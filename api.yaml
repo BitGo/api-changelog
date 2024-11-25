@@ -27324,14 +27324,10 @@ components:
         updatedBy:
           type: string
           description: The Id of the User that last updated the TxRequest document. This is an alias for the userId field.
-        intent:
-          allOf:
-            - $ref: '#/components/schemas/TransactionIntent'
-          description: The intent of the transaction request
+        intent: {}
         intents:
           type: array
-          items:
-            $ref: '#/components/schemas/TransactionIntent'
+          items: {}
         pendingApprovalId:
           type: string
           description: The id of the Pending Approval that was created for the TxRequest if one was required.
@@ -28824,22 +28820,28 @@ components:
               - inviter
               - state
             description: IDs of users on the enterprise that are approved for custodial video ID
-        sourceConfigs:
+        sourceConfig:
           type: array
           items:
             type: object
-            description: Array to store configs, upon which certain actions are taken, per source
             properties:
               source:
                 $ref: '#/components/schemas/AggregatorSourceType'
-              showBanner:
-                type: boolean
-              readyForDistribution:
-                type: boolean
-              showVideoIdBanner:
-                type: boolean
+              metadata:
+                type: object
+                description: 'The following fields: source, showBanner, readyForDistribution, showVideoIdBanner, ftxCreditorId were added for FTX insitutional distribution. Reference: https://bitgoinc.atlassian.net/browse/COPS-2695'
+                properties:
+                  showBanner:
+                    type: boolean
+                  readyForDistribution:
+                    type: boolean
+                  showVideoIdBanner:
+                    type: boolean
+                  ftxCreditorId:
+                    type: string
             required:
               - source
+            description: Array to store configs, upon which certain actions are taken, per source
         videoIdRequired:
           type: boolean
           description: Check for video ID Users
@@ -30056,6 +30058,186 @@ components:
       type: string
       example: 123e4567-e89b-12d3-a456-426614174000
       format: uuid
+    WalletIdString:
+      title: WalletIdString
+      type: string
+      example: 59cd72485007a239fb00282ed480da1f
+      pattern: ^[0-9a-f]{32}$
+    BaseShare:
+      title: BaseShare
+      type: object
+      properties:
+        from:
+          allOf:
+            - $ref: '#/components/schemas/SignatureShareType'
+          description: The source of the commitment share
+          example: user
+        to:
+          allOf:
+            - $ref: '#/components/schemas/SignatureShareType'
+          description: The recipient of the commitment share.
+          example: bitgo
+        share:
+          type: string
+          description: The commitment share.
+      required:
+        - from
+        - to
+        - share
+    SignatureShareType:
+      title: SignatureShareType
+      type: string
+      enum:
+        - user
+        - backup
+        - bitgo
+    SignatureShareWithoutVssProof:
+      title: SignatureShareWithoutVssProof
+      type: object
+      properties:
+        from:
+          allOf:
+            - $ref: '#/components/schemas/SignatureShareType'
+          description: The source of the signature share.
+        to:
+          allOf:
+            - $ref: '#/components/schemas/SignatureShareType'
+          description: The recipient of the signature share.
+        share:
+          type: string
+          description: The signature share
+      required:
+        - from
+        - to
+        - share
+    UnsignedTransaction:
+      title: UnsignedTransaction
+      type: object
+      properties:
+        parsedTx:
+          $ref: '#/components/schemas/ParsedTx'
+        serializedTxHex:
+          type: string
+          description: The unsigned transaction as a hex string.
+        signableHex:
+          type: string
+          description: The portion of a transaction used to generate a signature (may or may not be the same as serializedTxHex) as a hex string.
+        derivationPath:
+          type: string
+          description: A bip32 path.
+        coinSpecific:
+          allOf:
+            - type: object
+              properties:
+                nonceAddress:
+                  type: string
+                stakingAddress:
+                  type: string
+            - type: object
+              additionalProperties: {}
+          description: Coin specific information.
+        feeInfo:
+          type: object
+          properties:
+            fee:
+              oneOf:
+                - type: string
+                - type: number
+            feeString:
+              type: string
+          required:
+            - fee
+            - feeString
+      required:
+        - parsedTx
+        - serializedTxHex
+        - signableHex
+    ParsedTx:
+      title: ParsedTx
+      type: object
+      properties:
+        inputs:
+          type: array
+          items:
+            type: object
+            properties:
+              valueString:
+                type: string
+              _id:
+                type: string
+              address:
+                type: string
+              chain:
+                type: number
+              derivationIndex:
+                type: number
+              index:
+                type: number
+              value:
+                oneOf:
+                  - type: number
+                  - type: number
+            required:
+              - valueString
+        minerFee:
+          oneOf:
+            - type: string
+            - type: number
+        outputs:
+          type: array
+          items:
+            type: object
+            properties:
+              valueString:
+                type: string
+              address:
+                type: string
+              change:
+                type: boolean
+              coinName:
+                type: string
+              data:
+                type: string
+              isPayGo:
+                type: boolean
+              value:
+                oneOf:
+                  - type: number
+                  - type: number
+              wallet:
+                type: string
+              walletV1:
+                type: string
+              baseAddress:
+                type: string
+              enterprise:
+                type: string
+            required:
+              - valueString
+        spendAmount:
+          oneOf:
+            - type: string
+            - type: number
+        gasPrice:
+          type: number
+        hasUnvalidatedData:
+          type: boolean
+        payGoFee:
+          oneOf:
+            - type: string
+            - type: number
+        spendAmounts:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        type:
+          type: string
+      required:
+        - inputs
+        - minerFee
+        - outputs
+        - spendAmount
     TransactionIntent:
       title: TransactionIntent
       oneOf:
@@ -31041,186 +31223,6 @@ components:
             unspents:
               $ref: '#/components/schemas/optionalStringArray'
         - $ref: '#/components/schemas/AccountBaseConsolidateIntent'
-    WalletIdString:
-      title: WalletIdString
-      type: string
-      example: 59cd72485007a239fb00282ed480da1f
-      pattern: ^[0-9a-f]{32}$
-    BaseShare:
-      title: BaseShare
-      type: object
-      properties:
-        from:
-          allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
-          description: The source of the commitment share
-          example: user
-        to:
-          allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
-          description: The recipient of the commitment share.
-          example: bitgo
-        share:
-          type: string
-          description: The commitment share.
-      required:
-        - from
-        - to
-        - share
-    SignatureShareType:
-      title: SignatureShareType
-      type: string
-      enum:
-        - user
-        - backup
-        - bitgo
-    SignatureShareWithoutVssProof:
-      title: SignatureShareWithoutVssProof
-      type: object
-      properties:
-        from:
-          allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
-          description: The source of the signature share.
-        to:
-          allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
-          description: The recipient of the signature share.
-        share:
-          type: string
-          description: The signature share
-      required:
-        - from
-        - to
-        - share
-    UnsignedTransaction:
-      title: UnsignedTransaction
-      type: object
-      properties:
-        parsedTx:
-          $ref: '#/components/schemas/ParsedTx'
-        serializedTxHex:
-          type: string
-          description: The unsigned transaction as a hex string.
-        signableHex:
-          type: string
-          description: The portion of a transaction used to generate a signature (may or may not be the same as serializedTxHex) as a hex string.
-        derivationPath:
-          type: string
-          description: A bip32 path.
-        coinSpecific:
-          allOf:
-            - type: object
-              properties:
-                nonceAddress:
-                  type: string
-                stakingAddress:
-                  type: string
-            - type: object
-              additionalProperties: {}
-          description: Coin specific information.
-        feeInfo:
-          type: object
-          properties:
-            fee:
-              oneOf:
-                - type: string
-                - type: number
-            feeString:
-              type: string
-          required:
-            - fee
-            - feeString
-      required:
-        - parsedTx
-        - serializedTxHex
-        - signableHex
-    ParsedTx:
-      title: ParsedTx
-      type: object
-      properties:
-        inputs:
-          type: array
-          items:
-            type: object
-            properties:
-              valueString:
-                type: string
-              _id:
-                type: string
-              address:
-                type: string
-              chain:
-                type: number
-              derivationIndex:
-                type: number
-              index:
-                type: number
-              value:
-                oneOf:
-                  - type: number
-                  - type: number
-            required:
-              - valueString
-        minerFee:
-          oneOf:
-            - type: string
-            - type: number
-        outputs:
-          type: array
-          items:
-            type: object
-            properties:
-              valueString:
-                type: string
-              address:
-                type: string
-              change:
-                type: boolean
-              coinName:
-                type: string
-              data:
-                type: string
-              isPayGo:
-                type: boolean
-              value:
-                oneOf:
-                  - type: number
-                  - type: number
-              wallet:
-                type: string
-              walletV1:
-                type: string
-              baseAddress:
-                type: string
-              enterprise:
-                type: string
-            required:
-              - valueString
-        spendAmount:
-          oneOf:
-            - type: string
-            - type: number
-        gasPrice:
-          type: number
-        hasUnvalidatedData:
-          type: boolean
-        payGoFee:
-          oneOf:
-            - type: string
-            - type: number
-        spendAmounts:
-          type: array
-          items:
-            type: object
-            additionalProperties: {}
-        type:
-          type: string
-      required:
-        - inputs
-        - minerFee
-        - outputs
-        - spendAmount
     PendingApprovalType:
       title: PendingApprovalType
       type: string
@@ -31369,6 +31371,8 @@ components:
         - starter
         - growth
         - employee
+        - FTX Retail
+        - FTX Institutional
     AvailableUI:
       title: AvailableUI
       type: string
@@ -48401,6 +48405,9 @@ components:
       properties:
         needsKeyReshareAfterPasswordReset:
           type: boolean
+        pendingSystemInitialization:
+          type: boolean
+          description: If true, this wallet is waiting for the system to finish initializing. In this state, users cannot create addresses or initiate withdrawals.
       required:
         - needsKeyReshareAfterPasswordReset
     SilvergateUSDWallet:
