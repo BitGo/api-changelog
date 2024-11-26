@@ -303,7 +303,7 @@ paths:
                 allToken:
                   type: boolean
                   default: false
-                  description: Triggers on coin transfers and token transfers for ETH and Stellar.
+                  description: Triggers on coin transfers and token transfers for ETH and Stellar. Must be set to true to receive webhooks for Trade accounts.
                 listenToFailureStates:
                   type: boolean
                   description: Whether or not to listen to failed transactions on chain.
@@ -23593,6 +23593,9 @@ paths:
               - enterpriseKycState
               - identityStatus
               - accessToken
+              - accountCreated
+              - contractAgreed
+              - fundsDeposited
               - policyBalanceChange
               - transaction_finality_on_l1
         - name: prevId
@@ -25571,7 +25574,7 @@ paths:
                 type: array
                 items:
                   oneOf:
-                    - $ref: '#/components/schemas/TransactionRequestLite'
+                    - $ref: '#/components/schemas/TransactionRequestLite2'
                     - $ref: '#/components/schemas/TransactionRequestFull'
         '400':
           description: Bad Request
@@ -29473,6 +29476,9 @@ components:
         - enterpriseKycState
         - identityStatus
         - accessToken
+        - accountCreated
+        - contractAgreed
+        - fundsDeposited
         - policyBalanceChange
         - transaction_finality_on_l1
     WebhookState:
@@ -29551,7 +29557,7 @@ components:
             minLength: 1
         initiatorIsAllowedToApprove:
           type: boolean
-        webhookId:
+        webhookURL:
           type: string
           minLength: 1
     GroupApprovalRequirementOperator:
@@ -29661,7 +29667,7 @@ components:
               description: The unique ID for the policy
             txRequest:
               oneOf:
-                - $ref: '#/components/schemas/TransactionRequestLite'
+                - $ref: '#/components/schemas/TransactionRequestLite2'
                 - $ref: '#/components/schemas/TransactionRequestFull'
               description: The transaction request details
             txRequestId:
@@ -30284,6 +30290,7 @@ components:
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
         - $ref: '#/components/schemas/SolDeactivateIntent'
         - $ref: '#/components/schemas/SolDelegateIntent'
+        - $ref: '#/components/schemas/SolPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
         - $ref: '#/components/schemas/SuiConsolidateIntent'
@@ -30321,13 +30328,30 @@ components:
             intentType:
               type: string
               enum:
-                - delegate
+                - undelegate
             validatorAddress:
               type: string
+            useSingleNominator:
+              type: boolean
+            singleNominatorAmount:
+              $ref: '#/components/schemas/Amount'
           required:
             - intentType
             - validatorAddress
+            - useSingleNominator
+            - singleNominatorAmount
         - $ref: '#/components/schemas/BaseIntent'
+    Amount:
+      title: Amount
+      type: object
+      properties:
+        value:
+          type: string
+        symbol:
+          type: string
+      required:
+        - value
+        - symbol
     TonPaymentIntent:
       title: TON Payment Intent
       allOf:
@@ -30341,7 +30365,7 @@ components:
       allOf:
         - type: object
           properties:
-            intent:
+            intentType:
               type: string
               enum:
                 - payment
@@ -30360,20 +30384,9 @@ components:
                   - address
                   - amount
           required:
-            - intent
+            - intentType
             - recipients
         - $ref: '#/components/schemas/BaseIntent'
-    Amount:
-      title: Amount
-      type: object
-      properties:
-        value:
-          type: string
-        symbol:
-          type: string
-      required:
-        - value
-        - symbol
     Address:
       title: Address
       type: object
@@ -30395,10 +30408,15 @@ components:
               type: string
             amount:
               $ref: '#/components/schemas/Amount'
+            useSingleNominator:
+              type: boolean
+            ownerAddress:
+              $ref: '#/components/schemas/optionalString'
           required:
             - intentType
             - validatorAddress
             - amount
+            - useSingleNominator
         - $ref: '#/components/schemas/BaseIntent'
     TonConsolidateIntent:
       title: TON Consolidate Intent
@@ -30606,6 +30624,13 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
+    SolPaymentIntent:
+      title: SolPaymentIntent
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/PaymentIntent'
+        - $ref: '#/components/schemas/SolBuildOptions'
     SolDelegateIntent:
       title: SOL Delegate Intent
       allOf:
@@ -31537,7 +31562,7 @@ components:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/TransactionRequestLite'
+              - $ref: '#/components/schemas/TransactionRequestLite2'
               - $ref: '#/components/schemas/TransactionRequestFull'
       required:
         - txRequests
@@ -36893,6 +36918,20 @@ components:
         - owner
         - enterpriseId
         - routingNumber
+    DotPaymentIntent1:
+      title: DOT Payment Intent
+      allOf:
+        - type: object
+          properties:
+            proxy:
+              $ref: '#/components/schemas/DotProxy'
+            owner:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - proxy
+            - owner
+        - $ref: '#/components/schemas/PaymentIntent1'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
     Duration:
       type: string
       example: P1D
@@ -40122,7 +40161,7 @@ components:
         - $ref: '#/components/schemas/ConsolidateTokenIntent1'
         - $ref: '#/components/schemas/CosmosContractCallIntent'
         - $ref: '#/components/schemas/DOTClaimIntent'
-        - $ref: '#/components/schemas/DotPaymentIntent'
+        - $ref: '#/components/schemas/DotPaymentIntent1'
         - $ref: '#/components/schemas/DotStakingIntent'
         - $ref: '#/components/schemas/DotUnstakingIntent'
         - $ref: '#/components/schemas/EthAccelerationIntent'
@@ -46400,6 +46439,97 @@ components:
           title: ISO Date String
           description: The date and time the resource was last modified.
           example: '2024-02-01T00:00:00.000Z'
+    TransactionRequestLite2:
+      title: TransactionRequestLite
+      allOf:
+        - type: object
+          properties:
+            intent:
+              allOf:
+                - $ref: '#/components/schemas/TransactionIntent'
+              description: The intent of the transaction request
+            unsignedTxs:
+              type: array
+              items:
+                type: object
+                properties:
+                  parsedTx:
+                    $ref: '#/components/schemas/ParsedTx'
+                  serializedTxHex:
+                    type: string
+                    description: The unsigned transaction as a hex string.
+                  signableHex:
+                    type: string
+                    description: The portion of a transaction used to generate a signature (may or may not be the same as serializedTxHex) as a hex string.
+                  derivationPath:
+                    type: string
+                    description: A bip32 path.
+                  coinSpecific:
+                    allOf:
+                      - type: object
+                        properties:
+                          nonceAddress:
+                            type: string
+                          stakingAddress:
+                            type: string
+                      - type: object
+                        additionalProperties: {}
+                    description: Coin specific information.
+                  feeInfo:
+                    type: object
+                    properties:
+                      fee:
+                        oneOf:
+                          - type: string
+                          - type: number
+                      feeString:
+                        type: string
+                    required:
+                      - fee
+                      - feeString
+                required:
+                  - parsedTx
+                  - serializedTxHex
+                  - signableHex
+                description: Holds all unsigned transactions that will be used to fulfill the TxRequest for MPC wallets.
+            signatureShares:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      vssProof:
+                        type: string
+                        description: The VSS proof of the signature share
+                      privateShareProof:
+                        type: string
+                        description: The private share proof
+                      publicShare:
+                        type: string
+                        description: The public share
+                  - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                description: Only used for MPC coins. This is used to collect signature shares from and exchange them with the user.
+            commitmentShares:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - commitment
+                        description: The type of the commitment share
+                    required:
+                      - type
+                  - $ref: '#/components/schemas/BaseShare'
+                description: Only used for MPC coins on EdDSA curve. This is used to collect commitment shares from and exchange them with the user.
+            txHashes:
+              type: array
+              items:
+                type: string
+                description: The hashes of all transactions from the TxRequest that have been signed and are pending broadcast.
+        - $ref: '#/components/schemas/TransactionRequestBase'
     ExchangeEddsaCommitmentsResponse:
       title: ExchangeEddsaCommitmentsResponse
       type: object
@@ -46480,7 +46610,7 @@ components:
     TransactionRequest2:
       title: TransactionRequest
       oneOf:
-        - $ref: '#/components/schemas/TransactionRequestLite'
+        - $ref: '#/components/schemas/TransactionRequestLite2'
         - $ref: '#/components/schemas/TransactionRequestFull'
     SignatureShare1:
       title: SignatureShare
@@ -51504,6 +51634,8 @@ components:
               required:
                 - id
                 - allCodesUsed
+            createTime:
+              type: string
           required:
             - agreements
             - allowedCoins
