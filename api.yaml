@@ -27364,7 +27364,6 @@ components:
         - $ref: '#/components/schemas/NearWithdrawIntent'
         - $ref: '#/components/schemas/SolClaimIntent'
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
-        - $ref: '#/components/schemas/SOLPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
         - $ref: '#/components/schemas/TransferTokenIntent'
@@ -27658,33 +27657,6 @@ components:
       required:
         - value
         - symbol
-    SOLPaymentIntent:
-      title: Sol Payment
-      allOf:
-        - $ref: '#/components/schemas/SolBuildOptions'
-        - $ref: '#/components/schemas/PaymentIntent2'
-    PaymentIntent2:
-      allOf:
-        - $ref: '#/components/schemas/BaseIntent2'
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - payment
-            recipients:
-              type: array
-              items:
-                $ref: '#/components/schemas/RecipientEntry1'
-            amount:
-              type: object
-              properties:
-                value:
-                  type: string
-                  description: The value of the transaction in base units of the asset.
-                symbol:
-                  type: string
-                  description: A cryptocurrency or token ticker symbol.
     SolCreateAssociatedTokenAccountIntent:
       title: SOL Create Associated Token Account Intent
       allOf:
@@ -38974,6 +38946,28 @@ components:
           pattern: ^-?[\d\.]+$
           example: '1.5'
         - type: number
+    PaymentIntent2:
+      allOf:
+        - $ref: '#/components/schemas/BaseIntent2'
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - payment
+            recipients:
+              type: array
+              items:
+                $ref: '#/components/schemas/RecipientEntry1'
+            amount:
+              type: object
+              properties:
+                value:
+                  type: string
+                  description: The value of the transaction in base units of the asset.
+                symbol:
+                  type: string
+                  description: A cryptocurrency or token ticker symbol.
     PendingApproval1:
       title: Pending approval
       type: object
@@ -40165,7 +40159,6 @@ components:
         - $ref: '#/components/schemas/NearWithdrawIntent1'
         - $ref: '#/components/schemas/SolClaimIntent'
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
-        - $ref: '#/components/schemas/SOLPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
         - $ref: '#/components/schemas/TransferTokenIntent1'
@@ -41158,7 +41151,7 @@ components:
       type: string
       description: |
         Comma-separated list of privileges for a wallet. Includes:
-            
+
               - 'admin' - Can manage wallet policies and users and approve or reject pending approvals.
               - 'freeze' - Can freeze a wallet, disabling all withdrawals.
               - 'spend' - Can initiate withdrawals and generate new receive addresses.
