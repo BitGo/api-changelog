@@ -303,7 +303,7 @@ paths:
                 allToken:
                   type: boolean
                   default: false
-                  description: Triggers on coin transfers and token transfers for ETH and Stellar.
+                  description: Triggers on coin transfers and token transfers for ETH and Stellar. Must be set to true to receive webhooks for Trade accounts.
                 listenToFailureStates:
                   type: boolean
                   description: Whether or not to listen to failed transactions on chain.
@@ -19474,11 +19474,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -19486,9 +19485,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -19496,9 +19495,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -19506,9 +19505,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -19516,9 +19515,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -19526,9 +19525,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
     get:
       tags:
         - Staking Request
@@ -19571,11 +19570,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -19583,9 +19581,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -19593,9 +19591,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -19603,9 +19601,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -19613,9 +19611,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -19623,9 +19621,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/wallets/{walletId}/requests:
     get:
       tags:
@@ -19702,11 +19700,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -19714,9 +19711,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -19724,9 +19721,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -19734,9 +19731,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -19744,9 +19741,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -19754,9 +19751,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/requests/{stakingRequestId}:
     get:
       tags:
@@ -19814,11 +19811,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -19826,9 +19822,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -19836,9 +19832,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -19846,9 +19842,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -19856,9 +19852,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -19866,9 +19862,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/enterprises/{enterpriseId}/requests/transactions:
     get:
       deprecated: false
@@ -19937,11 +19933,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -19949,9 +19944,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -19959,9 +19954,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -19969,9 +19964,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -19979,9 +19974,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -19989,9 +19984,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/wallets/{walletId}/requests/{stakingRequestId}/transactions/{stakingTransactionId}:
     post:
       tags:
@@ -20058,11 +20053,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20070,9 +20064,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20080,9 +20074,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -20090,9 +20084,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20100,9 +20094,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -20110,9 +20104,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/wallets/{walletId}:
     get:
       tags:
@@ -20155,11 +20149,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20167,9 +20160,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20177,9 +20170,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -20187,9 +20180,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20197,9 +20190,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -20207,9 +20200,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/wallets/{walletId}/delegations:
     get:
       tags:
@@ -20288,11 +20281,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20300,9 +20292,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20310,9 +20302,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -20320,9 +20312,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20330,9 +20322,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -20340,9 +20332,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/enterprises/{enterpriseId}:
     get:
       tags:
@@ -20378,11 +20370,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20390,9 +20381,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20400,9 +20391,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -20410,9 +20401,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20420,9 +20411,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -20430,9 +20421,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/reward-accrual-report:
     get:
       tags:
@@ -20497,11 +20488,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20509,9 +20499,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20519,9 +20509,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -20529,9 +20519,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20539,9 +20529,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -20549,9 +20539,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/wallets/{walletId}/delegations/accruals:
     get:
       tags:
@@ -20610,11 +20600,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20622,9 +20611,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20632,9 +20621,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -20642,9 +20631,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20652,9 +20641,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -20662,9 +20651,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/wallets/{walletId}/attributes:
     get:
       tags:
@@ -20711,11 +20700,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20723,9 +20711,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20733,9 +20721,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -20743,9 +20731,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20753,9 +20741,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -20763,9 +20751,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/coins:
     get:
       tags:
@@ -20805,9 +20793,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Internal Server Error
-                status: 500
+                error: Internal Server Error
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/wallets/{walletId}/validators:
     get:
       tags:
@@ -20837,11 +20825,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20849,9 +20836,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20859,9 +20846,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -20869,9 +20856,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: Wallet not found
-                status: 404
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20879,9 +20866,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -20889,9 +20876,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/validators:
     get:
       tags:
@@ -20942,6 +20929,12 @@ paths:
           required: false
           schema:
             type: boolean
+        - name: stakingType
+          in: query
+          description: The staking type.
+          required: false
+          schema:
+            type: string
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize'
       responses:
@@ -20961,11 +20954,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -20973,9 +20965,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -20983,9 +20975,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: Staking license not added for enterprise
-                status: 403
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '409':
           description: Conflict
           content:
@@ -20993,9 +20985,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Conflict
-                message: Conflicting clientID
-                status: 409
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -21003,9 +20995,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/enterprises/{enterpriseId}/license:
     get:
       tags:
@@ -21037,11 +21029,10 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/StakingError'
-                  - $ref: '#/components/schemas/ValidationError1'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -21049,9 +21040,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -21059,9 +21050,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: User is not a member of the enterprise
-                status: 403
+                error: User is not a member of the enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -21069,9 +21060,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: License not found
-                status: 404
+                error: License not found
+                errorName: NotFound
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -21079,9 +21070,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/enterprises/{enterpriseId}/wallets:
     get:
       tags:
@@ -21114,9 +21105,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: BadRequest
-                message: Bad Request
-                status: 400
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
         '401':
           description: Unauthorized
           content:
@@ -21124,9 +21115,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Unauthorized
-                message: Unauthorized
-                status: 401
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
         '403':
           description: Forbidden
           content:
@@ -21134,9 +21125,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: AccessDenied
-                message: User is not a member of the enterprise
-                status: 403
+                error: User is not a member of the enterprise
+                errorName: AccessDenied
+                reqId: some-id
         '404':
           description: The specified resource was not found
           content:
@@ -21144,9 +21135,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: NotFound
-                message: License not found
-                status: 404
+                error: License not found
+                errorName: NotFound
+                reqId: some-id
         '500':
           description: Server Error - Transient error please try again
           content:
@@ -21154,9 +21145,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/StakingError'
               example:
-                code: Internal_Server_Error
-                message: Database is down
-                status: 500
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/v1/user/login:
     post:
       summary: Login Request
@@ -22405,6 +22396,7 @@ paths:
                     - backfillEnterpriseCoinSpecific
                     - approveGeneric
                     - rejectGeneric
+                    - updateServicesAgreement
         - name: userId
           description: The user ID to filter by
           in: query
@@ -23593,6 +23585,9 @@ paths:
               - enterpriseKycState
               - identityStatus
               - accessToken
+              - accountCreated
+              - contractAgreed
+              - fundsDeposited
               - policyBalanceChange
               - transaction_finality_on_l1
         - name: prevId
@@ -25571,7 +25566,7 @@ paths:
                 type: array
                 items:
                   oneOf:
-                    - $ref: '#/components/schemas/TransactionRequestLite'
+                    - $ref: '#/components/schemas/TransactionRequestLite2'
                     - $ref: '#/components/schemas/TransactionRequestFull'
         '400':
           description: Bad Request
@@ -27324,14 +27319,10 @@ components:
         updatedBy:
           type: string
           description: The Id of the User that last updated the TxRequest document. This is an alias for the userId field.
-        intent:
-          allOf:
-            - $ref: '#/components/schemas/TransactionIntent'
-          description: The intent of the transaction request
+        intent: {}
         intents:
           type: array
-          items:
-            $ref: '#/components/schemas/TransactionIntent'
+          items: {}
         pendingApprovalId:
           type: string
           description: The id of the Pending Approval that was created for the TxRequest if one was required.
@@ -27374,7 +27365,6 @@ components:
         - $ref: '#/components/schemas/NearWithdrawIntent'
         - $ref: '#/components/schemas/SolClaimIntent'
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
-        - $ref: '#/components/schemas/SOLPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
         - $ref: '#/components/schemas/TransferTokenIntent'
@@ -27668,33 +27658,6 @@ components:
       required:
         - value
         - symbol
-    SOLPaymentIntent:
-      title: Sol Payment
-      allOf:
-        - $ref: '#/components/schemas/SolBuildOptions'
-        - $ref: '#/components/schemas/PaymentIntent2'
-    PaymentIntent2:
-      allOf:
-        - $ref: '#/components/schemas/BaseIntent2'
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - payment
-            recipients:
-              type: array
-              items:
-                $ref: '#/components/schemas/RecipientEntry1'
-            amount:
-              type: object
-              properties:
-                value:
-                  type: string
-                  description: The value of the transaction in base units of the asset.
-                symbol:
-                  type: string
-                  description: A cryptocurrency or token ticker symbol.
     SolCreateAssociatedTokenAccountIntent:
       title: SOL Create Associated Token Account Intent
       allOf:
@@ -28824,22 +28787,28 @@ components:
               - inviter
               - state
             description: IDs of users on the enterprise that are approved for custodial video ID
-        sourceConfigs:
+        sourceConfig:
           type: array
           items:
             type: object
-            description: Array to store configs, upon which certain actions are taken, per source
             properties:
               source:
                 $ref: '#/components/schemas/AggregatorSourceType'
-              showBanner:
-                type: boolean
-              readyForDistribution:
-                type: boolean
-              showVideoIdBanner:
-                type: boolean
+              metadata:
+                type: object
+                description: 'The following fields: source, showBanner, readyForDistribution, showVideoIdBanner, ftxCreditorId were added for FTX insitutional distribution. Reference: https://bitgoinc.atlassian.net/browse/COPS-2695'
+                properties:
+                  showBanner:
+                    type: boolean
+                  readyForDistribution:
+                    type: boolean
+                  showVideoIdBanner:
+                    type: boolean
+                  ftxCreditorId:
+                    type: string
             required:
               - source
+            description: Array to store configs, upon which certain actions are taken, per source
         videoIdRequired:
           type: boolean
           description: Check for video ID Users
@@ -29471,6 +29440,9 @@ components:
         - enterpriseKycState
         - identityStatus
         - accessToken
+        - accountCreated
+        - contractAgreed
+        - fundsDeposited
         - policyBalanceChange
         - transaction_finality_on_l1
     WebhookState:
@@ -29549,7 +29521,7 @@ components:
             minLength: 1
         initiatorIsAllowedToApprove:
           type: boolean
-        webhookId:
+        webhookURL:
           type: string
           minLength: 1
     GroupApprovalRequirementOperator:
@@ -29659,7 +29631,7 @@ components:
               description: The unique ID for the policy
             txRequest:
               oneOf:
-                - $ref: '#/components/schemas/TransactionRequestLite'
+                - $ref: '#/components/schemas/TransactionRequestLite2'
                 - $ref: '#/components/schemas/TransactionRequestFull'
               description: The transaction request details
             txRequestId:
@@ -30056,6 +30028,186 @@ components:
       type: string
       example: 123e4567-e89b-12d3-a456-426614174000
       format: uuid
+    WalletIdString:
+      title: WalletIdString
+      type: string
+      example: 59cd72485007a239fb00282ed480da1f
+      pattern: ^[0-9a-f]{32}$
+    BaseShare:
+      title: BaseShare
+      type: object
+      properties:
+        from:
+          allOf:
+            - $ref: '#/components/schemas/SignatureShareType'
+          description: The source of the commitment share
+          example: user
+        to:
+          allOf:
+            - $ref: '#/components/schemas/SignatureShareType'
+          description: The recipient of the commitment share.
+          example: bitgo
+        share:
+          type: string
+          description: The commitment share.
+      required:
+        - from
+        - to
+        - share
+    SignatureShareType:
+      title: SignatureShareType
+      type: string
+      enum:
+        - user
+        - backup
+        - bitgo
+    SignatureShareWithoutVssProof:
+      title: SignatureShareWithoutVssProof
+      type: object
+      properties:
+        from:
+          allOf:
+            - $ref: '#/components/schemas/SignatureShareType'
+          description: The source of the signature share.
+        to:
+          allOf:
+            - $ref: '#/components/schemas/SignatureShareType'
+          description: The recipient of the signature share.
+        share:
+          type: string
+          description: The signature share
+      required:
+        - from
+        - to
+        - share
+    UnsignedTransaction:
+      title: UnsignedTransaction
+      type: object
+      properties:
+        parsedTx:
+          $ref: '#/components/schemas/ParsedTx'
+        serializedTxHex:
+          type: string
+          description: The unsigned transaction as a hex string.
+        signableHex:
+          type: string
+          description: The portion of a transaction used to generate a signature (may or may not be the same as serializedTxHex) as a hex string.
+        derivationPath:
+          type: string
+          description: A bip32 path.
+        coinSpecific:
+          allOf:
+            - type: object
+              properties:
+                nonceAddress:
+                  type: string
+                stakingAddress:
+                  type: string
+            - type: object
+              additionalProperties: {}
+          description: Coin specific information.
+        feeInfo:
+          type: object
+          properties:
+            fee:
+              oneOf:
+                - type: string
+                - type: number
+            feeString:
+              type: string
+          required:
+            - fee
+            - feeString
+      required:
+        - parsedTx
+        - serializedTxHex
+        - signableHex
+    ParsedTx:
+      title: ParsedTx
+      type: object
+      properties:
+        inputs:
+          type: array
+          items:
+            type: object
+            properties:
+              valueString:
+                type: string
+              _id:
+                type: string
+              address:
+                type: string
+              chain:
+                type: number
+              derivationIndex:
+                type: number
+              index:
+                type: number
+              value:
+                oneOf:
+                  - type: number
+                  - type: number
+            required:
+              - valueString
+        minerFee:
+          oneOf:
+            - type: string
+            - type: number
+        outputs:
+          type: array
+          items:
+            type: object
+            properties:
+              valueString:
+                type: string
+              address:
+                type: string
+              change:
+                type: boolean
+              coinName:
+                type: string
+              data:
+                type: string
+              isPayGo:
+                type: boolean
+              value:
+                oneOf:
+                  - type: number
+                  - type: number
+              wallet:
+                type: string
+              walletV1:
+                type: string
+              baseAddress:
+                type: string
+              enterprise:
+                type: string
+            required:
+              - valueString
+        spendAmount:
+          oneOf:
+            - type: string
+            - type: number
+        gasPrice:
+          type: number
+        hasUnvalidatedData:
+          type: boolean
+        payGoFee:
+          oneOf:
+            - type: string
+            - type: number
+        spendAmounts:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        type:
+          type: string
+      required:
+        - inputs
+        - minerFee
+        - outputs
+        - spendAmount
     TransactionIntent:
       title: TransactionIntent
       oneOf:
@@ -30102,6 +30254,7 @@ components:
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
         - $ref: '#/components/schemas/SolDeactivateIntent'
         - $ref: '#/components/schemas/SolDelegateIntent'
+        - $ref: '#/components/schemas/SolPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
         - $ref: '#/components/schemas/SuiConsolidateIntent'
@@ -30139,13 +30292,30 @@ components:
             intentType:
               type: string
               enum:
-                - delegate
+                - undelegate
             validatorAddress:
               type: string
+            useSingleNominator:
+              type: boolean
+            singleNominatorAmount:
+              $ref: '#/components/schemas/Amount'
           required:
             - intentType
             - validatorAddress
+            - useSingleNominator
+            - singleNominatorAmount
         - $ref: '#/components/schemas/BaseIntent'
+    Amount:
+      title: Amount
+      type: object
+      properties:
+        value:
+          type: string
+        symbol:
+          type: string
+      required:
+        - value
+        - symbol
     TonPaymentIntent:
       title: TON Payment Intent
       allOf:
@@ -30159,7 +30329,7 @@ components:
       allOf:
         - type: object
           properties:
-            intent:
+            intentType:
               type: string
               enum:
                 - payment
@@ -30178,20 +30348,9 @@ components:
                   - address
                   - amount
           required:
-            - intent
+            - intentType
             - recipients
         - $ref: '#/components/schemas/BaseIntent'
-    Amount:
-      title: Amount
-      type: object
-      properties:
-        value:
-          type: string
-        symbol:
-          type: string
-      required:
-        - value
-        - symbol
     Address:
       title: Address
       type: object
@@ -30213,10 +30372,15 @@ components:
               type: string
             amount:
               $ref: '#/components/schemas/Amount'
+            useSingleNominator:
+              type: boolean
+            ownerAddress:
+              $ref: '#/components/schemas/optionalString'
           required:
             - intentType
             - validatorAddress
             - amount
+            - useSingleNominator
         - $ref: '#/components/schemas/BaseIntent'
     TonConsolidateIntent:
       title: TON Consolidate Intent
@@ -30424,6 +30588,13 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
+    SolPaymentIntent:
+      title: SolPaymentIntent
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/PaymentIntent'
+        - $ref: '#/components/schemas/SolBuildOptions'
     SolDelegateIntent:
       title: SOL Delegate Intent
       allOf:
@@ -31041,186 +31212,6 @@ components:
             unspents:
               $ref: '#/components/schemas/optionalStringArray'
         - $ref: '#/components/schemas/AccountBaseConsolidateIntent'
-    WalletIdString:
-      title: WalletIdString
-      type: string
-      example: 59cd72485007a239fb00282ed480da1f
-      pattern: ^[0-9a-f]{32}$
-    BaseShare:
-      title: BaseShare
-      type: object
-      properties:
-        from:
-          allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
-          description: The source of the commitment share
-          example: user
-        to:
-          allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
-          description: The recipient of the commitment share.
-          example: bitgo
-        share:
-          type: string
-          description: The commitment share.
-      required:
-        - from
-        - to
-        - share
-    SignatureShareType:
-      title: SignatureShareType
-      type: string
-      enum:
-        - user
-        - backup
-        - bitgo
-    SignatureShareWithoutVssProof:
-      title: SignatureShareWithoutVssProof
-      type: object
-      properties:
-        from:
-          allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
-          description: The source of the signature share.
-        to:
-          allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
-          description: The recipient of the signature share.
-        share:
-          type: string
-          description: The signature share
-      required:
-        - from
-        - to
-        - share
-    UnsignedTransaction:
-      title: UnsignedTransaction
-      type: object
-      properties:
-        parsedTx:
-          $ref: '#/components/schemas/ParsedTx'
-        serializedTxHex:
-          type: string
-          description: The unsigned transaction as a hex string.
-        signableHex:
-          type: string
-          description: The portion of a transaction used to generate a signature (may or may not be the same as serializedTxHex) as a hex string.
-        derivationPath:
-          type: string
-          description: A bip32 path.
-        coinSpecific:
-          allOf:
-            - type: object
-              properties:
-                nonceAddress:
-                  type: string
-                stakingAddress:
-                  type: string
-            - type: object
-              additionalProperties: {}
-          description: Coin specific information.
-        feeInfo:
-          type: object
-          properties:
-            fee:
-              oneOf:
-                - type: string
-                - type: number
-            feeString:
-              type: string
-          required:
-            - fee
-            - feeString
-      required:
-        - parsedTx
-        - serializedTxHex
-        - signableHex
-    ParsedTx:
-      title: ParsedTx
-      type: object
-      properties:
-        inputs:
-          type: array
-          items:
-            type: object
-            properties:
-              valueString:
-                type: string
-              _id:
-                type: string
-              address:
-                type: string
-              chain:
-                type: number
-              derivationIndex:
-                type: number
-              index:
-                type: number
-              value:
-                oneOf:
-                  - type: number
-                  - type: number
-            required:
-              - valueString
-        minerFee:
-          oneOf:
-            - type: string
-            - type: number
-        outputs:
-          type: array
-          items:
-            type: object
-            properties:
-              valueString:
-                type: string
-              address:
-                type: string
-              change:
-                type: boolean
-              coinName:
-                type: string
-              data:
-                type: string
-              isPayGo:
-                type: boolean
-              value:
-                oneOf:
-                  - type: number
-                  - type: number
-              wallet:
-                type: string
-              walletV1:
-                type: string
-              baseAddress:
-                type: string
-              enterprise:
-                type: string
-            required:
-              - valueString
-        spendAmount:
-          oneOf:
-            - type: string
-            - type: number
-        gasPrice:
-          type: number
-        hasUnvalidatedData:
-          type: boolean
-        payGoFee:
-          oneOf:
-            - type: string
-            - type: number
-        spendAmounts:
-          type: array
-          items:
-            type: object
-            additionalProperties: {}
-        type:
-          type: string
-      required:
-        - inputs
-        - minerFee
-        - outputs
-        - spendAmount
     PendingApprovalType:
       title: PendingApprovalType
       type: string
@@ -31369,6 +31360,8 @@ components:
         - starter
         - growth
         - employee
+        - FTX Retail
+        - FTX Institutional
     AvailableUI:
       title: AvailableUI
       type: string
@@ -31533,7 +31526,7 @@ components:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/TransactionRequestLite'
+              - $ref: '#/components/schemas/TransactionRequestLite2'
               - $ref: '#/components/schemas/TransactionRequestFull'
       required:
         - txRequests
@@ -36889,6 +36882,20 @@ components:
         - owner
         - enterpriseId
         - routingNumber
+    DotPaymentIntent1:
+      title: DOT Payment Intent
+      allOf:
+        - type: object
+          properties:
+            proxy:
+              $ref: '#/components/schemas/DotProxy'
+            owner:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - proxy
+            - owner
+        - $ref: '#/components/schemas/PaymentIntent1'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
     Duration:
       type: string
       example: P1D
@@ -38940,6 +38947,28 @@ components:
           pattern: ^-?[\d\.]+$
           example: '1.5'
         - type: number
+    PaymentIntent2:
+      allOf:
+        - $ref: '#/components/schemas/BaseIntent2'
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - payment
+            recipients:
+              type: array
+              items:
+                $ref: '#/components/schemas/RecipientEntry1'
+            amount:
+              type: object
+              properties:
+                value:
+                  type: string
+                  description: The value of the transaction in base units of the asset.
+                symbol:
+                  type: string
+                  description: A cryptocurrency or token ticker symbol.
     PendingApproval1:
       title: Pending approval
       type: object
@@ -40118,7 +40147,7 @@ components:
         - $ref: '#/components/schemas/ConsolidateTokenIntent1'
         - $ref: '#/components/schemas/CosmosContractCallIntent'
         - $ref: '#/components/schemas/DOTClaimIntent'
-        - $ref: '#/components/schemas/DotPaymentIntent'
+        - $ref: '#/components/schemas/DotPaymentIntent1'
         - $ref: '#/components/schemas/DotStakingIntent'
         - $ref: '#/components/schemas/DotUnstakingIntent'
         - $ref: '#/components/schemas/EthAccelerationIntent'
@@ -40131,7 +40160,6 @@ components:
         - $ref: '#/components/schemas/NearWithdrawIntent1'
         - $ref: '#/components/schemas/SolClaimIntent'
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
-        - $ref: '#/components/schemas/SOLPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
         - $ref: '#/components/schemas/TransferTokenIntent1'
@@ -41124,7 +41152,7 @@ components:
       type: string
       description: |
         Comma-separated list of privileges for a wallet. Includes:
-            
+
               - 'admin' - Can manage wallet policies and users and approve or reject pending approvals.
               - 'freeze' - Can freeze a wallet, disabling all withdrawals.
               - 'spend' - Can initiate withdrawals and generate new receive addresses.
@@ -45839,23 +45867,13 @@ components:
       title: Staking Error
       type: object
       properties:
-        code:
+        error:
           type: string
-        message:
+        errorName:
           type: string
-        status:
+        reqId:
           type: integer
-    ValidationError1:
-      title: Validation Error
-      type: object
-      properties:
-        code:
-          type: string
-        message:
-          type: string
-        status:
-          type: integer
-        failedValidations:
+        context:
           type: object
     CoinsUnauthorizedError:
       type: object
@@ -46396,6 +46414,97 @@ components:
           title: ISO Date String
           description: The date and time the resource was last modified.
           example: '2024-02-01T00:00:00.000Z'
+    TransactionRequestLite2:
+      title: TransactionRequestLite
+      allOf:
+        - type: object
+          properties:
+            intent:
+              allOf:
+                - $ref: '#/components/schemas/TransactionIntent'
+              description: The intent of the transaction request
+            unsignedTxs:
+              type: array
+              items:
+                type: object
+                properties:
+                  parsedTx:
+                    $ref: '#/components/schemas/ParsedTx'
+                  serializedTxHex:
+                    type: string
+                    description: The unsigned transaction as a hex string.
+                  signableHex:
+                    type: string
+                    description: The portion of a transaction used to generate a signature (may or may not be the same as serializedTxHex) as a hex string.
+                  derivationPath:
+                    type: string
+                    description: A bip32 path.
+                  coinSpecific:
+                    allOf:
+                      - type: object
+                        properties:
+                          nonceAddress:
+                            type: string
+                          stakingAddress:
+                            type: string
+                      - type: object
+                        additionalProperties: {}
+                    description: Coin specific information.
+                  feeInfo:
+                    type: object
+                    properties:
+                      fee:
+                        oneOf:
+                          - type: string
+                          - type: number
+                      feeString:
+                        type: string
+                    required:
+                      - fee
+                      - feeString
+                required:
+                  - parsedTx
+                  - serializedTxHex
+                  - signableHex
+                description: Holds all unsigned transactions that will be used to fulfill the TxRequest for MPC wallets.
+            signatureShares:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      vssProof:
+                        type: string
+                        description: The VSS proof of the signature share
+                      privateShareProof:
+                        type: string
+                        description: The private share proof
+                      publicShare:
+                        type: string
+                        description: The public share
+                  - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                description: Only used for MPC coins. This is used to collect signature shares from and exchange them with the user.
+            commitmentShares:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - commitment
+                        description: The type of the commitment share
+                    required:
+                      - type
+                  - $ref: '#/components/schemas/BaseShare'
+                description: Only used for MPC coins on EdDSA curve. This is used to collect commitment shares from and exchange them with the user.
+            txHashes:
+              type: array
+              items:
+                type: string
+                description: The hashes of all transactions from the TxRequest that have been signed and are pending broadcast.
+        - $ref: '#/components/schemas/TransactionRequestBase'
     ExchangeEddsaCommitmentsResponse:
       title: ExchangeEddsaCommitmentsResponse
       type: object
@@ -46476,7 +46585,7 @@ components:
     TransactionRequest2:
       title: TransactionRequest
       oneOf:
-        - $ref: '#/components/schemas/TransactionRequestLite'
+        - $ref: '#/components/schemas/TransactionRequestLite2'
         - $ref: '#/components/schemas/TransactionRequestFull'
     SignatureShare1:
       title: SignatureShare
@@ -48401,6 +48510,9 @@ components:
       properties:
         needsKeyReshareAfterPasswordReset:
           type: boolean
+        pendingSystemInitialization:
+          type: boolean
+          description: If true, this wallet is waiting for the system to finish initializing. In this state, users cannot create addresses or initiate withdrawals.
       required:
         - needsKeyReshareAfterPasswordReset
     SilvergateUSDWallet:
@@ -51497,6 +51609,8 @@ components:
               required:
                 - id
                 - allCodesUsed
+            createTime:
+              type: string
           required:
             - agreements
             - allowedCoins
@@ -52064,6 +52178,7 @@ components:
         - backfillEnterpriseCoinSpecific
         - approveGeneric
         - rejectGeneric
+        - updateServicesAgreement
     AvaxcTxSubdocument:
       title: Avaxc
       allOf:
