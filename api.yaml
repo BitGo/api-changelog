@@ -15520,7 +15520,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: '#/components/schemas/PendingApprovalStatePending'
+              $ref: '#/components/schemas/PendingApprovalStatePending1'
         - $ref: '#/components/parameters/walletId'
         - name: expandWalletLabels
           description: |
@@ -22336,6 +22336,7 @@ paths:
                     - verifyReset2FA
                     - completeReset2FA
                     - retrofitToMPCv2
+                    - verifyLivenessCheck
                     - adminInternalTokenCreate
                     - adminInternalUnverifiedEmailStateReset
                     - routedTransactionCreate
@@ -22397,6 +22398,8 @@ paths:
                     - approveGeneric
                     - rejectGeneric
                     - updateServicesAgreement
+                    - claimTransactionByVasp
+                    - rejectTransactionByVasp
         - name: userId
           description: The user ID to filter by
           in: query
@@ -26596,6 +26599,7 @@ components:
                 enum:
                   - approve
                   - reject
+                  - skip
                 description: Action taken during resolution
               resolutionMemo:
                 type: string
@@ -26735,6 +26739,7 @@ components:
                       enum:
                         - approve
                         - reject
+                        - skip
                       description: Action taken during resolution
                     resolutionMemo:
                       type: string
@@ -26825,6 +26830,7 @@ components:
         - approved
         - processing
         - rejected
+        - skipped
     PendingApprovalStatePending:
       title: Pending
       type: string
@@ -26835,6 +26841,7 @@ components:
         - pendingCustodianApproval
         - pendingVideoApproval
         - pendingIdVerification
+        - pendingLivenessVerification
     PendingApprovalEnterpriseInviteRequest:
       title: Enterprise Invite Request
       type: object
@@ -29504,7 +29511,9 @@ components:
       title: EvaluatedPolicyActionStatus
       type: string
       enum:
+        - SKIPPED
         - PENDING
+        - NOT_NEEDED
         - COMPLETE
         - CANCELLED
     PolicyActionParameters:
@@ -39071,8 +39080,25 @@ components:
         - label
     PendingApprovalState1:
       anyOf:
-        - $ref: '#/components/schemas/PendingApprovalStatePending'
-        - $ref: '#/components/schemas/PendingApprovalStateResolved'
+        - $ref: '#/components/schemas/PendingApprovalStatePending1'
+        - $ref: '#/components/schemas/PendingApprovalStateResolved1'
+    PendingApprovalStatePending1:
+      title: Pending
+      type: string
+      enum:
+        - pending
+        - awaitingSignature
+        - pendingFinalApproval
+        - pendingCustodianApproval
+        - pendingVideoApproval
+        - pendingIdVerification
+    PendingApprovalStateResolved1:
+      title: Resolved
+      type: string
+      enum:
+        - approved
+        - processing
+        - rejected
     PendingApprovalTransactionRequestFull1:
       title: Transaction request (full)
       type: object
@@ -46253,7 +46279,6 @@ components:
           minLength: 1
         vaspId:
           type: string
-          minLength: 1
         name:
           type: string
           minLength: 1
@@ -46299,7 +46324,6 @@ components:
           minLength: 1
       required:
         - id
-        - vaspId
         - name
         - createdAt
         - updatedAt
@@ -46809,6 +46833,958 @@ components:
               - $ref: '#/components/schemas/TransactionRequestBase'
       required:
         - txRequests
+    GetTxInfoResponse:
+      allOf:
+        - title: GetTxInfoResponse
+        - $ref: '#/components/schemas/TxDetails'
+    TxDetails:
+      title: TxDetails
+      type: object
+      properties:
+        transfers:
+          type: array
+          items:
+            type: object
+            properties:
+              baseValue:
+                type: number
+                description: The value (in base units) sent by this transfer, excluding network fees. BitGo is deprecating this field in the future.
+              baseValueString:
+                type: string
+                description: The value (in base units) sent by this transfer, excluding network fees represented as a string. BitGo is deprecating this field in the future.
+                example: '2000000'
+                pattern: ^-?\d+$
+              coin:
+                $ref: '#/components/schemas/CoinString'
+              comment:
+                nullable: true
+                type: string
+                description: A comment from the user
+              date:
+                type: string
+                description: The date this Transfer was last updated
+                format: date-time
+                title: ISO Date String
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organization:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              bitgoOrg:
+                type: string
+                enum:
+                  - BitGo Trust
+                  - BitGo New York
+                  - BitGo Germany
+                  - BitGo Switzerland
+                  - Frankfurt DE Trust
+                  - BitGo Singapore
+                  - BitGo Korea
+                  - BitGo Sister Trust 1
+                  - BitGo Inc
+              entries:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      description: An address affected by this Transfer
+                      example: 2NAUwNgXaoFj2VVnSEvNLGuez8CfdU2UCMZ
+                    valueString:
+                      type: string
+                      description: The change (in base units) in the address' balance represented as a string
+                      example: '20000'
+                      pattern: '"^-?\d+$"'
+                    isChange:
+                      type: boolean
+                      description: True if this address is a change address (only exists for UTXO coins) and if this is a "send" transfer
+                    wallet:
+                      type: string
+                      description: Only visible when the user has access to the wallet
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                    value:
+                      type: number
+                      description: The change (in base units) in the address' balance
+                    nftSymbol:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - flushForwarderTokens
+                        - walletFunding
+                        - walletInitialization
+                        - addressInitialization
+                        - importedOutput
+                    isPayGo:
+                      type: boolean
+                      description: True if this address is the BitGo PayGo wallet
+                    token:
+                      type: string
+                      description: If this is a token entry, the token's symbol
+                      example: omg
+                    failed:
+                      type: boolean
+                      description: True if this entry is failed
+                    associatedNativeCoinAddress:
+                      type: string
+                      description: The native coin receive address associated with the solana ATA address. This is currently present only for BitGo addresses. This change was done so that there is a mapping between the two addresses in the transfer entries.
+                  required:
+                    - address
+                  description: An array of objects describing the change in address balances made as a result of this Transfer
+              history:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    action:
+                      $ref: '#/components/schemas/TransferAction'
+                    comment:
+                      nullable: true
+                      type: string
+                      description: If this history object is of action "commented", this is the comment from the user
+                    date:
+                      type: string
+                      description: The date of this history object
+                      format: date-time
+                      title: ISO Date String
+                    transferId:
+                      type: string
+                      description: The ID of the transfer that this history object is associated with
+                    txid:
+                      type: string
+                      description: The transaction ID of the transaction that this history object is associated with
+                    user:
+                      type: string
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                  required:
+                    - action
+                    - date
+                  description: An audit log of events that have happened to the Transfer during its lifecycle
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              pendingApproval:
+                type: string
+              state:
+                $ref: '#/components/schemas/TransferState1'
+              stakingParams:
+                type: object
+                properties:
+                  actionType:
+                    type: string
+                  requestId:
+                    type: string
+                  source:
+                    type: string
+                    enum:
+                      - external
+                      - internal
+                  validator:
+                    type: string
+                required:
+                  - actionType
+                  - requestId
+              txid:
+                type: string
+                description: The on-chain transaction id
+                example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+              type:
+                allOf:
+                  - $ref: '#/components/schemas/TransferType'
+                description: Defines whether or not this Transfer was sent or received by the user
+              usd:
+                type: number
+                description: The amount of USD of this Transfer (will be negative if it's a send)
+              usdRate:
+                type: number
+                description: The USD rate at the time this Transfer was created
+              value:
+                type: number
+                description: The total value (in base units) sent by this Transfer (may be approximate for ETH and other coins where amounts in base units can exceed 2^53 - 1)
+              valueString:
+                type: string
+                description: The total value (in base units) sent by this Transfer represented as a String
+                example: '2000000'
+                pattern: ^-?\d+$
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              walletType:
+                type: string
+                enum:
+                  - backing
+                  - cold
+                  - custodial
+                  - custodialPaired
+                  - hot
+                  - trading
+                description: Wallet type
+              replaces:
+                type: array
+                items:
+                  type: string
+                  description: Transaction IDs that this transfer replaces.
+              replacedBy:
+                type: array
+                items:
+                  type: string
+                  description: Transaction IDs that replace this transfer.
+            required:
+              - coin
+              - date
+              - entries
+              - history
+              - id
+              - state
+              - type
+              - valueString
+              - wallet
+        sendQueue:
+          type: array
+          items:
+            type: object
+            properties:
+              debugTa2Ta: {}
+              coin:
+                $ref: '#/components/schemas/CoinString'
+              token:
+                type: string
+              state:
+                type: string
+                enum:
+                  - pending
+                  - attempted
+                  - failed
+                  - done
+                  - reverted
+                  - held
+                  - replaced
+                  - abandoned
+                description: The status of this SendQueue item
+                example: done
+              user:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              address:
+                type: string
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              pendingApprovalId:
+                type: string
+              createTime:
+                type: number
+                description: Number of milliseconds since January 1, 1970
+                example: 1537289808000
+              modifyTime:
+                type: number
+                description: Number of milliseconds since January 1, 1970
+                example: 1537289808000
+              expireTime:
+                type: number
+              submitHeight:
+                type: number
+              confirmHeight:
+                type: number
+              comment:
+                type: string
+              txType:
+                type: string
+              txid:
+                type: string
+                description: The on-chain transaction ID
+                example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+              tx:
+                type: string
+                description: Raw transaction (hex)
+              value:
+                type: number
+                description: The total value (in base units) sent by this sendq transaction
+              valueString:
+                type: string
+                description: The total value (in base units) sent by this sendq transaction represented as a String
+                example: '200000'
+                pattern: ^-?\d+$
+              payGoFee:
+                type: number
+                description: The Transfer's BitGo fee (in base units)
+              payGoFeeString:
+                type: string
+                description: The Transfer's BitGo fee (in base units) represented as a String
+              attempts:
+                type: number
+                description: Number of transmission attempts
+              targetAttempts:
+                type: number
+                description: Max number of times to try transmitting
+              nextAttempt: {}
+              instantId:
+                type: string
+              instant:
+                type: boolean
+                description: Use instant sending (coin-specific) method if available
+              agent: {}
+              error:
+                type: string
+                description: Error regarding the transaction
+              held:
+                type: boolean
+                description: Indicates that the transaction was held at some point
+              uniqueDoubleSpendPreventionIds:
+                type: array
+                example:
+                  - 59cd72485007a239fb00282ed480da1f
+                items:
+                  type: string
+              coinSpecific:
+                allOf:
+                  - $ref: '#/components/schemas/SendQueueCoinSpecific'
+                description: Transaction fields specific to each coin type
+              deployment:
+                type: boolean
+              lowPriority:
+                type: boolean
+              feesUsed: {}
+              firstValidBlock:
+                type: number
+              lastValidBlock:
+                type: number
+              customNode:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  nodeId:
+                    type: string
+                  url:
+                    type: string
+              txRequestId:
+                type: string
+                example: 123e4567-e89b-12d3-a456-426614174000
+                format: uuid
+            required:
+              - coin
+              - state
+              - user
+              - createTime
+              - modifyTime
+              - txid
+              - tx
+              - valueString
+              - payGoFee
+              - payGoFeeString
+              - attempts
+              - targetAttempts
+              - nextAttempt
+              - agent
+              - held
+              - uniqueDoubleSpendPreventionIds
+              - coinSpecific
+              - deployment
+              - feesUsed
+        sendQueueUnconfirmedInputs:
+          type: array
+          items:
+            type: object
+            properties:
+              debugTa2Ta: {}
+              coin:
+                $ref: '#/components/schemas/CoinString'
+              token:
+                type: string
+              state:
+                type: string
+                enum:
+                  - pending
+                  - attempted
+                  - failed
+                  - done
+                  - reverted
+                  - held
+                  - replaced
+                  - abandoned
+                description: The status of this SendQueue item
+                example: done
+              user:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              address:
+                type: string
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              pendingApprovalId:
+                type: string
+              createTime:
+                type: number
+                description: Number of milliseconds since January 1, 1970
+                example: 1537289808000
+              modifyTime:
+                type: number
+                description: Number of milliseconds since January 1, 1970
+                example: 1537289808000
+              expireTime:
+                type: number
+              submitHeight:
+                type: number
+              confirmHeight:
+                type: number
+              comment:
+                type: string
+              txType:
+                type: string
+              txid:
+                type: string
+                description: The on-chain transaction ID
+                example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+              tx:
+                type: string
+                description: Raw transaction (hex)
+              value:
+                type: number
+                description: The total value (in base units) sent by this sendq transaction
+              valueString:
+                type: string
+                description: The total value (in base units) sent by this sendq transaction represented as a String
+                example: '200000'
+                pattern: ^-?\d+$
+              payGoFee:
+                type: number
+                description: The Transfer's BitGo fee (in base units)
+              payGoFeeString:
+                type: string
+                description: The Transfer's BitGo fee (in base units) represented as a String
+              attempts:
+                type: number
+                description: Number of transmission attempts
+              targetAttempts:
+                type: number
+                description: Max number of times to try transmitting
+              nextAttempt: {}
+              instantId:
+                type: string
+              instant:
+                type: boolean
+                description: Use instant sending (coin-specific) method if available
+              agent: {}
+              error:
+                type: string
+                description: Error regarding the transaction
+              held:
+                type: boolean
+                description: Indicates that the transaction was held at some point
+              uniqueDoubleSpendPreventionIds:
+                type: array
+                example:
+                  - 59cd72485007a239fb00282ed480da1f
+                items:
+                  type: string
+              coinSpecific:
+                allOf:
+                  - $ref: '#/components/schemas/SendQueueCoinSpecific'
+                description: Transaction fields specific to each coin type
+              deployment:
+                type: boolean
+              lowPriority:
+                type: boolean
+              feesUsed: {}
+              firstValidBlock:
+                type: number
+              lastValidBlock:
+                type: number
+              customNode:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  nodeId:
+                    type: string
+                  url:
+                    type: string
+              txRequestId:
+                type: string
+                example: 123e4567-e89b-12d3-a456-426614174000
+                format: uuid
+            required:
+              - coin
+              - state
+              - user
+              - createTime
+              - modifyTime
+              - txid
+              - tx
+              - valueString
+              - payGoFee
+              - payGoFeeString
+              - attempts
+              - targetAttempts
+              - nextAttempt
+              - agent
+              - held
+              - uniqueDoubleSpendPreventionIds
+              - coinSpecific
+              - deployment
+              - feesUsed
+      required:
+        - transfers
+        - sendQueue
+        - sendQueueUnconfirmedInputs
+    TransferAction:
+      title: TransferAction
+      type: string
+      enum:
+        - created
+        - approved
+        - rejected
+        - signed
+        - unconfirmed
+        - confirmed
+        - removed
+        - commented
+        - failed
+        - regenerated
+        - replaced
+        - replacing
+        - abandoned
+    TransferState1:
+      title: TransferState
+      type: string
+      enum:
+        - initialized
+        - pendingApproval
+        - rejected
+        - signed
+        - unconfirmed
+        - confirmed
+        - removed
+        - failed
+        - replaced
+        - deleted
+    TransferType:
+      title: TransferType
+      type: string
+      enum:
+        - send
+        - receive
+    SendQueueCoinSpecific:
+      title: SendQueueCoinSpecific
+      oneOf:
+        - $ref: '#/components/schemas/AlgorandSendQueue'
+        - $ref: '#/components/schemas/AvaxcTxSubdocument'
+        - $ref: '#/components/schemas/UtxoSendQueue'
+        - $ref: '#/components/schemas/CasperSendQueue'
+        - $ref: '#/components/schemas/EosSendQueue'
+        - $ref: '#/components/schemas/Ethereum2SendQueue'
+        - $ref: '#/components/schemas/HederaSendQueue'
+        - $ref: '#/components/schemas/FiatTx'
+        - $ref: '#/components/schemas/OffchainTx'
+        - $ref: '#/components/schemas/StacksSendQueue'
+        - $ref: '#/components/schemas/SilvergateUSDTx'
+        - $ref: '#/components/schemas/TestcoinTx'
+        - $ref: '#/components/schemas/TronSendQueue'
+        - $ref: '#/components/schemas/StellarSendQueue'
+        - $ref: '#/components/schemas/XRPSendQueue'
+        - $ref: '#/components/schemas/TezosSendQueue'
+        - $ref: '#/components/schemas/SolSendQueue'
+        - $ref: '#/components/schemas/SuiSendQueue'
+        - $ref: '#/components/schemas/EthereumTx'
+    AlgorandSendQueue:
+      title: Algorand
+      type: object
+      properties:
+        account:
+          type: string
+        feeString:
+          type: string
+        trustLines:
+          type: array
+          items:
+            type: object
+            properties:
+              limit:
+                type: string
+              token:
+                type: string
+    AvaxcTxSubdocument:
+      title: Avaxc
+      allOf:
+        - type: object
+          properties:
+            crossChainType:
+              type: string
+            parentTxid:
+              type: string
+        - $ref: '#/components/schemas/EthereumTx'
+    UtxoSendQueue:
+      title: Utxo
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/BitcoinSendQueueLighting'
+        - $ref: '#/components/schemas/UtxoSendQueueOnchain'
+    CasperSendQueue:
+      title: Casper
+      type: object
+      properties:
+        walletInitialization:
+          type: boolean
+    EosSendQueue:
+      title: Eos
+      type: object
+      properties:
+        walletInitialzation:
+          type: boolean
+    Ethereum2SendQueue:
+      title: Ethereum2
+      type: object
+      additionalProperties: {}
+    HederaSendQueue:
+      title: Hedera
+      type: object
+      properties:
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+        walletInitialization:
+          type: boolean
+        accountId:
+          type: string
+        transactionid:
+          type: string
+      required:
+        - trustedTokens
+    FiatTx:
+      title: Fiat
+      type: object
+      properties:
+        description:
+          type: string
+        fiatInfo:
+          $ref: '#/components/schemas/FiatTransferBankInfo'
+    OffchainTx:
+      title: Offchain
+      type: object
+      properties:
+        settlementFeeString:
+          type: string
+        transactionType:
+          type: string
+        referenceType:
+          type: string
+        referenceValue:
+          type: string
+        notation:
+          type: string
+        fiatInfo:
+          $ref: '#/components/schemas/FiatTransferBankInfo'
+        originalDestination:
+          type: string
+        memoType:
+          type: string
+        memoValue:
+          type: string
+        rtId:
+          type: string
+        fees:
+          type: array
+          items:
+            type: object
+            properties:
+              amount:
+                type: string
+              category:
+                type: string
+              payee:
+                type: string
+            required:
+              - amount
+    StacksSendQueue:
+      title: Stacks
+      type: object
+      properties:
+        memo:
+          type: string
+        type:
+          type: string
+        subtype:
+          type: string
+    SilvergateUSDTx:
+      title: Silvergate
+      type: object
+      properties:
+        description:
+          type: string
+    TestcoinTx:
+      title: Testcoin
+      type: object
+      properties:
+        fee:
+          type: number
+        recipients: {}
+        outputs:
+          type: array
+          items:
+            type: string
+      required:
+        - fee
+        - recipients
+        - outputs
+    TronSendQueue:
+      title: Tron
+      type: object
+      properties:
+        rootPub:
+          type: string
+        walletInitialization:
+          type: boolean
+    StellarSendQueue:
+      title: Stellas
+      type: object
+      properties:
+        account:
+          type: string
+        feeString:
+          type: string
+        memo:
+          type: string
+        memoType:
+          type: string
+        sequenceId:
+          type: string
+        trustlines:
+          type: array
+          items:
+            type: object
+            properties:
+              limit:
+                type: string
+              token:
+                type: string
+        muxedAddresses:
+          type: array
+          items:
+            type: object
+            properties:
+              baseAddress:
+                type: string
+              address:
+                type: string
+              id:
+                type: string
+            required:
+              - baseAddress
+              - address
+              - id
+        walletInitialization:
+          type: boolean
+        recipient:
+          type: string
+    XRPSendQueue:
+      title: XRP
+      type: object
+      properties:
+        sequenceId:
+          type: number
+        account:
+          type: string
+        walletInitialization:
+          type: boolean
+        trustlines:
+          type: array
+          items:
+            type: object
+            properties:
+              limit:
+                type: string
+              token:
+                type: string
+      required:
+        - sequenceId
+    TezosSendQueue:
+      title: Tezos
+      type: object
+      properties:
+        feeAddress:
+          type: string
+        feeAddressCounter:
+          type: string
+        contactAddress:
+          type: string
+        contactAddressCounter:
+          type: string
+        delegate:
+          type: string
+        walletInitialization:
+          type: boolean
+        publicKeyRevelation:
+          type: boolean
+    SolSendQueue:
+      title: Sol
+      type: object
+      properties:
+        walletInitialization:
+          type: boolean
+        addressInitialization:
+          type: boolean
+    SuiSendQueue:
+      title: Sui
+      type: object
+      properties:
+        publicKey:
+          type: string
+        signature:
+          type: string
+        pendingUnspents:
+          type: array
+          items:
+            type: string
+      required:
+        - publicKey
+        - signature
+        - pendingUnspents
+    EthereumTx:
+      title: Ethereum
+      type: object
+      properties:
+        addressInitialization:
+          type: boolean
+        nonce:
+          type: number
+        feeAddress:
+          type: string
+        token:
+          type: string
+        eth2ValidatorKey:
+          type: string
+        isMev:
+          type: boolean
+        eth2WithdrawalCommitment:
+          type: string
+        flushForwarderTokens:
+          type: boolean
+        gas:
+          type: number
+        gasPrice:
+          type: number
+        eip1559:
+          $ref: '#/components/schemas/Eip1559'
+        hopTxid:
+          type: string
+        walletInitialization:
+          type: boolean
+        custodianTransactionId:
+          type: string
+        contractSequenceId:
+          type: number
+    Eip1559:
+      title: Eip1559
+      type: object
+      properties:
+        maxPriorityFeePerGas:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Max priority tip price for EIP1559 transactions. Only for ETH and ERC20 tokens.
+        maxFeePerGas:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Max total gasPrice for EIP1559 transactions. Only for ETH and ERC20 tokens.
+      required:
+        - maxPriorityFeePerGas
+        - maxFeePerGas
+    NumberLike:
+      title: NumberLike
+      type: number
+    FiatTransferBankInfo:
+      title: FiatTransferBankInfo
+      type: object
+      properties:
+        IMAD:
+          type: string
+        OMAD:
+          type: string
+        counterParty:
+          type: string
+    Token:
+      title: Token
+      type: object
+      properties:
+        limit:
+          type: string
+        token:
+          type: string
+    TrustedTokenState:
+      title: TrustedTokenState
+      type: string
+      enum:
+        - pending
+        - active
+    BitcoinSendQueueLighting:
+      title: Bitcoin
+      oneOf:
+        - type: object
+          properties:
+            feeLimit:
+              type: number
+            invoice:
+              type: string
+            lightning:
+              type: boolean
+              enum:
+                - true
+          required:
+            - feeLimit
+            - invoice
+            - lightning
+        - type: object
+          properties:
+            lightning:
+              type: boolean
+              enum:
+                - true
+            withdrawalDestination:
+              type: string
+          required:
+            - lightning
+            - withdrawalDestination
+    UtxoSendQueueOnchain:
+      title: Utxo
+      allOf:
+        - type: object
+          properties:
+            changeAddressType:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+        - type: object
+          additionalProperties: {}
     OrganizationRole:
       title: OrganizationRole
       type: string
@@ -47022,43 +47998,6 @@ components:
         - type
         - valueString
         - wallet
-    TransferAction:
-      title: TransferAction
-      type: string
-      enum:
-        - created
-        - approved
-        - rejected
-        - signed
-        - unconfirmed
-        - confirmed
-        - removed
-        - commented
-        - failed
-        - regenerated
-        - replaced
-        - replacing
-        - abandoned
-    TransferState1:
-      title: TransferState
-      type: string
-      enum:
-        - initialized
-        - pendingApproval
-        - rejected
-        - signed
-        - unconfirmed
-        - confirmed
-        - removed
-        - failed
-        - replaced
-        - deleted
-    TransferType:
-      title: TransferType
-      type: string
-      enum:
-        - send
-        - receive
     ListPendingApprovalsCountByEnterpriseResponse:
       title: ListPendingApprovalsCountByEnterpriseResponse
       type: object
@@ -47096,9 +48035,6 @@ components:
           type: string
       required:
         - txId
-    NumberLike:
-      title: NumberLike
-      type: number
     AddressProofResult:
       title: AddressProofResult
       type: object
@@ -47709,20 +48645,6 @@ components:
             type: string
       required:
         - addresses
-    Token:
-      title: Token
-      type: object
-      properties:
-        limit:
-          type: string
-        token:
-          type: string
-    TrustedTokenState:
-      title: TrustedTokenState
-      type: string
-      enum:
-        - pending
-        - active
     BankAccountJson:
       title: BankAccountJson
       type: object
@@ -52118,6 +53040,7 @@ components:
         - verifyReset2FA
         - completeReset2FA
         - retrofitToMPCv2
+        - verifyLivenessCheck
         - adminInternalTokenCreate
         - adminInternalUnverifiedEmailStateReset
         - routedTransactionCreate
@@ -52179,113 +53102,8 @@ components:
         - approveGeneric
         - rejectGeneric
         - updateServicesAgreement
-    AvaxcTxSubdocument:
-      title: Avaxc
-      allOf:
-        - type: object
-          properties:
-            crossChainType:
-              type: string
-            parentTxid:
-              type: string
-        - $ref: '#/components/schemas/EthereumTx'
-    UtxoSendQueue:
-      title: Utxo
-      allOf:
-        - type: object
-          properties: {}
-        - $ref: '#/components/schemas/BitcoinSendQueueLighting'
-        - $ref: '#/components/schemas/UtxoSendQueueOnchain'
-    EthereumTx:
-      title: Ethereum
-      type: object
-      properties:
-        addressInitialization:
-          type: boolean
-        nonce:
-          type: number
-        feeAddress:
-          type: string
-        token:
-          type: string
-        eth2ValidatorKey:
-          type: string
-        isMev:
-          type: boolean
-        eth2WithdrawalCommitment:
-          type: string
-        flushForwarderTokens:
-          type: boolean
-        gas:
-          type: number
-        gasPrice:
-          type: number
-        eip1559:
-          $ref: '#/components/schemas/Eip1559'
-        hopTxid:
-          type: string
-        walletInitialization:
-          type: boolean
-        custodianTransactionId:
-          type: string
-        contractSequenceId:
-          type: number
-    Eip1559:
-      title: Eip1559
-      type: object
-      properties:
-        maxPriorityFeePerGas:
-          allOf:
-            - $ref: '#/components/schemas/NumberLike'
-          description: Max priority tip price for EIP1559 transactions. Only for ETH and ERC20 tokens.
-        maxFeePerGas:
-          allOf:
-            - $ref: '#/components/schemas/NumberLike'
-          description: Max total gasPrice for EIP1559 transactions. Only for ETH and ERC20 tokens.
-      required:
-        - maxPriorityFeePerGas
-        - maxFeePerGas
-    BitcoinSendQueueLighting:
-      title: Bitcoin
-      oneOf:
-        - type: object
-          properties:
-            feeLimit:
-              type: number
-            invoice:
-              type: string
-            lightning:
-              type: boolean
-              enum:
-                - true
-          required:
-            - feeLimit
-            - invoice
-            - lightning
-        - type: object
-          properties:
-            lightning:
-              type: boolean
-              enum:
-                - true
-            withdrawalDestination:
-              type: string
-          required:
-            - lightning
-            - withdrawalDestination
-    UtxoSendQueueOnchain:
-      title: Utxo
-      allOf:
-        - type: object
-          properties:
-            changeAddressType:
-              oneOf:
-                - type: string
-                - type: array
-                  items:
-                    type: string
-        - type: object
-          additionalProperties: {}
+        - claimTransactionByVasp
+        - rejectTransactionByVasp
     Organization:
       title: Organization
       allOf:
@@ -52388,6 +53206,7 @@ components:
               - B2B2B - Onramp
               - B2B2C - Onramp
               - starterAccount
+              - ftx
         usersViewAllWallets:
           nullable: true
           type: boolean
