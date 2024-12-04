@@ -22309,6 +22309,7 @@ paths:
                     - rejectEnterpriseUser
                     - freezeEnterprise
                     - adminRenameEnterprise
+                    - adminDeleteEnterprisePricingTypes
                     - createAccessToken
                     - modifyAccessToken
                     - deleteAccessToken
@@ -26791,6 +26792,11 @@ components:
         videoCallId:
           type: string
           description: ID for the video call
+        lastUpdated:
+          type: string
+          description: The last date the approval was processing
+          format: date-time
+          title: ISO Date String
       required:
         - id
         - creator
@@ -45898,7 +45904,7 @@ components:
         errorName:
           type: string
         reqId:
-          type: integer
+          type: string
         context:
           type: object
     CoinsUnauthorizedError:
@@ -46979,6 +46985,31 @@ components:
                 properties:
                   actionType:
                     type: string
+                  coreDao:
+                    type: object
+                    properties:
+                      amount:
+                        type: string
+                        format: number
+                      expiration:
+                        type: string
+                        format: date-time
+                        title: ISO Date String
+                      fee:
+                        type: number
+                      rewardAddress:
+                        type: string
+                      validator:
+                        type: string
+                      version:
+                        type: number
+                    required:
+                      - amount
+                      - expiration
+                      - fee
+                      - rewardAddress
+                      - validator
+                      - version
                   requestId:
                     type: string
                   source:
@@ -47930,6 +47961,31 @@ components:
           properties:
             actionType:
               type: string
+            coreDao:
+              type: object
+              properties:
+                amount:
+                  type: string
+                  format: number
+                expiration:
+                  type: string
+                  format: date-time
+                  title: ISO Date String
+                fee:
+                  type: number
+                rewardAddress:
+                  type: string
+                validator:
+                  type: string
+                version:
+                  type: number
+              required:
+                - amount
+                - expiration
+                - fee
+                - rewardAddress
+                - validator
+                - version
             requestId:
               type: string
             source:
@@ -49843,6 +49899,31 @@ components:
                 properties:
                   actionType:
                     type: string
+                  coreDao:
+                    type: object
+                    properties:
+                      amount:
+                        type: string
+                        format: number
+                      expiration:
+                        type: string
+                        format: date-time
+                        title: ISO Date String
+                      fee:
+                        type: number
+                      rewardAddress:
+                        type: string
+                      validator:
+                        type: string
+                      version:
+                        type: number
+                    required:
+                      - amount
+                      - expiration
+                      - fee
+                      - rewardAddress
+                      - validator
+                      - version
                   requestId:
                     type: string
                   source:
@@ -50820,6 +50901,31 @@ components:
               properties:
                 actionType:
                   type: string
+                coreDao:
+                  type: object
+                  properties:
+                    amount:
+                      type: string
+                      format: number
+                    expiration:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    fee:
+                      type: number
+                    rewardAddress:
+                      type: string
+                    validator:
+                      type: string
+                    version:
+                      type: number
+                  required:
+                    - amount
+                    - expiration
+                    - fee
+                    - rewardAddress
+                    - validator
+                    - version
                 requestId:
                   type: string
                 source:
@@ -53013,6 +53119,7 @@ components:
         - rejectEnterpriseUser
         - freezeEnterprise
         - adminRenameEnterprise
+        - adminDeleteEnterprisePricingTypes
         - createAccessToken
         - modifyAccessToken
         - deleteAccessToken
