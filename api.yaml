@@ -22318,6 +22318,7 @@ paths:
                     - updateBankAccount
                     - adminUpdateBankAccount
                     - removeBankAccount
+                    - walletPasswordReset
                     - createPasswordReset
                     - deletePasswordReset
                     - adminUpdatePasswordReset
@@ -23592,6 +23593,7 @@ paths:
               - accountCreated
               - contractAgreed
               - fundsDeposited
+              - kycResult
               - policyBalanceChange
               - transaction_finality_on_l1
         - name: prevId
@@ -29456,6 +29458,7 @@ components:
         - accountCreated
         - contractAgreed
         - fundsDeposited
+        - kycResult
         - policyBalanceChange
         - transaction_finality_on_l1
     WebhookState:
@@ -30282,6 +30285,10 @@ components:
         - $ref: '#/components/schemas/TonPaymentIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+        - $ref: '#/components/schemas/CoreDaoDelegateIntent'
+        - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
+        - $ref: '#/components/schemas/CoreDaoClaimIntent'
         - $ref: '#/components/schemas/BaseIntent'
     BaseIntent:
       title: Intent
@@ -30299,6 +30306,85 @@ components:
             - type: number
       required:
         - intentType
+    CoreDaoClaimIntent:
+      title: CoreDAO Claim Rewards Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+    BaseStakeIntentWithCalldata:
+      title: Base Stake Intent with Calldata
+      allOf:
+        - type: object
+          properties:
+            calldata:
+              type: string
+          required:
+            - calldata
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    BaseStakeIntent:
+      title: BaseStakeIntent
+      allOf:
+        - type: object
+          properties:
+            stakingRequestId:
+              type: string
+          required:
+            - stakingRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    CoreDaoUndelegateIntent:
+      title: CoreDAO Undelegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            validatorAddress:
+              type: string
+            amount:
+              $ref: '#/components/schemas/Amount'
+          required:
+            - intentType
+            - validatorAddress
+            - amount
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+    Amount:
+      title: Amount
+      type: object
+      properties:
+        value:
+          type: string
+        symbol:
+          type: string
+      required:
+        - value
+        - symbol
+    CoreDaoDelegateIntent:
+      title: CoreDAO Delegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegate
+            validatorAddress:
+              type: string
+            amount:
+              $ref: '#/components/schemas/Amount'
+          required:
+            - intentType
+            - validatorAddress
+            - amount
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
     TonUndelegateIntent:
       title: TON Undelegate Intent
       allOf:
@@ -30320,17 +30406,6 @@ components:
             - useSingleNominator
             - singleNominatorAmount
         - $ref: '#/components/schemas/BaseIntent'
-    Amount:
-      title: Amount
-      type: object
-      properties:
-        value:
-          type: string
-        symbol:
-          type: string
-      required:
-        - value
-        - symbol
     TonPaymentIntent:
       title: TON Payment Intent
       allOf:
@@ -30486,16 +30561,6 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
-    BaseStakeIntent:
-      title: BaseStakeIntent
-      allOf:
-        - type: object
-          properties:
-            stakingRequestId:
-              type: string
-          required:
-            - stakingRequestId
-        - $ref: '#/components/schemas/BaseIntent'
     SuiStakingIntent:
       title: SUI Stake Intent
       allOf:
@@ -53128,6 +53193,7 @@ components:
         - updateBankAccount
         - adminUpdateBankAccount
         - removeBankAccount
+        - walletPasswordReset
         - createPasswordReset
         - deletePasswordReset
         - adminUpdatePasswordReset
