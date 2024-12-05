@@ -22318,6 +22318,7 @@ paths:
                     - updateBankAccount
                     - adminUpdateBankAccount
                     - removeBankAccount
+                    - walletPasswordReset
                     - createPasswordReset
                     - deletePasswordReset
                     - adminUpdatePasswordReset
@@ -23592,6 +23593,7 @@ paths:
               - accountCreated
               - contractAgreed
               - fundsDeposited
+              - kycResult
               - policyBalanceChange
               - transaction_finality_on_l1
         - name: prevId
@@ -29456,6 +29458,7 @@ components:
         - accountCreated
         - contractAgreed
         - fundsDeposited
+        - kycResult
         - policyBalanceChange
         - transaction_finality_on_l1
     WebhookState:
@@ -30282,6 +30285,10 @@ components:
         - $ref: '#/components/schemas/TonPaymentIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+        - $ref: '#/components/schemas/CoreDaoDelegateIntent'
+        - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
+        - $ref: '#/components/schemas/CoreDaoClaimIntent'
         - $ref: '#/components/schemas/BaseIntent'
     BaseIntent:
       title: Intent
@@ -30299,6 +30306,85 @@ components:
             - type: number
       required:
         - intentType
+    CoreDaoClaimIntent:
+      title: CoreDAO Claim Rewards Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+    BaseStakeIntentWithCalldata:
+      title: Base Stake Intent with Calldata
+      allOf:
+        - type: object
+          properties:
+            calldata:
+              type: string
+          required:
+            - calldata
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    BaseStakeIntent:
+      title: BaseStakeIntent
+      allOf:
+        - type: object
+          properties:
+            stakingRequestId:
+              type: string
+          required:
+            - stakingRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    CoreDaoUndelegateIntent:
+      title: CoreDAO Undelegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            validatorAddress:
+              type: string
+            amount:
+              $ref: '#/components/schemas/Amount'
+          required:
+            - intentType
+            - validatorAddress
+            - amount
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+    Amount:
+      title: Amount
+      type: object
+      properties:
+        value:
+          type: string
+        symbol:
+          type: string
+      required:
+        - value
+        - symbol
+    CoreDaoDelegateIntent:
+      title: CoreDAO Delegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegate
+            validatorAddress:
+              type: string
+            amount:
+              $ref: '#/components/schemas/Amount'
+          required:
+            - intentType
+            - validatorAddress
+            - amount
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
     TonUndelegateIntent:
       title: TON Undelegate Intent
       allOf:
@@ -30320,17 +30406,6 @@ components:
             - useSingleNominator
             - singleNominatorAmount
         - $ref: '#/components/schemas/BaseIntent'
-    Amount:
-      title: Amount
-      type: object
-      properties:
-        value:
-          type: string
-        symbol:
-          type: string
-      required:
-        - value
-        - symbol
     TonPaymentIntent:
       title: TON Payment Intent
       allOf:
@@ -30486,16 +30561,6 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
-    BaseStakeIntent:
-      title: BaseStakeIntent
-      allOf:
-        - type: object
-          properties:
-            stakingRequestId:
-              type: string
-          required:
-            - stakingRequestId
-        - $ref: '#/components/schemas/BaseIntent'
     SuiStakingIntent:
       title: SUI Stake Intent
       allOf:
@@ -47376,10 +47441,334 @@ components:
               - coinSpecific
               - deployment
               - feesUsed
+        txRequests:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TransactionRequestLite2'
+              - $ref: '#/components/schemas/TransactionRequestFull'
+        pendingApprovals:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol.
+                example: btc
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              wallets:
+                type: array
+                items:
+                  type: string
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+                  description: The wallets of the pending approval
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organization:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organizationName:
+                type: string
+                description: The organization name
+              bitgoOrg:
+                type: string
+                description: The BitGo organization
+              creator:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              createDate:
+                type: string
+                description: The creation date of the pending approval
+                format: date-time
+                title: ISO Date String
+              approvedDate:
+                type: string
+                description: The date when the approval was granted
+                format: date-time
+                title: ISO Date String
+              info:
+                allOf:
+                  - $ref: '#/components/schemas/PendingApprovalInfo'
+                description: Information about the pending approval
+              state:
+                allOf:
+                  - $ref: '#/components/schemas/PendingApprovalState'
+                description: The state of the pending approval
+              scope:
+                type: string
+                enum:
+                  - enterprise
+                  - wallet
+                  - organization
+                description: What kind of entity the Pending Approval is tied to
+              userIds:
+                type: array
+                items:
+                  type: string
+                  description: All the Users who should see this Pending Approval
+              approvalsRequired:
+                type: number
+                example: 1
+                minimum: 1
+              walletLabel:
+                type: string
+                description: Label for the wallet
+              addressLabels:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      $ref: '#/components/schemas/AddressString'
+                    label:
+                      type: string
+                      description: The label
+                    walletLabel:
+                      type: string
+                      description: The wallet label
+                  required:
+                    - address
+                    - label
+                  description: Address labels of recipients in this Pending Approval
+              resolvers:
+                type: array
+                items:
+                  type: object
+                  description: Resolvers for the pending approval
+                  properties:
+                    date:
+                      type: string
+                      description: The date of resolution
+                      format: date-time
+                      title: ISO Date String
+                    resolutionAction:
+                      type: string
+                      enum:
+                        - approve
+                        - reject
+                        - skip
+                      description: Action taken during resolution
+                    resolutionMemo:
+                      type: string
+                      description: Memo regarding the resolution
+                    resolutionType:
+                      allOf:
+                        - $ref: '#/components/schemas/PendingApprovalStatePending'
+                      description: The type of resolution
+                    user:
+                      type: string
+                      description: The user who resolved the approval
+                    videoApprover:
+                      type: string
+                      description: The approver of the video resolution
+                    videoException:
+                      type: string
+                      description: Exception details for the video
+                    videoLink:
+                      type: string
+                      description: Link to the resolution video
+                  required:
+                    - resolutionType
+              approvers:
+                type: array
+                items:
+                  type: string
+                  description: List of approvers
+              singleRunResults:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ruleId:
+                      type: string
+                      description: The rule ID
+                    triggered:
+                      type: boolean
+                      description: Whether the rule was triggered
+                  description: Results from single run checks
+              txRequestId:
+                type: string
+                description: Transaction request ID
+                example: 123e4567-e89b-12d3-a456-426614174000
+                format: uuid
+              videoId:
+                type: object
+                description: ID for the video related to the approval
+                properties:
+                  date:
+                    type: string
+                    description: The date of the video ID
+                    format: date-time
+                    title: ISO Date String
+                  user:
+                    type: string
+                    description: The user associated with the video ID
+                  videoApprover:
+                    type: string
+                    description: The approver of the video
+                  videoException:
+                    type: string
+                    description: The exception related to the video
+                  videoLink:
+                    type: string
+                    description: The link to the video
+              version:
+                type: number
+                description: Version of the pending approval
+              groupApprovalRequirement:
+                type: object
+                description: Requirements for providing group approval.
+                properties:
+                  items:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: The ID of the group
+                        minimumApprovals:
+                          type: number
+                          description: The name of the group
+                        type:
+                          type: string
+                          description: The type of the group
+                      required:
+                        - id
+                        - type
+                  operator:
+                    $ref: '#/components/schemas/GroupApprovalRequirementOperator'
+                required:
+                  - items
+                  - operator
+              policyEvaluationId:
+                type: string
+                description: ID for the policy evaluation
+              actions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    approvers:
+                      type: array
+                      items:
+                        type: string
+                        description: The approvers of the action
+                    id:
+                      type: string
+                      description: The ID of the action
+                    name:
+                      type: string
+                      description: The name of the action
+                    operator:
+                      type: string
+                      enum:
+                        - AND
+                        - OR
+                      description: The operator of the action
+                    parameters:
+                      allOf:
+                        - $ref: '#/components/schemas/PolicyActionParameters'
+                      description: The parameters of the action
+                    resolvers:
+                      type: array
+                      items:
+                        type: object
+                        description: The resolvers of the action
+                        properties:
+                          date:
+                            type: string
+                            description: The date of resolution
+                            format: date-time
+                            title: ISO Date String
+                          resolutionAction:
+                            type: string
+                            enum:
+                              - approve
+                              - reject
+                              - skip
+                            description: Action taken during resolution
+                          resolutionMemo:
+                            type: string
+                            description: Memo regarding the resolution
+                          resolutionType:
+                            allOf:
+                              - $ref: '#/components/schemas/PendingApprovalStatePending'
+                            description: The type of resolution
+                          user:
+                            type: string
+                            description: The user who resolved the approval
+                          videoApprover:
+                            type: string
+                            description: The approver of the video resolution
+                          videoException:
+                            type: string
+                            description: Exception details for the video
+                          videoLink:
+                            type: string
+                            description: Link to the resolution video
+                        required:
+                          - resolutionType
+                    status:
+                      allOf:
+                        - $ref: '#/components/schemas/EvaluatedPolicyActionStatus'
+                      description: The status of the action
+                  required:
+                    - id
+                    - name
+                    - parameters
+                    - status
+                  description: List of actions taken
+              resolutionOrder:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    actions:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                  required:
+                    - actions
+                  description: Order of resolution
+              useLegacyPolicyEngine:
+                type: boolean
+                description: Flag to use legacy policy engine
+              videoCallId:
+                type: string
+                description: ID for the video call
+              lastUpdated:
+                type: string
+                description: The last date the approval was processing
+                format: date-time
+                title: ISO Date String
+            required:
+              - id
+              - creator
+              - createDate
+              - info
+              - state
+              - scope
       required:
         - transfers
         - sendQueue
         - sendQueueUnconfirmedInputs
+        - txRequests
+        - pendingApprovals
     TransferAction:
       title: TransferAction
       type: string
@@ -53128,6 +53517,7 @@ components:
         - updateBankAccount
         - adminUpdateBankAccount
         - removeBankAccount
+        - walletPasswordReset
         - createPasswordReset
         - deletePasswordReset
         - adminUpdatePasswordReset
