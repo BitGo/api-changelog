@@ -15813,7 +15813,7 @@ paths:
         'lowPriorityFeeAddress' is a secondary fee address that can be used to pay
         lower fee for Create Address operations without risking delaying subsequent
         higher-priority transactions initiated by main fee address.
-      operationId: v2.wallet.add
+      operationId: v2.wallet.add.deprecated
       parameters:
         - $ref: '#/components/parameters/pathCoin'
       requestBody:
@@ -15881,6 +15881,84 @@ paths:
           x-external-text:
             - property: source
               path: ../shared/code-samples/listWallets.js
+  /api/v2/{coin}/wallet/add:
+    post:
+      tags:
+        - Wallet
+      summary: Add wallet (advanced only)
+      description: |
+        Add Wallet is for advanced API users. It lets you manually create and
+        specify keys. The recommended (and simpler) method is [Generate Wallet](https://developers.bitgo.com/api/express.wallet.generate)
+        with the SDK or BitGo Express. You can also create wallets in the BitGo UI.
+
+        This API creates a new wallet for the user or enterprise. The keys to
+        use with the new wallet (passed in the 'keys' parameter) must be
+        registered with BitGo prior to using this API.
+
+        BitGo currently only supports 2-of-3 (e.g., m=2 and n=3) wallets. The
+        third key, and only the third key, must be a BitGo key. The first key
+        is by convention the user key, with its encrypted xprv stored on BitGo.
+
+        Ethereum and XRP wallets can only be created under an enterprise. Pass in the
+        id of the enterprise to associate the wallet with. Your enterprise id
+        can be seen by clicking on the "Manage Organization" link in the
+        enterprise dropdown. Using the Add Wallet API, you can create a wallet
+        using either the enterprise fee address (used by default for all
+        wallets in the enterprise), or a unique fee address (created manually
+        with the Keychains API). Pass the desired key as the third key ID in
+        the 'keys' array. In either case, the fee address must be funded
+        before creating the wallet.
+
+        You cannot generate a wallet by passing in a subtoken (i.e. ERC20 token) as the coin.
+        Subtokens use the wallet of their parent coin and it is not possible to create a
+        wallet specific to one token. For example, to create a wallet for an ERC20 token,
+        create an Ethereum wallet. It can hold any ERC20 tokens as well as Ether.
+
+        BitGo Ethereum wallet is a smart-contract implementing multi-signature scheme.
+        Because contracts itself can not initiate transactions, fee addresses are used
+        for this purpose. Ethereum transactions initiated by a given address, are
+        confirmed by the network in order of creation, so one lower fee transaction can
+        potentially delay all subsequent transactions. To help lower network fee costs,
+        two fee addresses are provided.
+
+        'feeAddress' is a main fee address usable for all operations.
+        'lowPriorityFeeAddress' is a secondary fee address that can be used to pay
+        lower fee for Create Address operations without risking delaying subsequent
+        higher-priority transactions initiated by main fee address.
+      operationId: v2.wallet.add
+      parameters:
+        - $ref: '#/components/parameters/pathCoin'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWallet'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError3'
+      x-code-samples:
+        - lang: javascript
+          x-external-text:
+            - property: source
+              path: ../shared/code-samples/addWallet.js
   /api/v2/{coin}/wallet/address/{address}:
     get:
       tags:
@@ -25468,12 +25546,14 @@ paths:
               - 1-eddsa
               - 2-eddsa
               - 3-eddsa
+              - 4-eddsa
               - 1-ecdsa
               - 2-ecdsa
               - 3-ecdsa
               - 1-ecdsa-mpcv2
               - 2-ecdsa-mpcv2
               - 3-ecdsa-mpcv2
+              - 4-ecdsa-mpcv2
         - name: prevId
           description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
           in: query
@@ -25941,6 +26021,7 @@ paths:
               - BitGo New York
               - BitGo Germany
               - BitGo Switzerland
+              - BitGo Europe ApS
               - Frankfurt DE Trust
               - BitGo Singapore
               - BitGo Korea
@@ -26043,6 +26124,7 @@ paths:
               - BitGo New York
               - BitGo Germany
               - BitGo Switzerland
+              - BitGo Europe ApS
               - Frankfurt DE Trust
               - BitGo Singapore
               - BitGo Korea
@@ -28987,6 +29069,7 @@ components:
         - BitGo New York
         - BitGo Germany
         - BitGo Switzerland
+        - BitGo Europe ApS
         - Frankfurt DE Trust
         - BitGo Singapore
         - BitGo Korea
@@ -46952,6 +47035,7 @@ components:
                   - BitGo New York
                   - BitGo Germany
                   - BitGo Switzerland
+                  - BitGo Europe ApS
                   - Frankfurt DE Trust
                   - BitGo Singapore
                   - BitGo Korea
@@ -48252,6 +48336,7 @@ components:
             - BitGo New York
             - BitGo Germany
             - BitGo Switzerland
+            - BitGo Europe ApS
             - Frankfurt DE Trust
             - BitGo Singapore
             - BitGo Korea
@@ -50190,6 +50275,7 @@ components:
                   - BitGo New York
                   - BitGo Germany
                   - BitGo Switzerland
+                  - BitGo Europe ApS
                   - Frankfurt DE Trust
                   - BitGo Singapore
                   - BitGo Korea
@@ -50867,6 +50953,7 @@ components:
           - mpcV2ReceiveAddress
           - enableUSDS
           - shouldCreateGoAccountAsynchronously
+          - enableWhitelistTestTransactions
     XpubWithDerivationPath:
       title: XpubWithDerivationPath
       type: object
@@ -51167,6 +51254,7 @@ components:
                 - BitGo New York
                 - BitGo Germany
                 - BitGo Switzerland
+                - BitGo Europe ApS
                 - Frankfurt DE Trust
                 - BitGo Singapore
                 - BitGo Korea
@@ -53708,6 +53796,7 @@ components:
               - B2B2C - Onramp
               - starterAccount
               - ftx
+              - bitgoTechnologiesFBO
         usersViewAllWallets:
           nullable: true
           type: boolean
@@ -53847,6 +53936,7 @@ components:
               - mpcV2ReceiveAddress
               - enableUSDS
               - shouldCreateGoAccountAsynchronously
+              - enableWhitelistTestTransactions
         distributedCustody:
           $ref: '#/components/schemas/DistributedCustody'
     UpfrontPaymentStatus:
