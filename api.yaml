@@ -47,10 +47,6 @@ tags:
   - name: Lightning
     description: |
       (Experimental) Lightning network related endpoints.
-  - name: Overview
-    x-external-text:
-      - property: description
-        path: ../shared/text/InfoDescription.md
   - name: Password reset
   - name: Pending approval
   - name: Policy
@@ -29626,6 +29622,15 @@ components:
         webhookURL:
           type: string
           minLength: 1
+        livenessCheckUser:
+          $ref: '#/components/schemas/LivenessVerificationParameter'
+    LivenessVerificationParameter:
+      title: LivenessVerificationParameter
+      type: string
+      enum:
+        - transactionInitiator
+        - walletAdmins
+        - videoIdUsers
     GroupApprovalRequirementOperator:
       title: GroupApprovalRequirementOperator
       type: string
@@ -30125,6 +30130,7 @@ components:
         - getCustodialSignature
         - noop
         - triggerWebhookNotification
+        - performLivenessVerification
     TransactionRequestId:
       title: TransactionRequestId
       type: string
@@ -36244,6 +36250,7 @@ components:
         - BitGo Sister Trust 1
         - BitGo Korea
         - BitGo Singapore
+        - BitGo Europe ApS
     BuildParams:
       type: object
       properties:
@@ -38530,6 +38537,12 @@ components:
           description: List of trustlines to manage on the account.
       required:
         - trustlines
+    RecipientAmount:
+      oneOf:
+        - type: string
+          pattern: ^(-?\d+|max)$
+          example: '2000000'
+        - type: integer
     InternationalWireBankAccount:
       title: International Wire Bank Account
       type: object
@@ -40175,8 +40188,8 @@ components:
                 properties:
                   amount:
                     allOf:
-                      - $ref: '#/components/schemas/IntegerOrIntegerString'
-                    description: String representation of the amount to send in base units (satoshis/litoshis/zatoshis/duffs). For doge, only string is allowed.
+                      - $ref: '#/components/schemas/RecipientAmount'
+                    description: String representation of the amount to send in base units (satoshis/litoshis/zatoshis/duffs). For doge, only string is allowed. Passing in 'max' will send the recipient the maximum amount available, minus fees and amounts for other recipients. Only a single recipient with a 'max' amount is allowed.
                   address:
                     allOf:
                       - $ref: '#/components/schemas/AddressString3'
