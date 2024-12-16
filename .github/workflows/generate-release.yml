@@ -1,0 +1,77 @@
+name: Generate Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'api.yaml'
+
+jobs:
+  generate-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Configure Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Get API specs and generate JSON files
+        run: |
+          PREVIOUS_MERGE=$(git rev-list --merges main | head -n 2 | tail -n 1)
+          git show $PREVIOUS_MERGE:api.yaml > previous.yaml || echo "v0.0.0" > previous.yaml
+          yq -o=json previous.yaml > previous.json
+          
+          yq -o=json api.yaml > current.json
+          rm previous.yaml
+
+      - name: Run API diff
+        run: node scripts/api-diff.js
+
+      - name: Determine version
+        id: version
+        run: |
+          # Get current year, month, and day
+          YEAR=$(date +%Y)
+          MONTH=$(date +%m)
+          DAY=$(date +%d)
+          
+          # Get the latest tag for current year.month.day
+          CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v$YEAR.$MONTH.$DAY.0")
+          echo "Current version: $CURRENT_VERSION"
+          
+          # Extract version number
+          if [[ $CURRENT_VERSION == v$YEAR.$MONTH.$DAY.* ]]; then
+            # If we already have a tag for today, increment its number
+            VERSION_NUM=$(echo $CURRENT_VERSION | cut -d. -f4)
+            NEW_VERSION="v$YEAR.$MONTH.$DAY.$((VERSION_NUM+1))"
+          else
+            # If this is the first tag for today, start at .1
+            NEW_VERSION="v$YEAR.$MONTH.$DAY.1"
+          fi
+          
+          echo "New version: $NEW_VERSION"
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Add version to release description
+        run: |
+          {
+            echo "# BitGo API Release ${{ steps.version.outputs.new_version }}"
+            cat release-description.md
+          } > final-release-description.md
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ steps.version.outputs.new_version }} \
+            --title "${{ steps.version.outputs.new_version }}" \
+            --notes-file final-release-description.md
