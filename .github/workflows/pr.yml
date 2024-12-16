@@ -1,0 +1,23 @@
+name: Pull Request
+
+on:
+  pull_request:
+    paths:
+      - scripts/api-diff.js
+      - tests/**
+
+jobs:
+  test-api-diff:
+    name: Run API Diff Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+
+      - name: Run tests
+        run: node --test
