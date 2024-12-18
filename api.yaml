@@ -26474,6 +26474,7 @@ components:
                   - approve
                   - reject
                   - skip
+                  - fail
                 description: Action taken during resolution
               resolutionMemo:
                 type: string
@@ -26614,6 +26615,7 @@ components:
                         - approve
                         - reject
                         - skip
+                        - fail
                       description: Action taken during resolution
                     resolutionMemo:
                       type: string
@@ -26710,6 +26712,7 @@ components:
         - processing
         - rejected
         - skipped
+        - failed
     PendingApprovalStatePending:
       title: Pending
       type: string
@@ -27463,7 +27466,7 @@ components:
       type: object
       properties:
         intentType:
-          $ref: '#/components/schemas/IntentType'
+          $ref: '#/components/schemas/IntentType1'
         sequenceId:
           $ref: '#/components/schemas/optionalString'
         comment:
@@ -27491,6 +27494,7 @@ components:
         - claim
         - stakeClaimRewards
         - pledge
+        - voteDelegation
         - vote
         - createAccount
         - updateAccount
@@ -28128,6 +28132,8 @@ components:
           properties:
             poolKeyHash:
               type: string
+            dRepId:
+              type: string
             amount:
               type: object
               properties:
@@ -28140,6 +28146,7 @@ components:
                 - value
           required:
             - poolKeyHash
+            - dRepId
         - $ref: '#/components/schemas/StakeIntent'
     WalletTypePublic:
       type: string
@@ -30116,6 +30123,7 @@ components:
         - $ref: '#/components/schemas/AdaStakeClaimRewardsIntent'
         - $ref: '#/components/schemas/AdaStakeIntent'
         - $ref: '#/components/schemas/AdaUnstakeIntent'
+        - $ref: '#/components/schemas/AdaVoteDelegationIntent'
         - $ref: '#/components/schemas/AtomPaymentIntent'
         - $ref: '#/components/schemas/AtomStakeIntent'
         - $ref: '#/components/schemas/AtomUnstakeIntent'
@@ -30171,6 +30179,9 @@ components:
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
         - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
         - $ref: '#/components/schemas/CoreDaoClaimIntent'
+        - $ref: '#/components/schemas/EthLikeDelegateIntent'
+        - $ref: '#/components/schemas/EthLikeUndelegateIntent'
+        - $ref: '#/components/schemas/EthLikeClaimIntent'
         - $ref: '#/components/schemas/BaseIntent'
     BaseIntent:
       title: Intent
@@ -30188,6 +30199,125 @@ components:
             - type: number
       required:
         - intentType
+    EthLikeClaimIntent:
+      title: EthLike Claim Rewards Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    $ref: '#/components/schemas/Address'
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  data:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - address
+                  - amount
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    BaseStakeIntent:
+      title: BaseStakeIntent
+      allOf:
+        - type: object
+          properties:
+            stakingRequestId:
+              type: string
+          required:
+            - stakingRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    Amount:
+      title: Amount
+      type: object
+      properties:
+        value:
+          type: string
+        symbol:
+          type: string
+      required:
+        - value
+        - symbol
+    Address:
+      title: Address
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/optionalString'
+        option:
+          $ref: '#/components/schemas/optionalUnknownObject'
+    EthLikeUndelegateIntent:
+      title: EthLike Undelegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            validatorAddress:
+              type: string
+            amount:
+              $ref: '#/components/schemas/Amount'
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    $ref: '#/components/schemas/Address'
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  data:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - address
+                  - amount
+          required:
+            - intentType
+            - validatorAddress
+            - amount
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    EthLikeDelegateIntent:
+      title: EthLike Delegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegate
+            validatorAddress:
+              type: string
+            amount:
+              $ref: '#/components/schemas/Amount'
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    $ref: '#/components/schemas/Address'
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  data:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - address
+                  - amount
+          required:
+            - intentType
+            - validatorAddress
+            - amount
+        - $ref: '#/components/schemas/BaseStakeIntent'
     CoreDaoClaimIntent:
       title: CoreDAO Claim Rewards Intent
       allOf:
@@ -30210,16 +30340,6 @@ components:
           required:
             - calldata
         - $ref: '#/components/schemas/BaseStakeIntent'
-    BaseStakeIntent:
-      title: BaseStakeIntent
-      allOf:
-        - type: object
-          properties:
-            stakingRequestId:
-              type: string
-          required:
-            - stakingRequestId
-        - $ref: '#/components/schemas/BaseIntent'
     CoreDaoUndelegateIntent:
       title: CoreDAO Undelegate Intent
       allOf:
@@ -30238,17 +30358,6 @@ components:
             - validatorAddress
             - amount
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
-    Amount:
-      title: Amount
-      type: object
-      properties:
-        value:
-          type: string
-        symbol:
-          type: string
-      required:
-        - value
-        - symbol
     CoreDaoDelegateIntent:
       title: CoreDAO Delegate Intent
       allOf:
@@ -30323,14 +30432,6 @@ components:
             - intentType
             - recipients
         - $ref: '#/components/schemas/BaseIntent'
-    Address:
-      title: Address
-      type: object
-      properties:
-        address:
-          $ref: '#/components/schemas/optionalString'
-        option:
-          $ref: '#/components/schemas/optionalUnknownObject'
     TonDelegateIntent:
       title: TON Delegate Intent
       allOf:
@@ -31117,6 +31218,28 @@ components:
           required:
             - memo
         - $ref: '#/components/schemas/PaymentIntent'
+    AdaVoteDelegationIntent:
+      title: ADA Vote Delegation Intent
+      allOf:
+        - type: object
+          properties:
+            dRepId:
+              type: string
+          required:
+            - dRepId
+        - $ref: '#/components/schemas/VoteDelegationIntent'
+    VoteDelegationIntent:
+      title: Vote Delegation Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - voteDelegation
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent'
     AdaUnstakeIntent:
       title: ADA Unstake Intent
       allOf:
@@ -35470,6 +35593,21 @@ components:
           required:
             - name
         - $ref: '#/components/schemas/PlatformErrorNoName2'
+    AccelerationIntent1:
+      title: AccelerationIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - acceleration
+            txid:
+              type: string
+          required:
+            - intentType
+            - txid
+        - $ref: '#/components/schemas/BaseIntent1'
     AdaStakeIntent1:
       title: Ada Stake
       allOf:
@@ -38346,6 +38484,39 @@ components:
           pattern: ^(-?\d+|max)$
           example: '2000000'
         - type: integer
+    IntentType1:
+      title: IntentType
+      type: string
+      enum:
+        - payment
+        - transferToken
+        - consolidate
+        - consolidateToken
+        - fanout
+        - stake
+        - unstake
+        - delegate
+        - undelegate
+        - switchValidator
+        - claim
+        - stakeClaimRewards
+        - pledge
+        - vote
+        - createAccount
+        - updateAccount
+        - addTrustLine
+        - removeTrustLine
+        - signMessage
+        - signTypedStructuredData
+        - enableToken
+        - authorize
+        - acceleration
+        - fillNonce
+        - walletRecovery
+        - contractCall
+        - deactivate
+        - customTx
+        - closeAssociatedTokenAccount
     InternationalWireBankAccount:
       title: International Wire Bank Account
       type: object
@@ -46416,7 +46587,7 @@ components:
           properties:
             intent:
               allOf:
-                - $ref: '#/components/schemas/TransactionIntent'
+                - $ref: '#/components/schemas/TransactionIntent1'
               description: The intent of the transaction request
             unsignedTxs:
               type: array
@@ -46500,6 +46671,74 @@ components:
                 type: string
                 description: The hashes of all transactions from the TxRequest that have been signed and are pending broadcast.
         - $ref: '#/components/schemas/TransactionRequestBase'
+    TransactionIntent1:
+      title: TransactionIntent
+      oneOf:
+        - $ref: '#/components/schemas/AdaConsolidateIntent'
+        - $ref: '#/components/schemas/AdaPaymentIntent'
+        - $ref: '#/components/schemas/AdaStakeClaimRewardsIntent'
+        - $ref: '#/components/schemas/AdaStakeIntent'
+        - $ref: '#/components/schemas/AdaUnstakeIntent'
+        - $ref: '#/components/schemas/AdaVoteDelegationIntent'
+        - $ref: '#/components/schemas/AtomPaymentIntent'
+        - $ref: '#/components/schemas/AtomStakeIntent'
+        - $ref: '#/components/schemas/AtomUnstakeIntent'
+        - $ref: '#/components/schemas/AtomWithdrawIntent'
+        - $ref: '#/components/schemas/BscDelegateIntent'
+        - $ref: '#/components/schemas/BscUnDelegateIntent'
+        - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
+        - $ref: '#/components/schemas/CosmosPaymentIntent'
+        - $ref: '#/components/schemas/CosmosStakeIntent'
+        - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
+        - $ref: '#/components/schemas/CosmosUnstakeIntent'
+        - $ref: '#/components/schemas/CosmosWithdrawIntent'
+        - $ref: '#/components/schemas/DotConsolidateIntent'
+        - $ref: '#/components/schemas/DotCreateAccountIntent'
+        - $ref: '#/components/schemas/DotPaymentIntent'
+        - $ref: '#/components/schemas/DotStakingIntent'
+        - $ref: '#/components/schemas/DotUnstakingIntent'
+        - $ref: '#/components/schemas/DotWithdrawStakeIntent'
+        - $ref: '#/components/schemas/EthAccelerationIntent'
+        - $ref: '#/components/schemas/EthConsolidateIntent'
+        - $ref: '#/components/schemas/EthConsolidateTokenIntent'
+        - $ref: '#/components/schemas/EthFillNonceIntent'
+        - $ref: '#/components/schemas/EthPaymentIntent'
+        - $ref: '#/components/schemas/EthStakingIntent'
+        - $ref: '#/components/schemas/EthTransferTokenIntent'
+        - $ref: '#/components/schemas/LightningPaymentIntent'
+        - $ref: '#/components/schemas/MmiSignMessageIntent'
+        - $ref: '#/components/schemas/MmiSignTransactionIntent'
+        - $ref: '#/components/schemas/NearStakeIntent'
+        - $ref: '#/components/schemas/NearUnstakeIntent'
+        - $ref: '#/components/schemas/NearWithdrawIntent'
+        - $ref: '#/components/schemas/SolAuthorizeIntent'
+        - $ref: '#/components/schemas/SolClaimIntent'
+        - $ref: '#/components/schemas/SolCloseAssociatedTokenAccountIntent'
+        - $ref: '#/components/schemas/SolConsolidateIntent'
+        - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
+        - $ref: '#/components/schemas/SolDeactivateIntent'
+        - $ref: '#/components/schemas/SolDelegateIntent'
+        - $ref: '#/components/schemas/SolPaymentIntent'
+        - $ref: '#/components/schemas/SolStakeIntent'
+        - $ref: '#/components/schemas/SolUnstakeIntent'
+        - $ref: '#/components/schemas/SuiConsolidateIntent'
+        - $ref: '#/components/schemas/SuiCustomTxIntent'
+        - $ref: '#/components/schemas/SuiPaymentIntent'
+        - $ref: '#/components/schemas/SuiStakingIntent'
+        - $ref: '#/components/schemas/SuiUnstakingIntent'
+        - $ref: '#/components/schemas/TonConsolidateIntent'
+        - $ref: '#/components/schemas/TonDelegateIntent'
+        - $ref: '#/components/schemas/TonPaymentIntent'
+        - $ref: '#/components/schemas/TonUndelegateIntent'
+        - $ref: '#/components/schemas/WalletRecoveryIntent'
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+        - $ref: '#/components/schemas/CoreDaoDelegateIntent'
+        - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
+        - $ref: '#/components/schemas/CoreDaoClaimIntent'
+        - $ref: '#/components/schemas/EthLikeDelegateIntent'
+        - $ref: '#/components/schemas/EthLikeUndelegateIntent'
+        - $ref: '#/components/schemas/EthLikeClaimIntent'
+        - $ref: '#/components/schemas/BaseIntent'
     ExchangeEddsaCommitmentsResponse:
       title: ExchangeEddsaCommitmentsResponse
       type: object
@@ -47461,6 +47700,7 @@ components:
                         - approve
                         - reject
                         - skip
+                        - fail
                       description: Action taken during resolution
                     resolutionMemo:
                       type: string
@@ -47601,6 +47841,7 @@ components:
                               - approve
                               - reject
                               - skip
+                              - fail
                             description: Action taken during resolution
                           resolutionMemo:
                             type: string
@@ -50668,6 +50909,7 @@ components:
         type: string
         enum:
           - adaBYOValidator
+          - adaBYODRep
           - adaPledging
           - adaStaking
           - atomStaking
@@ -53653,6 +53895,7 @@ components:
             type: string
             enum:
               - adaBYOValidator
+              - adaBYODRep
               - adaPledging
               - adaStaking
               - atomStaking
