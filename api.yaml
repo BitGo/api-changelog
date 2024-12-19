@@ -22176,6 +22176,7 @@ paths:
                     - freezeEnterprise
                     - adminRenameEnterprise
                     - adminDeleteEnterprisePricingTypes
+                    - adminUpdateEnterpriseExternalContract
                     - createAccessToken
                     - modifyAccessToken
                     - deleteAccessToken
@@ -28705,6 +28706,10 @@ components:
         videoIdRequired:
           type: boolean
           description: Check for video ID Users
+        contract:
+          allOf:
+            - $ref: '#/components/schemas/EnterpriseContract'
+          description: Contract information
       required:
         - id
         - name
@@ -28848,14 +28853,27 @@ components:
       description: Phone number for emergencies
       example: '+11234567890'
     EnterpriseContract:
+      title: EnterpriseContract
       type: object
       properties:
         startDate:
-          type: string
-          description: The contract start date for an enterprise
+          oneOf:
+            - type: string
+              format: date
+              title: Date String
+            - type: string
+              format: date-time
+              title: ISO Date String
         endDate:
-          type: string
-          description: The contract end date for an enterprise
+          oneOf:
+            - type: string
+              format: date
+              title: Date String
+            - type: string
+              format: date-time
+              title: ISO Date String
+        isExternal:
+          type: boolean
     BitgoOrg:
       title: BitgoOrg
       type: string
@@ -29404,6 +29422,7 @@ components:
         - NOT_NEEDED
         - COMPLETE
         - CANCELLED
+        - FAILED
     PolicyActionParameters:
       title: PolicyActionParameters
       type: object
@@ -31362,6 +31381,7 @@ components:
         - ftx-bahamas-retail
         - sofi
         - bitcoinWell
+        - lucid
     VideoIdUserState:
       title: VideoIdUserState
       type: string
@@ -37060,7 +37080,7 @@ components:
           type: boolean
           description: whether the enterprise has the license to create hot wallets
         contract:
-          $ref: '#/components/schemas/EnterpriseContract'
+          $ref: '#/components/schemas/EnterpriseContract1'
         emergencyPhone:
           $ref: '#/components/schemas/EmergencyPhone'
         ethFeeAddress:
@@ -37114,6 +37134,15 @@ components:
               type: string
             enterpriseId:
               $ref: '#/components/schemas/Id'
+    EnterpriseContract1:
+      type: object
+      properties:
+        startDate:
+          type: string
+          description: The contract start date for an enterprise
+        endDate:
+          type: string
+          description: The contract end date for an enterprise
     EnterpriseResponse1:
       allOf:
         - $ref: '#/components/schemas/Enterprise1'
@@ -53660,6 +53689,7 @@ components:
         - freezeEnterprise
         - adminRenameEnterprise
         - adminDeleteEnterprisePricingTypes
+        - adminUpdateEnterpriseExternalContract
         - createAccessToken
         - modifyAccessToken
         - deleteAccessToken
