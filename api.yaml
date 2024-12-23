@@ -22445,6 +22445,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/enterprise/{enterpriseId}/regionalfeatures:
+    get:
+      summary: Get enterprise regional features
+      description: Get the regional features available to an enterprise by its location.
+      operationId: v2.enterprise.regional.features.get
+      tags:
+        - Enterprise
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EnterpriseIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegionalFeatures'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}/tssconfig:
     get:
       summary: Get enterprise MPC config
@@ -48276,6 +48308,23 @@ components:
                     type: string
         - type: object
           additionalProperties: {}
+    RegionalFeatures:
+      title: RegionalFeatures
+      type: object
+      properties:
+        trading:
+          type: boolean
+        custody:
+          type: boolean
+        lending:
+          type: boolean
+        borrowing:
+          type: boolean
+      required:
+        - trading
+        - custody
+        - lending
+        - borrowing
     OrganizationRole:
       title: OrganizationRole
       type: string
