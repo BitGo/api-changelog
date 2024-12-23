@@ -26,7 +26,7 @@ jobs:
 
       - name: Get API specs and generate JSON files
         run: |
-          PREVIOUS_MERGE=$(git rev-list --merges main | head -n 2 | tail -n 1)
+          PREVIOUS_MERGE=$(git rev-list --merges master | head -n 2 | tail -n 1)
           git show $PREVIOUS_MERGE:api.yaml > previous.yaml || echo "v0.0.0" > previous.yaml
           yq -o=json previous.yaml > previous.json
           
