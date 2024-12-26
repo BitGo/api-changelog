@@ -29476,6 +29476,8 @@ components:
           minLength: 1
         livenessCheckUser:
           $ref: '#/components/schemas/LivenessVerificationParameter'
+        isFallback:
+          type: boolean
     LivenessVerificationParameter:
       title: LivenessVerificationParameter
       type: string
@@ -30232,9 +30234,7 @@ components:
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
         - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
         - $ref: '#/components/schemas/CoreDaoClaimIntent'
-        - $ref: '#/components/schemas/EthLikeDelegateIntent'
-        - $ref: '#/components/schemas/EthLikeUndelegateIntent'
-        - $ref: '#/components/schemas/EthLikeClaimIntent'
+        - $ref: '#/components/schemas/EthLikeStakeIntent'
         - $ref: '#/components/schemas/BaseIntent'
     BaseIntent:
       title: Intent
@@ -30252,15 +30252,13 @@ components:
             - type: number
       required:
         - intentType
-    EthLikeClaimIntent:
-      title: EthLike Claim Rewards Intent
+    EthLikeStakeIntent:
+      title: EthLike Stake Intent
       allOf:
         - type: object
           properties:
             intentType:
-              type: string
-              enum:
-                - stakeClaimRewards
+              $ref: '#/components/schemas/IntentType'
             recipients:
               type: array
               items:
@@ -30307,70 +30305,6 @@ components:
           $ref: '#/components/schemas/optionalString'
         option:
           $ref: '#/components/schemas/optionalUnknownObject'
-    EthLikeUndelegateIntent:
-      title: EthLike Undelegate Intent
-      allOf:
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - undelegate
-            validatorAddress:
-              type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
-            recipients:
-              type: array
-              items:
-                type: object
-                properties:
-                  address:
-                    $ref: '#/components/schemas/Address'
-                  amount:
-                    $ref: '#/components/schemas/Amount'
-                  data:
-                    $ref: '#/components/schemas/optionalString'
-                required:
-                  - address
-                  - amount
-          required:
-            - intentType
-            - validatorAddress
-            - amount
-        - $ref: '#/components/schemas/BaseStakeIntent'
-    EthLikeDelegateIntent:
-      title: EthLike Delegate Intent
-      allOf:
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - delegate
-            validatorAddress:
-              type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
-            recipients:
-              type: array
-              items:
-                type: object
-                properties:
-                  address:
-                    $ref: '#/components/schemas/Address'
-                  amount:
-                    $ref: '#/components/schemas/Amount'
-                  data:
-                    $ref: '#/components/schemas/optionalString'
-                required:
-                  - address
-                  - amount
-          required:
-            - intentType
-            - validatorAddress
-            - amount
-        - $ref: '#/components/schemas/BaseStakeIntent'
     CoreDaoClaimIntent:
       title: CoreDAO Claim Rewards Intent
       allOf:
@@ -46798,9 +46732,7 @@ components:
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
         - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
         - $ref: '#/components/schemas/CoreDaoClaimIntent'
-        - $ref: '#/components/schemas/EthLikeDelegateIntent'
-        - $ref: '#/components/schemas/EthLikeUndelegateIntent'
-        - $ref: '#/components/schemas/EthLikeClaimIntent'
+        - $ref: '#/components/schemas/EthLikeStakeIntent'
         - $ref: '#/components/schemas/BaseIntent'
     ExchangeEddsaCommitmentsResponse:
       title: ExchangeEddsaCommitmentsResponse
