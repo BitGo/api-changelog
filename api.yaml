@@ -34657,10 +34657,6 @@ components:
               description: ISO 8601 string representation of the timestamp the entry was physically posted
               example: '2019-06-12T15:28:35.773Z'
       description: General accounting entry representation
-    AmountString:
-      type: string
-      pattern: ^\d+$
-      example: '10100'
     BlockHash:
       type: string
       example: 0000000000000296ed56abee6cb78e40b00c47a03d92e71dd92c4862ca636b95
@@ -34701,104 +34697,6 @@ components:
             notation:
               type: string
               description: The notation on this entry in the DAS ledger
-    FeeDescriptor:
-      title: General Fee Descriptor
-      description: define a fee charged as part of a transaction (same currency only)
-      type: object
-      properties:
-        amount:
-          $ref: '#/components/schemas/AmountString'
-        notation:
-          type: string
-          description: Short notation for fee source/info
-          example: on chain fee
-        fee_type:
-          type: string
-          enum:
-            - WIRE_FEE
-            - ELECTRONIC_FEE
-            - BANK_FEE
-            - CHAIN_FEE
-            - BITGO_WITHDRAWAL_FEE
-            - BITGO_SETTLEMENT_FEE
-          description: 'Each fee type may be treated differently by accounting, revenue fee types: BITGO_WITHDRAWAL_FEE, BITGO_SETTLEMENT_FEE'
-          example: BITGO_SETTLEMENT_FEE
-    TradeAmountDescriptor:
-      type: object
-      required:
-        - walletId
-        - currency
-        - amount
-      properties:
-        walletId:
-          $ref: '#/components/schemas/WalletId'
-        currency:
-          $ref: '#/components/schemas/Coin'
-        amount:
-          $ref: '#/components/schemas/AmountString'
-        receiveAmount:
-          $ref: '#/components/schemas/AmountString'
-        receiveCurrency:
-          $ref: '#/components/schemas/Coin'
-        marketValue:
-          $ref: '#/components/schemas/AmountString'
-    TradeDescriptor:
-      allOf:
-        - $ref: '#/components/schemas/TradeAmountDescriptor'
-        - type: object
-          required:
-            - backingWallet
-          properties:
-            backingWallet:
-              $ref: '#/components/schemas/WalletId'
-            tradeId:
-              type: string
-              example: abcdef2345abc
-    TradeLockDescSigned:
-      description: requester party of two-sided locks
-      allOf:
-        - $ref: '#/components/schemas/TradeLockDescriptor'
-        - $ref: '#/components/schemas/TradeSignature'
-    TradeLockDescriptor:
-      allOf:
-        - type: object
-          required:
-            - lockId
-          properties:
-            lockId:
-              type: string
-              example: abcdef012345
-        - $ref: '#/components/schemas/TradeAmountDescriptor'
-    TradeOneSidedLockSignedDesc:
-      allOf:
-        - $ref: '#/components/schemas/TradeSignature'
-        - type: object
-          required:
-            - walletId
-          properties:
-            walletId:
-              type: string
-              description: walletId of the party signing the payload with their signature
-    TradeRequestSigned:
-      allOf:
-        - $ref: '#/components/schemas/TradeDescriptor'
-        - type: object
-          properties:
-            fees:
-              $ref: '#/components/schemas/FeeDescriptor'
-        - $ref: '#/components/schemas/TradeSignature'
-    TradeSignature:
-      type: object
-      required:
-        - payload
-        - signature
-      properties:
-        payload:
-          type: string
-          description: 'Stringified(serialized) JSON object containing at least: amount, walletId, currency, and otherParties (for trade). Should also have a significant nonce or salt.'
-        signature:
-          type: string
-          description: Signature of the payload using the proper private key.
     TxId:
       type: string
       description: The on-chain transaction id
