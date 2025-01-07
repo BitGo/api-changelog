@@ -43392,6 +43392,17 @@ components:
         durationSeconds:
           description: The length of time in seconds to complete a staking period.
           type: integer
+    StakingDelegationProperties:
+      type: object
+      properties:
+        delegationCycle:
+          allOf:
+            - $ref: '#/components/schemas/IntegerString'
+          description: The number of cycles this delegation will be active.
+        endBurnBlockHeight:
+          allOf:
+            - $ref: '#/components/schemas/IntegerString'
+          description: The end burn block height for this delegation.
     StakingDelegation:
       type: object
       properties:
@@ -43437,6 +43448,10 @@ components:
         unstakingMin:
           description: The minimum amount needed to unstake from the delegation.
           type: string
+        properties:
+          allOf:
+            - $ref: '#/components/schemas/StakingDelegationProperties'
+          type: object
     EthStakingDelegation:
       title: ETH
       allOf:
@@ -44268,6 +44283,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/IntegerString'
           description: The sum of the amounts of all confirmed staking transactions in this request.
+        delegationCycle:
+          allOf:
+            - $ref: '#/components/schemas/IntegerString'
+          description: The number of cycles this staking request will be active.
       required:
         - id
         - requestingUserId
