@@ -19247,6 +19247,383 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/currencies:
+    get:
+      summary: List available currencies for collateral
+      description: Returns the list of currencies that are available for use as collateral.
+      operationId: trade.margin.collateral.currencies.list
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of available currencies for collateral
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  availableCurrencies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Currency'
+  /api/prime/trading/v1/accounts/{accountID}/margin/risksettings:
+    get:
+      summary: Get margin risk settings
+      description: Returns the margin risk settings for the specified account.
+      operationId: trade.margin.risksettings.get
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Margin risk settings
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  totalShortPositionLimit:
+                    $ref: '#/components/schemas/Amount4'
+                  marginCallPercentage:
+                    type: number
+                    format: decimal
+                  liquidationThresholdPercentage:
+                    type: number
+                    format: decimal
+                  marginRequirementPercentage:
+                    type: number
+                    format: decimal
+                example:
+                  totalShortPositionLimit:
+                    quantity: '1000000'
+                    currency: USD
+                  marginCallPercentage: '1.1'
+                  liquidationThresholdPercentage: '1.2'
+                  marginRequirementPercentage: '0.2'
+  /api/prime/trading/v1/accounts/{accountID}/margin/netopenpositions:
+    get:
+      summary: Get net open margin positions
+      description: Returns the net open positions for the specified account.
+      operationId: trade.margin.netopenpositions.get
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+        - name: currency
+          in: query
+          required: false
+          description: Filters on provided currencies if provided, otherwise returns net open positions for all currencies
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: Net open positions
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  netOpenPositions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MarginNetOpenPosition'
+  /api/prime/trading/v1/accounts/{accountID}/margin/netopenpositionlimits:
+    get:
+      summary: Get net open margin position limits
+      description: Returns the asset-specific net open position limits for the specified account.
+      operationId: trade.margin.netopenpositionlimits.get
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Net open position limits
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  netOpenPositionLimits:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MarginNetOpenPositionLimit'
+  /api/prime/trading/v1/accounts/{accountID}/margin/riskprofile:
+    get:
+      summary: Get margin risk profile
+      description: Runs margin calculations and returns the margin risk profile for the specified account.
+      operationId: trade.margin.riskprofile.get
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Margin risk profile
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  riskProfile:
+                    type: object
+                    properties:
+                      netOpenPosition:
+                        $ref: '#/components/schemas/Amount4'
+                      transferredCollateral:
+                        $ref: '#/components/schemas/Amount4'
+                      unrealizedPnL:
+                        $ref: '#/components/schemas/Amount4'
+                      marginBalance:
+                        $ref: '#/components/schemas/Amount4'
+                      marginRequirement:
+                        $ref: '#/components/schemas/Amount4'
+                      marginUtilizationPercentage:
+                        type: number
+                        nullable: true
+                example:
+                  riskProfile:
+                    netOpenPosition:
+                      quantity: '1000000'
+                      currency: USD
+                    transferredCollateral:
+                      quantity: '500000'
+                      currency: USD
+                    unrealizedPnL:
+                      quantity: '200000'
+                      currency: USD
+                    marginBalance:
+                      quantity: '700000'
+                      currency: USD
+                    marginRequirement:
+                      quantity: '600000'
+                      currency: USD
+                    marginUtilizationPercentage: 0.85
+  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/transfer:
+    post:
+      summary: Transfer collateral for margin
+      description: Transfers collateral for the specified account.
+      operationId: trade.margin.collateral.transfer
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currency:
+                  type: string
+                quantity:
+                  type: string
+              example:
+                currency: BTC
+                quantity: '2'
+      responses:
+        '200':
+          description: Collateral transfer response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currency:
+                    type: string
+                  quantity:
+                    type: string
+                  balanceValue:
+                    $ref: '#/components/schemas/Amount4'
+                example:
+                  currency: BTC
+                  quantity: '2'
+                  balanceValue:
+                    quantity: '1000000'
+                    currency: USD
+  /api/prime/trading/v1/accounts/{accountID}/margin/positions/transfer:
+    post:
+      summary: Transfer margin position
+      description: Transfers the amount specified to cover margin position for the specified account.
+      operationId: trade.margin.positions.transfer
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                currency:
+                  type: string
+                quantity:
+                  type: string
+              example:
+                currency: BTC
+                quantity: '2'
+      responses:
+        '200':
+          description: Margin positions transfer response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  currency:
+                    type: string
+                  quantity:
+                    type: number
+                  balanceValue:
+                    $ref: '#/components/schemas/Amount4'
+                example:
+                  currency: BTC
+                  quantity: 2
+                  balanceValue:
+                    quantity: '1000000'
+                    currency: USD
+  /api/prime/trading/v1/accounts/{accountID}/margin/positions/cover:
+    post:
+      summary: Cover all short margin positions
+      description: Transfers the exact amount to cover all short margin positions for the specified account.
+      operationId: trade.margin.positions.cover
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    currencies:
+                      type: array
+                      items:
+                        type: string
+                  example:
+                    currencies:
+                      - BTC
+                - type: object
+                  properties:
+                    all:
+                      type: boolean
+                  example:
+                    all: true
+      responses:
+        '200':
+          description: Margin positions cover response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balances:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        currency:
+                          type: string
+                        quantity:
+                          type: number
+                        balanceValue:
+                          $ref: '#/components/schemas/Amount4'
+                example:
+                  balances:
+                    - currency: BTC
+                      quantity: 2
+                      balanceValue:
+                        quantity: '1000000'
+                        currency: USD
+  /api/prime/trading/v1/accounts/{accountID}/margin/close:
+    post:
+      summary: Close all margin positions
+      description: Starts an asynchronous process to automatically close all positions by selling and buying assets to attempt to net them to zero.
+      operationId: trade.margin.close
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  properties:
+                    currencies:
+                      type: array
+                      items:
+                        type: string
+                  example:
+                    currencies:
+                      - BTC
+                - type: object
+                  properties:
+                    all:
+                      type: boolean
+                  example:
+                    all: true
+      responses:
+        '202':
+          description: Acknowledgement that the action was received
   /api/staking/v1/{coin}/wallets/{walletId}/requests:
     post:
       tags:
@@ -38393,8 +38770,8 @@ components:
                 properties:
                   amount:
                     allOf:
-                      - $ref: '#/components/schemas/IntegerOrIntegerString'
-                    description: String representation of the amount to send in base units (satoshis/litoshis/zatoshis/duffs). For doge, only string is allowed.
+                      - $ref: '#/components/schemas/RecipientAmount'
+                    description: String representation of the amount to send in base units (satoshis/litoshis/zatoshis/duffs). For doge, only string is allowed. Passing in 'max' will send the recipient the maximum amount available, minus fees and amounts for other recipients. Only a single recipient with a 'max' amount is allowed.
                   address:
                     allOf:
                       - $ref: '#/components/schemas/AddressString3'
@@ -42512,6 +42889,101 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/AccountBalance'
+    Amount4:
+      type: object
+      required:
+        - quantity
+        - currency
+      properties:
+        quantity:
+          type: string
+          format: decimal
+          description: The specified quantity.
+        currency:
+          type: string
+          description: The specified quantity currency.
+      example:
+        quantity: '100.0'
+        currency: USD
+    FundingType:
+      type: string
+      enum:
+        - margin
+        - funded
+      description: The funding type of the order. Funded orders will be placed with the user's available balance. Margin orders will be placed with the user's margin balance.
+      default: funded
+    MarginNetOpenPosition:
+      type: object
+      required:
+        - currency
+        - enterpriseId
+        - netOpenPosition
+        - netOpenPositionValue
+        - shortMarginPositionNotionalLimit
+        - longMarginPositionNotionalLimit
+        - unrealizedPnL
+        - lastModified
+      properties:
+        currency:
+          type: string
+        enterpriseId:
+          type: string
+          format: uuid
+        netOpenPosition:
+          type: number
+          format: decimal
+        netOpenPositionValue:
+          type: number
+          format: decimal
+        shortMarginPositionNotionalLimit:
+          $ref: '#/components/schemas/Amount4'
+        longMarginPositionNotionalLimit:
+          $ref: '#/components/schemas/Amount4'
+        unrealizedPnL:
+          $ref: '#/components/schemas/Amount4'
+        lastModified:
+          type: string
+          format: date-time
+      example:
+        currency: BTC
+        enterpriseId: 63925f940c259a00061853808ffea830
+        netOpenPosition: -2.3242
+        netOpenPositionValue: -124017.22
+        shortMarginPositionNotionalLimit:
+          quantity: 1000000
+          currency: USD
+        longMarginPositionNotionalLimit:
+          quantity: 1000000
+          currency: USD
+        unrealizedPnL:
+          quantity: 1200
+          currency: USD
+        lastModified: '2024-07-29T21:13:09.000Z'
+    MarginNetOpenPositionLimit:
+      type: object
+      required:
+        - enterpriseId
+        - currency
+        - shortMarginPositionNotionalLimit
+        - longMarginPositionNotionalLimit
+      properties:
+        enterpriseId:
+          type: string
+        currency:
+          type: string
+        shortMarginPositionNotionalLimit:
+          $ref: '#/components/schemas/Amount4'
+        longMarginPositionNotionalLimit:
+          $ref: '#/components/schemas/Amount4'
+      example:
+        enterpriseId: enterprise-123
+        currency: BTC
+        shortMarginPositionNotionalLimit:
+          quantity: '1000000'
+          currency: USD
+        longMarginPositionNotionalLimit:
+          quantity: '2000000'
+          currency: USD
     Order:
       required:
         - id
@@ -42560,10 +43032,7 @@ components:
         type:
           type: string
         fundingType:
-          type: string
-          enum:
-            - margin
-            - funded
+          $ref: '#/components/schemas/FundingType'
         status:
           $ref: '#/components/schemas/OrderStatus'
         product:
@@ -42642,6 +43111,7 @@ components:
         - quantityCurrency
         - side
         - type
+        - fundingType
       type: object
       properties:
         clientOrderId:
@@ -42654,6 +43124,8 @@ components:
         type:
           type: string
           description: Must be set to "market"
+        fundingType:
+          $ref: '#/components/schemas/FundingType'
         side:
           $ref: '#/components/schemas/Side'
         quantity:
@@ -42690,6 +43162,8 @@ components:
         type:
           type: string
           description: Must be set to "limit"
+        fundingType:
+          $ref: '#/components/schemas/FundingType'
         side:
           $ref: '#/components/schemas/Side'
         quantity:
@@ -42740,6 +43214,8 @@ components:
         type:
           type: string
           description: Must be set to "twap"
+        fundingType:
+          $ref: '#/components/schemas/FundingType'
         side:
           $ref: '#/components/schemas/Side'
         quantity:
@@ -42852,6 +43328,7 @@ components:
         - baseMinSize
         - id
         - isTradeDisabled
+        - isMarginTradeSupported
         - name
         - quoteCurrencyId
         - quoteCurrency
@@ -42894,6 +43371,9 @@ components:
           format: decimal
         isTradeDisabled:
           type: boolean
+        isMarginTradeSupported:
+          type: boolean
+          description: True if margin trading is supported for this product
       example:
         id: 86d09911-e58e-4f27-ac1f-91d5f9c79952
         name: BTC-USD
@@ -43452,6 +43932,9 @@ components:
           allOf:
             - $ref: '#/components/schemas/StakingDelegationProperties'
           type: object
+        rewardCoin:
+          description: The coin in which rewards will be received.
+          type: string
     EthStakingDelegation:
       title: ETH
       allOf:
@@ -44138,6 +44621,9 @@ components:
           type: string
         type:
           description: The validator provider used for staking.
+          type: string
+        rewardCoin:
+          description: The coin in which rewards will be received.
           type: string
     StakingValidatorsResponse:
       type: object
