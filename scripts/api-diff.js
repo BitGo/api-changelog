@@ -14,13 +14,21 @@ const changes = {
 };
 
 // Helper function to track component references
-function findComponentRefs(obj, components) {
+function findComponentRefs(obj, components, spec = currentSpec) {
     if (!obj) return;
     if (typeof obj === 'object') {
         if (obj['$ref'] && obj['$ref'].startsWith('#/components/')) {
-            components.add(obj['$ref'].split('/').pop());
+            const componentName = obj['$ref'].split('/').pop();
+            components.add(componentName);
+            
+            // Follow the reference to check nested components
+            const [_, category, name] = obj['$ref'].split('/');
+            const referencedComponent = spec.components?.[category]?.[name];
+            if (referencedComponent) {
+                findComponentRefs(referencedComponent, components, spec);
+            }
         }
-        Object.values(obj).forEach(value => findComponentRefs(value, components));
+        Object.values(obj).forEach(value => findComponentRefs(value, components, spec));
     }
 }
 
@@ -31,9 +39,18 @@ function compareComponents() {
     
     for (const [category, components] of Object.entries(currComps)) {
         for (const [name, def] of Object.entries(components)) {
-            if (!prevComps[category]?.[name] || 
-                JSON.stringify(prevComps[category][name]) !== JSON.stringify(def)) {
+            const prevDef = prevComps[category]?.[name];
+            if (!prevDef || JSON.stringify(prevDef) !== JSON.stringify(def)) {
                 changes.components.add(name);
+                
+                // Also check which components reference this changed component
+                Object.entries(currComps[category] || {}).forEach(([otherName, otherDef]) => {
+                    const refsSet = new Set();
+                    findComponentRefs(otherDef, refsSet);
+                    if (refsSet.has(name)) {
+                        changes.components.add(otherName);
+                    }
+                });
             }
         }
     }
@@ -110,6 +127,53 @@ function getChanges(previous, current) {
     return changes;
 }
 
+// Helper function to check if a schema references a component or its dependencies
+function schemaReferencesComponent(schema, componentName, visitedRefs = new Set()) {
+    if (!schema) return false;
+    
+    // Prevent infinite recursion
+    const schemaKey = JSON.stringify(schema);
+    if (visitedRefs.has(schemaKey)) return false;
+    visitedRefs.add(schemaKey);
+    
+    // Direct reference check
+    if (schema.$ref) {
+        const refPath = schema.$ref;
+        if (refPath === `#/components/schemas/${componentName}`) return true;
+        
+        // Follow the reference to check nested components
+        const [_, category, name] = refPath.split('/');
+        const referencedComponent = currentSpec.components?.[category]?.[name];
+        if (referencedComponent && schemaReferencesComponent(referencedComponent, componentName, visitedRefs)) {
+            return true;
+        }
+    }
+    
+    // Check combiners (oneOf, anyOf, allOf)
+    for (const combiner of ['oneOf', 'anyOf', 'allOf']) {
+        if (schema[combiner] && Array.isArray(schema[combiner])) {
+            if (schema[combiner].some(s => schemaReferencesComponent(s, componentName, visitedRefs))) {
+                return true;
+            }
+        }
+    }
+    
+    // Check properties if it's an object
+    if (schema.properties) {
+        if (Object.values(schema.properties).some(prop => 
+            schemaReferencesComponent(prop, componentName, visitedRefs))) {
+            return true;
+        }
+    }
+    
+    // Check array items
+    if (schema.items && schemaReferencesComponent(schema.items, componentName, visitedRefs)) {
+        return true;
+    }
+    
+    return false;
+}
+
 // Helper function to detect where a component is used in an endpoint
 function findComponentUsage(details, componentName) {
     const usage = [];
@@ -117,26 +181,37 @@ function findComponentUsage(details, componentName) {
     // Check parameters
     if (details.parameters) {
         const hasComponent = details.parameters.some(p => 
-            (p.$ref && p.$ref.includes(componentName)) ||
-            (p.schema && p.schema.$ref && p.schema.$ref.includes(componentName))
+            (p.$ref && schemaReferencesComponent({ $ref: p.$ref }, componentName)) ||
+            (p.schema && schemaReferencesComponent(p.schema, componentName))
         );
         if (hasComponent) usage.push('parameters');
     }
     
     // Check requestBody
-    if (details.requestBody && 
-        details.requestBody.content && 
-        Object.values(details.requestBody.content).some(c => 
-            c.schema && c.schema.$ref && c.schema.$ref.includes(componentName))) {
-        usage.push('requestBody');
+    if (details.requestBody) {
+        let hasComponent = false;
+        if (details.requestBody.$ref) {
+            hasComponent = schemaReferencesComponent({ $ref: details.requestBody.$ref }, componentName);
+        } else if (details.requestBody.content) {
+            hasComponent = Object.values(details.requestBody.content).some(c => 
+                c.schema && schemaReferencesComponent(c.schema, componentName)
+            );
+        }
+        if (hasComponent) usage.push('requestBody');
     }
     
     // Check responses
-    if (details.responses && 
-        Object.values(details.responses).some(r => 
-            r.content && Object.values(r.content).some(c => 
-                c.schema && c.schema.$ref && c.schema.$ref.includes(componentName)))) {
-        usage.push('responses');
+    if (details.responses) {
+        const hasComponent = Object.entries(details.responses).some(([code, r]) => {
+            if (r.$ref) return schemaReferencesComponent({ $ref: r.$ref }, componentName);
+            if (r.content) {
+                return Object.values(r.content).some(c => 
+                    c.schema && schemaReferencesComponent(c.schema, componentName)
+                );
+            }
+            return false;
+        });
+        if (hasComponent) usage.push('responses');
     }
     
     return usage;
@@ -160,56 +235,88 @@ function generateReleaseNotes() {
         sections.push(section);
     }
 
+    // Helper function to generate route modification details
+    function generateModifiedRouteDetails(path, changes) {
+        let details = '';
+        const methodsToProcess = new Set();
+        
+        // Collect all affected methods
+        if (changes.modified[path]) {
+            changes.modified[path].forEach(({method}) => methodsToProcess.add(method));
+        }
+        if (changes.affectedByComponents[path]) {
+            changes.affectedByComponents[path].methods.forEach(method => methodsToProcess.add(method));
+        }
+
+        // Process each method
+        Array.from(methodsToProcess)
+            .sort()
+            .forEach(method => {
+                details += `- [${method}] \`${path}\`\n`;
+                
+                // Add direct changes
+                const directChanges = changes.modified[path]?.find(m => m.method === method);
+                if (directChanges) {
+                    directChanges.changes.sort().forEach(change => {
+                        details += `  - ${change}\n`;
+                    });
+                }
+
+                // Add component changes
+                if (changes.affectedByComponents[path]?.methods.has(method)) {
+                    const methodDetails = currentSpec.paths[path][method.toLowerCase()];
+                    Array.from(changes.affectedByComponents[path].components)
+                        .sort()
+                        .forEach(component => {
+                            const usageLocations = findComponentUsage(methodDetails, component).sort();
+                            details += `  - \`${component}\` modified in ${usageLocations.join(', ')}\n`;
+                        });
+                }
+            });
+        return details;
+    }
+
     // Modified endpoints
     if (Object.keys(changes.modified).length > 0 || Object.keys(changes.affectedByComponents).length > 0) {
         let section = '## Modified\n';
         
-        // Combine and sort all modified paths
-        const allModifiedPaths = new Set([
-            ...Object.keys(changes.modified),
-            ...Object.keys(changes.affectedByComponents)
-        ]);
+        // First show all directly modified paths
+        const directlyModifiedPaths = Object.keys(changes.modified).sort();
+        directlyModifiedPaths.forEach(path => {
+            section += generateModifiedRouteDetails(path, changes);
+        });
 
-        Array.from(allModifiedPaths)
-            .sort()
-            .forEach(path => {
-                // Handle both direct modifications and component changes for each path
-                const methodsToProcess = new Set();
-                
-                // Collect all affected methods
-                if (changes.modified[path]) {
-                    changes.modified[path].forEach(({method}) => methodsToProcess.add(method));
-                }
-                if (changes.affectedByComponents[path]) {
-                    changes.affectedByComponents[path].methods.forEach(method => methodsToProcess.add(method));
-                }
+        // Then show component-affected paths (but not ones that were directly modified)
+        const componentAffectedEntries = Object.entries(changes.affectedByComponents)
+            .filter(([path]) => !changes.modified[path]) // Only paths not already shown above
+            .flatMap(([path, details]) => 
+                Array.from(details.methods).map(method => ({path, method}))
+            )
+            .sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
 
-                // Process each method
-                Array.from(methodsToProcess)
-                    .sort()
-                    .forEach(method => {
-                        section += `- [${method}] \`${path}\`\n`;
-                        
-                        // Add direct changes
-                        const directChanges = changes.modified[path]?.find(m => m.method === method);
-                        if (directChanges) {
-                            directChanges.changes.sort().forEach(change => {
-                                section += `  - ${change}\n`;
-                            });
-                        }
+        // Show first 5 component-affected method-path combinations
+        const visibleEntries = componentAffectedEntries.slice(0, 5);
+        const processedPaths = new Set();
+        
+        visibleEntries.forEach(({path}) => {
+            if (!processedPaths.has(path)) {
+                section += generateModifiedRouteDetails(path, changes);
+                processedPaths.add(path);
+            }
+        });
 
-                        // Add component changes
-                        if (changes.affectedByComponents[path]?.methods.has(method)) {
-                            const methodDetails = currentSpec.paths[path][method.toLowerCase()];
-                            Array.from(changes.affectedByComponents[path].components)
-                                .sort()
-                                .forEach(component => {
-                                    const usageLocations = findComponentUsage(methodDetails, component).sort();
-                                    section += `  - \`${component}\` modified in ${usageLocations.join(', ')}\n`;
-                                });
-                        }
-                    });
+        // Collapse any remaining entries
+        const remainingEntries = componentAffectedEntries.slice(5);
+        if (remainingEntries.length > 0) {
+            section += '\n<details><summary>Show more routes affected by component changes...</summary>\n\n';
+            const remainingPaths = new Set();
+            remainingEntries.forEach(({path}) => remainingPaths.add(path));
+            Array.from(remainingPaths).sort().forEach(path => {
+                section += generateModifiedRouteDetails(path, changes);
             });
+            section += '</details>\n';
+        }
+        
         sections.push(section);
     }
 
