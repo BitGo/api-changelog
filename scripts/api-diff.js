@@ -180,34 +180,34 @@ function findComponentUsage(details, componentName) {
     
     // Check parameters
     if (details.parameters) {
-        const hasComponent = details.parameters.some(p => 
-            (p.$ref && schemaReferencesComponent({ $ref: p.$ref }, componentName)) ||
-            (p.schema && schemaReferencesComponent(p.schema, componentName))
-        );
+        const hasComponent = details.parameters.some(p => {
+            // Check direct parameter reference
+            if (p.$ref && p.$ref.includes(`/parameters/${componentName}`)) return true;
+            // Check schema reference if it exists
+            if (p.schema && p.schema.$ref && p.schema.$ref.includes(`/schemas/${componentName}`)) return true;
+            return false;
+        });
         if (hasComponent) usage.push('parameters');
     }
     
     // Check requestBody
     if (details.requestBody) {
-        let hasComponent = false;
-        if (details.requestBody.$ref) {
-            hasComponent = schemaReferencesComponent({ $ref: details.requestBody.$ref }, componentName);
+        if (details.requestBody.$ref && details.requestBody.$ref.includes(componentName)) {
+            usage.push('requestBody');
         } else if (details.requestBody.content) {
-            hasComponent = Object.values(details.requestBody.content).some(c => 
-                c.schema && schemaReferencesComponent(c.schema, componentName)
-            );
+            const hasComponent = Object.values(details.requestBody.content).some(c => 
+                c.schema && c.schema.$ref && c.schema.$ref.includes(`/schemas/${componentName}`));
+            if (hasComponent) usage.push('requestBody');
         }
-        if (hasComponent) usage.push('requestBody');
     }
     
     // Check responses
     if (details.responses) {
-        const hasComponent = Object.entries(details.responses).some(([code, r]) => {
-            if (r.$ref) return schemaReferencesComponent({ $ref: r.$ref }, componentName);
-            if (r.content) {
-                return Object.values(r.content).some(c => 
-                    c.schema && schemaReferencesComponent(c.schema, componentName)
-                );
+        const hasComponent = Object.entries(details.responses).some(([code, response]) => {
+            if (response.$ref && response.$ref.includes(`/responses/${componentName}`)) return true;
+            if (response.content) {
+                return Object.values(response.content).some(c => 
+                    c.schema && c.schema.$ref && c.schema.$ref.includes(`/schemas/${componentName}`));
             }
             return false;
         });
