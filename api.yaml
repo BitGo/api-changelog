@@ -23071,6 +23071,21 @@ paths:
       tags:
         - Transaction request
       parameters:
+        - name: walletTypes
+          description: If present, filters transaction requests by the specified wallet types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - backing
+                - cold
+                - custodial
+                - custodialPaired
+                - hot
+                - trading
+              description: If present, filters transaction requests by the specified wallet types
         - name: states
           description: If present, filters transaction requests by state
           in: query
@@ -25366,10 +25381,6 @@ paths:
                           - share
                           - to
                         description: The array of signature shares without VSS proof
-                    signerGpgPublicKey:
-                      type: string
-                      description: The GPG public key of the signer
-                      minLength: 1
                     signerShare:
                       type: string
                       description: The share of the signer
@@ -25380,7 +25391,6 @@ paths:
                       description: The type of the request body
                   required:
                     - signatureShares
-                    - signerGpgPublicKey
                     - type
       responses:
         '200':
@@ -29049,6 +29059,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/EnterpriseContract'
           description: Contract information
+        referralCode:
+          allOf:
+            - $ref: '#/components/schemas/ReferralCodeString'
+          description: Referral code
       required:
         - id
         - name
@@ -31540,6 +31554,10 @@ components:
       type: string
       example: 59cd72485007a239fb00282ed480da1f
       pattern: ^[0-9a-f]{32}$
+    ReferralCodeString:
+      title: ReferralCodeString
+      type: string
+      description: An Enterprise Referral Code
     AggregatorSourceType:
       title: AggregatorSourceType
       type: string
