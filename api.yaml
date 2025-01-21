@@ -24196,6 +24196,78 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/enterprise:
+    get:
+      summary: List enterprises for an organization
+      description: List all enterprises in the specified organization.
+      operationId: v2.organization.enterprise.list
+      tags:
+        - Enterprise Management
+      parameters:
+        - name: idempotencyKey
+          description: A unique identifier used when creating the enterprise. Adding this query parameter will return the enterprise created with the given idempotency key.
+          in: query
+          schema:
+            type: string
+            title: uuid
+        - name: limit
+          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
+          in: query
+          schema:
+            type: string
+            default: '25'
+            minimum: 1
+            maximum: 500
+            format: number
+        - name: prevId
+          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
+          in: query
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrganizationIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisesPaginatedResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
     post:
       summary: Create an enterprise for an organization
       description: Create an enterprise in the specified organization. Also create a user if it doesn't already exist.
@@ -24284,31 +24356,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-    get:
-      summary: List enterprises for an organization
-      description: List all enterprises in the specified organization.
-      operationId: v2.organization.enterprise.list
+  /api/v2/organization/{organizationId}/user:
+    delete:
+      summary: Remove a user from an organization
+      description: Remove a user from an organization. Must be an organization manager to perform this action.
+      operationId: v2.organization.user.remove
       tags:
-        - Enterprise Management
+        - User Management
       parameters:
-        - name: idempotencyKey
-          description: A unique identifier used when creating the enterprise. Adding this query parameter will return the enterprise created with the given idempotency key.
+        - name: userId
+          description: ''
           in: query
-          schema:
-            type: string
-            title: uuid
-        - name: limit
-          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
-          in: query
-          schema:
-            type: string
-            default: '25'
-            minimum: 1
-            maximum: 500
-            format: number
-        - name: prevId
-          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
-          in: query
+          required: true
           schema:
             type: string
             example: 59cd72485007a239fb00282ed480da1f
@@ -24324,14 +24383,21 @@ paths:
           description: OK
           content:
             application/json:
+              schema: {}
+        '202':
+          description: Accepted
+          content:
+            application/json:
               schema:
-                $ref: '#/components/schemas/EnterprisesPaginatedResponse'
+                $ref: '#/components/schemas/PendingApproval'
         '400':
           description: Bad Request
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlatformError'
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidOrganizationId'
         '403':
           description: Forbidden
           content:
@@ -24344,19 +24410,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-        '409':
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-  /api/v2/organization/{organizationId}/user:
     post:
       summary: Add a user to an organization
       description: |-
@@ -24438,59 +24491,6 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/OrganizationRole'
-        - name: organizationId
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/OrganizationIdString'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema: {}
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidOrganizationId'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-    delete:
-      summary: Remove a user from an organization
-      description: Remove a user from an organization. Must be an organization manager to perform this action.
-      operationId: v2.organization.user.remove
-      tags:
-        - User Management
-      parameters:
-        - name: userId
-          description: ''
-          in: query
-          required: true
-          schema:
-            type: string
-            example: 59cd72485007a239fb00282ed480da1f
-            minLength: 1
-            pattern: ^[0-9a-f]{32}$
         - name: organizationId
           in: path
           required: true
@@ -24867,50 +24867,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/webhook/{webhookId}:
-    get:
-      summary: Get webhook by id
-      description: Get an organization webhook by its id.
-      operationId: v2.organization.webhook.get
-      tags:
-        - Organization Webhooks
-      parameters:
-        - name: organizationId
-          description: ''
-          in: path
-          required: true
-          schema:
-            type: string
-            example: 59cd72485007a239fb00282ed480da1f
-            minLength: 1
-            pattern: ^[0-9a-f]{32}$
-        - name: webhookId
-          description: ''
-          in: path
-          required: true
-          schema:
-            type: string
-            example: 59cd72485007a239fb00282ed480da1f
-            minLength: 1
-            pattern: ^[0-9a-f]{32}$
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Webhook'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
     delete:
       summary: Delete an organization webhook by id
       description: |-
@@ -24945,6 +24901,50 @@ paths:
           description: No Content
           content:
             application/json: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    get:
+      summary: Get webhook by id
+      description: Get an organization webhook by its id.
+      operationId: v2.organization.webhook.get
+      tags:
+        - Organization Webhooks
+      parameters:
+        - name: organizationId
+          description: ''
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: webhookId
+          description: ''
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Webhook'
         '401':
           description: Unauthorized
           content:
@@ -25115,6 +25115,123 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/reports:
+    get:
+      summary: List reports
+      description: Lists generated reports.
+      operationId: v2.reports.list
+      tags:
+        - Reports
+      parameters:
+        - name: limit
+          description: Number of reports to return
+          in: query
+          schema:
+            type: string
+            default: '25'
+            maximum: 500
+            format: number
+        - name: createdAtGt
+          description: Only return reports created after this date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: enterprise
+          description: Only return reports for this enterprise
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: wallet
+          description: Only return reports for this wallet
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: walletType
+          description: Only return reports for this wallet type
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: reportType
+          description: Only return reports for this report type
+          in: query
+          schema:
+            type: string
+            enum:
+              - holdings
+              - transactions
+              - quarterly
+              - trades
+              - staking
+              - holdingsByAddress
+        - name: status
+          description: Only return rports for this report status
+          in: query
+          schema:
+            type: string
+            enum:
+              - pending
+              - processing
+              - completed
+              - failed
+        - name: prevId
+          description: Only return reports created after this ID
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: format
+          description: Only return reports for this report format
+          in: query
+          schema:
+            type: string
+            enum:
+              - csv
+              - pdf
+        - name: asset
+          description: Only return reports for this report asset
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: reportParams
+          description: Only return reports for this report asset
+          in: query
+          schema: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListReportsJSON'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
     post:
       summary: Generate report
       description: Creates a new report in pending status.
@@ -25343,123 +25460,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-    get:
-      summary: List reports
-      description: Lists generated reports.
-      operationId: v2.reports.list
-      tags:
-        - Reports
-      parameters:
-        - name: limit
-          description: Number of reports to return
-          in: query
-          schema:
-            type: string
-            default: '25'
-            maximum: 500
-            format: number
-        - name: createdAtGt
-          description: Only return reports created after this date
-          in: query
-          schema:
-            type: string
-            format: date-time
-            title: ISO Date String
-        - name: enterprise
-          description: Only return reports for this enterprise
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: wallet
-          description: Only return reports for this wallet
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: walletType
-          description: Only return reports for this wallet type
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: reportType
-          description: Only return reports for this report type
-          in: query
-          schema:
-            type: string
-            enum:
-              - holdings
-              - transactions
-              - quarterly
-              - trades
-              - staking
-              - holdingsByAddress
-        - name: status
-          description: Only return rports for this report status
-          in: query
-          schema:
-            type: string
-            enum:
-              - pending
-              - processing
-              - completed
-              - failed
-        - name: prevId
-          description: Only return reports created after this ID
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: format
-          description: Only return reports for this report format
-          in: query
-          schema:
-            type: string
-            enum:
-              - csv
-              - pdf
-        - name: asset
-          description: Only return reports for this report asset
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: reportParams
-          description: Only return reports for this report asset
-          in: query
-          schema: {}
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListReportsJSON'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/reports/{reportId}:
     get:
       summary: Get report
@@ -25559,6 +25559,36 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/tssconfigs/ecdsa:
+    delete:
+      summary: Delete ECDSA MPC configurations
+      description: Deletes the ECDSA MPC configurations from all enterprises the user is an admin of.
+      operationId: v2.tssconfigs.ecdsa.delete
+      tags:
+        - Transaction request
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                createdBy:
+                  type: string
+                  description: The user who created the configurations
+                  minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  deletedCount:
+                    type: number
+                    description: The number of deleted configurations
+                required:
+                  - deletedCount
     get:
       summary: List ECDSA MPC configurations per enterprise
       description: List all ECDSA MPC configurations from all enterprises for a user. Returns an empty array if the user's enterprise doesn't have any ECDSA MPC configurations.
@@ -25597,36 +25627,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-    delete:
-      summary: Delete ECDSA MPC configurations
-      description: Deletes the ECDSA MPC configurations from all enterprises the user is an admin of.
-      operationId: v2.tssconfigs.ecdsa.delete
-      tags:
-        - Transaction request
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                createdBy:
-                  type: string
-                  description: The user who created the configurations
-                  minLength: 1
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  deletedCount:
-                    type: number
-                    description: The number of deleted configurations
-                required:
-                  - deletedCount
   /api/v2/user/freeze:
     post:
       summary: Freeze User
@@ -27036,7 +27036,6 @@ paths:
       operationId: v2.walletsharerequests.list
       tags:
         - Wallet
-      parameters: []
       responses:
         '200':
           description: OK
@@ -29740,6 +29739,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/ReferralCodeString'
           description: Referral code
+        oauthProvider:
+          allOf:
+            - $ref: '#/components/schemas/OAuthProvider'
+          description: Log in Method of the enterprise *
       required:
         - id
         - name
@@ -31128,6 +31131,7 @@ components:
         - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
         - $ref: '#/components/schemas/CoreDaoClaimIntent'
         - $ref: '#/components/schemas/EthLikeStakeIntent'
+        - $ref: '#/components/schemas/BeraDelegateIntent'
         - $ref: '#/components/schemas/BaseIntent'
     BaseIntent:
       title: Intent
@@ -31145,13 +31149,15 @@ components:
             - type: number
       required:
         - intentType
-    EthLikeStakeIntent:
-      title: EthLike Stake Intent
+    BeraDelegateIntent:
+      title: Bera Delegate Intent
       allOf:
         - type: object
           properties:
             intentType:
-              $ref: '#/components/schemas/IntentType'
+              type: string
+              enum:
+                - delegate
             recipients:
               type: array
               items:
@@ -31198,6 +31204,30 @@ components:
           $ref: '#/components/schemas/optionalString'
         option:
           $ref: '#/components/schemas/optionalUnknownObject'
+    EthLikeStakeIntent:
+      title: EthLike Stake Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              $ref: '#/components/schemas/IntentType'
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    $ref: '#/components/schemas/Address'
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  data:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - address
+                  - amount
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent'
     CoreDaoClaimIntent:
       title: CoreDAO Claim Rewards Intent
       allOf:
@@ -32231,6 +32261,11 @@ components:
       type: string
       example: 59cd72485007a239fb00282ed480da1f
       pattern: ^[0-9a-f]{32}$
+    OAuthProvider:
+      title: OAuthProvider
+      type: string
+      enum:
+        - msEntra
     ReferralCodeString:
       title: ReferralCodeString
       type: string
@@ -45751,6 +45786,7 @@ components:
         - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
         - $ref: '#/components/schemas/CoreDaoClaimIntent'
         - $ref: '#/components/schemas/EthLikeStakeIntent'
+        - $ref: '#/components/schemas/BeraDelegateIntent'
         - $ref: '#/components/schemas/BaseIntent'
     ExchangeEddsaCommitmentsResponse:
       title: ExchangeEddsaCommitmentsResponse
@@ -48867,6 +48903,8 @@ components:
           $ref: '#/components/schemas/MultisigTypeVersion1'
         coldMultiSigTypeVersion:
           $ref: '#/components/schemas/MultisigTypeVersion1'
+        defaultWalletVersion:
+          type: number
     BitgoTSSPublicKeyResponse:
       title: BitgoTSSPublicKeyResponse
       type: object
@@ -49678,6 +49716,7 @@ components:
           enum:
             - institutional
             - nitro
+            - SDTrustNitro
           description: The type of HSM that owns this key.
           example: institutional
         isBitGo:
