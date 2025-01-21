@@ -6683,6 +6683,60 @@ paths:
       x-licenses:
         - cryptoCompare
   /api/evs/v1/identity:
+    get:
+      summary: Get Identity
+      description: Get a Persona transaction.
+      operationId: entity.validation.identity.get
+      tags:
+        - Entity Validation
+      parameters:
+        - name: organizationId
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: enterpriseId
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: userId
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: identityId
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: allData
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IdentityGetResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
     post:
       summary: Create Identity
       description: Create an identity for a user.
@@ -6993,60 +7047,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IdentityCreateResponse'
-    get:
-      summary: Get Identity
-      description: Get a Persona transaction.
-      operationId: entity.validation.identity.get
-      tags:
-        - Entity Validation
-      parameters:
-        - name: organizationId
-          in: query
-          required: true
-          schema:
-            type: string
-            minLength: 1
-        - name: enterpriseId
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: userId
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: identityId
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: allData
-          in: query
-          schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IdentityGetResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError2'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError2'
   /api/evs/v1/identity/{id}:
     patch:
       summary: Patch Update Identity
