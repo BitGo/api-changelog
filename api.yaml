@@ -22751,6 +22751,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/addresses/balances:
+    get:
+      summary: List addresses sorted by balance
+      description: List receive addresses by balance on a wallet
+      operationId: v2.wallet.addresses.balances
+      tags:
+        - Address
+      parameters:
+        - name: page
+          description: page number
+          in: query
+          schema:
+            type: string
+            default: '1'
+            minimum: 1
+            format: number
+        - name: limit
+          description: Maximum number of results to return
+          in: query
+          schema:
+            type: string
+            default: '500'
+            minimum: 1
+            maximum: 500
+            format: number
+        - name: sort
+          description: Sort order of returned addresses based on balance. (1 for ascending, -1 for descending)
+          in: query
+          schema:
+            type: string
+            enum:
+              - '1'
+              - '-1'
+            default: '-1'
+        - name: token
+          description: Name of the token for which the addresses need to be fetched
+          in: query
+          schema:
+            type: string
+        - name: coin
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddressWithBalanceQueryResult'
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/crossChainUnspents:
     get:
       summary: Get Wallet Cross Chain Unspents
@@ -23495,6 +23569,41 @@ paths:
                   - $ref: '#/components/schemas/InvalidEnterpriseId'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/enterprise/{enterpriseId}/points/optOut:
+    put:
+      summary: Opt out of points system
+      operationId: v2.enterprise.points.optOut
+      tags:
+        - Enterprise
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EnterpriseIdString'
+        - name: authorization
+          description: The authorization header
+          in: header
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -25862,6 +25971,9 @@ paths:
                   enum:
                     - canceled
                   description: For transaction request full, the current state must be "pendingApproval" or "pendingDelivery". For transaction request lite, the current state must be "pendingApproval", "pendingUserCommitment", "pendingUserGShare", "pendingUserRShare", or "pendingUserSignature".
+                cancellationReason:
+                  type: string
+                  description: The reason for the cancellation
               required:
                 - state
       responses:
@@ -26910,6 +27022,7 @@ paths:
               - Frankfurt DE Trust
               - BitGo Singapore
               - BitGo Korea
+              - BitGo Mena Fze
               - BitGo Sister Trust 1
       responses:
         '200':
@@ -27013,6 +27126,7 @@ paths:
               - Frankfurt DE Trust
               - BitGo Singapore
               - BitGo Korea
+              - BitGo Mena Fze
               - BitGo Sister Trust 1
       responses:
         '200':
@@ -29743,6 +29857,9 @@ components:
           allOf:
             - $ref: '#/components/schemas/OAuthProvider'
           description: Log in Method of the enterprise *
+        optOutOfPoints:
+          type: boolean
+          description: Opt Out of Points System Flag
       required:
         - id
         - name
@@ -29834,6 +29951,7 @@ components:
         - Frankfurt DE Trust
         - BitGo Singapore
         - BitGo Korea
+        - BitGo Mena Fze
         - BitGo Sister Trust 1
         - BitGo Inc
     Policy:
@@ -46251,6 +46369,7 @@ components:
             - Frankfurt DE Trust
             - BitGo Singapore
             - BitGo Korea
+            - BitGo Mena Fze
             - BitGo Sister Trust 1
             - BitGo Inc
         entries:
@@ -47144,6 +47263,45 @@ components:
       enum:
         - cashaddr
         - base58
+    AddressWithBalanceQueryResult:
+      title: AddressWithBalanceQueryResult
+      type: object
+      description: Represents the result of a query for addresses with balances. This structure contains the details of a set of addresses, their associated balances, and pagination information about the query results.
+      properties:
+        coin:
+          allOf:
+            - $ref: '#/components/schemas/CoinString'
+          description: The coin associated with the address balances
+        page:
+          type: number
+          description: The current page number
+        totalAddressCount:
+          type: number
+          description: Total number of addresses present
+        totalPages:
+          type: number
+          description: Total number of pages available for pagination
+        addresses:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+                description: The address itself
+              balance:
+                allOf:
+                  - $ref: '#/components/schemas/TrimmedBalance1'
+                description: The balance associated with the address
+            required:
+              - address
+              - balance
+            description: List of addresses with their balances
+        message:
+          type: string
+          description: Optional message from the response
+      required:
+        - coin
     AddressQueryResult:
       title: AddressQueryResult
       type: object
@@ -47368,6 +47526,8 @@ components:
       enum:
         - distributedCustody
         - pairedCustodial
+        - custodialHot
+        - custodialCold
     WalletFlag1:
       title: WalletFlag
       type: string
@@ -47980,6 +48140,7 @@ components:
                   - Frankfurt DE Trust
                   - BitGo Singapore
                   - BitGo Korea
+                  - BitGo Mena Fze
                   - BitGo Sister Trust 1
                   - BitGo Inc
               entries:
@@ -48485,6 +48646,7 @@ components:
                 - Frankfurt DE Trust
                 - BitGo Singapore
                 - BitGo Korea
+                - BitGo Mena Fze
                 - BitGo Sister Trust 1
                 - BitGo Inc
             coin:
