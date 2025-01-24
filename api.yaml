@@ -24304,42 +24304,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/internal/enterprise/{enterpriseId}/points/verifyRetail:
-    post:
-      summary: Verifies if a given enterpise is a retail enterprise
-      operationId: v2.internal.enterprise.points.verifyRetail
-      tags:
-        - Enterprise
-      parameters:
-        - name: enterpriseId
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/EnterpriseIdString'
-        - name: authorization
-          description: The authorization header
-          in: header
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/IsRetailEnterprise'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/enterprise:
     get:
       summary: List enterprises for an organization
@@ -30528,6 +30492,14 @@ components:
           $ref: '#/components/schemas/LivenessVerificationParameter'
         isFallback:
           type: boolean
+        walletSubtype:
+          $ref: '#/components/schemas/WalletSubtype'
+    WalletSubtype:
+      title: WalletSubtype
+      type: string
+      enum:
+        - custodialCold
+        - custodialHot
     LivenessVerificationParameter:
       title: LivenessVerificationParameter
       type: string
@@ -31035,6 +31007,7 @@ components:
         - noop
         - triggerWebhookNotification
         - performLivenessVerification
+        - recommendBackingWalletRouting
     TransactionRequestId:
       title: TransactionRequestId
       type: string
@@ -50935,14 +50908,6 @@ components:
         - claimTransactionByVasp
         - rejectTransactionByVasp
         - freezeKey
-    IsRetailEnterprise:
-      title: IsRetailEnterprise
-      type: object
-      properties:
-        isRetail:
-          type: boolean
-      required:
-        - isRetail
   parameters:
     Base:
       name: base
