@@ -170,6 +170,13 @@ function schemaReferencesComponent(schema, componentName, visitedRefs = new Set(
     if (schema.items && schemaReferencesComponent(schema.items, componentName, visitedRefs)) {
         return true;
     }
+
+    // Check additionalProperties
+    if (schema.additionalProperties && typeof schema.additionalProperties === 'object') {
+        if (schemaReferencesComponent(schema.additionalProperties, componentName, visitedRefs)) {
+            return true;
+        }
+    }
     
     return false;
 }
@@ -184,7 +191,10 @@ function findComponentUsage(details, componentName) {
             // Check direct parameter reference
             if (p.$ref && p.$ref.includes(`/parameters/${componentName}`)) return true;
             // Check schema reference if it exists
-            if (p.schema && p.schema.$ref && p.schema.$ref.includes(`/schemas/${componentName}`)) return true;
+            if (p.schema && schemaReferencesComponent(p.schema, componentName)) return true;
+            // Check examples
+            if (p.examples && Object.values(p.examples).some(e => 
+                e.$ref && e.$ref.includes(`/examples/${componentName}`))) return true;
             return false;
         });
         if (hasComponent) usage.push('parameters');
@@ -195,8 +205,12 @@ function findComponentUsage(details, componentName) {
         if (details.requestBody.$ref && details.requestBody.$ref.includes(componentName)) {
             usage.push('requestBody');
         } else if (details.requestBody.content) {
-            const hasComponent = Object.values(details.requestBody.content).some(c => 
-                c.schema && c.schema.$ref && c.schema.$ref.includes(`/schemas/${componentName}`));
+            const hasComponent = Object.values(details.requestBody.content).some(c => {
+                if (c.schema && schemaReferencesComponent(c.schema, componentName)) return true;
+                if (c.examples && Object.values(c.examples).some(e => 
+                    e.$ref && e.$ref.includes(`/examples/${componentName}`))) return true;
+                return false;
+            });
             if (hasComponent) usage.push('requestBody');
         }
     }
@@ -206,8 +220,16 @@ function findComponentUsage(details, componentName) {
         const hasComponent = Object.entries(details.responses).some(([code, response]) => {
             if (response.$ref && response.$ref.includes(`/responses/${componentName}`)) return true;
             if (response.content) {
-                return Object.values(response.content).some(c => 
-                    c.schema && c.schema.$ref && c.schema.$ref.includes(`/schemas/${componentName}`));
+                return Object.values(response.content).some(c => {
+                    if (c.schema && schemaReferencesComponent(c.schema, componentName)) return true;
+                    if (c.examples && Object.values(c.examples).some(e => 
+                        e.$ref && e.$ref.includes(`/examples/${componentName}`))) return true;
+                    return false;
+                });
+            }
+            if (response.headers) {
+                return Object.values(response.headers).some(h => 
+                    schemaReferencesComponent(h.schema, componentName));
             }
             return false;
         });
