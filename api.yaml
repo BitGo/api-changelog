@@ -147,6 +147,164 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PendingApproval'
+  /api/v2/{coin}/wallet/{walletId}:
+    put:
+      tags:
+        - Wallet
+      summary: Update wallet
+      operationId: v2.wallet.update
+      description: Update a wallet by its 'coin' and 'walletId'.
+      parameters:
+        - $ref: '#/components/parameters/pathCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWallet'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
+    delete:
+      tags:
+        - Wallet
+      summary: Delete wallet
+      description: Delete one wallet by its 'coin' and 'walletId'. Once removed, you can no longer view or access this wallet, but it does remain accessible to other wallet users. If you are the only user on this wallet, you can only delete it if it has a 0 balance.
+      operationId: v2.wallet.remove
+      parameters:
+        - $ref: '#/components/parameters/pathCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    get:
+      summary: Get wallet by ID and coin
+      description: Get one wallet by its 'coin' and 'walletId'. One 'walletId' can map to multiple receive addresses.
+      operationId: v2.wallet.get
+      tags:
+        - Wallet
+      parameters:
+        - name: allTokens
+          description: Include data for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: unspentCount
+          description: True, if including unspent count for UTXO-based coins.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: includeRbf
+          description: True, if including Replace-By-Fee (RBF) transactions in the total balance amount.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: expandAdvancedWhitelist
+          description: True, if including the advanced whitelist wallet address in the response. The address is annotated as part of the whitelist entry metadata
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: includeStakingBalances
+          description: Includes the staked balance and reward balance of the wallet
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: coin
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/webhooks:
     get:
       tags:
@@ -16049,7 +16207,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Wallet'
+                $ref: '#/components/schemas/Wallet1'
         '202':
           description: Accepted
           content:
@@ -16084,7 +16242,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Wallet'
+                $ref: '#/components/schemas/Wallet1'
         '202':
           description: Accepted
           content:
@@ -16119,7 +16277,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Wallet'
+                $ref: '#/components/schemas/Wallet1'
         '202':
           description: Accepted
           content:
@@ -16446,7 +16604,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Wallet'
+                $ref: '#/components/schemas/Wallet1'
         '400':
           description: Bad Request
           content:
@@ -16548,7 +16706,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Wallet'
+                $ref: '#/components/schemas/Wallet1'
         '400':
           description: Bad Request
           content:
@@ -16579,153 +16737,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Wallet'
+                $ref: '#/components/schemas/Wallet1'
         '400':
           description: Bad Request
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-        '404':
-          description: Not Found
-  /api/v2/{coin}/wallet/{walletId}:
-    get:
-      tags:
-        - Wallet
-      summary: Get wallet
-      operationId: v2.wallet.get
-      description: Get one wallet by its 'coin' and 'walletId'. One 'walletId' can map to multiple receive addresses.
-      parameters:
-        - $ref: '#/components/parameters/allTokens'
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-        - $ref: '#/components/parameters/unspentCount'
-        - name: includeRbf
-          in: query
-          description: True, if including Replace-By-Fee (RBF) transactions in the total balance amount.
-          schema:
-            type: boolean
-        - name: expandAdvancedWhitelist
-          in: query
-          description: True, if including the advanced whitelist wallet address in the response. The address is annotated as part of the whitelist entry metadata.
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/Wallet'
-                  - $ref: '#/components/schemas/WalletBalance'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
-        '404':
-          description: Not Found
-    put:
-      tags:
-        - Wallet
-      summary: Update wallet
-      operationId: v2.wallet.update
-      description: Update a wallet by its 'coin' and 'walletId'.
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateWallet'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Wallet'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
-        '403':
-          description: Forbidden
-        '404':
-          description: Not Found
-    delete:
-      tags:
-        - Wallet
-      summary: Delete wallet
-      description: Delete one wallet by its 'coin' and 'walletId'. Once removed, you can no longer view or access this wallet, but it does remain accessible to other wallet users. If you are the only user on this wallet, you can only delete it if it has a 0 balance.
-      operationId: v2.wallet.remove
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Wallet'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-  /api/v2/wallet/{walletId}:
-    get:
-      tags:
-        - Wallet
-      summary: Get wallet by ID
-      operationId: v2.wallet.getbyid
-      description: Get one wallet by its 'walletId'. One 'walletId' can map to multiple receive addresses.
-      parameters:
-        - $ref: '#/components/parameters/allTokens'
-        - $ref: '#/components/parameters/pathWalletId'
-        - name: expandAdvancedWhitelist
-          in: query
-          description: True, if including the advanced whitelist wallet address in the response. The address is annotated as part of the whitelist entry metadata.
-          schema:
-            type: boolean
-            default: false
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - $ref: '#/components/schemas/Wallet'
-                  - $ref: '#/components/schemas/WalletBalance'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
         '404':
           description: Not Found
   /api/v2/{coin}/wallet/{walletId}/user/{userId}:
@@ -16752,7 +16770,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Wallet'
+                $ref: '#/components/schemas/Wallet1'
         '400':
           description: Bad Request
           content:
@@ -25875,6 +25893,96 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}:
+    get:
+      summary: Get wallet by ID
+      description: Get one wallet by its 'walletId'. One 'walletId' can map to multiple receive addresses.
+      operationId: v2.wallet.getbyid
+      tags:
+        - Wallet
+      parameters:
+        - name: allTokens
+          description: Include data for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: unspentCount
+          description: True, if including unspent count for UTXO-based coins.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: includeRbf
+          description: True, if including Replace-By-Fee (RBF) transactions in the total balance amount.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: expandAdvancedWhitelist
+          description: True, if including the advanced whitelist wallet address in the response. The address is annotated as part of the whitelist entry metadata
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: includeStakingBalances
+          description: Includes the staked balance and reward balance of the wallet
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/pin:
     put:
       summary: Pin or unpin a wallet
@@ -26864,10 +26972,12 @@ paths:
     get:
       summary: List wallets
       description: |-
-        Lists all wallets you can access, including:
+        Lists all wallets you can access when the enterprise ID is provided, including:
         - Wallets you have a role on (admin, spender, or viewer).
         - Wallets in enterprises you belong to that have the 'View All Wallets' option enabled
         from the enterprise settings.
+
+        If the enterprise ID is not provided, lists only the wallets you have a role on.
       operationId: v2.wallet.list
       tags:
         - Wallet
@@ -27882,6 +27992,25 @@ components:
           description: The last date the approval was processing
           format: date-time
           title: ISO Date String
+        freeze:
+          type: object
+          description: The freeze state
+          properties:
+            comment:
+              type: string
+            reason:
+              type: string
+            state:
+              type: string
+              enum:
+                - frozen
+                - unFrozen
+            time:
+              type: string
+              format: date-time
+              title: ISO Date String
+            user:
+              type: string
       required:
         - id
         - creator
@@ -27889,6 +28018,19 @@ components:
         - info
         - state
         - scope
+    PendingApprovalAddressLabel:
+      description: Address labels of recipients in this Pending Approval
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/AddressString3'
+        label:
+          $ref: '#/components/schemas/AddressLabel'
+        walletLabel:
+          $ref: '#/components/schemas/WalletLabel'
+      required:
+        - address
+        - label
     WalletLabel:
       type: string
       example: My Wallet
@@ -29477,6 +29619,621 @@ components:
       type: string
       example: '123456'
       description: Second factor authentication token
+    Wallet:
+      title: Wallet
+      type: object
+      properties:
+        allowBackupKeySigning:
+          type: boolean
+        approvalsRequired:
+          type: number
+          example: 1
+          minimum: 1
+        coin:
+          $ref: '#/components/schemas/CoinString'
+        coinSpecific:
+          $ref: '#/components/schemas/WalletSubdocument'
+        deleted:
+          type: boolean
+        disableTransactionNotifications:
+          type: boolean
+        hasLargeNumberOfAddresses:
+          type: boolean
+        id:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        isCold:
+          type: boolean
+        label:
+          type: string
+          example: My Wallet
+        startDate:
+          type: string
+          description: Wallet creation time
+          format: date-time
+          title: ISO Date String
+        admin:
+          type: object
+          properties:
+            policy:
+              $ref: '#/components/schemas/Policy'
+        billingEnterprise:
+          type: string
+        buildDefaults:
+          type: object
+          properties:
+            minFeeRate:
+              type: number
+              description: (UTXO only) Wallet-level minimum fee rate that must be greater than or equal to the default of 1000 satoshis/kvByte. Per transaction, you can override "minFeeRate" with the "feeRate" parameter.
+              example: 12000
+              minimum: 1000
+        clientFlags:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              value:
+                type: boolean
+        config:
+          type: object
+          properties:
+            nodeId: {}
+        custodialWalletId:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        customChangeKeySignatures:
+          type: object
+          properties:
+            user:
+              type: string
+            backup:
+              type: string
+            bitgo:
+              type: string
+        customerWalletId:
+          type: string
+        enterprise:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        organization:
+          type: string
+        bitgoOrg:
+          type: string
+        freeze:
+          type: object
+          properties:
+            time:
+              type: string
+              format: date-time
+              title: ISO Date String
+            expires:
+              type: string
+              format: date-time
+              title: ISO Date String
+        instantProvider:
+          type: string
+        keys:
+          type: array
+          example:
+            - 585951a5df8380e0e304a553
+            - 585951a5df8380e0e30d645c
+            - 585951a5df8380e0e30b6147
+          items:
+            type: string
+        keySignatures:
+          type: object
+          properties:
+            backupPub:
+              type: string
+            bitgoPub:
+              type: string
+        m:
+          type: number
+          description: Number of signatures required. This value must be 2 for hot wallets, 1 for **ofc** wallets, and not specified for custodial wallets.
+          example: 2
+        migratedFrom:
+          type: string
+        multisigType:
+          $ref: '#/components/schemas/MultiSigType'
+        multisigTypeVersion:
+          $ref: '#/components/schemas/MultisigTypeVersion'
+        'n':
+          type: number
+          description: Number of keys provided. This value must be 3 for hot wallets, 1 for **ofc** wallets, and not specified for custodial wallets.
+          example: 3
+        recoverable:
+          type: boolean
+        tags:
+          type: array
+          items:
+            type: string
+        type:
+          allOf:
+            - $ref: '#/components/schemas/WalletType'
+          description: The type describes who owns the keys to the wallet and how they are stored. "cold" wallets are wallets where the private key of the user key is stored exclusively outside of BitGo's system. "custodial" means that this wallet is a cold wallet where BitGo owns the keys. Only customers of the BitGo Trust can create this kind of wallet. "custodialPaired" means that this is a hot wallet that is owned by the customer but it will be linked to a cold (custodial) wallet where BitGo owns the keys. This option is only available to customers of BitGo Inc. BitGo stores an encrypted private key for the user key of "hot" wallets. "trading" wallets are trading accounts where the coin is "ofc". "distributedCustody" means You manage one key and another key agent manages the second key. BitGo manages the third key
+        subType:
+          $ref: '#/components/schemas/WalletSubType'
+        balanceString:
+          type: string
+          description: The cleared balance of the address in base units (e.g. Satoshis). Guaranteed to not lose precision. The is only returned if the 'expandBalance' query parameter is set to 'true'.
+        balance:
+          type: number
+          description: The cleared balance of the address in base units (e.g. Satoshis). The is only returned if the 'expandBalance' query parameter is set to 'true'.
+        confirmedBalanceString:
+          type: string
+          description: The total balance of confirmed transactions in base units (e.g. Satoshis). The is only returned if the 'expandBalance' query parameter is set to 'true'. Guaranteed to not lose precision.
+        confirmedBalance:
+          type: number
+          description: The total balance of confirmed transactions in base units (e.g. Satoshis). The is only returned if the 'expandBalance' query parameter is set to 'true'.
+        spendableBalanceString:
+          type: string
+          description: The total balance in base units (e.g. Satoshis) which may be used as inputs for creating new transactions in string representation. Guaranteed to not lose precision. The is only returned if the 'expandBalance' query parameter is set to 'true'.
+        spendableBalance:
+          type: number
+          description: The total balance in base units (e.g. Satoshis) which may be used as inputs for creating new transactions in string representation. The is only returned if the 'expandBalance' query parameter is set to 'true'.
+        stakingBalanceString:
+          type: string
+          description: The staked balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
+        rewardBalanceString:
+          type: string
+          description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              needsRecovery:
+                type: boolean
+              permissions:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - admin
+                    - spend
+                    - view
+                    - freeze
+                    - trade
+              recoverable:
+                type: boolean
+              user:
+                type: string
+            required:
+              - permissions
+        walletFlags:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                $ref: '#/components/schemas/WalletFlag'
+              value:
+                type: string
+            required:
+              - name
+              - value
+        receiveAddress:
+          $ref: '#/components/schemas/WalletAddress'
+      required:
+        - allowBackupKeySigning
+        - approvalsRequired
+        - coin
+        - coinSpecific
+        - deleted
+        - disableTransactionNotifications
+        - hasLargeNumberOfAddresses
+        - id
+        - isCold
+        - label
+        - startDate
+    MultisigTypeVersion:
+      title: MultisigTypeVersion
+      type: string
+      enum:
+        - MPCv2
+    WalletMultisigType:
+      type: string
+      enum:
+        - onchain
+        - tss
+        - blsdkg
+    CustomChangeKeySignatures:
+      type: object
+      properties:
+        user:
+          type: string
+        backup:
+          type: string
+        bitgo:
+          type: string
+      description: |
+        Signatures for the keys which will be used to derive custom change addresses.
+
+        **Note:** These signatures may only be set once for each wallet and are not modifiable after being set.
+    WalletUser:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/Id'
+        permissions:
+          type: array
+          items:
+            $ref: '#/components/schemas/WalletPermission'
+      example:
+        user: 55e8a1a5df8380e0e30e20c6
+        permissions:
+          - admin
+          - view
+          - spend
+    WalletPermission:
+      type: string
+      description: |
+        Comma-separated list of privileges for a wallet. Includes:
+
+              - 'admin' - Can manage wallet policies and users and approve or reject pending approvals.
+              - 'freeze' - Can freeze a wallet, disabling all withdrawals.
+              - 'spend' - Can initiate withdrawals and generate new receive addresses.
+              - 'trade' - Can initiate trades from a Go Account ('trading' wallet type).
+              - 'view' - Can view balances and transactions.
+
+        Permissions don't overlap. Required parameter if 'reshare' is false.
+      enum:
+        - admin
+        - spend
+        - trade
+        - view
+      example: spend,view
+    IntegerString:
+      type: string
+      pattern: ^-?\d+$
+      example: '2000000'
+    AddressType:
+      type: string
+      example: p2sh
+      enum:
+        - p2sh
+        - p2shP2wsh
+        - p2wsh
+        - p2tr
+        - p2trMusig2
+    AddressBalance:
+      type: object
+      properties:
+        updated:
+          type: string
+          description: The last time a transaction affected the balance of this address
+          format: date-time
+        balance:
+          type: integer
+          description: The cleared balance of the address
+          example: 50000
+        balanceString:
+          type: string
+          description: String representation of 'balance'. Guaranteed to not lose precision.
+          example: '50000'
+        totalReceived:
+          type: integer
+          description: The total amount received on this address (in the chain's base unit)
+        totalSent:
+          type: integer
+          description: The total amount send from this address (in the chain's base unit)
+        confirmedBalanceString:
+          type: string
+          description: |
+            The total balance of confirmed transactions for the address (in the chain's base unit).
+            Guaranteed to not lose precision.
+          example: '40000'
+        spendableBalanceString:
+          type: string
+          description: |
+            The total balance of the address (in the chain's base unit) which may
+            be used as inputs for creating new transactions in string representation.
+            Guaranteed to not lose precision.
+          example: '40000'
+    AddressCoinSpecificXlm:
+      type: object
+      properties:
+        memoId:
+          allOf:
+            - $ref: '#/components/schemas/IntegerString'
+            - example: '1'
+          description: Latest memo id generated for the wallet
+        rootAddress:
+          type: string
+          description: Root address of the wallet
+          example: GCTTCPH4IIDK7P72FFAEJ3ZFN6WDHJH6GGMRPHPM56ZWGIQ7B3XTIJAM
+    Chain:
+      type: integer
+      example: 1
+      enum:
+        - 0
+        - 1
+        - 10
+        - 11
+        - 20
+        - 21
+        - 30
+        - 31
+        - 40
+        - 41
+    NumKeychains:
+      description: |
+        Number of keys provided.  This value must be 3 for hot wallets,
+        1 for **ofc** wallets, and not specified for custodial wallets.
+      type: integer
+      example: 3
+    NumSignatures:
+      description: |
+        Number of signatures required.  This value must be 2 for
+        hot wallets, 1 for **ofc** wallets, and not specified for custodial
+        wallets.
+      type: integer
+      example: 2
+    Keys:
+      type: array
+      items:
+        $ref: '#/components/schemas/Id'
+      example:
+        - 585951a5df8380e0e304a553
+        - 585951a5df8380e0e30d645c
+        - 585951a5df8380e0e30b6147
+    WalletCoinSpecific:
+      oneOf:
+        - title: Wallet
+          type: object
+          properties:
+            creationFailure:
+              type: array
+              items:
+                $ref: '#/components/schemas/TxId'
+              description: Includes list of fail initialization txids
+            pendingChainInitialization:
+              type: boolean
+              description: Whether the wallet needs to be initialized on the chain
+        - $ref: '#/components/schemas/WalletCoinSpecificCosmos'
+        - $ref: '#/components/schemas/WalletCoinSpecificXlm'
+    WalletCoinSpecificXlm:
+      title: XLM
+      type: object
+      properties:
+        rootAddress:
+          type: string
+          description: Root address of the wallet
+          example: GCTTCPH4IIDK7P72FFAEJ3ZFN6WDHJH6GGMRPHPM56ZWGIQ7B3XTIJAM
+        stellarUsername:
+          type: string
+          description: Username for the user's Stellar address
+          example: foo_bar@baz.com
+        homeDomain:
+          type: string
+          description: Home domain of a Stellar account
+          example: bitgo.com
+        stellarAddress:
+          type: string
+          description: Email-like address associated to a Stellar account
+          example: foo_bar@baz.com*bitgo.com
+    WalletCoinSpecificCosmos:
+      title: ATOM
+      type: object
+      properties:
+        rootAddress:
+          type: string
+          description: Wallet address to send or receive assets.
+          example: cosmos1uvrgkp82dmeks368d7g2ejzm3axhapzveh5uek
+        lastChainIndex:
+          type: number
+          description: Index of last address that was derived.
+          example: 1
+        lastMemoId:
+          type: string
+          description: A running counter of the last known memo id. The first one is 0.
+          example: '0'
+        pendingEcdsaTssInitialization:
+          type: boolean
+          description: If true, this wallet cannot sign transactions or messages as the enterprise has not finished MPC setup.
+          example: false
+      required:
+        - rootAddress
+        - lastMemoId
+    TxId:
+      type: string
+      description: The on-chain transaction id
+      example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+    WalletBuildDefaults:
+      type: object
+      properties:
+        minFeeRate:
+          type: integer
+          minimum: 1000
+          nullable: true
+          example: 12000
+          description: |
+            (BTC only) The minimum fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte. Must be greater than or equal to the default of 1000 satoshis/kvByte.
+
+            Note: The you can override 'minFeeRate' on a per transaction basis with the 'feeRate' parameter.
+        maxFeeRate:
+          type: integer
+          minimum: 1000
+          nullable: true
+          example: 18000
+          description: |
+            (BTC only) The maximum fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte. The 'maxFeeRate' limits the fee rate generated by both 'feeMultiplier' and 'numBlocks'.
+
+            Note: The you can override 'maxFeeRate' on a per transaction basis with the 'feeRate' parameter.
+        feeMultiplier:
+          type: number
+          minimum: 1
+          nullable: true
+          example: 1.2
+          description: |
+            (UTXO only) Custom multiplier to the 'feeRate'. The resulting fee rate is limited by the 'maxFeeRate'. For replace-by-fee (RBF) transactions (that include 'rbfTxIds'), the 'feeMultiplier' must be greater than 1, since it's an absolute fee multiplier to the transaction being replaced.
+
+            Note: The 'maxFeeRate' limits the fee rate generated by 'feeMultiplier'.
+        changeAddressType:
+          $ref: '#/components/schemas/DefaultChangeAddressType'
+        txFormat:
+          type: string
+          example: psbt
+          enum:
+            - legacy
+            - psbt
+            - psbt-lite
+          description: |
+            (UTXO only) The default transaction format to use for this wallet. Per transaction, you can override the default with the 'txFormat' parameter.
+    DefaultChangeAddressType:
+      type: string
+      example: p2wsh
+      enum:
+        - p2sh
+        - p2shP2wsh
+        - p2wsh
+        - p2tr
+        - p2trMusig2
+        - default
+      description: |
+        (UTXO only) The default script type to use for change for this wallet. Per transaction, you override the default with the 'changeAddressType' parameter. If 'default' is provided, it will clear the 'changeAddressType' default on the wallet. Note that each UTXO coin has different address types available. For example, Only BTC supports 'p2tr'.
+    Policy:
+      title: Policy
+      type: object
+      properties:
+        date:
+          oneOf:
+            - type: string
+              format: date-time
+              title: ISO Date String
+            - type: string
+              format: date
+              title: Date String
+          format: date-time
+        id:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        latest:
+          type: boolean
+        version:
+          type: number
+        enterpriseId:
+          type: string
+        label:
+          type: string
+        rules:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              type:
+                $ref: '#/components/schemas/ApiRuleType'
+              action:
+                allOf:
+                  - $ref: '#/components/schemas/PolicyRuleAction'
+                description: What happens when this rule is triggered
+              latest:
+                type: boolean
+              version:
+                type: number
+              lockDate:
+                type: string
+                description: The time at which this rule becomes immutable
+                format: date-time
+                title: ISO Date String
+              mutabilityConstraint:
+                allOf:
+                  - $ref: '#/components/schemas/MutabilityConstraint'
+                description: Specifies whether a BitGo admin can change "lockDate" * "managed" - Not locked, but requires approval from a BitGo admin to change * "permanent" - "lockDate" cannot be changed * "sticky" - Not included in bulk unlock, but "lockDate" can be individually changed
+              coin:
+                $ref: '#/components/schemas/CoinString'
+              condition:
+                allOf:
+                  - $ref: '#/components/schemas/Condition'
+                description: Parameters for the type
+            required:
+              - id
+              - type
+              - action
+        walletId:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+      required:
+        - date
+        - id
+        - latest
+        - version
+    AdvancedListRuleEntry:
+      title: AdvancedListRuleEntry
+      type: object
+      properties:
+        item:
+          type: string
+          description: Either a valid address or a wallet or enterprise id. Must be unique in this whitelist.
+        metaData:
+          type: object
+          additionalProperties: {}
+          description: Any data about this entry that is not used to determine when to enforce the policy
+        type:
+          allOf:
+            - $ref: '#/components/schemas/AdvancedListType'
+          description: the kind of resource a list rule entry refers to
+        verificationState:
+          type: string
+          enum:
+            - unverified
+            - verified
+      required:
+        - item
+        - type
+    ListRuleEntryType:
+      type: string
+      enum:
+        - address
+        - walletId
+        - enterpriseId
+      description: the kind of resource a list rule entry refers to
+    MutabilityConstraint:
+      title: MutabilityConstraint
+      type: string
+      enum:
+        - unlocked
+        - permanent
+        - sticky
+        - managed
+    UpdateWallet:
+      type: object
+      properties:
+        approvalsRequired:
+          $ref: '#/components/schemas/ApprovalsRequired'
+        buildDefaults:
+          $ref: '#/components/schemas/WalletBuildDefaults'
+        disableTransactionNotifications:
+          type: boolean
+        label:
+          $ref: '#/components/schemas/WalletLabel'
+        customChangeKeySignatures:
+          $ref: '#/components/schemas/CustomChangeKeySignatures'
+        coinSpecific:
+          $ref: '#/components/schemas/WalletUpdateCoinSpecific'
+    WalletUpdateCoinSpecific:
+      type: object
+      properties:
+        eth:
+          $ref: '#/components/schemas/WalletUpdateCoinSpecificEth'
+        teth:
+          $ref: '#/components/schemas/WalletUpdateCoinSpecificEth'
+    WalletUpdateCoinSpecificEth:
+      type: object
+      properties:
+        deployForwardersManually:
+          type: boolean
+        flushForwardersManually:
+          type: boolean
     UpdateWalletShareResponse:
       title: UpdateWalletShareResponse
       type: object
@@ -29954,120 +30711,6 @@ components:
         - BitGo Mena Fze
         - BitGo Sister Trust 1
         - BitGo Inc
-    Policy:
-      title: Policy
-      type: object
-      properties:
-        date:
-          oneOf:
-            - type: string
-              format: date-time
-              title: ISO Date String
-            - type: string
-              format: date
-              title: Date String
-          format: date-time
-        id:
-          type: string
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
-        latest:
-          type: boolean
-        version:
-          type: number
-        enterpriseId:
-          type: string
-        label:
-          type: string
-        rules:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-              latest:
-                type: boolean
-              version:
-                type: number
-              type:
-                $ref: '#/components/schemas/ApiRuleType'
-              action:
-                allOf:
-                  - $ref: '#/components/schemas/PolicyRuleAction'
-                description: What happens when this rule is triggered
-              lockDate:
-                type: string
-                description: The time at which this rule becomes immutable
-                format: date-time
-                title: ISO Date String
-              mutabilityConstraint:
-                allOf:
-                  - $ref: '#/components/schemas/MutabilityConstraint'
-                description: Specifies whether a BitGo admin can change "lockDate" * "managed" - Not locked, but requires approval from a BitGo admin to change * "permanent" - "lockDate" cannot be changed * "sticky" - Not included in bulk unlock, but "lockDate" can be individually changed
-              coin:
-                $ref: '#/components/schemas/CoinString'
-              condition:
-                allOf:
-                  - $ref: '#/components/schemas/Condition'
-                description: Parameters for the type
-            required:
-              - id
-              - latest
-              - version
-              - type
-              - action
-        walletId:
-          type: string
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
-      required:
-        - date
-        - id
-        - latest
-        - version
-    AdvancedListRuleEntry:
-      title: AdvancedListRuleEntry
-      type: object
-      properties:
-        item:
-          type: string
-          description: Either a valid address or a wallet or enterprise id. Must be unique in this whitelist.
-        metaData:
-          type: object
-          additionalProperties: {}
-          description: Any data about this entry that is not used to determine when to enforce the policy
-        type:
-          allOf:
-            - $ref: '#/components/schemas/AdvancedListType'
-          description: the kind of resource a list rule entry refers to
-        verificationState:
-          type: string
-          enum:
-            - unverified
-            - verified
-      required:
-        - item
-        - type
-    ListRuleEntryType:
-      type: string
-      enum:
-        - address
-        - walletId
-        - enterpriseId
-      description: the kind of resource a list rule entry refers to
-    IntegerString:
-      type: string
-      pattern: ^-?\d+$
-      example: '2000000'
-    MutabilityConstraint:
-      title: MutabilityConstraint
-      type: string
-      enum:
-        - unlocked
-        - permanent
-        - sticky
-        - managed
     AdditionalEnterpriseInfo:
       title: AdditionalEnterpriseInfo
       type: object
@@ -32347,6 +32990,1250 @@ components:
         - updateOrganizationRequest
         - genericRequest
         - enterpriseInviteRequest
+    WalletAddress:
+      title: WalletAddress
+      type: object
+      properties:
+        chain:
+          allOf:
+            - $ref: '#/components/schemas/AddressChain'
+          example: '1'
+        coin:
+          $ref: '#/components/schemas/CoinString'
+        index:
+          type: number
+        wallet:
+          type: string
+        id:
+          type: string
+          description: Platform public ID for an address
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        address:
+          $ref: '#/components/schemas/AddressString'
+        balance:
+          $ref: '#/components/schemas/TrimmedBalance'
+        coinSpecific:
+          allOf:
+            - $ref: '#/components/schemas/AddressSubdocument'
+          description: Properties specific to certain coin types
+        label:
+          $ref: '#/components/schemas/AddressLabelString'
+        lastNonce:
+          type: number
+          default: -1
+        token:
+          type: string
+        proof:
+          type: string
+        signature:
+          type: string
+        lastConsolidatedTime:
+          type: string
+          format: date
+          title: Date String
+        needsConsolidation:
+          type: boolean
+        tokenConsolidationState: {}
+      required:
+        - chain
+        - coin
+        - index
+        - wallet
+    AddressLabelString:
+      title: AddressLabelString
+      type: string
+      description: A human-readable label for the address
+      example: Bob's Hot Wallet Address
+      maxLength: 250
+    AddressSubdocument:
+      title: AddressSubdocument
+      oneOf:
+        - $ref: '#/components/schemas/AlgorandAddress'
+        - $ref: '#/components/schemas/AtomAddress'
+        - $ref: '#/components/schemas/AvaxPAddress'
+        - $ref: '#/components/schemas/UtxoAddress'
+        - $ref: '#/components/schemas/BitcoinCashAddress'
+        - $ref: '#/components/schemas/CasperAddress'
+        - $ref: '#/components/schemas/DotAddress'
+        - $ref: '#/components/schemas/EosAddress'
+        - $ref: '#/components/schemas/EthereumAddress'
+        - $ref: '#/components/schemas/Ethereum2Address'
+        - $ref: '#/components/schemas/FiatAddress'
+        - $ref: '#/components/schemas/HederaAddress'
+        - $ref: '#/components/schemas/OffchainAddressSubdocument'
+        - $ref: '#/components/schemas/SilvergateUSDAddress'
+        - $ref: '#/components/schemas/SolAddress'
+        - $ref: '#/components/schemas/StacksAddress'
+        - $ref: '#/components/schemas/StellarAddress'
+        - $ref: '#/components/schemas/TestcoinAddress'
+        - $ref: '#/components/schemas/TezosAddress'
+        - $ref: '#/components/schemas/TronAddress'
+        - $ref: '#/components/schemas/XRPAddress'
+        - $ref: '#/components/schemas/TonAddress'
+    TonAddress:
+      title: Ton Address
+      type: object
+      properties:
+        addresses:
+          type: array
+          items:
+            type: string
+      required:
+        - addresses
+    XRPAddress:
+      title: XRP Address
+      type: object
+      properties:
+        nonceTracker:
+          type: object
+          properties:
+            detectedMissingNonces:
+              type: array
+              items:
+                type: object
+                properties:
+                  nonce:
+                    type: number
+                  isNonceLocked:
+                    type: boolean
+                  nonceLockExpireTime:
+                    type: string
+                    format: date
+                    title: Date String
+                required:
+                  - nonce
+                  - isNonceLocked
+            detectedMissingNoncesData:
+              type: array
+              items:
+                type: object
+                properties:
+                  nonce:
+                    type: number
+                  isNonceLocked:
+                    type: boolean
+                  nonceLockExpireTime:
+                    type: string
+                    format: date
+                    title: Date String
+                required:
+                  - nonce
+                  - isNonceLocked
+          required:
+            - detectedMissingNonces
+            - detectedMissingNoncesData
+      required:
+        - nonceTracker
+    TronAddress:
+      title: Tron Address
+      type: object
+      properties:
+        rootPub:
+          type: string
+      required:
+        - rootPub
+    TezosAddress:
+      title: Tezos Address
+      type: object
+      properties:
+        counter:
+          type: number
+        updateTime:
+          type: string
+          format: date
+          title: Date String
+        txCount:
+          type: number
+        pendingChainInitialization:
+          type: boolean
+        pendingPublicKeyRevelation:
+          type: boolean
+        creationFailure:
+          type: array
+          items:
+            type: string
+        delegate:
+          type: string
+        previousLowBalanceEmailSentAt:
+          type: string
+          format: date
+          title: Date String
+      required:
+        - counter
+        - updateTime
+        - txCount
+        - pendingChainInitialization
+        - pendingPublicKeyRevelation
+        - creationFailure
+    TestcoinAddress:
+      title: Testcoin Address
+      type: object
+      additionalProperties: {}
+    StellarAddress:
+      title: Stellar Address
+      type: object
+      properties:
+        memoId:
+          type: string
+        rootAddress:
+          type: string
+      required:
+        - memoId
+        - rootAddress
+    StacksAddress:
+      title: Stacks Address
+      type: object
+      properties:
+        baseAddress:
+          type: string
+        memoId:
+          type: string
+      required:
+        - baseAddress
+        - memoId
+    SolAddress:
+      title: Sol Address
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        minimumFunding:
+          type: number
+        pendingChainInitialization:
+          type: boolean
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+        nonceExpiresAt:
+          type: string
+          format: date
+          title: Date String
+        nonceTxRequestid:
+          type: string
+        type:
+          type: string
+      required:
+        - rootAddress
+        - minimumFunding
+        - pendingChainInitialization
+        - trustedTokens
+    Token:
+      title: Token
+      type: object
+      properties:
+        limit:
+          type: string
+        token:
+          type: string
+    TrustedTokenState:
+      title: TrustedTokenState
+      type: string
+      enum:
+        - pending
+        - active
+    SilvergateUSDAddress:
+      title: Silvergate USD Address
+      type: object
+      properties:
+        bankAccountId:
+          type: string
+        bankAccount:
+          $ref: '#/components/schemas/BankAccountJson'
+      required:
+        - bankAccountId
+    BankAccountJson:
+      title: BankAccountJson
+      type: object
+      properties:
+        accountNumber:
+          type: string
+        address1:
+          type: string
+        name:
+          type: string
+        owner:
+          type: object
+          properties:
+            name:
+              type: string
+            address1:
+              type: string
+            address2:
+              type: string
+            address3:
+              type: string
+          required:
+            - name
+            - address1
+        idHash:
+          type: string
+        verificationState:
+          type: string
+        address2:
+          type: string
+        address3:
+          type: string
+        enterpriseId:
+          type: string
+        id:
+          type: string
+        routingNumber:
+          type: string
+        shortCountryCode:
+          type: string
+        swiftCode:
+          type: string
+        type:
+          type: string
+      required:
+        - accountNumber
+        - address1
+        - name
+        - owner
+        - idHash
+        - verificationState
+    OffchainAddressSubdocument:
+      title: Offchain Address
+      type: object
+      additionalProperties: {}
+    HederaAddress:
+      title: Hedera Address
+      type: object
+      properties:
+        baseAddress:
+          type: string
+        memoId:
+          type: string
+      required:
+        - baseAddress
+        - memoId
+    FiatAddress:
+      title: Fiat Address
+      type: object
+      properties:
+        bankAccountId:
+          type: string
+        faBankAccountId:
+          type: string
+        bankAccount:
+          $ref: '#/components/schemas/BankAccountJson'
+    Ethereum2Address:
+      title: Ethereum2 Address
+      type: object
+      properties:
+        feeAddress:
+          type: string
+    EthereumAddress:
+      title: Ethereum Address
+      type: object
+      properties:
+        creationFailure:
+          type: array
+          items:
+            type: string
+        forwarderVersion:
+          type: number
+        nonce:
+          type: number
+        feeAddress:
+          type: string
+        pendingChainInitialization:
+          type: boolean
+        pendingDeployment:
+          type: boolean
+        txCount:
+          type: number
+        updateTime:
+          type: string
+          format: date
+          title: Date String
+        hopTxid:
+          type: string
+        salt:
+          type: string
+        usdtBug:
+          type: boolean
+        isTss:
+          type: boolean
+        isNonceLocked:
+          type: boolean
+        nonceLockExpireTime:
+          type: string
+          format: date
+          title: Date String
+        previousLowBalanceEmailSentAt:
+          type: string
+          format: date
+          title: Date String
+      required:
+        - creationFailure
+        - forwarderVersion
+        - nonce
+        - feeAddress
+        - pendingChainInitialization
+        - pendingDeployment
+        - txCount
+        - updateTime
+    EosAddress:
+      title: Eos Address
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        memoId:
+          type: string
+      required:
+        - rootAddress
+        - memoId
+    DotAddress:
+      title: Dot Address
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        nonceTracker:
+          type: object
+          properties:
+            lastReservedNonce:
+              type: number
+            lastExecutedNonce:
+              type: number
+            detectedMissingNonces:
+              type: array
+              items:
+                type: object
+                properties:
+                  nonce:
+                    type: number
+                  isNonceLocked:
+                    type: boolean
+                  nonceLockExpireTime:
+                    type: string
+                    format: date
+                    title: Date String
+                required:
+                  - nonce
+                  - isNonceLocked
+            detecMissingNoncesData:
+              type: array
+              items:
+                type: object
+                properties:
+                  nonce:
+                    type: number
+                  isNonceLocked:
+                    type: boolean
+                  nonceLockExpireTime:
+                    type: string
+                    format: date
+                    title: Date String
+                required:
+                  - nonce
+                  - isNonceLocked
+          required:
+            - lastReservedNonce
+            - lastExecutedNonce
+            - detectedMissingNonces
+            - detecMissingNoncesData
+      required:
+        - rootAddress
+        - nonceTracker
+    CasperAddress:
+      title: Casper Address
+      type: object
+      properties:
+        accountHash:
+          type: string
+        rootAddress:
+          type: string
+        transferId:
+          type: string
+      required:
+        - accountHash
+        - rootAddress
+        - transferId
+    BitcoinCashAddress:
+      title: Bitcoin Cash Address
+      allOf:
+        - type: object
+          properties:
+            format:
+              $ref: '#/components/schemas/SupportedAddressFormat'
+        - $ref: '#/components/schemas/UtxoAddress'
+    UtxoAddress:
+      title: Utxo Address
+      type: object
+      properties:
+        redeemScript:
+          type: string
+        witnessScript:
+          type: string
+    SupportedAddressFormat:
+      title: SupportedAddressFormat
+      type: string
+      enum:
+        - cashaddr
+        - base58
+    AvaxPAddress:
+      title: AvaxP Address
+      type: object
+      properties:
+        threshold:
+          type: number
+        addresses:
+          type: array
+          items:
+            type: string
+      required:
+        - threshold
+        - addresses
+    AtomAddress:
+      title: Atom Address
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        memoId:
+          type: string
+      required:
+        - rootAddress
+        - memoId
+    AlgorandAddress:
+      title: Algorand Address
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+        addressVersion:
+          type: number
+        threshold:
+          type: number
+        bitgoKey: {}
+        bitgoPubKey:
+          type: string
+      required:
+        - rootAddress
+    TrimmedBalance:
+      title: TrimmedBalance
+      type: object
+      properties:
+        balanceString:
+          type: string
+          description: String representation of the balance. Guaranteed to not lose precision.
+          example: '500000'
+        confirmedBalanceString:
+          type: string
+          description: The total balance of confirmed transactions for the address (in the chain's base unit). Guaranteed to not lose precision.
+          example: '400000'
+        spendableBalanceString:
+          type: string
+          description: The total balance of the address (in the chain's base unit) which may be used as inputs for creating new transactions in string representation. Guaranteed to not lose precision.
+          example: '40000'
+        updated:
+          oneOf:
+            - type: string
+              format: date-time
+              title: ISO Date String
+            - type: string
+              format: date
+              title: Date String
+          description: The last time a transaction affected the balance of this address
+        balance:
+          type: number
+          example: 50000
+        lockedBalanceString:
+          type: string
+        reservedBalanceString:
+          type: string
+        totalReceived:
+          type: number
+          description: The total amount received on this address (in the chain's base unit)
+        totalSent:
+          type: number
+          description: The total amount sent from this address (in the chain's base unit)
+        transferCount:
+          type: number
+        tokens:
+          type: object
+          additionalProperties: {}
+        nfts:
+          type: object
+          additionalProperties: {}
+        unsupportedNfts:
+          type: object
+          additionalProperties: {}
+        type: {}
+        metadata: {}
+      required:
+        - balanceString
+        - confirmedBalanceString
+        - spendableBalanceString
+    AddressChain:
+      title: AddressChain
+      type: number
+      enum:
+        - 0
+        - 1
+        - 10
+        - 11
+        - 20
+        - 21
+        - 30
+        - 31
+        - 40
+        - 41
+    WalletFlag:
+      title: WalletFlag
+      type: string
+      enum:
+        - isStaking
+        - lightning
+        - musigKp
+        - trackingInscriptions
+        - lockedAmount
+        - rbf
+        - coldWalletStaking
+        - tokenizationToken
+        - oneClickStaking
+    WalletSubType:
+      title: WalletSubType
+      type: string
+      enum:
+        - distributedCustody
+        - pairedCustodial
+        - custodialHot
+        - custodialCold
+    WalletType:
+      title: WalletType
+      type: string
+      enum:
+        - backing
+        - cold
+        - custodial
+        - custodialPaired
+        - hot
+        - trading
+    MultiSigType:
+      title: MultiSigType
+      type: string
+      enum:
+        - onchain
+        - tss
+        - blsdkg
+    Condition:
+      title: Condition
+      oneOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/AddressListCondition'
+        - $ref: '#/components/schemas/AdvancedListCondition'
+        - $ref: '#/components/schemas/LimitRuleCondition'
+        - $ref: '#/components/schemas/TxUsdThresholdRuleCondition'
+        - $ref: '#/components/schemas/WebhookRuleCondition'
+    AdvancedListCondition:
+      title: AdvancedListCondition
+      type: object
+      properties:
+        entries:
+          type: array
+          items:
+            type: object
+            properties:
+              item:
+                type: string
+                description: Either a valid address or a wallet or enterprise id. Must be unique in this whitelist.
+              metaData:
+                type: object
+                additionalProperties: {}
+                description: Any data about this entry that is not used to determine when to enforce the policy
+              type:
+                allOf:
+                  - $ref: '#/components/schemas/AdvancedListType'
+                description: the kind of resource a list rule entry refers to
+              verificationState:
+                type: string
+                enum:
+                  - unverified
+                  - verified
+            required:
+              - item
+              - type
+            description: Entries specifying which addresses/ wallets/ enterprises are on the whitelist
+      required:
+        - entries
+    AddressListCondition:
+      title: AddressListCondition
+      type: object
+      properties:
+        addresses:
+          type: array
+          items:
+            type: string
+        metaData:
+          type: object
+          additionalProperties:
+            type: object
+            additionalProperties: {}
+      required:
+        - addresses
+        - metaData
+    WalletSubdocument:
+      title: WalletSubdocument
+      oneOf:
+        - $ref: '#/components/schemas/AdaWallet'
+        - $ref: '#/components/schemas/AlgorandWallet'
+        - $ref: '#/components/schemas/AtomWallet'
+        - $ref: '#/components/schemas/AvaxPWallet'
+        - $ref: '#/components/schemas/UtxoWallet'
+        - $ref: '#/components/schemas/CasperWallet'
+        - $ref: '#/components/schemas/DotWallet'
+        - $ref: '#/components/schemas/EosWallet'
+        - $ref: '#/components/schemas/EthereumWallet'
+        - $ref: '#/components/schemas/Ethereum2Wallet'
+        - $ref: '#/components/schemas/FiatWallet'
+        - $ref: '#/components/schemas/HederaWallet'
+        - $ref: '#/components/schemas/NearWallet'
+        - $ref: '#/components/schemas/Offchain'
+        - $ref: '#/components/schemas/SilvergateUSDWallet'
+        - $ref: '#/components/schemas/StacksWallet'
+        - $ref: '#/components/schemas/TestcoinWallet'
+        - $ref: '#/components/schemas/TonWallet'
+        - $ref: '#/components/schemas/TronWallet'
+        - $ref: '#/components/schemas/StellarWallet'
+        - $ref: '#/components/schemas/XRPWallet'
+        - $ref: '#/components/schemas/TezosWallet'
+        - $ref: '#/components/schemas/SolWallet'
+        - $ref: '#/components/schemas/LightningCoinWallet'
+    LightningCoinWallet:
+      title: Lightning Coin Wallet
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            type: string
+        uri:
+          type: string
+        apiEndpoint:
+          type: string
+        nodeId:
+          type: string
+        updateSignerIP:
+          type: boolean
+        signerIP:
+          type: string
+        updateSignerTlsCert:
+          type: boolean
+        signerTlsCert:
+          type: string
+        updateSignerMacaroon:
+          type: boolean
+        encryptedSignerMacaroon:
+          type: string
+      required:
+        - keys
+    SolWallet:
+      title: Sol Wallet
+      type: object
+      properties:
+        pendingChainInitialization:
+          type: boolean
+        minimumFunding:
+          type: number
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+        rootAddress:
+          type: string
+        nonceAddress:
+          type: string
+        lastBlockHash:
+          type: string
+        lastChainIndex: {}
+        nonceExpiresAt:
+          type: string
+          format: date
+          title: Date String
+        nonceTxRequestId:
+          type: string
+      required:
+        - pendingChainInitialization
+        - minimumFunding
+        - trustedTokens
+    TezosWallet:
+      title: Tezos Wallet
+      type: object
+      properties:
+        pendingChainInitialization:
+          type: boolean
+        creationFailure:
+          type: array
+          items:
+            type: string
+        deployedInBlock:
+          oneOf:
+            - type: number
+            - type: boolean
+        deployTxHash:
+          type: string
+        lastChainIndex: {}
+        baseAddress:
+          type: string
+        feeAddress:
+          type: string
+        safeModeActivated:
+          type: string
+        lowPriorityFeeAddress:
+          type: string
+        delegate:
+          type: string
+      required:
+        - pendingChainInitialization
+        - creationFailure
+    XRPWallet:
+      title: XRP Wallet
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        pendingChainInitialization:
+          type: boolean
+        creationFailure:
+          type: array
+          items:
+            type: string
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+      required:
+        - rootAddress
+        - pendingChainInitialization
+        - creationFailure
+    StellarWallet:
+      title: Stellar Wallet
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        pendingChainInitialization:
+          type: boolean
+        creationFailure:
+          type: array
+          items:
+            type: string
+        lastMemoId:
+          type: string
+        stellarUsername:
+          type: string
+        homeDomain:
+          type: string
+        stellarAddress:
+          type: string
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+      required:
+        - rootAddress
+        - pendingChainInitialization
+        - creationFailure
+        - lastMemoId
+    TronWallet:
+      title: Tron Wallet
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        rootPub:
+          type: string
+        pendingChainInitialization:
+          type: boolean
+        creationFailure:
+          type: array
+          items:
+            type: string
+        minimumFunding:
+          type: number
+      required:
+        - rootAddress
+        - rootPub
+        - pendingChainInitialization
+        - creationFailure
+        - minimumFunding
+    TonWallet:
+      title: Ton Wallet
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        memoId:
+          type: string
+        lastMemoId:
+          type: string
+        seqno:
+          type: number
+        lastChainIndex:
+          type: object
+          additionalProperties:
+            type: number
+        walletVersion:
+          type: number
+      required:
+        - rootAddress
+        - memoId
+        - lastMemoId
+        - seqno
+    TestcoinWallet:
+      title: Testcoin Wallet
+      type: object
+      properties:
+        lastChainIndex:
+          type: number
+    StacksWallet:
+      title: Stacks Wallet
+      type: object
+      properties:
+        baseAddress:
+          type: string
+        feeAddress:
+          type: string
+        lastNonce:
+          type: number
+        addressCount:
+          type: number
+    SilvergateUSDWallet:
+      title: Silvergate USD Wallet
+      type: object
+      properties:
+        backingBankAccountId: {}
+        backingSENBankAccountId: {}
+        lastUsedNonce:
+          type: number
+      required:
+        - backingBankAccountId
+        - backingSENBankAccountId
+        - lastUsedNonce
+    Offchain:
+      title: Offchain
+      type: object
+      properties:
+        needsKeyReshareAfterPasswordReset:
+          type: boolean
+        pendingSystemInitialization:
+          type: boolean
+          description: If true, this wallet is waiting for the system to finish initializing. In this state, users cannot create addresses or initiate withdrawals.
+      required:
+        - needsKeyReshareAfterPasswordReset
+    NearWallet:
+      title: Near Wallet
+      type: object
+      properties:
+        nonceAddress:
+          type: string
+        lastNonce:
+          type: number
+        addressCount:
+          type: number
+        pendingChainInitialization:
+          type: boolean
+        rootAddrss:
+          type: string
+        lastChainIndex:
+          type: object
+          additionalProperties:
+            type: number
+      required:
+        - nonceAddress
+        - lastNonce
+        - addressCount
+        - pendingChainInitialization
+    HederaWallet:
+      title: Hedera Wallet
+      type: object
+      properties:
+        addressCount:
+          type: number
+        pendingChainInitialization:
+          type: boolean
+        creationFailure:
+          type: array
+          items:
+            type: string
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+        deployTxHash:
+          type: string
+        baseAddress:
+          type: string
+        confirmedTransactionId:
+          type: string
+      required:
+        - addressCount
+        - pendingChainInitialization
+        - creationFailure
+        - trustedTokens
+    FiatWallet:
+      title: Fiat Wallet
+      type: object
+      properties:
+        backingBankAccountId: {}
+        backingSENBankAccountId: {}
+        lastUsedNonce:
+          type: number
+      required:
+        - backingBankAccountId
+        - backingSENBankAccountId
+        - lastUsedNonce
+    Ethereum2Wallet:
+      title: Ethereum2 Wallet
+      type: object
+      properties:
+        pendingChainInitialization:
+          type: boolean
+        baseAddress:
+          type: string
+        feeAddress:
+          type: string
+      required:
+        - pendingChainInitialization
+    EthereumWallet:
+      title: Ethereum Wallet
+      type: object
+      properties:
+        pendingChainInitialization:
+          type: boolean
+        creationFailure:
+          type: array
+          items:
+            type: string
+        gasPriceTier:
+          type: string
+        tokenFlushThresholds:
+          type: object
+          additionalProperties:
+            oneOf:
+              - type: string
+              - type: number
+        walletVersion:
+          type: number
+        pendingDeployment:
+          type: boolean
+        deployForwardersManually:
+          type: boolean
+        flushForwardersManually:
+          type: boolean
+        enableMMI:
+          type: boolean
+        enableNFT:
+          type: boolean
+        deployedInBlock:
+          oneOf:
+            - type: number
+            - type: boolean
+        deployTxHash:
+          type: string
+        lastChainIndex: {}
+        baseAddress:
+          type: string
+        feeAddress:
+          type: string
+        nonce:
+          type: string
+        token:
+          type: string
+        pendingEcdsaTssInitialization:
+          type: boolean
+        safeModeActivated:
+          type: string
+        lowPriorityFeeAddress:
+          type: string
+        salt:
+          type: string
+      required:
+        - pendingChainInitialization
+        - creationFailure
+        - gasPriceTier
+        - tokenFlushThresholds
+        - walletVersion
+        - pendingDeployment
+        - deployForwardersManually
+        - flushForwardersManually
+        - enableMMI
+        - enableNFT
+    EosWallet:
+      title: Eos Wallet
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        pendingChainInitialization:
+          type: boolean
+        creationFailure:
+          type: array
+          items:
+            type: string
+        lastMemoId:
+          type: string
+      required:
+        - rootAddress
+        - pendingChainInitialization
+        - creationFailure
+        - lastMemoId
+    DotWallet:
+      title: Dot Wallet
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        pendingChainInitialization:
+          type: boolean
+        nonceAddress:
+          type: string
+      required:
+        - rootAddress
+        - pendingChainInitialization
+    CasperWallet:
+      title: Casper Wallet
+      type: object
+      properties:
+        accountHash:
+          type: string
+        creationFailure:
+          type: array
+          items:
+            type: string
+        lastTransferId:
+          type: string
+        pendingChainInitialization:
+          type: boolean
+        rootAddress:
+          type: string
+      required:
+        - accountHash
+        - creationFailure
+        - lastTransferId
+        - pendingChainInitialization
+        - rootAddress
+    UtxoWallet:
+      title: Utxo Wallet
+      type: object
+      properties:
+        customChangeWalletId:
+          type: string
+        customChangeAddressType:
+          type: string
+        sendQueueInferredScriptTypes:
+          type: array
+          items:
+            type: string
+    AvaxPWallet:
+      title: AvaxP Wallet
+      type: object
+      properties:
+        unlockAddresses:
+          type: array
+          items:
+            type: string
+        threshold:
+          type: number
+      required:
+        - unlockAddresses
+        - threshold
+    AtomWallet:
+      title: Atom Wallet
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        lastMemoId:
+          type: string
+        lastChainIndex: {}
+        pendingEcdsaTssInitialization:
+          type: boolean
+      required:
+        - rootAddress
+        - lastMemoId
+    AlgorandWallet:
+      title: Algorand Wallet
+      type: object
+      properties:
+        addressVersion:
+          type: number
+        rootAddress:
+          type: string
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+      required:
+        - addressVersion
+        - rootAddress
+    AdaWallet:
+      title: Ada Wallet
+      type: object
+      properties:
+        rootAddress:
+          type: string
+        addressCount:
+          type: string
+        pendingChainInitialization:
+          type: boolean
+        rewardAddress:
+          type: string
+        lastChainIndex:
+          type: object
+          additionalProperties:
+            type: number
+      required:
+        - rootAddress
+        - addressCount
+        - pendingChainInitialization
+        - rewardAddress
     CoinNonEmptyString:
       title: CoinNonEmptyString
       type: string
@@ -32591,63 +34478,6 @@ components:
       enum:
         - admin
         - member
-    Condition:
-      title: Condition
-      oneOf:
-        - type: object
-          properties: {}
-        - $ref: '#/components/schemas/AddressListCondition'
-        - $ref: '#/components/schemas/AdvancedListCondition'
-        - $ref: '#/components/schemas/LimitRuleCondition'
-        - $ref: '#/components/schemas/TxUsdThresholdRuleCondition'
-        - $ref: '#/components/schemas/WebhookRuleCondition'
-    AdvancedListCondition:
-      title: AdvancedListCondition
-      type: object
-      properties:
-        entries:
-          type: array
-          items:
-            type: object
-            properties:
-              item:
-                type: string
-                description: Either a valid address or a wallet or enterprise id. Must be unique in this whitelist.
-              metaData:
-                type: object
-                additionalProperties: {}
-                description: Any data about this entry that is not used to determine when to enforce the policy
-              type:
-                allOf:
-                  - $ref: '#/components/schemas/AdvancedListType'
-                description: the kind of resource a list rule entry refers to
-              verificationState:
-                type: string
-                enum:
-                  - unverified
-                  - verified
-            required:
-              - item
-              - type
-            description: Entries specifying which addresses/ wallets/ enterprises are on the whitelist
-      required:
-        - entries
-    AddressListCondition:
-      title: AddressListCondition
-      type: object
-      properties:
-        addresses:
-          type: array
-          items:
-            type: string
-        metaData:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties: {}
-      required:
-        - addresses
-        - metaData
     GetTransactionRequestsResponse:
       title: GetTransactionRequestsResponse
       type: object
@@ -34919,10 +36749,6 @@ components:
     BlockHash:
       type: string
       example: 0000000000000296ed56abee6cb78e40b00c47a03d92e71dd92c4862ca636b95
-    TxId:
-      type: string
-      description: The on-chain transaction id
-      example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
     IdentityOccupation:
       title: IdentityOccupation
       type: string
@@ -35360,7 +37186,7 @@ components:
                 The pool key hash to which the coins will be delegated to.
           required:
             - poolKeyHash
-    Address2:
+    Address21:
       type: object
       properties:
         id:
@@ -35399,66 +37225,11 @@ components:
           $ref: '#/components/schemas/AddressLabel'
         addressType:
           $ref: '#/components/schemas/AddressType'
-    AddressBalance:
-      type: object
-      properties:
-        updated:
-          type: string
-          description: The last time a transaction affected the balance of this address
-          format: date-time
-        balance:
-          type: integer
-          description: The cleared balance of the address
-          example: 50000
-        balanceString:
-          type: string
-          description: String representation of 'balance'. Guaranteed to not lose precision.
-          example: '50000'
-        totalReceived:
-          type: integer
-          description: The total amount received on this address (in the chain's base unit)
-        totalSent:
-          type: integer
-          description: The total amount send from this address (in the chain's base unit)
-        confirmedBalanceString:
-          type: string
-          description: |
-            The total balance of confirmed transactions for the address (in the chain's base unit).
-            Guaranteed to not lose precision.
-          example: '40000'
-        spendableBalanceString:
-          type: string
-          description: |
-            The total balance of the address (in the chain's base unit) which may
-            be used as inputs for creating new transactions in string representation.
-            Guaranteed to not lose precision.
-          example: '40000'
-    AddressCoinSpecificXlm:
-      type: object
-      properties:
-        memoId:
-          allOf:
-            - $ref: '#/components/schemas/IntegerString'
-            - example: '1'
-          description: Latest memo id generated for the wallet
-        rootAddress:
-          type: string
-          description: Root address of the wallet
-          example: GCTTCPH4IIDK7P72FFAEJ3ZFN6WDHJH6GGMRPHPM56ZWGIQ7B3XTIJAM
     AddressString3:
       title: Address
       type: string
       example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
       maxLength: 250
-    AddressType:
-      type: string
-      example: p2sh
-      enum:
-        - p2sh
-        - p2shP2wsh
-        - p2wsh
-        - p2tr
-        - p2trMusig2
     AdvancedListRuleEntry1:
       title: Advanced whitelist rule entry
       type: object
@@ -35558,61 +37329,6 @@ components:
       type: string
       description: Coin name used to choose correct KRS public key for the given provider. Possible valid values are "btc", "eth", "bitcoin"
       example: eth
-    Balance:
-      type: object
-      properties:
-        balance:
-          type: integer
-          description: |
-            The total balance of all wallets containing the given coin type.  May lose
-            precision for large values.
-          example: 50000
-        balanceString:
-          type: string
-          description: |
-            String representation of 'balance'.  Guaranteed to not lose
-            precision.
-          example: '50000'
-        confirmedBalance:
-          type: integer
-          description: |
-            The total balance of confirmed transactions for all wallets containing the given
-            coin type.  May lose precision for large values.
-          nullable: true
-          example: 40000
-        confirmedBalanceString:
-          type: string
-          description: |
-            String representation of 'confirmedBalance'.  Guaranteed to not lose
-            precision.
-          example: '40000'
-        spendableBalance:
-          type: integer
-          description: |
-            The total balance of all wallets containing the given coin which may
-            be used as inputs for creating new transactions.  May lose precision
-            for large values.
-          nullable: true
-          example: 40000
-        spendableBalanceString:
-          type: string
-          description: |
-            String representation of 'spendableBalance'.  Guaranteed to not lose
-            precision.
-          example: '40000'
-        stakedBalance:
-          type: integer
-          description: |
-            The total balance of all wallets containing the given coin which has been staked.
-            May lose precision for large values.
-          nullable: true
-          example: 40000
-        stakedBalanceString:
-          type: string
-          description: |
-            String representation of 'stakedBalance'.  Guaranteed to not lose
-            precision.
-          example: '40000'
     BalanceReserve:
       type: object
       properties:
@@ -36216,20 +37932,6 @@ components:
           required:
             - context
             - name
-    Chain:
-      type: integer
-      example: 1
-      enum:
-        - 0
-        - 1
-        - 10
-        - 11
-        - 20
-        - 21
-        - 30
-        - 31
-        - 40
-        - 41
     ChangeAddressTypes:
       type: array
       items:
@@ -36560,31 +38262,6 @@ components:
             - maxFeePerGas
       required:
         - label
-    CustomChangeKeySignatures:
-      type: object
-      properties:
-        user:
-          type: string
-        backup:
-          type: string
-        bitgo:
-          type: string
-      description: |
-        Signatures for the keys which will be used to derive custom change addresses.
-
-        **Note:** These signatures may only be set once for each wallet and are not modifiable after being set.
-    DefaultChangeAddressType:
-      type: string
-      example: p2wsh
-      enum:
-        - p2sh
-        - p2shP2wsh
-        - p2wsh
-        - p2tr
-        - p2trMusig2
-        - default
-      description: |
-        (UTXO only) The default script type to use for change for this wallet. Per transaction, you override the default with the 'changeAddressType' parameter. If 'default' is provided, it will clear the 'changeAddressType' default on the wallet. Note that each UTXO coin has different address types available. For example, Only BTC supports 'p2tr'.
     DomesticWireBankAccount:
       title: Domestic Wire Bank Account
       type: object
@@ -37769,7 +39446,7 @@ components:
           items:
             $ref: '#/components/schemas/Id'
         receiveAddress:
-          $ref: '#/components/schemas/Address2'
+          $ref: '#/components/schemas/Address21'
         balance:
           type: integer
           description: Wallet balance as number
@@ -38402,14 +40079,6 @@ components:
       default: independent
       description: A value from a string enum denoting what kind of key this is. Defaults to “independent” indicating an on-chain key is requested. If set to “tss” this tells us that a “tss” key is requested.
       example: tss
-    Keys:
-      type: array
-      items:
-        $ref: '#/components/schemas/Id'
-      example:
-        - 585951a5df8380e0e304a553
-        - 585951a5df8380e0e30d645c
-        - 585951a5df8380e0e30b6147
     KeysResponse:
       type: object
       properties:
@@ -38524,7 +40193,7 @@ components:
       required:
         - messageRaw
         - state
-    MultisigTypeVersion:
+    MultisigTypeVersion1:
       type: string
       enum:
         - MPCv2
@@ -38602,19 +40271,6 @@ components:
               type: boolean
           required:
             - nonParticipation
-    NumKeychains:
-      description: |
-        Number of keys provided.  This value must be 3 for hot wallets,
-        1 for **ofc** wallets, and not specified for custodial wallets.
-      type: integer
-      example: 3
-    NumSignatures:
-      description: |
-        Number of signatures required.  This value must be 2 for
-        hot wallets, 1 for **ofc** wallets, and not specified for custodial
-        wallets.
-      type: integer
-      example: 2
     NumberOrString:
       oneOf:
         - type: string
@@ -38707,20 +40363,7 @@ components:
         addressLabels:
           type: array
           items:
-            $ref: '#/components/schemas/PendingApprovalAddressLabel1'
-    PendingApprovalAddressLabel1:
-      description: Address labels of recipients in this Pending Approval
-      type: object
-      properties:
-        address:
-          $ref: '#/components/schemas/AddressString3'
-        label:
-          $ref: '#/components/schemas/AddressLabel'
-        walletLabel:
-          $ref: '#/components/schemas/WalletLabel'
-      required:
-        - address
-        - label
+            $ref: '#/components/schemas/PendingApprovalAddressLabel'
     PendingApprovalState1:
       anyOf:
         - $ref: '#/components/schemas/PendingApprovalStatePending1'
@@ -40334,21 +41977,6 @@ components:
           description: A human-readable mapping to an address
       required:
         - label
-    UpdateWallet:
-      type: object
-      properties:
-        approvalsRequired:
-          $ref: '#/components/schemas/ApprovalsRequired'
-        buildDefaults:
-          $ref: '#/components/schemas/WalletBuildDefaults'
-        disableTransactionNotifications:
-          type: boolean
-        label:
-          $ref: '#/components/schemas/WalletLabel'
-        customChangeKeySignatures:
-          $ref: '#/components/schemas/CustomChangeKeySignatures'
-        coinSpecific:
-          $ref: '#/components/schemas/WalletUpdateCoinSpecific'
     User:
       type: object
       properties:
@@ -40467,7 +42095,7 @@ components:
           items:
             $ref: '#/components/schemas/Unspent'
         walletAddressDetails:
-          $ref: '#/components/schemas/Address2'
+          $ref: '#/components/schemas/Address21'
     VideoApprovers:
       type: array
       items:
@@ -40475,7 +42103,7 @@ components:
       description: |
         A list of public ids of users that should do the video id verification for the transaction that is being sent or initiated.
       minItems: 1
-    Wallet:
+    Wallet1:
       type: object
       properties:
         admin:
@@ -40532,7 +42160,7 @@ components:
         nodeId:
           $ref: '#/components/schemas/Id'
         receiveAddress:
-          $ref: '#/components/schemas/Address2'
+          $ref: '#/components/schemas/Address21'
         recoverable:
           type: boolean
         tags:
@@ -40562,7 +42190,7 @@ components:
         multisigType:
           $ref: '#/components/schemas/WalletMultisigType'
         multisigTypeVersion:
-          $ref: '#/components/schemas/MultisigTypeVersion'
+          $ref: '#/components/schemas/MultisigTypeVersion1'
       required:
         - approvalsRequired
         - coin
@@ -40570,160 +42198,6 @@ components:
         - disableTransactionNotifications
         - id
         - label
-    WalletBalance:
-      allOf:
-        - $ref: '#/components/schemas/Balance'
-        - type: object
-          properties:
-            tokens:
-              type: object
-              description: Object of key value pairs where the keys are the token symbols (e.g. omg) and the values are the balance data for that token symbol.
-              additionalProperties:
-                type: object
-                properties:
-                  balanceString:
-                    type: string
-                    example: '30000'
-                  confirmedBalanceString:
-                    type: string
-                    example: '20000'
-                  heldBalanceString:
-                    type: string
-                    description: The difference between the balanceString and the spendableBalanceString.
-                    example: '10000'
-                  spendableBalanceString:
-                    type: string
-                    example: '20000'
-                  stakedBalanceString:
-                    type: string
-                    example: '20000'
-                  transferCount:
-                    type: number
-                    example: 100
-            unsupportedTokens:
-              type: object
-              description: Object of key value pairs where the keys are the unsupported token contracts (e.g. 0x9928e4046d7c6513326ccea028cd3e7a91c7590a) and the values are the balance data for that token contract. UnsupportedTokens will only be returned for wallets that supports Metamask Institutional and has enableMMI flag turned on
-              additionalProperties:
-                type: object
-                properties:
-                  balanceString:
-                    type: string
-                    example: '30000'
-                  confirmedBalanceString:
-                    type: string
-                    example: '20000'
-                  heldBalanceString:
-                    type: string
-                    description: The difference between the balanceString and the spendableBalanceString.
-                    example: '10000'
-                  spendableBalanceString:
-                    type: string
-                    example: '20000'
-                  stakedBalanceString:
-                    type: string
-                    example: '20000'
-                  transferCount:
-                    type: number
-                    example: 100
-    WalletBuildDefaults:
-      type: object
-      properties:
-        minFeeRate:
-          type: integer
-          minimum: 1000
-          nullable: true
-          example: 12000
-          description: |
-            (BTC only) The minimum fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte. Must be greater than or equal to the default of 1000 satoshis/kvByte.
-
-            Note: The you can override 'minFeeRate' on a per transaction basis with the 'feeRate' parameter.
-        maxFeeRate:
-          type: integer
-          minimum: 1000
-          nullable: true
-          example: 18000
-          description: |
-            (BTC only) The maximum fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte. The 'maxFeeRate' limits the fee rate generated by both 'feeMultiplier' and 'numBlocks'.
-
-            Note: The you can override 'maxFeeRate' on a per transaction basis with the 'feeRate' parameter.
-        feeMultiplier:
-          type: number
-          minimum: 1
-          nullable: true
-          example: 1.2
-          description: |
-            (UTXO only) Custom multiplier to the 'feeRate'. The resulting fee rate is limited by the 'maxFeeRate'. For replace-by-fee (RBF) transactions (that include 'rbfTxIds'), the 'feeMultiplier' must be greater than 1, since it's an absolute fee multiplier to the transaction being replaced.
-
-            Note: The 'maxFeeRate' limits the fee rate generated by 'feeMultiplier'.
-        changeAddressType:
-          $ref: '#/components/schemas/DefaultChangeAddressType'
-        txFormat:
-          type: string
-          example: psbt
-          enum:
-            - legacy
-            - psbt
-            - psbt-lite
-          description: |
-            (UTXO only) The default transaction format to use for this wallet. Per transaction, you can override the default with the 'txFormat' parameter.
-    WalletCoinSpecific:
-      oneOf:
-        - title: Wallet
-          type: object
-          properties:
-            creationFailure:
-              type: array
-              items:
-                $ref: '#/components/schemas/TxId'
-              description: Includes list of fail initialization txids
-            pendingChainInitialization:
-              type: boolean
-              description: Whether the wallet needs to be initialized on the chain
-        - $ref: '#/components/schemas/WalletCoinSpecificCosmos'
-        - $ref: '#/components/schemas/WalletCoinSpecificXlm'
-    WalletCoinSpecificCosmos:
-      title: ATOM
-      type: object
-      properties:
-        rootAddress:
-          type: string
-          description: Wallet address to send or receive assets.
-          example: cosmos1uvrgkp82dmeks368d7g2ejzm3axhapzveh5uek
-        lastChainIndex:
-          type: number
-          description: Index of last address that was derived.
-          example: 1
-        lastMemoId:
-          type: string
-          description: A running counter of the last known memo id. The first one is 0.
-          example: '0'
-        pendingEcdsaTssInitialization:
-          type: boolean
-          description: If true, this wallet cannot sign transactions or messages as the enterprise has not finished MPC setup.
-          example: false
-      required:
-        - rootAddress
-        - lastMemoId
-    WalletCoinSpecificXlm:
-      title: XLM
-      type: object
-      properties:
-        rootAddress:
-          type: string
-          description: Root address of the wallet
-          example: GCTTCPH4IIDK7P72FFAEJ3ZFN6WDHJH6GGMRPHPM56ZWGIQ7B3XTIJAM
-        stellarUsername:
-          type: string
-          description: Username for the user's Stellar address
-          example: foo_bar@baz.com
-        homeDomain:
-          type: string
-          description: Home domain of a Stellar account
-          example: bitgo.com
-        stellarAddress:
-          type: string
-          description: Email-like address associated to a Stellar account
-          example: foo_bar@baz.com*bitgo.com
     WalletConsolidateUnspentsResponse:
       type: object
       properties:
@@ -40797,30 +42271,6 @@ components:
         maximumSpendable:
           type: string
           example: '19948310'
-    WalletMultisigType:
-      type: string
-      enum:
-        - onchain
-        - tss
-        - blsdkg
-    WalletPermission:
-      type: string
-      description: |
-        Comma-separated list of privileges for a wallet. Includes:
-
-              - 'admin' - Can manage wallet policies and users and approve or reject pending approvals.
-              - 'freeze' - Can freeze a wallet, disabling all withdrawals.
-              - 'spend' - Can initiate withdrawals and generate new receive addresses.
-              - 'trade' - Can initiate trades from a Go Account ('trading' wallet type).
-              - 'view' - Can view balances and transactions.
-
-        Permissions don't overlap. Required parameter if 'reshare' is false.
-      enum:
-        - admin
-        - spend
-        - trade
-        - view
-      example: spend,view
     WalletRecoveryIntent1:
       title: Wallet Recovery
       type: object
@@ -40982,42 +42432,13 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Unspent'
-    WalletUpdateCoinSpecific:
-      type: object
-      properties:
-        eth:
-          $ref: '#/components/schemas/WalletUpdateCoinSpecificEth'
-        teth:
-          $ref: '#/components/schemas/WalletUpdateCoinSpecificEth'
-    WalletUpdateCoinSpecificEth:
-      type: object
-      properties:
-        deployForwardersManually:
-          type: boolean
-        flushForwardersManually:
-          type: boolean
-    WalletUser:
-      type: object
-      properties:
-        user:
-          $ref: '#/components/schemas/Id'
-        permissions:
-          type: array
-          items:
-            $ref: '#/components/schemas/WalletPermission'
-      example:
-        user: 55e8a1a5df8380e0e30e20c6
-        permissions:
-          - admin
-          - view
-          - spend
     WalletsResponse:
       type: object
       properties:
         wallets:
           type: array
           items:
-            $ref: '#/components/schemas/Wallet'
+            $ref: '#/components/schemas/Wallet1'
         nextBatchPrevId:
           $ref: '#/components/schemas/NextBatchPrevId'
         totalCount:
@@ -46298,20 +47719,6 @@ components:
     NumberLike:
       title: NumberLike
       type: number
-    Token:
-      title: Token
-      type: object
-      properties:
-        limit:
-          type: string
-        token:
-          type: string
-    TrustedTokenState:
-      title: TrustedTokenState
-      type: string
-      enum:
-        - pending
-        - active
     RegionalFeatures:
       title: RegionalFeatures
       type: object
@@ -46679,600 +48086,6 @@ components:
         - WITNESS_SCRIPT
         - ETH_CREATE
         - ETH_CREATE2
-    WalletAddress:
-      title: WalletAddress
-      type: object
-      properties:
-        chain:
-          allOf:
-            - $ref: '#/components/schemas/AddressChain'
-          example: '1'
-        coin:
-          $ref: '#/components/schemas/CoinString'
-        index:
-          type: number
-        wallet:
-          type: string
-        id:
-          type: string
-          description: Platform public ID for an address
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
-        address:
-          $ref: '#/components/schemas/AddressString'
-        balance:
-          $ref: '#/components/schemas/TrimmedBalance1'
-        coinSpecific:
-          allOf:
-            - $ref: '#/components/schemas/AddressSubdocument'
-          description: Properties specific to certain coin types
-        label:
-          $ref: '#/components/schemas/AddressLabelString'
-        lastNonce:
-          type: number
-          default: -1
-        token:
-          type: string
-        proof:
-          type: string
-        signature:
-          type: string
-        lastConsolidatedTime:
-          type: string
-          format: date
-          title: Date String
-        needsConsolidation:
-          type: boolean
-        tokenConsolidationState: {}
-      required:
-        - chain
-        - coin
-        - index
-        - wallet
-    AddressChain:
-      title: AddressChain
-      type: number
-      enum:
-        - 0
-        - 1
-        - 10
-        - 11
-        - 20
-        - 21
-        - 30
-        - 31
-        - 40
-        - 41
-    TrimmedBalance1:
-      title: TrimmedBalance
-      type: object
-      properties:
-        balanceString:
-          type: string
-          description: String representation of the balance. Guaranteed to not lose precision.
-          example: '500000'
-        confirmedBalanceString:
-          type: string
-          description: The total balance of confirmed transactions for the address (in the chain's base unit). Guaranteed to not lose precision.
-          example: '400000'
-        spendableBalanceString:
-          type: string
-          description: The total balance of the address (in the chain's base unit) which may be used as inputs for creating new transactions in string representation. Guaranteed to not lose precision.
-          example: '40000'
-        updated:
-          oneOf:
-            - type: string
-              format: date-time
-              title: ISO Date String
-            - type: string
-              format: date
-              title: Date String
-          description: The last time a transaction affected the balance of this address
-        balance:
-          type: number
-          example: 50000
-        lockedBalanceString:
-          type: string
-        reservedBalanceString:
-          type: string
-        totalReceived:
-          type: number
-          description: The total amount received on this address (in the chain's base unit)
-        totalSent:
-          type: number
-          description: The total amount sent from this address (in the chain's base unit)
-        transferCount:
-          type: number
-        tokens:
-          type: object
-          additionalProperties: {}
-        nfts:
-          type: object
-          additionalProperties: {}
-        unsupportedNfts:
-          type: object
-          additionalProperties: {}
-        type: {}
-        metadata: {}
-      required:
-        - balanceString
-        - confirmedBalanceString
-        - spendableBalanceString
-    AddressSubdocument:
-      title: AddressSubdocument
-      oneOf:
-        - $ref: '#/components/schemas/AlgorandAddress'
-        - $ref: '#/components/schemas/AtomAddress'
-        - $ref: '#/components/schemas/AvaxPAddress'
-        - $ref: '#/components/schemas/UtxoAddress'
-        - $ref: '#/components/schemas/BitcoinCashAddress'
-        - $ref: '#/components/schemas/CasperAddress'
-        - $ref: '#/components/schemas/DotAddress'
-        - $ref: '#/components/schemas/EosAddress'
-        - $ref: '#/components/schemas/EthereumAddress'
-        - $ref: '#/components/schemas/Ethereum2Address'
-        - $ref: '#/components/schemas/FiatAddress'
-        - $ref: '#/components/schemas/HederaAddress'
-        - $ref: '#/components/schemas/OffchainAddressSubdocument'
-        - $ref: '#/components/schemas/SilvergateUSDAddress'
-        - $ref: '#/components/schemas/SolAddress'
-        - $ref: '#/components/schemas/StacksAddress'
-        - $ref: '#/components/schemas/StellarAddress'
-        - $ref: '#/components/schemas/TestcoinAddress'
-        - $ref: '#/components/schemas/TezosAddress'
-        - $ref: '#/components/schemas/TronAddress'
-        - $ref: '#/components/schemas/XRPAddress'
-        - $ref: '#/components/schemas/TonAddress'
-    AddressLabelString:
-      title: AddressLabelString
-      type: string
-      description: A human-readable label for the address
-      example: Bob's Hot Wallet Address
-      maxLength: 250
-    AlgorandAddress:
-      title: Algorand Address
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        trustedTokens:
-          type: array
-          items:
-            allOf:
-              - type: object
-                properties:
-                  state:
-                    $ref: '#/components/schemas/TrustedTokenState'
-              - $ref: '#/components/schemas/Token'
-        addressVersion:
-          type: number
-        threshold:
-          type: number
-        bitgoKey: {}
-        bitgoPubKey:
-          type: string
-      required:
-        - rootAddress
-    AtomAddress:
-      title: Atom Address
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        memoId:
-          type: string
-      required:
-        - rootAddress
-        - memoId
-    AvaxPAddress:
-      title: AvaxP Address
-      type: object
-      properties:
-        threshold:
-          type: number
-        addresses:
-          type: array
-          items:
-            type: string
-      required:
-        - threshold
-        - addresses
-    UtxoAddress:
-      title: Utxo Address
-      type: object
-      properties:
-        redeemScript:
-          type: string
-        witnessScript:
-          type: string
-    BitcoinCashAddress:
-      title: Bitcoin Cash Address
-      allOf:
-        - type: object
-          properties:
-            format:
-              $ref: '#/components/schemas/SupportedAddressFormat'
-        - $ref: '#/components/schemas/UtxoAddress'
-    CasperAddress:
-      title: Casper Address
-      type: object
-      properties:
-        accountHash:
-          type: string
-        rootAddress:
-          type: string
-        transferId:
-          type: string
-      required:
-        - accountHash
-        - rootAddress
-        - transferId
-    DotAddress:
-      title: Dot Address
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        nonceTracker:
-          type: object
-          properties:
-            lastReservedNonce:
-              type: number
-            lastExecutedNonce:
-              type: number
-            detectedMissingNonces:
-              type: array
-              items:
-                type: object
-                properties:
-                  nonce:
-                    type: number
-                  isNonceLocked:
-                    type: boolean
-                  nonceLockExpireTime:
-                    type: string
-                    format: date
-                    title: Date String
-                required:
-                  - nonce
-                  - isNonceLocked
-            detecMissingNoncesData:
-              type: array
-              items:
-                type: object
-                properties:
-                  nonce:
-                    type: number
-                  isNonceLocked:
-                    type: boolean
-                  nonceLockExpireTime:
-                    type: string
-                    format: date
-                    title: Date String
-                required:
-                  - nonce
-                  - isNonceLocked
-          required:
-            - lastReservedNonce
-            - lastExecutedNonce
-            - detectedMissingNonces
-            - detecMissingNoncesData
-      required:
-        - rootAddress
-        - nonceTracker
-    EosAddress:
-      title: Eos Address
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        memoId:
-          type: string
-      required:
-        - rootAddress
-        - memoId
-    EthereumAddress:
-      title: Ethereum Address
-      type: object
-      properties:
-        creationFailure:
-          type: array
-          items:
-            type: string
-        forwarderVersion:
-          type: number
-        nonce:
-          type: number
-        feeAddress:
-          type: string
-        pendingChainInitialization:
-          type: boolean
-        pendingDeployment:
-          type: boolean
-        txCount:
-          type: number
-        updateTime:
-          type: string
-          format: date
-          title: Date String
-        hopTxid:
-          type: string
-        salt:
-          type: string
-        usdtBug:
-          type: boolean
-        isTss:
-          type: boolean
-        isNonceLocked:
-          type: boolean
-        nonceLockExpireTime:
-          type: string
-          format: date
-          title: Date String
-        previousLowBalanceEmailSentAt:
-          type: string
-          format: date
-          title: Date String
-      required:
-        - creationFailure
-        - forwarderVersion
-        - nonce
-        - feeAddress
-        - pendingChainInitialization
-        - pendingDeployment
-        - txCount
-        - updateTime
-    Ethereum2Address:
-      title: Ethereum2 Address
-      type: object
-      properties:
-        feeAddress:
-          type: string
-    FiatAddress:
-      title: Fiat Address
-      type: object
-      properties:
-        bankAccountId:
-          type: string
-        faBankAccountId:
-          type: string
-        bankAccount:
-          $ref: '#/components/schemas/BankAccountJson'
-    HederaAddress:
-      title: Hedera Address
-      type: object
-      properties:
-        baseAddress:
-          type: string
-        memoId:
-          type: string
-      required:
-        - baseAddress
-        - memoId
-    OffchainAddressSubdocument:
-      title: Offchain Address
-      type: object
-      additionalProperties: {}
-    SilvergateUSDAddress:
-      title: Silvergate USD Address
-      type: object
-      properties:
-        bankAccountId:
-          type: string
-        bankAccount:
-          $ref: '#/components/schemas/BankAccountJson'
-      required:
-        - bankAccountId
-    SolAddress:
-      title: Sol Address
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        minimumFunding:
-          type: number
-        pendingChainInitialization:
-          type: boolean
-        trustedTokens:
-          type: array
-          items:
-            allOf:
-              - type: object
-                properties:
-                  state:
-                    $ref: '#/components/schemas/TrustedTokenState'
-              - $ref: '#/components/schemas/Token'
-        nonceExpiresAt:
-          type: string
-          format: date
-          title: Date String
-        nonceTxRequestid:
-          type: string
-        type:
-          type: string
-      required:
-        - rootAddress
-        - minimumFunding
-        - pendingChainInitialization
-        - trustedTokens
-    StacksAddress:
-      title: Stacks Address
-      type: object
-      properties:
-        baseAddress:
-          type: string
-        memoId:
-          type: string
-      required:
-        - baseAddress
-        - memoId
-    StellarAddress:
-      title: Stellar Address
-      type: object
-      properties:
-        memoId:
-          type: string
-        rootAddress:
-          type: string
-      required:
-        - memoId
-        - rootAddress
-    TestcoinAddress:
-      title: Testcoin Address
-      type: object
-      additionalProperties: {}
-    TezosAddress:
-      title: Tezos Address
-      type: object
-      properties:
-        counter:
-          type: number
-        updateTime:
-          type: string
-          format: date
-          title: Date String
-        txCount:
-          type: number
-        pendingChainInitialization:
-          type: boolean
-        pendingPublicKeyRevelation:
-          type: boolean
-        creationFailure:
-          type: array
-          items:
-            type: string
-        delegate:
-          type: string
-        previousLowBalanceEmailSentAt:
-          type: string
-          format: date
-          title: Date String
-      required:
-        - counter
-        - updateTime
-        - txCount
-        - pendingChainInitialization
-        - pendingPublicKeyRevelation
-        - creationFailure
-    TronAddress:
-      title: Tron Address
-      type: object
-      properties:
-        rootPub:
-          type: string
-      required:
-        - rootPub
-    XRPAddress:
-      title: XRP Address
-      type: object
-      properties:
-        nonceTracker:
-          type: object
-          properties:
-            detectedMissingNonces:
-              type: array
-              items:
-                type: object
-                properties:
-                  nonce:
-                    type: number
-                  isNonceLocked:
-                    type: boolean
-                  nonceLockExpireTime:
-                    type: string
-                    format: date
-                    title: Date String
-                required:
-                  - nonce
-                  - isNonceLocked
-            detectedMissingNoncesData:
-              type: array
-              items:
-                type: object
-                properties:
-                  nonce:
-                    type: number
-                  isNonceLocked:
-                    type: boolean
-                  nonceLockExpireTime:
-                    type: string
-                    format: date
-                    title: Date String
-                required:
-                  - nonce
-                  - isNonceLocked
-          required:
-            - detectedMissingNonces
-            - detectedMissingNoncesData
-      required:
-        - nonceTracker
-    TonAddress:
-      title: Ton Address
-      type: object
-      properties:
-        addresses:
-          type: array
-          items:
-            type: string
-      required:
-        - addresses
-    BankAccountJson:
-      title: BankAccountJson
-      type: object
-      properties:
-        accountNumber:
-          type: string
-        address1:
-          type: string
-        name:
-          type: string
-        owner:
-          type: object
-          properties:
-            name:
-              type: string
-            address1:
-              type: string
-            address2:
-              type: string
-            address3:
-              type: string
-          required:
-            - name
-            - address1
-        idHash:
-          type: string
-        verificationState:
-          type: string
-        address2:
-          type: string
-        address3:
-          type: string
-        enterpriseId:
-          type: string
-        id:
-          type: string
-        routingNumber:
-          type: string
-        shortCountryCode:
-          type: string
-        swiftCode:
-          type: string
-        type:
-          type: string
-      required:
-        - accountNumber
-        - address1
-        - name
-        - owner
-        - idHash
-        - verificationState
-    SupportedAddressFormat:
-      title: SupportedAddressFormat
-      type: string
-      enum:
-        - cashaddr
-        - base58
     AddressWithBalanceQueryResult:
       title: AddressWithBalanceQueryResult
       type: object
@@ -47301,7 +48114,7 @@ components:
                 description: The address itself
               balance:
                 allOf:
-                  - $ref: '#/components/schemas/TrimmedBalance1'
+                  - $ref: '#/components/schemas/TrimmedBalance'
                 description: The balance associated with the address
             required:
               - address
@@ -47332,7 +48145,7 @@ components:
               address:
                 $ref: '#/components/schemas/AddressString'
               balance:
-                $ref: '#/components/schemas/TrimmedBalance1'
+                $ref: '#/components/schemas/TrimmedBalance'
               chain:
                 allOf:
                   - $ref: '#/components/schemas/AddressChain'
@@ -47481,590 +48294,6 @@ components:
           type: string
       required:
         - secret
-    WalletSubdocument:
-      title: WalletSubdocument
-      oneOf:
-        - $ref: '#/components/schemas/AdaWallet'
-        - $ref: '#/components/schemas/AlgorandWallet'
-        - $ref: '#/components/schemas/AtomWallet'
-        - $ref: '#/components/schemas/AvaxPWallet'
-        - $ref: '#/components/schemas/UtxoWallet'
-        - $ref: '#/components/schemas/CasperWallet'
-        - $ref: '#/components/schemas/DotWallet'
-        - $ref: '#/components/schemas/EosWallet'
-        - $ref: '#/components/schemas/EthereumWallet'
-        - $ref: '#/components/schemas/Ethereum2Wallet'
-        - $ref: '#/components/schemas/FiatWallet'
-        - $ref: '#/components/schemas/HederaWallet'
-        - $ref: '#/components/schemas/NearWallet'
-        - $ref: '#/components/schemas/Offchain'
-        - $ref: '#/components/schemas/SilvergateUSDWallet'
-        - $ref: '#/components/schemas/StacksWallet'
-        - $ref: '#/components/schemas/TestcoinWallet'
-        - $ref: '#/components/schemas/TonWallet'
-        - $ref: '#/components/schemas/TronWallet'
-        - $ref: '#/components/schemas/StellarWallet'
-        - $ref: '#/components/schemas/XRPWallet'
-        - $ref: '#/components/schemas/TezosWallet'
-        - $ref: '#/components/schemas/SolWallet'
-        - $ref: '#/components/schemas/LightningCoinWallet'
-    MultiSigType:
-      title: MultiSigType
-      type: string
-      enum:
-        - onchain
-        - tss
-        - blsdkg
-    MultisigTypeVersion1:
-      title: MultisigTypeVersion
-      type: string
-      enum:
-        - MPCv2
-    WalletType:
-      title: WalletType
-      type: string
-      enum:
-        - backing
-        - cold
-        - custodial
-        - custodialPaired
-        - hot
-        - trading
-    WalletSubType:
-      title: WalletSubType
-      type: string
-      enum:
-        - distributedCustody
-        - pairedCustodial
-        - custodialHot
-        - custodialCold
-    WalletFlag1:
-      title: WalletFlag
-      type: string
-      enum:
-        - isStaking
-        - lightning
-        - musigKp
-        - trackingInscriptions
-        - lockedAmount
-        - rbf
-        - coldWalletStaking
-        - tokenizationToken
-        - oneClickStaking
-    AdaWallet:
-      title: Ada Wallet
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        addressCount:
-          type: string
-        pendingChainInitialization:
-          type: boolean
-        rewardAddress:
-          type: string
-        lastChainIndex:
-          type: object
-          additionalProperties:
-            type: number
-      required:
-        - rootAddress
-        - addressCount
-        - pendingChainInitialization
-        - rewardAddress
-    AlgorandWallet:
-      title: Algorand Wallet
-      type: object
-      properties:
-        addressVersion:
-          type: number
-        rootAddress:
-          type: string
-        trustedTokens:
-          type: array
-          items:
-            allOf:
-              - type: object
-                properties:
-                  state:
-                    $ref: '#/components/schemas/TrustedTokenState'
-              - $ref: '#/components/schemas/Token'
-      required:
-        - addressVersion
-        - rootAddress
-    AtomWallet:
-      title: Atom Wallet
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        lastMemoId:
-          type: string
-        lastChainIndex: {}
-        pendingEcdsaTssInitialization:
-          type: boolean
-      required:
-        - rootAddress
-        - lastMemoId
-    AvaxPWallet:
-      title: AvaxP Wallet
-      type: object
-      properties:
-        unlockAddresses:
-          type: array
-          items:
-            type: string
-        threshold:
-          type: number
-      required:
-        - unlockAddresses
-        - threshold
-    UtxoWallet:
-      title: Utxo Wallet
-      type: object
-      properties:
-        customChangeWalletId:
-          type: string
-        customChangeAddressType:
-          type: string
-        sendQueueInferredScriptTypes:
-          type: array
-          items:
-            type: string
-    CasperWallet:
-      title: Casper Wallet
-      type: object
-      properties:
-        accountHash:
-          type: string
-        creationFailure:
-          type: array
-          items:
-            type: string
-        lastTransferId:
-          type: string
-        pendingChainInitialization:
-          type: boolean
-        rootAddress:
-          type: string
-      required:
-        - accountHash
-        - creationFailure
-        - lastTransferId
-        - pendingChainInitialization
-        - rootAddress
-    DotWallet:
-      title: Dot Wallet
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        pendingChainInitialization:
-          type: boolean
-        nonceAddress:
-          type: string
-      required:
-        - rootAddress
-        - pendingChainInitialization
-    EosWallet:
-      title: Eos Wallet
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        pendingChainInitialization:
-          type: boolean
-        creationFailure:
-          type: array
-          items:
-            type: string
-        lastMemoId:
-          type: string
-      required:
-        - rootAddress
-        - pendingChainInitialization
-        - creationFailure
-        - lastMemoId
-    EthereumWallet:
-      title: Ethereum Wallet
-      type: object
-      properties:
-        pendingChainInitialization:
-          type: boolean
-        creationFailure:
-          type: array
-          items:
-            type: string
-        gasPriceTier:
-          type: string
-        tokenFlushThresholds:
-          type: object
-          additionalProperties:
-            oneOf:
-              - type: string
-              - type: number
-        walletVersion:
-          type: number
-        pendingDeployment:
-          type: boolean
-        deployForwardersManually:
-          type: boolean
-        flushForwardersManually:
-          type: boolean
-        enableMMI:
-          type: boolean
-        enableNFT:
-          type: boolean
-        deployedInBlock:
-          oneOf:
-            - type: number
-            - type: boolean
-        deployTxHash:
-          type: string
-        lastChainIndex: {}
-        baseAddress:
-          type: string
-        feeAddress:
-          type: string
-        nonce:
-          type: string
-        token:
-          type: string
-        pendingEcdsaTssInitialization:
-          type: boolean
-        safeModeActivated:
-          type: string
-        lowPriorityFeeAddress:
-          type: string
-        salt:
-          type: string
-      required:
-        - pendingChainInitialization
-        - creationFailure
-        - gasPriceTier
-        - tokenFlushThresholds
-        - walletVersion
-        - pendingDeployment
-        - deployForwardersManually
-        - flushForwardersManually
-        - enableMMI
-        - enableNFT
-    Ethereum2Wallet:
-      title: Ethereum2 Wallet
-      type: object
-      properties:
-        pendingChainInitialization:
-          type: boolean
-        baseAddress:
-          type: string
-        feeAddress:
-          type: string
-      required:
-        - pendingChainInitialization
-    FiatWallet:
-      title: Fiat Wallet
-      type: object
-      properties:
-        backingBankAccountId: {}
-        backingSENBankAccountId: {}
-        lastUsedNonce:
-          type: number
-      required:
-        - backingBankAccountId
-        - backingSENBankAccountId
-        - lastUsedNonce
-    HederaWallet:
-      title: Hedera Wallet
-      type: object
-      properties:
-        addressCount:
-          type: number
-        pendingChainInitialization:
-          type: boolean
-        creationFailure:
-          type: array
-          items:
-            type: string
-        trustedTokens:
-          type: array
-          items:
-            allOf:
-              - type: object
-                properties:
-                  state:
-                    $ref: '#/components/schemas/TrustedTokenState'
-              - $ref: '#/components/schemas/Token'
-        deployTxHash:
-          type: string
-        baseAddress:
-          type: string
-        confirmedTransactionId:
-          type: string
-      required:
-        - addressCount
-        - pendingChainInitialization
-        - creationFailure
-        - trustedTokens
-    NearWallet:
-      title: Near Wallet
-      type: object
-      properties:
-        nonceAddress:
-          type: string
-        lastNonce:
-          type: number
-        addressCount:
-          type: number
-        pendingChainInitialization:
-          type: boolean
-        rootAddrss:
-          type: string
-        lastChainIndex:
-          type: object
-          additionalProperties:
-            type: number
-      required:
-        - nonceAddress
-        - lastNonce
-        - addressCount
-        - pendingChainInitialization
-    Offchain:
-      title: Offchain
-      type: object
-      properties:
-        needsKeyReshareAfterPasswordReset:
-          type: boolean
-        pendingSystemInitialization:
-          type: boolean
-          description: If true, this wallet is waiting for the system to finish initializing. In this state, users cannot create addresses or initiate withdrawals.
-      required:
-        - needsKeyReshareAfterPasswordReset
-    SilvergateUSDWallet:
-      title: Silvergate USD Wallet
-      type: object
-      properties:
-        backingBankAccountId: {}
-        backingSENBankAccountId: {}
-        lastUsedNonce:
-          type: number
-      required:
-        - backingBankAccountId
-        - backingSENBankAccountId
-        - lastUsedNonce
-    StacksWallet:
-      title: Stacks Wallet
-      type: object
-      properties:
-        baseAddress:
-          type: string
-        feeAddress:
-          type: string
-        lastNonce:
-          type: number
-        addressCount:
-          type: number
-    TestcoinWallet:
-      title: Testcoin Wallet
-      type: object
-      properties:
-        lastChainIndex:
-          type: number
-    TonWallet:
-      title: Ton Wallet
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        memoId:
-          type: string
-        lastMemoId:
-          type: string
-        seqno:
-          type: number
-        lastChainIndex:
-          type: object
-          additionalProperties:
-            type: number
-        walletVersion:
-          type: number
-      required:
-        - rootAddress
-        - memoId
-        - lastMemoId
-        - seqno
-    TronWallet:
-      title: Tron Wallet
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        rootPub:
-          type: string
-        pendingChainInitialization:
-          type: boolean
-        creationFailure:
-          type: array
-          items:
-            type: string
-        minimumFunding:
-          type: number
-      required:
-        - rootAddress
-        - rootPub
-        - pendingChainInitialization
-        - creationFailure
-        - minimumFunding
-    StellarWallet:
-      title: Stellar Wallet
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        pendingChainInitialization:
-          type: boolean
-        creationFailure:
-          type: array
-          items:
-            type: string
-        lastMemoId:
-          type: string
-        stellarUsername:
-          type: string
-        homeDomain:
-          type: string
-        stellarAddress:
-          type: string
-        trustedTokens:
-          type: array
-          items:
-            allOf:
-              - type: object
-                properties:
-                  state:
-                    $ref: '#/components/schemas/TrustedTokenState'
-              - $ref: '#/components/schemas/Token'
-      required:
-        - rootAddress
-        - pendingChainInitialization
-        - creationFailure
-        - lastMemoId
-    XRPWallet:
-      title: XRP Wallet
-      type: object
-      properties:
-        rootAddress:
-          type: string
-        pendingChainInitialization:
-          type: boolean
-        creationFailure:
-          type: array
-          items:
-            type: string
-        trustedTokens:
-          type: array
-          items:
-            allOf:
-              - type: object
-                properties:
-                  state:
-                    $ref: '#/components/schemas/TrustedTokenState'
-              - $ref: '#/components/schemas/Token'
-      required:
-        - rootAddress
-        - pendingChainInitialization
-        - creationFailure
-    TezosWallet:
-      title: Tezos Wallet
-      type: object
-      properties:
-        pendingChainInitialization:
-          type: boolean
-        creationFailure:
-          type: array
-          items:
-            type: string
-        deployedInBlock:
-          oneOf:
-            - type: number
-            - type: boolean
-        deployTxHash:
-          type: string
-        lastChainIndex: {}
-        baseAddress:
-          type: string
-        feeAddress:
-          type: string
-        safeModeActivated:
-          type: string
-        lowPriorityFeeAddress:
-          type: string
-        delegate:
-          type: string
-      required:
-        - pendingChainInitialization
-        - creationFailure
-    SolWallet:
-      title: Sol Wallet
-      type: object
-      properties:
-        pendingChainInitialization:
-          type: boolean
-        minimumFunding:
-          type: number
-        trustedTokens:
-          type: array
-          items:
-            allOf:
-              - type: object
-                properties:
-                  state:
-                    $ref: '#/components/schemas/TrustedTokenState'
-              - $ref: '#/components/schemas/Token'
-        rootAddress:
-          type: string
-        nonceAddress:
-          type: string
-        lastBlockHash:
-          type: string
-        lastChainIndex: {}
-        nonceExpiresAt:
-          type: string
-          format: date
-          title: Date String
-        nonceTxRequestId:
-          type: string
-      required:
-        - pendingChainInitialization
-        - minimumFunding
-        - trustedTokens
-    LightningCoinWallet:
-      title: Lightning Coin Wallet
-      type: object
-      properties:
-        keys:
-          type: array
-          items:
-            type: string
-        uri:
-          type: string
-        apiEndpoint:
-          type: string
-        nodeId:
-          type: string
-        updateSignerIP:
-          type: boolean
-        signerIP:
-          type: string
-        updateSignerTlsCert:
-          type: boolean
-        signerTlsCert:
-          type: string
-        updateSignerMacaroon:
-          type: boolean
-        encryptedSignerMacaroon:
-          type: string
-      required:
-        - keys
     GetPinnedWalletsCountResponse:
       title: GetPinnedWalletsCountResponse
       type: object
@@ -48495,7 +48724,7 @@ components:
               multisigType:
                 $ref: '#/components/schemas/MultiSigType'
               multisigTypeVersion:
-                $ref: '#/components/schemas/MultisigTypeVersion1'
+                $ref: '#/components/schemas/MultisigTypeVersion'
               'n':
                 type: number
                 description: Number of keys provided. This value must be 3 for hot wallets, 1 for **ofc** wallets, and not specified for custodial wallets.
@@ -48530,6 +48759,12 @@ components:
               spendableBalance:
                 type: number
                 description: The total balance in base units (e.g. Satoshis) which may be used as inputs for creating new transactions in string representation. The is only returned if the 'expandBalance' query parameter is set to 'true'.
+              stakingBalanceString:
+                type: string
+                description: The staked balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
+              rewardBalanceString:
+                type: string
+                description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
               users:
                 type: array
                 items:
@@ -48559,7 +48794,7 @@ components:
                   type: object
                   properties:
                     name:
-                      $ref: '#/components/schemas/WalletFlag1'
+                      $ref: '#/components/schemas/WalletFlag'
                     value:
                       type: string
                   required:
@@ -49123,11 +49358,11 @@ components:
       type: object
       properties:
         multiSigTypeVersion:
-          $ref: '#/components/schemas/MultisigTypeVersion1'
+          $ref: '#/components/schemas/MultisigTypeVersion'
         custodialMultiSigTypeVersion:
-          $ref: '#/components/schemas/MultisigTypeVersion1'
+          $ref: '#/components/schemas/MultisigTypeVersion'
         coldMultiSigTypeVersion:
-          $ref: '#/components/schemas/MultisigTypeVersion1'
+          $ref: '#/components/schemas/MultisigTypeVersion'
         defaultWalletVersion:
           type: number
     BitgoTSSPublicKeyResponse:
@@ -51339,13 +51574,6 @@ components:
       example: true
       description: |
         Exclude tokens with zero balance. When allTokens is passed, then every token supported by BitGo will be included, regardless of balance.
-    unspentCount:
-      name: unspentCount
-      schema:
-        type: boolean
-      in: query
-      example: true
-      description: True, if including unspent count for UTXO-based coins.
     state:
       name: state
       description: |
