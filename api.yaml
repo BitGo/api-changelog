@@ -27020,6 +27020,14 @@ paths:
             items:
               type: string
               description: Filter by wallet type
+        - name: subType
+          description: Filter by wallet sub-type
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: Filter by wallet sub-type
         - name: deleted
           description: Filter by deleted state
           in: query
@@ -27133,6 +27141,7 @@ paths:
               - BitGo Singapore
               - BitGo Korea
               - BitGo Mena Fze
+              - BitGo Custody MENA FZE
               - BitGo Sister Trust 1
       responses:
         '200':
@@ -27237,6 +27246,7 @@ paths:
               - BitGo Singapore
               - BitGo Korea
               - BitGo Mena Fze
+              - BitGo Custody MENA FZE
               - BitGo Sister Trust 1
       responses:
         '200':
@@ -30610,10 +30620,10 @@ components:
           allOf:
             - $ref: '#/components/schemas/ReferralCodeString'
           description: Referral code
-        oauthProvider:
+        oauthSetting:
           allOf:
-            - $ref: '#/components/schemas/OAuthProvider'
-          description: Log in Method of the enterprise *
+            - $ref: '#/components/schemas/OAuthSetting'
+          description: oauth setting of the enterprise *
         optOutOfPoints:
           type: boolean
           description: Opt Out of Points System Flag
@@ -30709,6 +30719,7 @@ components:
         - BitGo Singapore
         - BitGo Korea
         - BitGo Mena Fze
+        - BitGo Custody MENA FZE
         - BitGo Sister Trust 1
         - BitGo Inc
     AdditionalEnterpriseInfo:
@@ -31136,9 +31147,9 @@ components:
         isFallback:
           type: boolean
         walletSubtype:
-          $ref: '#/components/schemas/WalletSubtype'
-    WalletSubtype:
-      title: WalletSubtype
+          $ref: '#/components/schemas/CustodialWalletSubType'
+    CustodialWalletSubType:
+      title: CustodialWalletSubType
       type: string
       enum:
         - custodialCold
@@ -34275,6 +34286,23 @@ components:
       type: string
       example: 59cd72485007a239fb00282ed480da1f
       pattern: ^[0-9a-f]{32}$
+    OAuthSetting:
+      title: OAuthSetting
+      type: object
+      properties:
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+        tenantId:
+          type: string
+        oauthProvider:
+          $ref: '#/components/schemas/OAuthProvider'
+      required:
+        - clientId
+        - clientSecret
+        - tenantId
+        - oauthProvider
     OAuthProvider:
       title: OAuthProvider
       type: string
@@ -47791,6 +47819,7 @@ components:
             - BitGo Singapore
             - BitGo Korea
             - BitGo Mena Fze
+            - BitGo Custody MENA FZE
             - BitGo Sister Trust 1
             - BitGo Inc
         entries:
@@ -48384,6 +48413,7 @@ components:
                   - BitGo Singapore
                   - BitGo Korea
                   - BitGo Mena Fze
+                  - BitGo Custody MENA FZE
                   - BitGo Sister Trust 1
                   - BitGo Inc
               entries:
@@ -48896,6 +48926,7 @@ components:
                 - BitGo Singapore
                 - BitGo Korea
                 - BitGo Mena Fze
+                - BitGo Custody MENA FZE
                 - BitGo Sister Trust 1
                 - BitGo Inc
             coin:
@@ -50186,6 +50217,10 @@ components:
         isBitGo:
           type: boolean
           description: '"true" if this key is owned by BitGo'
+          example: false
+        isTrust:
+          type: boolean
+          description: '"true" if this key is owned by Trust'
           example: false
         encryptedPrv:
           type: string
