@@ -93,12 +93,15 @@ function comparePaths() {
             if (!previousMethods[method]) {
                 if (!changes.added[path]) changes.added[path] = new Set();
                 changes.added[path].add(method.toUpperCase());
-            } else if (JSON.stringify(previousMethods[method]) !== JSON.stringify(details)) {
-                if (!changes.modified[path]) changes.modified[path] = [];
-                changes.modified[path].push({
-                    method: method.toUpperCase(),
-                    changes: getChanges(previousMethods[method], details)
-                });
+            } else {
+                const changedFields = getChanges(previousMethods[method], details);
+                if (changedFields.length > 0) {  // Only add if there are meaningful changes
+                    if (!changes.modified[path]) changes.modified[path] = [];
+                    changes.modified[path].push({
+                        method: method.toUpperCase(),
+                        changes: changedFields
+                    });
+                }
             }
         });
     });
@@ -116,7 +119,7 @@ function comparePaths() {
 
 function getChanges(previous, current) {
     const changes = [];
-    const fields = ['summary', 'description', 'operationId', 'parameters', 'requestBody', 'responses'];
+    const fields = ['operationId', 'parameters', 'requestBody', 'responses'];
     
     fields.forEach(field => {
         if (JSON.stringify(previous[field]) !== JSON.stringify(current[field])) {
