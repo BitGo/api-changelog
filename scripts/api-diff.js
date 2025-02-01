@@ -10,7 +10,7 @@ const changes = {
     removed: {},    // Group by path
     modified: {},   // Group by path
     components: new Set(),  // Track changed components
-    affectedByComponents: {} // Track paths affected by component changes
+    affectedByComponents: new Map() // Track path/method combinations affected by component changes
 };
 
 // Helper function to track component references
@@ -61,22 +61,21 @@ function findAffectedPaths() {
     if (changes.components.size === 0) return;
 
     Object.entries(currentSpec.paths || {}).forEach(([path, methods]) => {
-        const affectedMethods = [];
         Object.entries(methods).forEach(([method, details]) => {
             const usedComponents = new Set();
             findComponentRefs(details, usedComponents);
             
             for (const comp of usedComponents) {
                 if (changes.components.has(comp)) {
-                    affectedMethods.push(method.toUpperCase());
-                    if (!changes.affectedByComponents[path]) {
-                        changes.affectedByComponents[path] = {
-                            methods: new Set(),
+                    const key = `${path}::${method.toUpperCase()}`;
+                    if (!changes.affectedByComponents.has(key)) {
+                        changes.affectedByComponents.set(key, {
+                            path,
+                            method: method.toUpperCase(),
                             components: new Set()
-                        };
+                        });
                     }
-                    changes.affectedByComponents[path].methods.add(method.toUpperCase());
-                    changes.affectedByComponents[path].components.add(comp);
+                    changes.affectedByComponents.get(key).components.add(comp);
                 }
             }
         });
@@ -241,9 +240,6 @@ function findComponentUsage(details, componentName) {
 
 // Generate markdown release notes
 function generateReleaseNotes() {
-    let releaseDescription = '';
-    
-
     const sections = [];
 
     // Added endpoints
@@ -257,84 +253,85 @@ function generateReleaseNotes() {
         sections.push(section);
     }
 
-    // Helper function to generate route modification details
-    function generateModifiedRouteDetails(path, changes) {
-        let details = '';
-        const methodsToProcess = new Set();
-        
-        // Collect all affected methods
-        if (changes.modified[path]) {
-            changes.modified[path].forEach(({method}) => methodsToProcess.add(method));
-        }
-        if (changes.affectedByComponents[path]) {
-            changes.affectedByComponents[path].methods.forEach(method => methodsToProcess.add(method));
-        }
+    // Modified endpoints
+    if (Object.keys(changes.modified).length > 0 || changes.affectedByComponents.size > 0) {
+        let section = '## Modified\n';
 
-        // Process each method
-        Array.from(methodsToProcess)
-            .sort()
-            .forEach(method => {
-                details += `- [${method}] \`${path}\`\n`;
-                
-                // Add direct changes
-                const directChanges = changes.modified[path]?.find(m => m.method === method);
-                if (directChanges) {
-                    directChanges.changes.sort().forEach(change => {
-                        details += `  - ${change}\n`;
+        // First show all directly modified paths
+        Object.entries(changes.modified)
+            .sort(([a], [b]) => a.localeCompare(b))
+            .forEach(([path, methodChanges]) => {
+                methodChanges
+                    .sort((a, b) => a.method.localeCompare(b.method))
+                    .forEach(({method, changes: methodChanges}) => {
+                        section += `- [${method}] \`${path}\`\n`;
+                        methodChanges.sort().forEach(change => {
+                            section += `  - ${change}\n`;
+                        });
                     });
-                }
+            });
 
-                // Add component changes
-                if (changes.affectedByComponents[path]?.methods.has(method)) {
+        // Then handle component-affected paths
+        const componentAffectedPaths = new Map();
+        
+        for (const [_, value] of changes.affectedByComponents) {
+            const { path, method, components } = value;
+            // Skip if this path/method was already shown in direct modifications
+            if (changes.modified[path]?.some(m => m.method === method)) continue;
+            
+            if (!componentAffectedPaths.has(path)) {
+                componentAffectedPaths.set(path, new Map());
+            }
+            componentAffectedPaths.get(path).set(method, Array.from(components));
+        }
+
+        // Show first 5 component-affected paths
+        const sortedComponentPaths = Array.from(componentAffectedPaths.keys()).sort();
+        const visibleComponentPaths = sortedComponentPaths.slice(0, 5);
+        
+        // Add a blank line before component-affected paths if there were direct modifications
+        if (Object.keys(changes.modified).length > 0 && visibleComponentPaths.length > 0) {
+            section += '\n';
+        }
+
+        visibleComponentPaths.forEach(path => {
+            const methods = componentAffectedPaths.get(path);
+            Array.from(methods.entries())
+                .sort(([a], [b]) => a.localeCompare(b))
+                .forEach(([method, components]) => {
+                    section += `- [${method}] \`${path}\`\n`;
                     const methodDetails = currentSpec.paths[path][method.toLowerCase()];
-                    Array.from(changes.affectedByComponents[path].components)
+                    components
                         .sort()
                         .forEach(component => {
                             const usageLocations = findComponentUsage(methodDetails, component).sort();
-                            details += `  - \`${component}\` modified in ${usageLocations.join(', ')}\n`;
+                            if (usageLocations.length > 0) {
+                                section += `  - \`${component}\` modified in ${usageLocations.join(', ')}\n`;
+                            }
                         });
-                }
-            });
-        return details;
-    }
-
-    // Modified endpoints
-    if (Object.keys(changes.modified).length > 0 || Object.keys(changes.affectedByComponents).length > 0) {
-        let section = '## Modified\n';
-        
-        // First show all directly modified paths
-        const directlyModifiedPaths = Object.keys(changes.modified).sort();
-        directlyModifiedPaths.forEach(path => {
-            section += generateModifiedRouteDetails(path, changes);
+                });
         });
 
-        // Then show component-affected paths (but not ones that were directly modified)
-        const componentAffectedEntries = Object.entries(changes.affectedByComponents)
-            .filter(([path]) => !changes.modified[path]) // Only paths not already shown above
-            .flatMap(([path, details]) => 
-                Array.from(details.methods).map(method => ({path, method}))
-            )
-            .sort((a, b) => a.path.localeCompare(b.path) || a.method.localeCompare(b.method));
-
-        // Show first 5 component-affected method-path combinations
-        const visibleEntries = componentAffectedEntries.slice(0, 5);
-        const processedPaths = new Set();
-        
-        visibleEntries.forEach(({path}) => {
-            if (!processedPaths.has(path)) {
-                section += generateModifiedRouteDetails(path, changes);
-                processedPaths.add(path);
-            }
-        });
-
-        // Collapse any remaining entries
-        const remainingEntries = componentAffectedEntries.slice(5);
-        if (remainingEntries.length > 0) {
+        // Collapse remaining component-affected paths
+        const remainingPaths = sortedComponentPaths.slice(5);
+        if (remainingPaths.length > 0) {
             section += '\n<details><summary>Show more routes affected by component changes...</summary>\n\n';
-            const remainingPaths = new Set();
-            remainingEntries.forEach(({path}) => remainingPaths.add(path));
-            Array.from(remainingPaths).sort().forEach(path => {
-                section += generateModifiedRouteDetails(path, changes);
+            remainingPaths.forEach(path => {
+                const methods = componentAffectedPaths.get(path);
+                Array.from(methods.entries())
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .forEach(([method, components]) => {
+                        section += `- [${method}] \`${path}\`\n`;
+                        const methodDetails = currentSpec.paths[path][method.toLowerCase()];
+                        components
+                            .sort()
+                            .forEach(component => {
+                                const usageLocations = findComponentUsage(methodDetails, component).sort();
+                                if (usageLocations.length > 0) {
+                                    section += `  - \`${component}\` modified in ${usageLocations.join(', ')}\n`;
+                                }
+                            });
+                    });
             });
             section += '</details>\n';
         }
@@ -353,7 +350,6 @@ function generateReleaseNotes() {
         sections.push(section);
     }
 
-
     // Sort sections alphabetically and combine
     sections.sort((a, b) => {
         const titleA = a.split('\n')[0];
@@ -361,9 +357,7 @@ function generateReleaseNotes() {
         return titleA.localeCompare(titleB);
     });
 
-    releaseDescription += sections.join('\n');
-
-    return releaseDescription;
+    return sections.join('\n');
 }
 
 // Main execution
