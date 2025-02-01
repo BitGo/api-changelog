@@ -72,6 +72,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          if [ ! -s release-description.md ]; then
+            echo "Release summary is empty, skipping release creation"
+            exit 0
+          fi
+          
+          # Create GitHub Release
           gh release create ${{ steps.version.outputs.new_version }} \
             --title "${{ steps.version.outputs.new_version }}" \
             --notes-file final-release-description.md
