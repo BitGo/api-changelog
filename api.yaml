@@ -22298,7 +22298,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WalletAddress'
+                $ref: '#/components/schemas/WalletAddressUnion'
         '400':
           description: Bad Request
           content:
@@ -22492,7 +22492,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/WalletAddress'
+                $ref: '#/components/schemas/WalletAddressUnion'
         '400':
           description: Bad Request
           content:
@@ -33009,18 +33009,27 @@ components:
         - enterpriseInviteRequest
     WalletAddress:
       title: WalletAddress
+      allOf:
+        - type: object
+          properties:
+            coin:
+              $ref: '#/components/schemas/CoinString'
+            wallet:
+              type: string
+            chain:
+              $ref: '#/components/schemas/AddressChain'
+            index:
+              type: number
+          required:
+            - coin
+            - wallet
+            - chain
+            - index
+        - $ref: '#/components/schemas/BaseWalletAddress'
+    BaseWalletAddress:
+      title: BaseWalletAddress
       type: object
       properties:
-        chain:
-          allOf:
-            - $ref: '#/components/schemas/AddressChain'
-          example: '1'
-        coin:
-          $ref: '#/components/schemas/CoinString'
-        index:
-          type: number
-        wallet:
-          type: string
         id:
           type: string
           description: Platform public ID for an address
@@ -33052,11 +33061,6 @@ components:
         needsConsolidation:
           type: boolean
         tokenConsolidationState: {}
-      required:
-        - chain
-        - coin
-        - index
-        - wallet
     AddressLabelString:
       title: AddressLabelString
       type: string
@@ -48130,6 +48134,24 @@ components:
         - WITNESS_SCRIPT
         - ETH_CREATE
         - ETH_CREATE2
+    WalletAddressUnion:
+      title: WalletAddressUnion
+      oneOf:
+        - $ref: '#/components/schemas/WalletAddress'
+        - $ref: '#/components/schemas/LightningWalletAddress'
+    LightningWalletAddress:
+      title: LightningWalletAddress
+      allOf:
+        - type: object
+          properties:
+            coin:
+              $ref: '#/components/schemas/CoinString'
+            wallet:
+              type: string
+          required:
+            - coin
+            - wallet
+        - $ref: '#/components/schemas/BaseWalletAddress'
     AddressWithBalanceQueryResult:
       title: AddressWithBalanceQueryResult
       type: object
@@ -48184,54 +48206,23 @@ components:
         addresses:
           type: array
           items:
-            type: object
-            properties:
-              address:
-                $ref: '#/components/schemas/AddressString'
-              balance:
-                $ref: '#/components/schemas/TrimmedBalance'
-              chain:
-                allOf:
-                  - $ref: '#/components/schemas/AddressChain'
-                example: '1'
-              coin:
-                $ref: '#/components/schemas/CoinString'
-              coinSpecific:
-                allOf:
-                  - $ref: '#/components/schemas/AddressSubdocument'
-                description: Properties specific to certain coin types
-              id:
-                type: string
-                description: Platform public ID for an address
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              index:
-                type: number
-              label:
-                $ref: '#/components/schemas/AddressLabelString'
-              lastConsolidatedTime:
-                type: string
-                format: date
-                title: Date String
-              lastNonce:
-                type: number
-                default: -1
-              needsConsolidation:
-                type: boolean
-              proof:
-                type: string
-              signature:
-                type: string
-              token:
-                type: string
-              tokenConsolidationState: {}
-              wallet:
-                type: string
-            required:
-              - chain
-              - coin
-              - index
-              - wallet
+            allOf:
+              - type: object
+                properties:
+                  chain:
+                    $ref: '#/components/schemas/AddressChain'
+                  coin:
+                    $ref: '#/components/schemas/CoinString'
+                  index:
+                    type: number
+                  wallet:
+                    type: string
+                required:
+                  - chain
+                  - coin
+                  - index
+                  - wallet
+              - $ref: '#/components/schemas/BaseWalletAddress'
         nextBatchPrevId:
           type: string
           description: When a result set is truncated, this field returns the id of the last object in the previous batch.  To get the next batch of results, pass this value via the 'prevId' query parameter.
