@@ -9,9 +9,101 @@ const changes = {
     added: {},      // Group by path
     removed: {},    // Group by path
     modified: {},   // Group by path
+    renamed: {},    // Track renamed endpoints
     components: new Set(),  // Track changed components
     affectedByComponents: new Map() // Track path/method combinations affected by component changes
 };
+
+function checkSimilarity(endpoint1, endpoint2) {
+    // Required matches: HTTP method and operationId
+    if (endpoint1.method.toLowerCase() !== endpoint2.method.toLowerCase() ||
+        !endpoint1.details.operationId ||
+        !endpoint2.details.operationId ||
+        endpoint1.details.operationId !== endpoint2.details.operationId) {
+        return false;
+    }
+
+    let similarityScore = 0;
+    
+    // Similar response structure
+    if (JSON.stringify(endpoint1.details.responses) === JSON.stringify(endpoint2.details.responses)) {
+        similarityScore += 2;
+    }
+    
+    // Similar parameters
+    if (JSON.stringify(endpoint1.details.parameters) === JSON.stringify(endpoint2.details.parameters)) {
+        similarityScore += 2;
+    }
+    
+    // Similar request body
+    if (JSON.stringify(endpoint1.details.requestBody) === JSON.stringify(endpoint2.details.requestBody)) {
+        similarityScore += 2;
+    }
+
+    // Similar summary/description if they exist
+    if (endpoint1.details.summary && endpoint2.details.summary && endpoint1.details.summary === endpoint2.details.summary) {
+        similarityScore += 1;
+    }
+    if (endpoint1.details.description && endpoint1.details.description && endpoint1.details.description === endpoint2.details.description) {
+        similarityScore += 1;
+    }
+
+    return similarityScore >= 4;
+}
+
+function detectRenamedEndpoints() {
+    const removedEndpoints = [];
+    const addedEndpoints = [];
+    
+    // Collect all removed endpoints
+    Object.entries(changes.removed).forEach(([path, methods]) => {
+        methods.forEach(method => {
+            removedEndpoints.push({
+                path,
+                method,
+                details: previousSpec.paths[path][method.toLowerCase()]
+            });
+        });
+    });
+    
+    // Collect all added endpoints
+    Object.entries(changes.added).forEach(([path, methods]) => {
+        methods.forEach(method => {
+            addedEndpoints.push({
+                path,
+                method,
+                details: currentSpec.paths[path][method.toLowerCase()]
+            });
+        });
+    });
+    
+    // Compare removed and added endpoints to find similarities
+    removedEndpoints.forEach(removedEndpoint => {
+        addedEndpoints.forEach(addedEndpoint => {
+            if (checkSimilarity(removedEndpoint, addedEndpoint)) {
+                // Remove from added and removed lists
+                changes.added[addedEndpoint.path].delete(addedEndpoint.method);
+                if (changes.added[addedEndpoint.path].size === 0) {
+                    delete changes.added[addedEndpoint.path];
+                }
+                
+                changes.removed[removedEndpoint.path].delete(removedEndpoint.method);
+                if (changes.removed[removedEndpoint.path].size === 0) {
+                    delete changes.removed[removedEndpoint.path];
+                }
+                
+                // Add to renamed list
+                if (!changes.renamed[removedEndpoint.path]) {
+                    changes.renamed[removedEndpoint.path] = {
+                        newPath: addedEndpoint.path,
+                        methods: new Set()
+                    };
+                }
+                changes.renamed[removedEndpoint.path].methods.add(addedEndpoint.method);
+            }
+        });
+    });
+}
 
 // Helper function to track component references
 function findComponentRefs(obj, components, spec = currentSpec) {
@@ -353,6 +445,34 @@ function generateReleaseNotes() {
         sections.push(section);
     }
 
+
+    // Add renamed endpoints section
+    if (Object.keys(changes.renamed).length > 0) {
+        let section = '## Renamed\n';
+        
+        // Group by old path and new path combination
+        const groupedRenames = {};
+        Object.entries(changes.renamed).forEach(([oldPath, {newPath, methods}]) => {
+            const key = `${oldPath}→${newPath}`;
+            if (!groupedRenames[key]) {
+                groupedRenames[key] = {
+                    oldPath,
+                    newPath,
+                    methods: new Set()
+                };
+            }
+            methods.forEach(method => groupedRenames[key].methods.add(method));
+        });
+
+        Object.values(groupedRenames)
+            .sort((a, b) => a.oldPath.localeCompare(b.oldPath))
+            .forEach(({oldPath, newPath, methods}) => {
+                const methodsList = Array.from(methods).sort().join('] [');
+                section += `- [${methodsList}] \`${oldPath}\` → \`${newPath}\`\n`;
+            });
+        sections.push(section);
+    }
+
     // Sort sections alphabetically and combine
     sections.sort((a, b) => {
         const titleA = a.split('\n')[0];
@@ -367,6 +487,7 @@ function generateReleaseNotes() {
 compareComponents();
 findAffectedPaths();
 comparePaths();
+detectRenamedEndpoints();
 const releaseDescription = generateReleaseNotes();
 
 // Write release notes to markdown file
