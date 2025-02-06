@@ -1,0 +1,2 @@
+## Renamed
+- [POST] `/users` → `/user`
