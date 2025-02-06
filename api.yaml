@@ -23560,55 +23560,6 @@ paths:
           content:
             application/json:
               schema: {}
-  /api/v2/enterprise/{enterpriseId}/ftxTrustToSingapore:
-    post:
-      summary: Create an FTX Singapore Enterprise from an existing FTX Trust enterprise
-      operationId: v2.enterprise.ftxTrustToSingapore
-      tags:
-        - Enterprise
-      parameters:
-        - name: enterpriseId
-          description: ''
-          in: path
-          required: true
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/EnterpriseIdString'
-            example: '"59cd72485007a239fb00282ed480da1f"'
-            pattern: ^[0-9a-f]{32}$
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                templateId:
-                  type: string
-                  minLength: 1
-              required:
-                - templateId
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}/pin/count:
     get:
       summary: Get pinned wallet count
