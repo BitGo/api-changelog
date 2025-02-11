@@ -28010,21 +28010,31 @@ components:
           type: object
           description: The freeze state
           properties:
-            comment:
-              type: string
-            reason:
-              type: string
+            actions:
+              type: array
+              items:
+                type: object
+                properties:
+                  reason:
+                    type: string
+                  state:
+                    type: string
+                    enum:
+                      - frozen
+                      - unFrozen
+                  time:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  userId:
+                    type: string
+                  username:
+                    type: string
             state:
               type: string
               enum:
                 - frozen
                 - unFrozen
-            time:
-              type: string
-              format: date-time
-              title: ISO Date String
-            user:
-              type: string
       required:
         - id
         - creator
@@ -33636,6 +33646,8 @@ components:
         - coldWalletStaking
         - tokenizationToken
         - oneClickStaking
+        - solOfcStaking
+        - suiOfcStaking
     WalletSubType:
       title: WalletSubType
       type: string
