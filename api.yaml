@@ -22808,6 +22808,22 @@ paths:
           in: query
           schema:
             type: string
+        - name: addressesNeedingFunding
+          description: Filters and gives only the addresses that need funding for consolidation
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: addressesEligibleForConsolidation
+          description: Filters and gives you the addresses eligible for consolidation
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
         - name: coin
           in: path
           required: true
@@ -33030,6 +33046,15 @@ components:
           type: string
           example: 59cd72485007a239fb00282ed480da1f
           pattern: ^[0-9a-f]{32}$
+        oauth:
+          type: object
+          properties:
+            oauthRequired:
+              type: boolean
+            expires:
+              type: string
+              format: date-time
+              title: ISO Date String
       required:
         - id
         - isExtensible
@@ -49034,6 +49059,9 @@ components:
         message:
           type: string
           description: Optional message from the response
+        count:
+          type: number
+          description: Count of the addresses in the current response
       required:
         - coin
     AddressQueryResult:
