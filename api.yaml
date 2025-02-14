@@ -1337,6 +1337,135 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/address-book/v1/connections:
+    get:
+      summary: List Go Account connections
+      description: Lists connections from your Go Account to other Go Accounts.
+      operationId: V1GetConnectionsRoute
+      tags:
+        - Counterparties
+      parameters:
+        - name: limit
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
+        - name: offset
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
+        - name: id
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+        - name: status
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - PENDING_DEACTIVATION
+                - PENDING_ACTIVATION
+                - ACTIVE
+                - INACTIVE
+              description: codec for valid connection statuses
+        - name: connectionType
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - DVP
+                - WHITELIST
+              description: codec for valid connection statuses
+        - name: orderBy
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - description
+              - connectionType
+              - createdAt
+              - updatedAt
+        - name: orderDirection
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+        - name: name
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: ownerWalletId
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: targetWalletId
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ConnectionWithOwnerAndTargetListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
     post:
       summary: Add Go Account connection
       description: |-
@@ -1431,130 +1560,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
-    get:
-      summary: List Go Account connections
-      description: Lists connections from your Go Account to other Go Accounts.
-      operationId: V1GetConnectionsRoute
-      tags:
-        - Counterparties
-      parameters:
-        - name: limit
-          in: query
-          required: true
-          schema:
-            oneOf:
-              - type: string
-              - type: number
-                enum:
-                  - 50
-        - name: offset
-          in: query
-          required: true
-          schema:
-            oneOf:
-              - type: string
-              - type: number
-                enum:
-                  - 0
-        - name: id
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              title: uuid
-        - name: status
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-                - PENDING_DEACTIVATION
-                - PENDING_ACTIVATION
-                - ACTIVE
-                - INACTIVE
-              description: codec for valid connection statuses
-        - name: connectionType
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-                - DVP
-                - WHITELIST
-              description: codec for valid connection statuses
-        - name: orderBy
-          in: query
-          required: true
-          schema:
-            type: string
-            enum:
-              - description
-              - connectionType
-              - createdAt
-              - updatedAt
-        - name: orderDirection
-          in: query
-          required: true
-          schema:
-            type: string
-            enum:
-              - ASC
-              - DESC
-        - name: name
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: ownerWalletId
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              minLength: 1
-        - name: targetWalletId
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              minLength: 1
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ConnectionWithOwnerAndTargetListResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
     put:
       summary: Update connection status
       description: Update connections to 'PENDING_DEACTIVATION'.
       operationId: V1PutConnectionsRoute
       tags:
         - Counterparties
-      parameters: []
+      parameters:
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       requestBody:
         content:
           application/json:
@@ -1678,6 +1702,18 @@ paths:
             items:
               type: string
               minLength: 1
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       responses:
         '200':
           description: OK
@@ -1728,6 +1764,18 @@ paths:
           schema:
             type: string
             title: uuid
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       requestBody:
         content:
           application/json:
@@ -1794,6 +1842,18 @@ paths:
           schema:
             type: string
             title: uuid
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       requestBody:
         content:
           application/json:
@@ -1916,6 +1976,18 @@ paths:
           schema:
             type: string
             minLength: 1
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       responses:
         '200':
           description: OK
@@ -2025,6 +2097,18 @@ paths:
           schema:
             type: string
             minLength: 1
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       responses:
         '200':
           description: OK
@@ -2058,7 +2142,19 @@ paths:
       operationId: V1PostListingEntryRoute
       tags:
         - Counterparties
-      parameters: []
+      parameters:
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       requestBody:
         content:
           application/json:
@@ -2115,6 +2211,57 @@ paths:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
   /api/address-book/v1/listing/global:
+    get:
+      summary: Get enterprise listing
+      description: Get the enterprise listing and list all entries in the enterprise listing.
+      operationId: V1GetListingRoute
+      tags:
+        - Counterparties
+      parameters:
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GlobalListingWithListingEntries'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
     post:
       summary: Create enterprise listing
       description: |-
@@ -2123,7 +2270,19 @@ paths:
       operationId: V1PostListingRoute
       tags:
         - Counterparties
-      parameters: []
+      parameters:
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       requestBody:
         content:
           application/json:
@@ -2167,45 +2326,6 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
         '422':
           description: Unprocessable Entity
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
-    get:
-      summary: Get enterprise listing
-      description: Get the enterprise listing and list all entries in the enterprise listing.
-      operationId: V1GetListingRoute
-      tags:
-        - Counterparties
-      parameters: []
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1GlobalListingWithListingEntries'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
-        '404':
-          description: Not Found
           content:
             application/json:
               schema:
