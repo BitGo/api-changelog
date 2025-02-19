@@ -22573,6 +22573,84 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/balances:
+    get:
+      summary: Get wallet by ID and coin
+      description: Get one wallet by its 'coin' and 'walletId'. One 'walletId' can map to multiple receive addresses.
+      operationId: v2.wallet.gettotalbalancesbycoin
+      tags:
+        - Wallet
+      parameters:
+        - name: allTokens
+          description: Include balances for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: enterprise
+          description: Filter by enterprise ID
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/EnterpriseIdString'
+              - type: array
+                items:
+                  type: string
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+        - name: showAllWallets
+          description: Include wallets that have 'deleted' or 'creationFailed' set to **true**
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+        - name: coin
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CoinString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWalletBalancesByCoinResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/auditlog:
     get:
       summary: List audit logs
@@ -26345,6 +26423,169 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WireWithdrawalsPaginatedResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/balances:
+    get:
+      summary: Get wallet by ID and coin
+      description: Get one wallet by its 'coin' and 'walletId'. One 'walletId' can map to multiple receive addresses.
+      operationId: v2.wallet.gettotalbalances
+      tags:
+        - Wallet
+      parameters:
+        - name: allTokens
+          description: Include balances for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: coin
+          description: Filter by coin
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+              - type: array
+                items:
+                  type: string
+                  description: A cryptocurrency symbol or token ticker symbol
+                  example: btc
+                  minLength: 1
+            example: btc | ['btc', 'eth']
+        - name: deleted
+          description: Filter by deleted state
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+        - name: enterprise
+          description: Filter by enterprise ID
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/EnterpriseIdString'
+              - type: array
+                items:
+                  type: string
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+        - name: excludeEmptyBalances
+          description: Exclude tokens with zero balance. When allTokens is passed, then every token supported by BitGo will be included, regardless of balance.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+        - name: excludeSpendableBalances
+          description: Skip spendable balance calculations and only include confirmed balances. If absent, defaults to false.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+        - name: expandCustodialWallet
+          description: Whether balances of linked custodial wallets should be included
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+        - name: id
+          description: Filter by wallet ID
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/WalletIdString'
+              - type: array
+                items:
+                  type: string
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+        - name: labelContains
+          description: Filter by label substring
+          in: query
+          schema:
+            type: string
+        - name: skipPendingTxs
+          description: Do not include pending withdrawals when determining total balances. By default, pending withdrawals will be considered.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+        - name: skipTxCounts
+          description: True, if excluding transfer counts when calculating total balances. If absent, defaults to false.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+        - name: type
+          description: Filter by wallet type
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/WalletType'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - backing
+                    - cold
+                    - custodial
+                    - custodialPaired
+                    - hot
+                    - trading
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWalletBalanceResponse'
         '400':
           description: Bad Request
           content:
@@ -48296,6 +48537,100 @@ components:
             description: The number of pending approvals
         required:
           - pendingApprovalsCount
+    GetWalletBalancesByCoinResponse:
+      title: GetWalletBalancesByCoinResponse
+      allOf:
+        - type: object
+          properties:
+            balance:
+              type: number
+              description: The total balance of all wallets containing the given coin type. May lose precision for large values.
+            confirmedBalance:
+              type: number
+              description: The total balance of confirmed transactions for all wallets containing the given coin type. May lose precision for large values.
+            spendableBalance:
+              type: number
+              description: The total balance of all wallets containing the given coin which may be used as inputs for creating new transactions. May lose precision for large values.
+            stakedBalance:
+              type: number
+              description: The total balance of all wallets containing the given coin which has been staked. May lose precision for large values.
+            stakedBalanceString:
+              type: string
+              description: String representation of 'stakedBalance'. Guaranteed to not lose precision.
+            tokens:
+              allOf:
+                - $ref: '#/components/schemas/tokenBalances'
+              description: Object of key value pairs where the keys are the token symbols (e.g. omg) and the values are the balance data for that token symbol.
+            unsupportedTokens:
+              allOf:
+                - $ref: '#/components/schemas/tokenBalances'
+              description: Object of key value pairs where the keys are the unsupported token contracts (e.g. 0x9928e4046d7c6513326ccea028cd3e7a91c7590a) and the values are the balance data for that token contract. UnsupportedTokens will only be returned for wallets that supports Metamask Institutional and has enableMMI flag turned on
+          required:
+            - balance
+            - confirmedBalance
+            - spendableBalance
+        - $ref: '#/components/schemas/baseBalanceStrings'
+    baseBalanceStrings:
+      title: baseBalanceStrings
+      type: object
+      properties:
+        balanceString:
+          type: string
+          description: String representation of the total balance of all wallets containing the given coin type. Guaranteed to not lose precision.
+        confirmedBalanceString:
+          type: string
+          description: String representation of the total balance of confirmed transactions for all wallets containing the given coin type. Guaranteed to not lose precision.
+        spendableBalanceString:
+          type: string
+          description: String representation of the total balance of all wallets containing the given coin which may be used as inputs for creating new transactions. Guaranteed to not lose precision.
+      required:
+        - balanceString
+        - confirmedBalanceString
+        - spendableBalanceString
+    tokenBalances:
+      title: tokenBalances
+      type: object
+      additionalProperties:
+        allOf:
+          - type: object
+            properties:
+              transferCount:
+                type: number
+                description: Number of transfers for the token.
+              heldBalanceString:
+                type: string
+                description: The difference between the balanceString and the spendableBalanceString.
+            required:
+              - transferCount
+          - $ref: '#/components/schemas/baseBalanceStrings'
+    GetWalletBalanceResponse:
+      title: GetWalletBalanceResponse
+      type: object
+      properties:
+        balances:
+          type: array
+          items:
+            type: object
+            properties:
+              coin:
+                allOf:
+                  - $ref: '#/components/schemas/CoinNonEmptyString'
+                description: A cryptocurrency or token ticker symbol.
+              balanceString:
+                type: string
+                description: String representation of the balance in base units. Guaranteed to not lose precision.
+              confirmedBalanceString:
+                type: string
+                description: String representation of the confirmed balance in base units. Guaranteed to not lose precision.
+              spendableBalanceString:
+                type: string
+                description: String representation of the spendable in base units. Guaranteed to not lose precision. Will not be included if 'excludeSpendableBalances=false'
+            required:
+              - coin
+              - balanceString
+              - confirmedBalanceString
+      required:
+        - balances
     DeployAddressAndForwardTokenResponse:
       title: DeployAddressAndForwardTokenResponse
       type: object
