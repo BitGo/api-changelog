@@ -16586,62 +16586,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/wallet/balances:
-    get:
-      tags:
-        - Wallet
-      summary: List total balances
-      description: |
-        Selects wallets based on the given filter parameters. Gets all balances for the selected wallets and sums up the
-        balances by coin.
-      operationId: v2.wallet.gettotalbalances
-      parameters:
-        - $ref: '#/components/parameters/coinArray'
-        - name: deleted
-          in: query
-          description: Filter by deleted state
-          schema:
-            type: array
-            items:
-              type: boolean
-            default:
-              - false
-        - $ref: '#/components/parameters/queryEnterpriseArray'
-        - $ref: '#/components/parameters/queryIdArray'
-        - name: labelContains
-          in: query
-          description: Filter by label substring
-          schema:
-            type: string
-        - name: type
-          in: query
-          description: Filter by wallet type
-          schema:
-            type: array
-            items:
-              $ref: '#/components/schemas/WalletTypePublic'
-        - name: expandCustodialWallet
-          description: Whether balances of linked custodial wallets should be included
-          in: query
-          schema:
-            type: boolean
-        - $ref: '#/components/parameters/skipPendingTxs'
-        - $ref: '#/components/parameters/skipTxCounts'
-        - $ref: '#/components/parameters/excludeEmptyBalances'
-        - $ref: '#/components/parameters/excludeSpendableBalances'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TotalBalances'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
   /api/v2/{coin}/wallet/{walletId}/requestreshare:
     post:
       tags:
@@ -41597,22 +41541,6 @@ components:
           type: number
           description: Number of decimal places the token uses (for fungible tokens unsupported in WP).
           example: 18
-    TotalBalances:
-      type: object
-      properties:
-        balances:
-          type: array
-          items:
-            type: object
-            properties:
-              balanceString:
-                allOf:
-                  - $ref: '#/components/schemas/IntegerString'
-                description: |
-                  String representation of the balance in base units. Guaranteed to not lose
-                  precision.
-              coin:
-                $ref: '#/components/schemas/Coin'
     Transaction1:
       type: object
       properties:
@@ -51706,22 +51634,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/BankAccountId'
-    queryIdArray:
-      name: id
-      in: query
-      description: Filter by ID.
-      schema:
-        type: array
-        items:
-          $ref: '#/components/schemas/Id'
-    queryEnterpriseArray:
-      name: enterprise
-      in: query
-      description: Filter by enterprise.
-      schema:
-        type: array
-        items:
-          $ref: '#/components/schemas/Id'
     pathUserId:
       name: userId
       in: path
@@ -51990,36 +51902,6 @@ components:
       example: true
       description: |
         Skip spendable balance calculations and only include confirmed balances. If absent, defaults to false.
-    skipPendingTxs:
-      name: skipPendingTxs
-      schema:
-        type: boolean
-      in: query
-      example: true
-      description: Do not include pending withdrawals when determining total balances. By default, pending withdrawals will be considered.
-    skipTxCounts:
-      name: skipTxCounts
-      schema:
-        type: boolean
-      in: query
-      example: true
-      description: True, if excluding transfer counts when calculating total balances. If absent, defaults to false.
-    excludeSpendableBalances:
-      name: excludeSpendableBalances
-      schema:
-        type: boolean
-      in: query
-      example: true
-      description: |
-        Skip spendable balance calculations and only include confirmed balances. If absent, defaults to false.
-    excludeEmptyBalances:
-      name: excludeEmptyBalances
-      schema:
-        type: boolean
-      in: query
-      example: true
-      description: |
-        Exclude tokens with zero balance. When allTokens is passed, then every token supported by BitGo will be included, regardless of balance.
     state:
       name: state
       description: |
