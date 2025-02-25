@@ -1195,7 +1195,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlatformPlatformError'
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformPlatformError'
+                  - $ref: '#/components/schemas/DuplicateSequenceId'
         '401':
           description: Unauthorized
           content:
@@ -17438,6 +17440,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/DuplicateSequenceId1'
                   - $ref: '#/components/schemas/InvalidOFAC'
         '423':
           description: Locked
@@ -31387,24 +31390,6 @@ components:
           type: array
           items:
             type: string
-        uri:
-          type: string
-        apiEndpoint:
-          type: string
-        nodeId:
-          type: string
-        updateSignerIP:
-          type: boolean
-        signerIP:
-          type: string
-        updateSignerTlsCert:
-          type: boolean
-        signerTlsCert:
-          type: string
-        updateSignerMacaroon:
-          type: boolean
-        encryptedSignerMacaroon:
-          type: string
       required:
         - keys
     SolWallet:
@@ -35333,6 +35318,18 @@ components:
       type: string
       format: ipv4
       example: 127.0.0.1
+    DuplicateSequenceId:
+      title: Duplicate SequenceId
+      allOf:
+        - $ref: '#/components/schemas/PlatformPlatformError'
+        - properties:
+            name:
+              type: string
+              description: Error code
+              enum:
+                - DuplicateSequenceId
+          required:
+            - name
     V1ErrorResponse:
       title: V1ErrorResponse
       type: object
@@ -38965,6 +38962,18 @@ components:
             - owner
         - $ref: '#/components/schemas/PaymentIntent1'
         - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+    DuplicateSequenceId1:
+      title: Duplicate SequenceId
+      allOf:
+        - $ref: '#/components/schemas/PlatformError3'
+        - properties:
+            name:
+              type: string
+              description: Error code
+              enum:
+                - DuplicateSequenceId
+          required:
+            - name
     Email:
       type: string
       format: email
