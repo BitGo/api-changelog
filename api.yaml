@@ -18448,6 +18448,121 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
+  /api/v2/{coin}/wallet/{walletId}/state:
+    get:
+      tags:
+        - Express
+      summary: Lightning - Get node state
+      operationId: express.lightning.getState
+      description: Get the current state of the lightning node.
+      parameters:
+        - $ref: '#/components/parameters/pathLightningCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressLightningNodeStateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/{coin}/wallet/{walletId}/initwallet:
+    post:
+      tags:
+        - Express
+      summary: Lightning - Initialize node
+      operationId: express.lightning.initWallet
+      description: Initialize a newly created Lightning Network Daemon (LND) for the first time. Returns the updated wallet with the encrypted admin macaroon in the 'coinSpecific' response field.
+      parameters:
+        - $ref: '#/components/parameters/pathLightningCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpressInitWalletRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressGenerateWalletResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/{coin}/wallet/{walletId}/signermacaroon:
+    post:
+      tags:
+        - Express
+      summary: Lightning - Create signer macaroon
+      operationId: express.lightning.signerMacaroon
+      description: Create the signer macaroon for the watch-only Lightning Network Daemon (LND) node. This macaroon derives from the signer node admin macaroon and is used by the watch-only node to request signatures from the signer node for operational tasks. Returns the updated wallet with the encrypted signer macaroon in the 'coinSpecific' response field.
+      parameters:
+        - $ref: '#/components/parameters/pathLightningCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpressGenerateSignerMacaroonRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressGenerateWalletResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/{coin}/wallet/{walletId}/unlockwallet:
+    post:
+      tags:
+        - Express
+      summary: Lightning - Unlock node
+      operationId: express.lightning.unlockWallet
+      description: Unlock the Lightning Network Daemon (LND) node with the given wallet password.
+      parameters:
+        - $ref: '#/components/parameters/pathLightningCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpressUnlockLightningWalletRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressUnlockLightningWalletResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/consolidateAccount:
     post:
       tags:
@@ -38514,6 +38629,11 @@ components:
       items:
         $ref: '#/components/schemas/AddressType'
       description: The address types for the change address. Order by preference and BitGo uses the first available. Any subset of 'p2sh', 'p2shP2wsh', 'p2wsh', 'p2tr' or 'p2trMusig2'.
+    LightningCoin:
+      title: Coin
+      description: A lightning coin name.
+      type: string
+      example: lnbtc
     CommitmentShare:
       type: object
       properties:
@@ -39330,6 +39450,27 @@ components:
               enum:
                 - 1
                 - 2
+    ExpressInitWalletRequest:
+      type: object
+      properties:
+        passphrase:
+          type: string
+          description: Passphrase to encrypt the admin macaroon of the signer node.
+    ExpressUnlockLightningWalletRequest:
+      type: object
+      properties:
+        passphrase:
+          type: string
+          description: Passphrase to decrypt the unlock the node.
+    ExpressGenerateSignerMacaroonRequest:
+      type: object
+      properties:
+        passphrase:
+          type: string
+          description: Passphrase to decrypt the admin macaroon of the signer node.
+        addIpCaveatToMacaroon:
+          type: boolean
+          description: If true, adds an IP caveat to the generated signer macaroon.
     ExpressConsolidateAccountRequest:
       type: object
       properties:
@@ -39745,6 +39886,25 @@ components:
             - signed
             - signed (suppressed)
             - pendingApproval
+    ExpressUnlockLightningWalletResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: ok
+    ExpressLightningNodeStateResponse:
+      type: object
+      properties:
+        state:
+          description: Current state of the node
+          type: string
+          enum:
+            - NON_EXISTING
+            - LOCKED
+            - UNLOCKED
+            - RPC_ACTIVE
+            - SERVER_ACTIVE
+            - WAITING_TO_START
     ExpressSendConsolidationResponse:
       type: object
       properties:
@@ -52148,6 +52308,12 @@ components:
         type: string
       description: |
         A 'sequenceId' is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a 'sequenceId' you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per 'sequenceId' (and fails all subsequent attempts), you can retry sending without the risk of double spending. The 'sequenceId' is only visible to users on the wallet and is not shared publicly.
+    pathLightningCoin:
+      name: coin
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/LightningCoin'
     pathBitcoin:
       name: coin
       in: path
