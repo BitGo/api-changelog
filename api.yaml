@@ -22143,6 +22143,15 @@ paths:
               - 'true'
               - 'false'
             default: 'false'
+        - name: includeAllTokenAddresses
+          description: Whether to include all token addresses for receiver addresses
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
         - name: labelContains
           description: A case-insensitive regular expression which will be used to filter returned addresses based on their address label.
           in: query
@@ -27924,8 +27933,6 @@ components:
         - approved
         - processing
         - rejected
-        - skipped
-        - failed
     PendingApprovalInfo:
       title: PendingApprovalInfo
       type: object
@@ -30733,6 +30740,7 @@ components:
         needsConsolidation:
           type: boolean
         tokenConsolidationState: {}
+        tokenAddress: {}
     AddressLabelString:
       title: AddressLabelString
       type: string
@@ -33579,7 +33587,7 @@ components:
               description: Transaction information.
               type: array
               items:
-                $ref: '#/components/schemas/Transaction'
+                $ref: '#/components/schemas/PlatformTransaction'
             messages:
               description: Messages for the transaction request.
               type: array
@@ -33654,7 +33662,7 @@ components:
         - backup
         - bitgo
       example: user
-    Transaction:
+    PlatformTransaction:
       type: object
       properties:
         state:
@@ -41179,7 +41187,7 @@ components:
     PendingApprovalState1:
       anyOf:
         - $ref: '#/components/schemas/PendingApprovalStatePending1'
-        - $ref: '#/components/schemas/PendingApprovalStateResolved1'
+        - $ref: '#/components/schemas/PendingApprovalStateResolved'
     PendingApprovalStatePending1:
       title: Pending
       type: string
@@ -41190,13 +41198,6 @@ components:
         - pendingCustodianApproval
         - pendingVideoApproval
         - pendingIdVerification
-    PendingApprovalStateResolved1:
-      title: Resolved
-      type: string
-      enum:
-        - approved
-        - processing
-        - rejected
     PendingApprovalTransactionRequestFull1:
       title: Transaction request (full)
       type: object
@@ -42006,7 +42007,7 @@ components:
           type: number
           description: Number of decimal places the token uses (for fungible tokens unsupported in WP).
           example: 18
-    Transaction1:
+    Transaction:
       type: object
       properties:
         state:
@@ -42183,7 +42184,7 @@ components:
               description: Transaction information.
               type: array
               items:
-                $ref: '#/components/schemas/Transaction1'
+                $ref: '#/components/schemas/Transaction'
             messages:
               description: Messages for the transaction request.
               type: array
