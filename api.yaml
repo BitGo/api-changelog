@@ -22583,7 +22583,9 @@ paths:
   /api/v2/{coin}/wallet/{walletId}/addresses/balances:
     get:
       summary: List addresses sorted by balance
-      description: List receive addresses by balance on a wallet
+      description: |-
+        List addresses by sorted balances on a wallet
+        Supported coins: TRX
       operationId: v2.wallet.addresses.balances
       tags:
         - Address
@@ -22619,27 +22621,14 @@ paths:
           in: query
           schema:
             type: string
-        - name: addressesNeedingFunding
-          description: Filters and gives only the addresses that need funding for consolidation
-          in: query
-          schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-        - name: addressesEligibleForConsolidation
-          description: Filters and gives you the addresses eligible for consolidation
-          in: query
-          schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
         - name: coin
+          description: A cryptocurrency symbol or token ticker symbol
           in: path
           required: true
           schema:
-            $ref: '#/components/schemas/CoinString'
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+            example: trx
         - name: walletId
           in: path
           required: true
@@ -31672,6 +31661,7 @@ components:
           allOf:
             - $ref: '#/components/schemas/CoinString'
           description: The coin associated with the address balances
+          example: trx
         page:
           type: number
           description: The current page number
@@ -36188,6 +36178,7 @@ components:
               format: date-time
               title: ISO Date String
         endDate:
+          nullable: true
           oneOf:
             - type: string
               format: date
