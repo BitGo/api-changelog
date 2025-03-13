@@ -50,24 +50,13 @@ tags:
   - name: Password reset
   - name: Pending approval
   - name: Policy
-  - name: Products
   - name: Reports
   - name: Send label
-  - name: Signing policy
-    description: |
-      A signing policy includes signing and update requirements, which specifies the minimum
-      number of cryptographic signatures, m, needed from a list of trusted public keys before
-      they can make a transaction or update the policy itself. Signing policy provides extra security.
-      It is BitGo's way of ensuring the transaction has been indeed authorized by the user and approved
-      by a quorum of decision makers from the user's side before co-signing the transaction.
   - name: Transfer
   - name: Transaction request
   - name: TSS wallets
   - name: User
   - name: User Management
-  - name: User group
-  - name: User group member
-  - name: User group wallet
   - name: Wallet
   - name: Wallet events
     description: |
@@ -18479,7 +18468,7 @@ paths:
         - Express
       summary: Lightning - Initialize node
       operationId: express.lightning.initWallet
-      description: Initialize a newly created Lightning Network Daemon (LND) for the first time. Returns the updated wallet with the encrypted admin macaroon in the 'coinSpecific' response field.
+      description: This is only used for self-custody lightning. Initialize a newly created Lightning Network Daemon (LND) for the first time. Returns the updated wallet with the encrypted admin macaroon in the 'coinSpecific' response field.
       parameters:
         - $ref: '#/components/parameters/pathLightningCoin'
         - $ref: '#/components/parameters/pathWalletId'
@@ -18509,7 +18498,7 @@ paths:
         - Express
       summary: Lightning - Create signer macaroon
       operationId: express.lightning.signerMacaroon
-      description: Create the signer macaroon for the watch-only Lightning Network Daemon (LND) node. This macaroon derives from the signer node admin macaroon and is used by the watch-only node to request signatures from the signer node for operational tasks. Returns the updated wallet with the encrypted signer macaroon in the 'coinSpecific' response field.
+      description: This is only used for self-custody lightning. Create the signer macaroon for the watch-only Lightning Network Daemon (LND) node. This macaroon derives from the signer node admin macaroon and is used by the watch-only node to request signatures from the signer node for operational tasks. Returns the updated wallet with the encrypted signer macaroon in the 'coinSpecific' response field.
       parameters:
         - $ref: '#/components/parameters/pathLightningCoin'
         - $ref: '#/components/parameters/pathWalletId'
@@ -18539,7 +18528,7 @@ paths:
         - Express
       summary: Lightning - Unlock node
       operationId: express.lightning.unlockWallet
-      description: Unlock the Lightning Network Daemon (LND) node with the given wallet password.
+      description: This is only used for self-custody lightning. Unlock the Lightning Network Daemon (LND) node with the given wallet password.
       parameters:
         - $ref: '#/components/parameters/pathLightningCoin'
         - $ref: '#/components/parameters/pathWalletId'
@@ -56192,13 +56181,11 @@ components:
 x-tagGroups:
   - name: API reference
     tags:
-      - Activation
       - Address
       - Approval Requests
       - Audit log
       - Bank account
       - Counterparties
-      - Clearing & Settlement
       - Client Allocations & Deallocations
       - Client Balances
       - Client Settlements & Transfers
@@ -56222,14 +56209,11 @@ x-tagGroups:
       - Partner Balances
       - Partner Settlements & Transfers
       - Pending approval
-      - Plaid
       - Policy Builder
-      - Portfolio REST API
       - User Management
       - CryptoCompare
       - Reports
       - Send label
-      - Staking
       - Staking Request
       - Staking State Information
       - Staking History
@@ -56237,8 +56221,6 @@ x-tagGroups:
       - Settlement Signing
       - Settlements
       - Trade REST API
-      - Trading Account Settings
-      - Trading Partners
       - Transaction request
       - Transfer
       - User
