@@ -22584,8 +22584,8 @@ paths:
     get:
       summary: List addresses sorted by balance
       description: |-
-        List addresses by sorted balances on a wallet
-        Supported coins: TRX
+        List addresses by sorted balances on a wallet.
+        Supported coins: TRX.
       operationId: v2.wallet.addresses.balances
       tags:
         - Address
@@ -22626,8 +22626,7 @@ paths:
           in: path
           required: true
           schema:
-            allOf:
-              - $ref: '#/components/schemas/CoinString'
+            type: string
             example: trx
         - name: walletId
           in: path
@@ -31659,8 +31658,7 @@ components:
       description: Represents the result of a query for addresses with balances. This structure contains the details of a set of addresses, their associated balances, and pagination information about the query results.
       properties:
         coin:
-          allOf:
-            - $ref: '#/components/schemas/CoinString'
+          type: string
           description: The coin associated with the address balances
           example: trx
         page:
@@ -35997,7 +35995,7 @@ components:
                   ftxCreditorId:
                     type: string
                   ftxHost:
-                    type: string
+                    $ref: '#/components/schemas/FtxHostType'
             required:
               - source
             description: Array to store configs, upon which certain actions are taken, per source
@@ -38788,6 +38786,13 @@ components:
           type: string
           format: date-time
           description: When the freeze will end
+    FtxHostType:
+      title: FtxHostType
+      type: string
+      enum:
+        - COM
+        - LIQUID
+        - US
     FundingType:
       type: string
       enum:
