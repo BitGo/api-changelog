@@ -55670,42 +55670,28 @@ components:
       properties:
         id:
           $ref: '#/components/schemas/Id'
-        coin:
-          $ref: '#/components/schemas/Coin'
         type:
           $ref: '#/components/schemas/WebhookTypeWallet'
-        walletType:
+        wallet:
+          $ref: '#/components/schemas/Id'
+        enterprise:
+          $ref: '#/components/schemas/Id'
+        organization:
+          $ref: '#/components/schemas/Id'
+        bankAccount:
+          $ref: '#/components/schemas/Id'
+        url:
           type: string
-          example: cold
-        transferType:
+          format: uri
+          example: https://your.server.com/webhook
+        hash:
           type: string
-          example: receive
-        value:
-          type: integer
-          example: 1055354
-        valueString:
-          type: string
-          example: 1055354
-        baseValue:
-          type: integer
-          example: 1055354
-        baseValueString:
-          type: string
-          example: 1055354
-        feeString:
-          type: string
-          example: 71854
-        initiator:
-          type: array
-          items:
-            type: string
-            example: external
-        receiver:
-          type: string
-          example: tb1q3tzuxef7qc0sl8jq6vh3hpeq0w7swmq9a7eh4p
-        version:
-          type: integer
-          example: 2
+          example: 1311768467294899700
+          description: A transaction hash for transactions, or a block hash for block notifications.
+        coin:
+          $ref: '#/components/schemas/Coin'
+        transfer:
+          $ref: '#/components/schemas/Id'
         state:
           type: string
           description: If 'failed', webhook notification failed to connect with the target URL. If 'new', webhook notification was newly generated, in response to an event. If 'pending', webhook notification is awaiting processing by the webhook worker. If 'processed', webhook notification successfully sent to target URL. If 'unconfirmed', webhook notification is awaiting confirmation on the blockchain.
@@ -55716,6 +55702,25 @@ components:
             - processed
             - unconfirmed
           example: new
+        simulation:
+          type: boolean
+          example: false
+        retries:
+          type: integer
+          example: 0
+          description: The number of retries that have been attempted for this webhook notification.
+        webhook:
+          $ref: '#/components/schemas/Id'
+        updateAt:
+          $ref: '#/components/schemas/DateTime'
+        nextAttempt:
+          $ref: '#/components/schemas/DateTime'
+        version:
+          type: integer
+          example: 2
+        idempotencyKey:
+          type: string
+          description: A unique id that can be used to de-duplicate notifications.
     WebhookNotificationState:
       title: WebhookNotificationState
       type: string
