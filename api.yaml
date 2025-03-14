@@ -22942,6 +22942,59 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/{coin}/wallet/{walletId}/token/approval/build:
+    post:
+      summary: Build an approval transaction for ERC20 token
+      operationId: v2.wallet.token.approval.build
+      tags:
+        - Wallet
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: string
+                  minLength: 1
+                gasLimit:
+                  type: number
+                gasPrice:
+                  type: number
+                eip1559:
+                  type: object
+                  properties:
+                    maxFeePerGas:
+                      type: number
+                    maxPriorityFeePerGas:
+                      type: number
+                  required:
+                    - maxFeePerGas
+                    - maxPriorityFeePerGas
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildTokenApprovalResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/tx/changeFee:
     post:
       summary: Change Fee
@@ -23039,6 +23092,15 @@ paths:
                   pattern: ^[0-9a-f]{32}$
         - name: showAllWallets
           description: Include wallets that have 'deleted' or 'creationFailed' set to **true**
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+        - name: includeStakingBalances
+          description: Include 'stakingBalanceString' and 'rewardBalanceString' properties for each staking wallet.
           in: query
           schema:
             type: string
@@ -26981,6 +27043,15 @@ paths:
                   type: string
                   example: 59cd72485007a239fb00282ed480da1f
                   pattern: ^[0-9a-f]{32}$
+        - name: includeStakingBalances
+          description: Include 'stakingBalanceString' and 'rewardBalanceString' properties for each staking wallet.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
         - name: labelContains
           description: Filter by label substring
           in: query
@@ -27175,6 +27246,15 @@ paths:
             enum:
               - 'true'
               - 'false'
+        - name: includeStakingBalances
+          description: Include 'stakingBalanceString' and 'rewardBalanceString' properties for each staking wallet. Requires 'expandBalance' to be set to true.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
         - name: limit
           description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
           in: query
@@ -33618,6 +33698,44 @@ components:
               format: date-time
               description: Required. The time that the unspent reservations should expire.
           description: Optional parameter for UTXO coins to automatically reserve the unspents that are used in the build. Useful for Cold wallets. If using, must set expireTime.
+    BuildTokenApprovalResponse:
+      title: BuildTokenApprovalResponse
+      type: object
+      properties:
+        txHex:
+          type: string
+        txInfo:
+          type: object
+          properties:
+            amount:
+              type: string
+            contractAddress:
+              type: string
+            spender:
+              type: string
+          required:
+            - amount
+            - contractAddress
+            - spender
+        recipients:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+              amount:
+                type: string
+              data:
+                type: string
+            required:
+              - address
+              - amount
+              - data
+      required:
+        - txHex
+        - txInfo
+        - recipients
     BusinessModel:
       title: BusinessModel
       type: string
@@ -39400,6 +39518,12 @@ components:
               spendableBalanceString:
                 type: string
                 description: String representation of the spendable in base units. Guaranteed to not lose precision. Will not be included if 'excludeSpendableBalances=false'
+              stakingBalanceString:
+                type: string
+                description: The staked balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
+              rewardBalanceString:
+                type: string
+                description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
             required:
               - coin
               - balanceString
@@ -40023,6 +40147,22 @@ components:
           type: boolean
           description: true, if multiple values can be provided, i.e. as a list of values. When false only one value can be provided, i.e. a list with more than one element will be rejected.
           example: false
+    InquiryStatus:
+      title: InquiryStatus
+      type: string
+      enum:
+        - completed
+        - failed
+    InquirySubType:
+      title: InquirySubType
+      type: string
+      enum:
+        - withdrawalLivenessCheck
+    InquiryType:
+      title: InquiryType
+      type: string
+      enum:
+        - livenessCheck
     InscriptionId:
       type: string
       description: The ID of the inscription in the form <txid>i<vin>
@@ -43532,6 +43672,25 @@ components:
               enum:
                 - frozen
                 - unFrozen
+        associatedInquiries:
+          type: array
+          items:
+            type: object
+            properties:
+              inquiryId:
+                type: string
+              inquiryStatus:
+                $ref: '#/components/schemas/InquiryStatus'
+              inquirySubType:
+                $ref: '#/components/schemas/InquirySubType'
+              inquiryType:
+                $ref: '#/components/schemas/InquiryType'
+            required:
+              - inquiryId
+              - inquiryStatus
+              - inquirySubType
+              - inquiryType
+            description: Associated inquiries
       required:
         - id
         - creator
@@ -56111,6 +56270,12 @@ components:
         spendableBalanceString:
           type: string
           description: String representation of the total balance of all wallets containing the given coin which may be used as inputs for creating new transactions. Guaranteed to not lose precision.
+        stakingBalanceString:
+          type: string
+          description: The staked balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
+        rewardBalanceString:
+          type: string
+          description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
       required:
         - balanceString
         - confirmedBalanceString
