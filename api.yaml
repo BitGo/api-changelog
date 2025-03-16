@@ -25971,6 +25971,547 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/lightning/invoice:
+    get:
+      summary: Fetch lightning invoices
+      description: |-
+        This API call is used to fetch current lightning invoices which are
+        used for requesting and receiving payments over the lightning network.
+      operationId: v2.wallet.lightning.invoice.list
+      tags:
+        - Lightning
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - open
+              - settled
+              - canceled
+        - name: limit
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    valueMsat:
+                      type: string
+                      format: number
+                    paymentHash:
+                      type: string
+                    invoice:
+                      type: string
+                    walletId:
+                      type: string
+                    status:
+                      $ref: '#/components/schemas/InvoiceStatus'
+                    expiresAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    createdAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    updatedAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    amtPaidMsat:
+                      type: string
+                      description: The number of millisats actually paid to this invoice, this may be greater than the amount requested by the invoice, since lightning allows overpaying (but not underpaying) invoices.
+                      format: number
+                  required:
+                    - valueMsat
+                    - paymentHash
+                    - invoice
+                    - walletId
+                    - status
+                    - expiresAt
+                    - createdAt
+                    - updatedAt
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidWalletId'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Create a lightning invoice
+      description: |-
+        This API call is used to create a new lightning invoice which can be
+        used for requesting and receiving payments over the lightning network.
+      operationId: v2.wallet.lightning.invoice.create
+      tags:
+        - Lightning
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                valueMsat:
+                  type: string
+                  description: The value of the invoice in millisatoshis
+                  example: '50000000'
+                  format: number
+                memo:
+                  type: string
+                  description: Optional memo or description for the invoice
+                  example: Payment for services
+                expiry:
+                  type: number
+                  description: Optional expiry time in seconds
+                  example: 3600
+              required:
+                - valueMsat
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LightningInvoice'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidWalletId'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/lightning/invoice/{paymentHash}:
+    get:
+      summary: Fetch lightning invoice for a payment hash
+      description: |-
+        This API call is used to fetch lightning invoice for a given payment hash.
+        Payment hash is a unique identifier for a lightning invoice.
+      operationId: v2.wallet.lightning.invoice.get
+      tags:
+        - Lightning
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+        - name: paymentHash
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceInfo'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidPaymentHash'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidPaymentHash'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/lightning/payment:
+    get:
+      summary: Fetch lightning payments
+      description: This API call is used to fetch current lightning payments over the lightning network.
+      operationId: v2.wallet.lightning.payment.list
+      tags:
+        - Lightning
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum:
+              - in_flight
+              - settled
+              - failed
+        - name: limit
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: Off-chain payment information
+                  properties:
+                    paymentHash:
+                      type: string
+                    walletId:
+                      type: string
+                    txRequestId:
+                      type: string
+                    status:
+                      $ref: '#/components/schemas/PaymentStatus'
+                    invoice:
+                      type: string
+                    feeLimitMsat:
+                      type: string
+                      format: number
+                    destination:
+                      type: string
+                    updatedAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    createdAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    amountMsat:
+                      type: string
+                      format: number
+                    feeMsat:
+                      type: string
+                      format: number
+                    failureReason:
+                      $ref: '#/components/schemas/PaymentFailureReason'
+                    paymentPreimage:
+                      type: string
+                  required:
+                    - paymentHash
+                    - walletId
+                    - txRequestId
+                    - status
+                    - invoice
+                    - feeLimitMsat
+                    - destination
+                    - updatedAt
+                    - createdAt
+                    - amountMsat
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidWalletId'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/lightning/payment/{paymentHash}:
+    get:
+      summary: Fetch lightning payment for a payment hash
+      description: |-
+        This API call is used to fetch lightning payment for a given payment hash.
+        Payment hash is a unique identifier for a lightning payment.
+      operationId: v2.wallet.lightning.payment.get
+      tags:
+        - Lightning
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+        - name: paymentHash
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentInfo'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidPaymentHash'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidPaymentHash'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/lightning/transaction:
+    get:
+      summary: Fetch lightning onchain transactions
+      description: This API call is used to fetch current lightning onchain transactions.
+      operationId: v2.wallet.lightning.transaction.list
+      tags:
+        - Lightning
+      parameters:
+        - name: blockHeight
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: limit
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: Transaction details
+                  properties:
+                    id:
+                      type: string
+                    normalizedTxHash:
+                      type: string
+                    blockHeight:
+                      type: number
+                    blockHash:
+                      type: string
+                    blockPosition:
+                      type: number
+                    inputIds: {}
+                    entries: {}
+                    inputs: {}
+                    outputs: {}
+                    size:
+                      type: number
+                    date:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    fee:
+                      type: number
+                    feeString:
+                      type: string
+                    hex:
+                      type: string
+                    confirmations:
+                      type: number
+                    label:
+                      type: string
+                  required:
+                    - id
+                    - normalizedTxHash
+                    - blockHeight
+                    - blockHash
+                    - blockPosition
+                    - inputIds
+                    - entries
+                    - inputs
+                    - outputs
+                    - size
+                    - date
+                    - fee
+                    - feeString
+                    - hex
+                    - confirmations
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvalidWalletId'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/lightning/transaction/{txid}:
+    get:
+      summary: Fetch lightning onchain transaction for a txid
+      description: This API call is used to fetch lightning onchain transaction for a given txid.
+      operationId: v2.wallet.lightning.transaction.get
+      tags:
+        - Lightning
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+        - name: txid
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidTxId'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidTxId'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/pin:
     put:
       summary: Pin or unpin a wallet
@@ -40452,6 +40993,18 @@ components:
           required:
             - name
         - $ref: '#/components/schemas/InvalidId'
+    InvalidPaymentHash:
+      title: Invalid Payment Hash
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              enum:
+                - InvalidPaymentHash
+          required:
+            - name
+        - $ref: '#/components/schemas/InvalidId'
     InvalidTransferId:
       title: Invalid transfer ID
       allOf:
@@ -40464,6 +41017,18 @@ components:
                 - InvalidTransferId
           required:
             - name
+    InvalidTxId:
+      title: Invalid TxId
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              enum:
+                - InvalidTxId
+          required:
+            - name
+        - $ref: '#/components/schemas/InvalidId'
     InvalidUserId:
       title: Invalid user ID
       allOf:
@@ -40500,6 +41065,53 @@ components:
                 - InvalidWalletId
           required:
             - name
+    InvoiceInfo:
+      title: InvoiceInfo
+      type: object
+      properties:
+        valueMsat:
+          type: string
+          format: number
+        paymentHash:
+          type: string
+        invoice:
+          type: string
+        walletId:
+          type: string
+        status:
+          $ref: '#/components/schemas/InvoiceStatus'
+        expiresAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        amtPaidMsat:
+          type: string
+          description: The number of millisats actually paid to this invoice, this may be greater than the amount requested by the invoice, since lightning allows overpaying (but not underpaying) invoices.
+          format: number
+      required:
+        - valueMsat
+        - paymentHash
+        - invoice
+        - walletId
+        - status
+        - expiresAt
+        - createdAt
+        - updatedAt
+    InvoiceStatus:
+      title: InvoiceStatus
+      type: string
+      enum:
+        - open
+        - settled
+        - canceled
     Ip:
       type: string
       format: ipv4
@@ -41018,6 +41630,51 @@ components:
             type: string
       required:
         - keys
+    LightningInvoice:
+      title: LightningInvoice
+      type: object
+      properties:
+        memo:
+          type: string
+          description: A memo or description for the invoice
+          example: Payment for the coffee
+        invoice:
+          type: string
+          description: The BOLT \#11 encoded invoice
+          example: lnbc500n1p3zv5vkpp5x0thcaz8wep54clc2xt5895azjdzmthyskzzh9yslggy74qtvl6sdpdg3hkuct5d9hkugrxdaezqjn0dphk2fmnypkk2mtsdahkccqzpgxqyz5vqsp5v80q4vq4pwakq2l0hcqgtelgajsymv4ud4jdcrqtnzhvet55qlus9qyyssquqh2wl2m866qs5n72c5vg6wmqx9vzwhs5ypualq4mcu76h2tdkcq3jtjwtggfff7xwtdqxlnwqk8cxpzryjghrmmq3syraswp9vjr7cqry9l96
+        paymentHash:
+          type: string
+          description: The payment hash of the invoice
+          example: 63d9ce82e09d16761a85116ed8b65407db4fb22f85d03573de09c480f2c6d175
+        valueMsat:
+          type: string
+          description: The value of the invoice in satoshis
+          example: '50000'
+          format: number
+        expiresAt:
+          type: string
+          description: ISO-8601 string representing when the invoice will expire
+          example: '2022-04-01T18:46:24.677Z'
+          format: date-time
+          title: ISO Date String
+        status:
+          type: string
+          enum:
+            - open
+            - settled
+            - canceled
+          description: The status of the invoice
+        walletId:
+          allOf:
+            - $ref: '#/components/schemas/WalletIdString'
+          description: The wallet to which this invoice belongs
+      required:
+        - invoice
+        - paymentHash
+        - valueMsat
+        - expiresAt
+        - status
+        - walletId
     LightningOutput:
       type: object
       properties:
@@ -43279,6 +43936,68 @@ components:
           type: string
         description: Record<Currency, Amount (bigint)>>
       description: Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>> For exchange-style settlements, where the exchange is always the source and client owned connections are the destination.
+    PaymentFailureReason:
+      title: PaymentFailureReason
+      type: string
+      enum:
+        - TIMEOUT
+        - NO_ROUTE
+        - ERROR
+        - INCORRECT_PAYMENT_DETAILS
+        - INSUFFICIENT_BALANCE
+        - INSUFFICIENT_WALLET_BALANCE
+        - EXCESS_WALLET_BALANCE
+        - INVOICE_EXPIRED
+        - CANCELED
+    PaymentInfo:
+      title: PaymentInfo
+      type: object
+      description: Off-chain payment information
+      properties:
+        paymentHash:
+          type: string
+        walletId:
+          type: string
+        txRequestId:
+          type: string
+        status:
+          $ref: '#/components/schemas/PaymentStatus'
+        invoice:
+          type: string
+        feeLimitMsat:
+          type: string
+          format: number
+        destination:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        amountMsat:
+          type: string
+          format: number
+        feeMsat:
+          type: string
+          format: number
+        failureReason:
+          $ref: '#/components/schemas/PaymentFailureReason'
+        paymentPreimage:
+          type: string
+      required:
+        - paymentHash
+        - walletId
+        - txRequestId
+        - status
+        - invoice
+        - feeLimitMsat
+        - destination
+        - updatedAt
+        - createdAt
+        - amountMsat
     PaymentIntent:
       title: PaymentIntent
       allOf:
@@ -43333,6 +44052,13 @@ components:
             - intent
             - recipients
         - $ref: '#/components/schemas/BaseIntent1'
+    PaymentStatus:
+      title: PaymentStatus
+      type: string
+      enum:
+        - in_flight
+        - settled
+        - failed
     PendingApproval:
       title: PendingApproval
       type: object
@@ -49142,6 +49868,57 @@ components:
       required:
         - state
         - unsignedTx
+    Transaction1:
+      title: Transaction
+      type: object
+      description: Transaction details
+      properties:
+        id:
+          type: string
+        normalizedTxHash:
+          type: string
+        blockHeight:
+          type: number
+        blockHash:
+          type: string
+        blockPosition:
+          type: number
+        inputIds: {}
+        entries: {}
+        inputs: {}
+        outputs: {}
+        size:
+          type: number
+        date:
+          type: string
+          format: date-time
+          title: ISO Date String
+        fee:
+          type: number
+        feeString:
+          type: string
+        hex:
+          type: string
+        confirmations:
+          type: number
+        label:
+          type: string
+      required:
+        - id
+        - normalizedTxHash
+        - blockHeight
+        - blockHash
+        - blockPosition
+        - inputIds
+        - entries
+        - inputs
+        - outputs
+        - size
+        - date
+        - fee
+        - feeString
+        - hex
+        - confirmations
     TransactionBuildParams:
       type: object
       properties:
