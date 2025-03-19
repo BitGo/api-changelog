@@ -3058,6 +3058,85 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ReservedAllocationOrErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/clients/connections/{connectionId}/allocations/signing:
+    get:
+      summary: Get Signing Payload for Client Allocations
+      description: This API call allows clients to get the client allocations payload for signing.
+      operationId: v1ClientAllocationsSigningGetRoute
+      tags:
+        - Client Allocations & Deallocations
+      parameters:
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                clientExternalId:
+                  type: string
+                  minLength: 1
+                nonce:
+                  type: string
+                  minLength: 1
+                notes:
+                  type: string
+                  minLength: 1
+              required:
+                - amount
+                - clientExternalId
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ClientAllocationsSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/clients/connections/{connectionId}/deallocations:
     post:
       summary: Deallocate Funds from Connection
@@ -3158,6 +3237,171 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ReservedDeallocationOrErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/clients/connections/{connectionId}/deallocations/signing:
+    get:
+      summary: Get Signing Payload for Client Deallocations
+      description: This API call allows clients to get the client deallocations payload for signing.
+      operationId: V1ClientDeallocationsSigningGetRoute
+      tags:
+        - Client Allocations & Deallocations
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: connectionId
+          in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                clientExternalId:
+                  type: string
+                  minLength: 1
+                nonce:
+                  type: string
+                  minLength: 1
+                notes:
+                  type: string
+                  minLength: 1
+              required:
+                - amount
+                - clientExternalId
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ClientDeallocationsSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/clients/connections/signing:
+    get:
+      summary: Get Signing Payload for Client Connections
+      description: This API call allows clients to get the client connections payload for signing.
+      operationId: V1ClientConnectionsSigningGetRoute
+      tags:
+        - Client Activation
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                partnerId:
+                  type: string
+                  title: uuid
+                name:
+                  type: string
+                  minLength: 1
+                connectionKey:
+                  $ref: '#/components/schemas/ConnectionKey'
+                nonce:
+                  type: string
+                  minLength: 1
+              required:
+                - partnerId
+                - name
+                - connectionKey
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ClientConnectionsSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/clients/settlements:
     get:
       summary: List client settlements
@@ -3569,6 +3813,10 @@ paths:
                   minLength: 1
                 connectionKeySchema:
                   $ref: '#/components/schemas/PartnerConnectionKeySchema'
+                clientDisputeWindowMinutes:
+                  type: number
+                topUpWindowMinutes:
+                  type: number
               required:
                 - name
                 - broker
@@ -4200,6 +4448,79 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1PartnerIncompleteSettlementOrErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/partners/settlements-signing:
+    get:
+      summary: Get Signing Payload for Partner Settlement
+      description: This API call allows partners to get the partner settlement payload for signing.
+      operationId: v1PartnerSettlementSigningGetRoute
+      tags:
+        - Partner Settlements & Transfers
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                externalId:
+                  type: string
+                  minLength: 1
+                notes:
+                  type: string
+                  minLength: 1
+                settlementAmounts:
+                  $ref: '#/components/schemas/SettlementAmountsRecord'
+                nonce:
+                  type: string
+                  minLength: 1
+              required:
+                - externalId
+                - settlementAmounts
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PartnerSettlementsSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements/{settlementId}:
     get:
       summary: Get partner settlement
@@ -4558,6 +4879,161 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
         '409':
           description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/partners/settlements/onchain/deposits/signing:
+    get:
+      summary: Get Signing Payload for Partner External Deposits
+      description: This API call allows partners to get the partner external deposits payload for signing.
+      operationId: v1PartnerExtDepositsSigningGetRoute
+      tags:
+        - Partner Settlements & Transfers
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                externalSettlementId:
+                  type: string
+                  minLength: 1
+                settlementId:
+                  type: string
+                  title: uuid
+                deposits:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      currency:
+                        type: string
+                        minLength: 1
+                      onChainTxId:
+                        type: string
+                        minLength: 1
+                    required:
+                      - currency
+                      - onChainTxId
+              required:
+                - externalSettlementId
+                - deposits
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PartnerExtDepositsSigningPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/partners/trades/signing:
+    get:
+      summary: Get Signing Payload for Partner Trades
+      description: This API call allows partners to get the partner trades payload for signing.
+      operationId: v1PartnerTradesSigningGetRoute
+      tags:
+        - Partner Trades
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                trade:
+                  $ref: '#/components/schemas/InboundTrade'
+                tradeCorrection:
+                  allOf:
+                    - type: object
+                      properties:
+                        externalId:
+                          type: string
+                          minLength: 1
+                    - $ref: '#/components/schemas/BaseTradeCorrectionMetadata'
+                nonce:
+                  type: string
+                  minLength: 1
+              required:
+                - trade
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PartnerTradeSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -33847,6 +34323,19 @@ components:
           required:
             - calldata
         - $ref: '#/components/schemas/BaseStakeIntent'
+    BaseTradeCorrectionMetadata:
+      title: BaseTradeCorrectionMetadata
+      type: object
+      properties:
+        correctingUser:
+          type: string
+          minLength: 1
+        reason:
+          type: string
+          minLength: 1
+      required:
+        - correctingUser
+        - reason
     BaseWalletAddress:
       title: BaseWalletAddress
       type: object
@@ -40622,6 +41111,16 @@ components:
         - id
         - status
         - organizationId
+    InboundTrade:
+      title: InboundTrade
+      allOf:
+        - type: object
+          properties:
+            counterpartyConnectionId:
+              type: string
+              title: uuid
+        - $ref: '#/components/schemas/TradeBaseReq'
+        - $ref: '#/components/schemas/TradeBaseQuoteInbound'
     InitiateTrustlineParams:
       type: object
       properties:
@@ -49786,6 +50285,71 @@ components:
               items:
                 $ref: '#/components/schemas/Touchpoint'
         - $ref: '#/components/schemas/PaginatedResults'
+    TradeBaseQuoteInbound:
+      title: TradeBaseQuoteInbound
+      oneOf:
+        - type: object
+          properties:
+            base:
+              $ref: '#/components/schemas/TradeCurrencyPositiveInbound'
+            quote:
+              $ref: '#/components/schemas/TradeCurrencyNegativeInbound'
+          required:
+            - base
+            - quote
+        - type: object
+          properties:
+            base:
+              $ref: '#/components/schemas/TradeCurrencyNegativeInbound'
+            quote:
+              $ref: '#/components/schemas/TradeCurrencyPositiveInbound'
+          required:
+            - base
+            - quote
+    TradeBaseReq:
+      title: TradeBaseReq
+      type: object
+      properties:
+        externalId:
+          type: string
+          minLength: 1
+        externalOrderId:
+          type: string
+          minLength: 1
+        partyConnectionId:
+          type: string
+          title: uuid
+        tradedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+      required:
+        - externalId
+        - externalOrderId
+        - partyConnectionId
+        - tradedAt
+    TradeCurrencyNegativeInbound:
+      title: TradeCurrencyNegativeInbound
+      type: object
+      properties:
+        currency:
+          $ref: '#/components/schemas/BNSupportedCurrency'
+        quantity:
+          type: string
+      required:
+        - currency
+        - quantity
+    TradeCurrencyPositiveInbound:
+      title: TradeCurrencyPositiveInbound
+      type: object
+      properties:
+        currency:
+          $ref: '#/components/schemas/BNSupportedCurrency'
+        quantity:
+          type: string
+      required:
+        - currency
+        - quantity
     TradeUser:
       required:
         - email
@@ -51848,6 +52412,21 @@ components:
         - pendingChainInitialization
         - creationFailure
         - minimumFunding
+    TrustOrg:
+      title: TrustOrg
+      type: string
+      enum:
+        - BitGo Trust
+        - BitGo New York
+        - BitGo Germany
+        - BitGo Switzerland
+        - BitGo Europe ApS
+        - Frankfurt DE Trust
+        - BitGo Singapore
+        - BitGo Korea
+        - BitGo Mena Fze
+        - BitGo Custody MENA FZE
+        - BitGo Sister Trust 1
     TrustedTokenState:
       title: TrustedTokenState
       type: string
@@ -52975,6 +53554,14 @@ components:
         - updatedAt
         - retriable
         - status
+    V1ClientAllocationsSigningGetPayload:
+      title: V1ClientAllocationsSigningGetPayload
+      type: object
+      properties:
+        payload:
+          type: string
+      required:
+        - payload
     V1ClientBalancesGetPayload:
       title: V1ClientBalancesGetPayload
       type: object
@@ -52990,6 +53577,22 @@ components:
         - clientId
         - balances
         - networkBalances
+    V1ClientConnectionsSigningGetPayload:
+      title: V1ClientConnectionsSigningGetPayload
+      type: object
+      properties:
+        payload:
+          type: string
+      required:
+        - payload
+    V1ClientDeallocationsSigningGetPayload:
+      title: V1ClientDeallocationsSigningGetPayload
+      type: object
+      properties:
+        payload:
+          type: string
+      required:
+        - payload
     V1ClientGetSettlementOkPayload:
       title: V1ClientGetSettlementOkPayload
       type: object
@@ -53020,7 +53623,7 @@ components:
           type: string
           minLength: 1
         trustOrg:
-          type: string
+          $ref: '#/components/schemas/TrustOrg'
         walletId:
           type: string
           minLength: 1
@@ -53828,6 +54431,14 @@ components:
           $ref: '#/components/schemas/AccountBalanceRecord'
       required:
         - networkBalances
+    V1PartnerExtDepositsSigningPayload:
+      title: V1PartnerExtDepositsSigningPayload
+      type: object
+      properties:
+        payload:
+          type: string
+      required:
+        - payload
     V1PartnerIncompleteSettlementOrErrorPayload:
       title: V1PartnerIncompleteSettlementOrErrorPayload
       oneOf:
@@ -53852,6 +54463,22 @@ components:
           $ref: '#/components/schemas/V1CompleteSettlementOutput'
       required:
         - settlement
+    V1PartnerSettlementsSigningGetPayload:
+      title: V1PartnerSettlementsSigningGetPayload
+      type: object
+      properties:
+        payload:
+          type: string
+      required:
+        - payload
+    V1PartnerTradeSigningGetPayload:
+      title: V1PartnerTradeSigningGetPayload
+      type: object
+      properties:
+        payload:
+          type: string
+      required:
+        - payload
     V1PartnersGetOkPayload:
       title: V1PartnersGetOkPayload
       type: object
@@ -53902,7 +54529,7 @@ components:
           type: string
           minLength: 1
         trustOrg:
-          type: string
+          $ref: '#/components/schemas/TrustOrg'
         institutionId:
           type: string
         institutionIdentifier:
@@ -53929,6 +54556,10 @@ components:
           type: boolean
         settlementTransactionRouteId:
           type: string
+        clientDisputeWindowMinutes:
+          type: number
+        topUpWindowMinutes:
+          type: number
         publicKey:
           type: string
       required:
