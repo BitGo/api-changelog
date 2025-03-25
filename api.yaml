@@ -247,6 +247,14 @@ paths:
             enum:
               - 'true'
               - 'false'
+        - name: includeBalance
+          description: Omit trying to fetch the wallet balance
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
         - name: coin
           in: path
           required: true
@@ -801,6 +809,7 @@ paths:
                       type: string
                       enum:
                         - admin
+                        - auditor
                     videoIdUser:
                       type: boolean
                     invite:
@@ -26257,6 +26266,14 @@ paths:
             enum:
               - 'true'
               - 'false'
+        - name: includeBalance
+          description: Omit trying to fetch the wallet balance
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
         - name: walletId
           in: path
           required: true
@@ -32611,19 +32628,24 @@ components:
         addresses:
           type: array
           items:
-            type: object
-            properties:
-              address:
-                type: string
-                description: The address itself
-              balance:
-                allOf:
-                  - $ref: '#/components/schemas/TrimmedBalance'
-                description: The balance associated with the address
-            required:
-              - address
-              - balance
-            description: List of addresses with their balances
+            allOf:
+              - type: object
+                properties:
+                  chain:
+                    $ref: '#/components/schemas/AddressChain'
+                  coin:
+                    $ref: '#/components/schemas/CoinString'
+                  index:
+                    type: number
+                  wallet:
+                    type: string
+                required:
+                  - chain
+                  - coin
+                  - index
+                  - wallet
+              - $ref: '#/components/schemas/BaseWalletAddress'
+            description: List of addresses with their balances and other fields
         message:
           type: string
           description: Optional message from the response
@@ -32765,6 +32787,7 @@ components:
         - lucid
         - wlf
         - walrus
+        - mtgox
     Agreements:
       title: Agreements
       type: object
@@ -37228,6 +37251,12 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/AuditableItem'
+    EnterpriseMember:
+      title: EnterpriseMember
+      type: string
+      enum:
+        - member
+      description: 'This type represents the member permission that can be assigned to a user when adding them to an enterprise 1. ''member'': Receive invitations to wallets'
     EnterprisePermission:
       type: string
       enum:
@@ -37408,12 +37437,18 @@ components:
           type: boolean
           description: true, if multiple values can be provided, i.e. as a list of values. When false only one value can be provided, i.e. a list with more than one element will be rejected.
           example: true
-    EnterpriseUserRole:
-      title: EnterpriseUserRole
+    EnterpriseUserPermission:
+      title: EnterpriseUserPermission
       type: string
       enum:
         - admin
-        - member
+        - auditor
+      description: 'This type represents the permissions that can be assigned to a user when adding them to an enterprise 1. ''admin'': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets 2. ''auditor'': View audit logs across the enterprise, Receive invitations to wallets'
+    EnterpriseUserRole:
+      title: EnterpriseUserRole
+      oneOf:
+        - $ref: '#/components/schemas/EnterpriseUserPermission'
+        - $ref: '#/components/schemas/EnterpriseMember'
     EnterpriseUsersActionRequest:
       title: Require approval from a set of enterprise users
       type: object
@@ -41096,6 +41131,20 @@ components:
         - deactivate
         - customTx
         - closeAssociatedTokenAccount
+    InternalUserOAuthSetting:
+      title: InternalUserOAuthSetting
+      type: object
+      properties:
+        clientId:
+          type: string
+        tenantId:
+          type: string
+        oauthProvider:
+          $ref: '#/components/schemas/OAuthProvider'
+      required:
+        - clientId
+        - tenantId
+        - oauthProvider
     InternationalWireBankAccount:
       title: International Wire Bank Account
       type: object
@@ -41729,6 +41778,8 @@ components:
         isScreeningRequired:
           type: boolean
         documentsWaived:
+          type: boolean
+        unverifiedPaygoUser:
           type: boolean
         enterpriseVideoCallInfo:
           type: array
@@ -43716,21 +43767,14 @@ components:
         - msEntra
     OAuthSetting:
       title: OAuthSetting
-      type: object
-      properties:
-        clientId:
-          type: string
-        clientSecret:
-          type: string
-        tenantId:
-          type: string
-        oauthProvider:
-          $ref: '#/components/schemas/OAuthProvider'
-      required:
-        - clientId
-        - clientSecret
-        - tenantId
-        - oauthProvider
+      allOf:
+        - type: object
+          properties:
+            clientSecret:
+              type: string
+          required:
+            - clientSecret
+        - $ref: '#/components/schemas/InternalUserOAuthSetting'
     Offchain:
       title: Offchain
       type: object
@@ -44982,6 +45026,7 @@ components:
               type: string
               enum:
                 - admin
+                - auditor
               description: The permissions associated with the update
             userId:
               type: string
@@ -45105,6 +45150,7 @@ components:
               type: string
               enum:
                 - admin
+                - auditor
               description: The permissions associated with the invite
             userId:
               type: string
@@ -52923,6 +52969,10 @@ components:
                 type: array
                 items:
                   type: string
+                  enum:
+                    - admin
+                    - auditor
+                  description: 'This type represents the permissions that can be assigned to a user when adding them to an enterprise 1. ''admin'': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets 2. ''auditor'': View audit logs across the enterprise, Receive invitations to wallets'
               id:
                 type: string
               beneficialOwner:
@@ -55061,6 +55111,7 @@ components:
                     - view
                     - freeze
                     - trade
+                  description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets'
               recoverable:
                 type: boolean
               user:
@@ -55912,6 +55963,7 @@ components:
                           - view
                           - freeze
                           - trade
+                        description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets'
                     recoverable:
                       type: boolean
                     user:
