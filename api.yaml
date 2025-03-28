@@ -806,10 +806,15 @@ paths:
                 - type: object
                   properties:
                     permission:
-                      type: string
-                      enum:
-                        - admin
-                        - auditor
+                      oneOf:
+                        - $ref: '#/components/schemas/EnterpriseUserPermission'
+                        - type: array
+                          items:
+                            type: string
+                            enum:
+                              - admin
+                              - auditor
+                            description: 'This type represents the permissions that can be assigned to a user when adding them to an enterprise 1. ''admin'': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets 2. ''auditor'': View audit logs across the enterprise, Receive invitations to wallets'
                     videoIdUser:
                       type: boolean
                     invite:
