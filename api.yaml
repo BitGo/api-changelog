@@ -43080,9 +43080,6 @@ components:
           currency:
             type: string
             minLength: 1
-          settlementId:
-            type: string
-            title: uuid
           quantity:
             $ref: '#/components/schemas/NonNegativeBigAmount'
           txIds:
@@ -43098,6 +43095,12 @@ components:
               - type: string
                 format: number
               - type: number
+          settlementId:
+            type: string
+            title: uuid
+          disputeClosureId:
+            type: string
+            title: uuid
           id:
             type: string
             title: uuid
@@ -43128,11 +43131,11 @@ components:
             minLength: 1
         required:
           - currency
-          - settlementId
           - quantity
           - txIds
           - status
           - usdValue
+          - settlementId
           - id
           - createdAt
           - updatedAt
@@ -48005,6 +48008,8 @@ components:
         - completed
         - failed
         - rejected
+        - disputed
+        - pending_settlement_assignment
     SettlementTypes:
       title: SettlementTypes
       type: string
@@ -54145,6 +54150,9 @@ components:
                 type: string
                 minLength: 1
               settlementId:
+                type: string
+                title: uuid
+              disputeClosureId:
                 type: string
                 title: uuid
               quantity:
