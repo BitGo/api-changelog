@@ -18978,6 +18978,54 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
+  /express/api/v2/{coin}/wallet/{walletId}:
+    put:
+      tags:
+        - Express
+      summary: Update Wallet
+      description: The express update wallet route is meant to be used for lightning (lnbtc/tlnbtc). It will produced a signed wallet update request that can be used to update the wallet. For other coins, use the standard wallet update endpoint.
+      operationId: express.wallet.update
+      parameters:
+        - $ref: '#/components/parameters/pathCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                signerHost:
+                  type: string
+                  description: The host address of the lightning signer node.
+                signerTlsCert:
+                  type: string
+                  description: The TLS certificate for the lighting signer node encoded to base64.
+                signerMacaroon:
+                  type: string
+                  description: (Optional) The signer macaroon for the lighting signer node.
+                passphrase:
+                  type: string
+                  description: The wallet passphrase. This is not uploaded to BitGo, but used to decrypt userAuthKey used to sign the request before sending to BitGo.
+      responses:
+        '200':
+          description: Success
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '403':
+          description: Forbidden
+        '404':
+          description: Not Found
   /api/v2/{coin}/wallet/{walletId}/initwallet:
     post:
       tags:
