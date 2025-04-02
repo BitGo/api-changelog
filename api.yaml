@@ -19206,36 +19206,6 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
-  /api/v2/{coin}/wallet/lightning/{walletId}:
-    put:
-      tags:
-        - Express
-      summary: Update Wallet
-      operationId: express.updateWallet
-      description: Update wallet details.
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExpressUpdateWalletRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Wallet1'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/consolidateAccount:
     post:
       tags:
@@ -39376,21 +39346,6 @@ components:
         message:
           type: string
           example: ok
-    ExpressUpdateWalletRequest:
-      type: object
-      properties:
-        passphrase:
-          type: string
-          description: Wallet passphrase - required for lightning update
-        signerMacaroon:
-          type: string
-          description: Optional signer macaroon (Lightning only)
-        signerAdminMacaroon:
-          type: string
-          description: Optional signer admin macaroon (Lightning only)
-        signerTlsKey:
-          type: string
-          description: Optional signer TLS key (Lightning only)
     ExpressVerifyCoinAddressRequest:
       type: object
       properties:
