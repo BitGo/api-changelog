@@ -41325,6 +41325,7 @@ components:
         - deactivate
         - customTx
         - closeAssociatedTokenAccount
+        - stakeWithCallData
     IntentType1:
       title: IntentType
       type: string
@@ -42334,12 +42335,12 @@ components:
       title: LightningPaymentRequestWithSig
       type: object
       properties:
-        request:
+        signedRequest:
           $ref: '#/components/schemas/LightningPaymentRequest'
         signature:
           type: string
       required:
-        - request
+        - signedRequest
         - signature
     LightningWalletAddress:
       title: LightningWalletAddress
@@ -49781,6 +49782,51 @@ components:
         - pendingChainInitialization
         - creationFailure
         - lastMemoId
+    SubstrateAccountBaseBuildOptions:
+      title: SubstrateAccountBaseBuildOptions
+      allOf:
+        - type: object
+          properties:
+            fee:
+              type: object
+              properties:
+                amount:
+                  oneOf:
+                    - type: string
+                    - type: number
+                formula:
+                  type: string
+                  enum:
+                    - fixed
+                    - feeRate
+                    - perKB
+                    - custom
+                type:
+                  type: string
+                  enum:
+                    - base
+                    - max
+                    - tip
+                unit:
+                  type: string
+                  enum:
+                    - baseUnit
+                    - cpu
+                    - ram
+              required:
+                - amount
+        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+    SubstrateConsolidateIntent:
+      title: Substrate Consolidate Intent
+      allOf:
+        - $ref: '#/components/schemas/AccountBaseConsolidateIntent'
+    SubstratePaymentIntent:
+      title: Substrate Payment Intent
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/PaymentIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     SuiBuildOptions:
       title: SuiBuildOptions
       allOf:
@@ -49898,6 +49944,31 @@ components:
           type: string
       required:
         - tokenName
+    TaoStakeIntent:
+      title: Tao Stake Intent
+      allOf:
+        - type: object
+          properties:
+            amountStaked:
+              type: string
+          required:
+            - amountStaked
+        - $ref: '#/components/schemas/StakeIntent'
+        - $ref: '#/components/schemas/TaoStakingBaseIntent'
+    TaoStakingBaseIntent:
+      title: Tao Staking Base Intent
+      allOf:
+        - type: object
+          properties:
+            hotkey:
+              type: string
+            netuid:
+              type: string
+          required:
+            - hotkey
+            - netuid
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     TaoStakingRequest:
       title: TAO
       allOf:
@@ -49944,6 +50015,17 @@ components:
           type: string
       required:
         - type
+    TaoUnstakeIntent:
+      title: Tao Unstake Intent
+      allOf:
+        - type: object
+          properties:
+            amountUnstaked:
+              type: string
+          required:
+            - amountUnstaked
+        - $ref: '#/components/schemas/WithdrawIntent'
+        - $ref: '#/components/schemas/TaoStakingBaseIntent'
     TestcoinAddress:
       title: Testcoin Address
       type: object
@@ -50640,11 +50722,15 @@ components:
         - $ref: '#/components/schemas/SolPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
+        - $ref: '#/components/schemas/SubstrateConsolidateIntent'
+        - $ref: '#/components/schemas/SubstratePaymentIntent'
         - $ref: '#/components/schemas/SuiConsolidateIntent'
         - $ref: '#/components/schemas/SuiCustomTxIntent'
         - $ref: '#/components/schemas/SuiPaymentIntent'
         - $ref: '#/components/schemas/SuiStakingIntent'
         - $ref: '#/components/schemas/SuiUnstakingIntent'
+        - $ref: '#/components/schemas/TaoStakeIntent'
+        - $ref: '#/components/schemas/TaoUnstakeIntent'
         - $ref: '#/components/schemas/TonConsolidateIntent'
         - $ref: '#/components/schemas/TonDelegateIntent'
         - $ref: '#/components/schemas/TonPaymentIntent'
@@ -50656,6 +50742,9 @@ components:
         - $ref: '#/components/schemas/CoreDaoClaimIntent'
         - $ref: '#/components/schemas/EthLikeStakeIntent'
         - $ref: '#/components/schemas/BeraDelegateIntent'
+        - $ref: '#/components/schemas/WalrusStakingIntent'
+        - $ref: '#/components/schemas/WalrusUndelegateIntent'
+        - $ref: '#/components/schemas/WalrusWithdrawIntent'
         - $ref: '#/components/schemas/BaseIntent'
     TransactionRequest:
       anyOf:
@@ -56912,6 +57001,54 @@ components:
               $ref: '#/components/schemas/Coin'
           required:
             - coin
+    WalrusStakingIntent:
+      title: Walrus Stake Intent
+      allOf:
+        - type: object
+          properties:
+            sharedStakingObjectId:
+              type: string
+          required:
+            - sharedStakingObjectId
+        - $ref: '#/components/schemas/SuiStakingIntent'
+    WalrusUndelegateIntent:
+      title: Walrus Undelegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            stakedSuiObjectId:
+              type: string
+            sharedStakingObjectId:
+              type: string
+            amount:
+              type: object
+              properties:
+                symbol:
+                  type: string
+                value:
+                  type: string
+              required:
+                - symbol
+                - value
+          required:
+            - intentType
+            - stakedSuiObjectId
+            - sharedStakingObjectId
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    WalrusWithdrawIntent:
+      title: Walrus Withdraw Intent
+      allOf:
+        - type: object
+          properties:
+            sharedStakingObjectId:
+              type: string
+          required:
+            - sharedStakingObjectId
+        - $ref: '#/components/schemas/SuiUnstakingIntent'
     Webhook:
       title: Webhook
       type: object
