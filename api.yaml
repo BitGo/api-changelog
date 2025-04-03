@@ -23342,6 +23342,9 @@ paths:
             schema:
               type: object
               properties:
+                tokenName:
+                  type: string
+                  minLength: 1
                 amount:
                   type: string
                   minLength: 1
@@ -23359,6 +23362,8 @@ paths:
                   required:
                     - maxFeePerGas
                     - maxPriorityFeePerGas
+              required:
+                - tokenName
       responses:
         '200':
           description: OK
@@ -34835,6 +34840,16 @@ components:
               - address
               - amount
               - data
+        eip1559:
+          type: object
+          properties:
+            maxFeePerGas:
+              type: string
+            maxPriorityFeePerGas:
+              type: string
+          required:
+            - maxFeePerGas
+            - maxPriorityFeePerGas
       required:
         - txHex
         - txInfo
@@ -35828,6 +35843,9 @@ components:
           type: string
           description: The time at which this rule becomes immutable
           format: date-time
+        generatePolicy:
+          type: boolean
+          description: When undefined or set to true, generates a policy enforcing the whitelist (if one has not been generated already) after the whitelist is created. If set to false, no policy will be generated.
       required:
         - id
         - type
@@ -36292,7 +36310,6 @@ components:
       properties:
         username:
           type: string
-          format: email
       required:
         - username
     DeployAddressAndForwardTokenResponse:
@@ -45191,6 +45208,9 @@ components:
                   allOf:
                     - $ref: '#/components/schemas/PolicyRuleUpdateCondition'
                   description: The condition of the policy rule
+                generatePolicy:
+                  type: boolean
+                  description: Should generate new whitelist policy when generatePolicy is undefined *
                 id:
                   type: string
                   description: The ID of the policy rule
