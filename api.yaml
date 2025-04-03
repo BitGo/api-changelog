@@ -23342,6 +23342,9 @@ paths:
             schema:
               type: object
               properties:
+                tokenName:
+                  type: string
+                  minLength: 1
                 amount:
                   type: string
                   minLength: 1
@@ -23359,6 +23362,8 @@ paths:
                   required:
                     - maxFeePerGas
                     - maxPriorityFeePerGas
+              required:
+                - tokenName
       responses:
         '200':
           description: OK
@@ -34835,6 +34840,16 @@ components:
               - address
               - amount
               - data
+        eip1559:
+          type: object
+          properties:
+            maxFeePerGas:
+              type: string
+            maxPriorityFeePerGas:
+              type: string
+          required:
+            - maxFeePerGas
+            - maxPriorityFeePerGas
       required:
         - txHex
         - txInfo
@@ -45193,6 +45208,9 @@ components:
                   allOf:
                     - $ref: '#/components/schemas/PolicyRuleUpdateCondition'
                   description: The condition of the policy rule
+                generatePolicy:
+                  type: boolean
+                  description: Should generate new whitelist policy when generatePolicy is undefined *
                 id:
                   type: string
                   description: The ID of the policy rule
