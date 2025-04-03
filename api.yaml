@@ -4439,7 +4439,7 @@ paths:
                   type: string
                   minLength: 1
                 settlementAmounts:
-                  $ref: '#/components/schemas/SettlementAmountsRecord'
+                  $ref: '#/components/schemas/UnmappedSettlementAmountsRecord'
                 nonce:
                   type: string
                   minLength: 1
@@ -4698,7 +4698,7 @@ paths:
                   type: string
                   minLength: 1
                 settlementAmounts:
-                  $ref: '#/components/schemas/SettlementAmountsRecord'
+                  $ref: '#/components/schemas/UnmappedSettlementAmountsRecord'
                 nonce:
                   type: string
                   minLength: 1
@@ -35699,7 +35699,7 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: Record<Currency, Amount (bigint)>>
+          description: For mapped settlement amounts where the amount will always be a bigint
         description: Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>> For exchange-style settlements, where the exchange is always the source and client owned connections are the destination.
       description: Record<Counterparty (source) connectionId, Record<Party (dest) connectionId, Record<Currency, Amount (bigint)>>> For broker-style settlements, where the source and destination are both client owned connections.
     CreateBitgoChallengeResponse:
@@ -43062,7 +43062,7 @@ components:
             type: string
             minLength: 1
           quantity:
-            $ref: '#/components/schemas/NonNegativeBigAmount'
+            $ref: '#/components/schemas/NonZeroBigAmount'
           txIds:
             type: array
             items:
@@ -43605,28 +43605,6 @@ components:
           - partnersConnectionId
           - name
           - balances
-    NetworkAccountBalanceRecordForPartner:
-      title: NetworkAccountBalanceRecordForPartner
-      type: object
-      additionalProperties:
-        type: object
-        properties:
-          clientId:
-            type: string
-            title: uuid
-          partnerId:
-            type: string
-            title: uuid
-          partnersConnectionId:
-            type: string
-            minLength: 1
-          balances:
-            $ref: '#/components/schemas/AccountBalanceRecord'
-        required:
-          - clientId
-          - partnerId
-          - partnersConnectionId
-          - balances
     NewLimitOrderRequest:
       title: Limit
       required:
@@ -43814,6 +43792,9 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: The destination is not whitelisted
+    NonZeroBigAmount:
+      title: NonZeroBigAmount
+      type: string
     NtildeProof:
       title: NtildeProof
       type: object
@@ -44368,7 +44349,7 @@ components:
         type: object
         additionalProperties:
           type: string
-        description: Record<Currency, Amount (bigint)>>
+        description: For mapped settlement amounts where the amount will always be a bigint
       description: Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>> For exchange-style settlements, where the exchange is always the source and client owned connections are the destination.
     PaymentFailureReason:
       title: PaymentFailureReason
@@ -52707,6 +52688,29 @@ components:
           description: Number of seconds that the session will stay unlocked
         otp:
           $ref: '#/components/schemas/Otp'
+    UnmappedCounterpartyPartySettlementAmountsRecord:
+      title: UnmappedCounterpartyPartySettlementAmountsRecord
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: object
+          additionalProperties:
+            type: string
+            description: For unmapped settlement amounts where the amount can be BigAmount(BigNumberFromString, BigIntFromString)
+    UnmappedPartySettlementAmountsRecord:
+      title: UnmappedPartySettlementAmountsRecord
+      type: object
+      additionalProperties:
+        type: object
+        additionalProperties:
+          type: string
+          description: For unmapped settlement amounts where the amount can be BigAmount(BigNumberFromString, BigIntFromString)
+    UnmappedSettlementAmountsRecord:
+      title: UnmappedSettlementAmountsRecord
+      oneOf:
+        - $ref: '#/components/schemas/UnmappedPartySettlementAmountsRecord'
+        - $ref: '#/components/schemas/UnmappedCounterpartyPartySettlementAmountsRecord'
     UnsignedTransaction:
       title: UnsignedTransaction
       type: object
@@ -53790,6 +53794,8 @@ components:
           type: boolean
         gainSLAAlertSent:
           type: boolean
+        cutoffAt:
+          type: string
       required:
         - id
         - partnerId
@@ -54183,6 +54189,8 @@ components:
           type: boolean
         gainSLAAlertSent:
           type: boolean
+        cutoffAt:
+          type: string
       required:
         - id
         - partnerId
@@ -54228,7 +54236,7 @@ components:
                 type: string
                 title: uuid
               quantity:
-                $ref: '#/components/schemas/NonNegativeBigAmount'
+                $ref: '#/components/schemas/NonZeroBigAmount'
               txIds:
                 type: array
                 items:
@@ -54517,14 +54525,27 @@ components:
         - owner
         - createdAt
         - updatedAt
+    V1PartnerAccountBalanceRecordOutput:
+      title: V1PartnerAccountBalanceRecordOutput
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          held:
+            $ref: '#/components/schemas/NonNegativeBigAmount'
+          available:
+            $ref: '#/components/schemas/NonNegativeBigAmount'
+        required:
+          - held
+          - available
     V1PartnerBalancesGetPayload:
       title: V1PartnerBalancesGetPayload
       type: object
       properties:
         networkBalances:
-          $ref: '#/components/schemas/NetworkAccountBalanceRecordForPartner'
+          $ref: '#/components/schemas/V1PartnerNetworkAccountBalanceRecordOutput'
         balances:
-          $ref: '#/components/schemas/AccountBalanceRecord'
+          $ref: '#/components/schemas/V1PartnerAccountBalanceRecordOutput'
       required:
         - networkBalances
     V1PartnerExtDepositsSigningPayload:
@@ -54540,6 +54561,28 @@ components:
       oneOf:
         - $ref: '#/components/schemas/V1PartnerSettlementIncompletePayload'
         - $ref: '#/components/schemas/V1ErrorPayload'
+    V1PartnerNetworkAccountBalanceRecordOutput:
+      title: V1PartnerNetworkAccountBalanceRecordOutput
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          clientId:
+            type: string
+            title: uuid
+          partnerId:
+            type: string
+            title: uuid
+          partnersConnectionId:
+            type: string
+            minLength: 1
+          balances:
+            $ref: '#/components/schemas/V1PartnerAccountBalanceRecordOutput'
+        required:
+          - clientId
+          - partnerId
+          - partnersConnectionId
+          - balances
     V1PartnerSettlementIncompletePayload:
       title: V1PartnerSettlementIncompletePayload
       type: object
@@ -54818,6 +54861,8 @@ components:
           type: boolean
         gainSLAAlertSent:
           type: boolean
+        cutoffAt:
+          type: string
       required:
         - id
         - partnerId
@@ -54886,6 +54931,8 @@ components:
           type: boolean
         gainSLAAlertSent:
           type: boolean
+        cutoffAt:
+          type: string
       required:
         - id
         - partnerId
