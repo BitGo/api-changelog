@@ -1,4 +1,4 @@
-# BitGo API Changelog
+# astrox API Changelog
 
 This repository contains the latest changes to the BitGo API reference published on the [Developer Portal](https://developers.bitgo.com/api/overview).
 
