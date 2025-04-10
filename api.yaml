@@ -23799,6 +23799,7 @@ paths:
                     - adminCreateReport
                     - updateWalletApprovalsRequired
                     - custodialHotRetrySignTx
+                    - createUser
         - name: userId
           description: The user ID to filter by
           in: query
@@ -32803,7 +32804,6 @@ components:
         - $ref: '#/components/schemas/FiatAddress'
         - $ref: '#/components/schemas/HederaAddress'
         - $ref: '#/components/schemas/OffchainAddressSubdocument'
-        - $ref: '#/components/schemas/SilvergateUSDAddress'
         - $ref: '#/components/schemas/SolAddress'
         - $ref: '#/components/schemas/StacksAddress'
         - $ref: '#/components/schemas/StellarAddress'
@@ -33800,6 +33800,7 @@ components:
         - adminCreateReport
         - updateWalletApprovalsRequired
         - custodialHotRetrySignTx
+        - createUser
     AuditableItem:
       type: object
       properties:
@@ -34812,10 +34813,13 @@ components:
           required:
             - maxFeePerGas
             - maxPriorityFeePerGas
+        nextContractSequenceId:
+          type: number
       required:
         - txHex
         - txInfo
         - recipients
+        - nextContractSequenceId
     BusinessModel:
       title: BusinessModel
       type: string
@@ -36380,8 +36384,6 @@ components:
       properties:
         signingBitgoOrg:
           $ref: '#/components/schemas/BitgoOrg'
-      required:
-        - signingBitgoOrg
     DistributedCustodyUpdateEnterprise:
       type: object
       description: Parameters associated with distributed custody enterprises. If you want to remove 'signingBitgoOrg', set it to null.
@@ -48372,28 +48374,6 @@ components:
         - from
         - to
         - share
-    SilvergateUSDAddress:
-      title: Silvergate USD Address
-      type: object
-      properties:
-        bankAccountId:
-          type: string
-        bankAccount:
-          $ref: '#/components/schemas/BankAccountJson'
-      required:
-        - bankAccountId
-    SilvergateUSDWallet:
-      title: Silvergate USD Wallet
-      type: object
-      properties:
-        backingBankAccountId: {}
-        backingSENBankAccountId: {}
-        lastUsedNonce:
-          type: number
-      required:
-        - backingBankAccountId
-        - backingSENBankAccountId
-        - lastUsedNonce
     SimulateEnterpriseWebhookResponseBody:
       title: SimulateEnterpriseWebhookResponseBody
       type: object
@@ -56755,7 +56735,6 @@ components:
         - $ref: '#/components/schemas/HederaWallet'
         - $ref: '#/components/schemas/NearWallet'
         - $ref: '#/components/schemas/Offchain'
-        - $ref: '#/components/schemas/SilvergateUSDWallet'
         - $ref: '#/components/schemas/StacksWallet'
         - $ref: '#/components/schemas/TestcoinWallet'
         - $ref: '#/components/schemas/TonWallet'
