@@ -18970,52 +18970,6 @@ paths:
                 properties:
                   isValid:
                     type: boolean
-  /api/v2/{coin}/wallet/{walletId}/balances/staked:
-    get:
-      tags:
-        - Wallet
-      summary: Get staked balance data
-      description: Returns staking information about validator and staked amount for the current wallet. Currently only available for Casper and Stacks.
-      operationId: v2.wallet.staked
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BalanceStaked'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/wallet/{walletId}/balances/totalrewards:
-    get:
-      tags:
-        - Wallet
-      summary: Get total rewards data
-      description: Returns staking information receiving address and the total rewards received for the current wallet. Currently only available for Stacks.
-      operationId: v2.wallet.totalrewards
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BalanceTotalRewards'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
   /api/v2/{coin}/wallet/{walletId}/state:
     get:
       tags:
@@ -34063,56 +34017,6 @@ components:
           type: integer
           description: the height of the block that provides the base values
           example: 11228504
-    BalanceStaked:
-      type: array
-      items:
-        type: object
-        properties:
-          address:
-            allOf:
-              - type: string
-              - $ref: '#/components/schemas/AddressString3'
-            description: the address of the wallet
-          balances:
-            type: array
-            items:
-              type: object
-              description: an object containing of validators and the current staked amount
-              properties:
-                validator:
-                  allOf:
-                    - type: string
-                    - $ref: '#/components/schemas/AddressString3'
-                  description: the validator
-                staked_amount:
-                  type: string
-                  description: the amount delegated to the validator
-                  example: '5000000000'
-    BalanceTotalRewards:
-      type: array
-      items:
-        type: object
-        properties:
-          address:
-            allOf:
-              - type: string
-              - $ref: '#/components/schemas/AddressString3'
-            description: the address of the wallet
-          rewards:
-            type: array
-            items:
-              type: object
-              description: an object containing the reward recipient address and the total rewards received
-              properties:
-                reward_recipient:
-                  allOf:
-                    - type: string
-                    - $ref: '#/components/schemas/AddressString3'
-                  description: the receiving address
-                reward_amount:
-                  type: string
-                  description: the total rewards received
-                  example: '5000000000'
     BankAccountCurrency:
       title: BankAccountCurrency
       description: |
@@ -38832,7 +38736,7 @@ components:
             - onchain
             - tss
             - blsdkg
-          description: If absent, BitGo uses the default wallet type for the asset. For Solana wallets, this parameter is required and must be set to 'tss'.
+          description: If absent, BitGo uses the default wallet type for the asset.
         type:
           type: string
           enum:
