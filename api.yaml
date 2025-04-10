@@ -43671,7 +43671,6 @@ components:
         - side
         - type
         - duration
-        - interval
       type: object
       properties:
         clientOrderId:
@@ -43702,10 +43701,27 @@ components:
           description: Duration of the TWAP order in minutes.
         interval:
           type: integer
-          description: Interval of the TWAP order in minutes.
+          description: Interval of the time-sliced TWAP order in minutes. Only required if 'isTimeSliced' is 'true'.
         scheduledDate:
           type: string
           format: date-time
+        isTimeSliced:
+          type: boolean
+          description: |
+            The isTimeSliced field, when provided under the parameters section, determines the order's time slicing behavior:
+            - If isTimeSliced is set to true, the order will be executed using a time-sliced strategy.
+            - If isTimeSliced is set to false, the order will be executed using a regular TWAP strategy without time slicing.
+            - If isTimeSliced is not specified, the default behavior uses a regular TWAP strategy without time slicing.
+        boundsControl:
+          type: string
+          description: |
+            The boundsControl field, when provided under the parameters section, determines how strictly the TWAP algorithm adheres to the target fill progression.
+            - It is optional but can be provided for a regular TWAP strategy.
+            - Default value is 'standard'.
+          enum:
+            - narrow
+            - standard
+            - wide
       example:
         clientOrderId: myorder1
         type: twap
@@ -43715,6 +43731,9 @@ components:
         quantityCurrency: USD
         duration: 60
         interval: 5
+        parameters:
+          isTimeSliced: false
+          boundsControl: wide
     NextBatchPrevId:
       type: string
       format: uuid
@@ -44103,6 +44122,15 @@ components:
             - internalError
             - insufficientFunds
           example: insufficientFunds
+        parameters:
+          type: object
+          properties:
+            isTimeSliced:
+              type: boolean
+              description: Indicates if the order is a time-sliced TWAP.
+            boundsControl:
+              type: string
+              description: Defines the bounds control strategy used to manage a regular TWAP order.
       example:
         id: 67fd640c-cb6c-4218-80ae-49e79ec15646
         accountId: 60e740e7898f7d00064d43769a73dc48
