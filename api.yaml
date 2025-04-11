@@ -35117,6 +35117,12 @@ components:
         - apiSecret
         - clientAccountId
         - companyRegistrationNumber
+    ClosedByUnion:
+      title: ClosedByUnion
+      type: string
+      enum:
+        - client
+        - admin
     Coin:
       title: Coin
       description: A cryptocurrency or token ticker symbol.
@@ -36380,6 +36386,88 @@ components:
             anyOf:
               - $ref: '#/components/schemas/WhitelistedAddressValue'
               - $ref: '#/components/schemas/NonWhitelistedAddressValue'
+    DisputeClosureOutput:
+      title: DisputeClosureOutput
+      type: object
+      properties:
+        id:
+          type: string
+          title: uuid
+        closedBy:
+          $ref: '#/components/schemas/ClosedByUnion'
+        userId:
+          type: string
+          minLength: 1
+        notes:
+          type: string
+          minLength: 1
+        adjustedSettlementTransfers:
+          $ref: '#/components/schemas/DisputedSettlementTransfersOutput'
+      required:
+        - id
+        - closedBy
+        - userId
+        - notes
+        - adjustedSettlementTransfers
+    DisputedSettlementTransfersOutput:
+      title: DisputedSettlementTransfersOutput
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            title: uuid
+          createdAt:
+            type: string
+            format: date-time
+            title: ISO Date String
+          updatedAt:
+            type: string
+            format: date-time
+            title: ISO Date String
+          currency:
+            type: string
+            minLength: 1
+          settlementId:
+            type: string
+            title: uuid
+          disputeClosureId:
+            type: string
+            title: uuid
+          quantity:
+            $ref: '#/components/schemas/NonZeroBigAmount'
+          txIds:
+            type: array
+            items:
+              type: string
+              minLength: 1
+          status:
+            $ref: '#/components/schemas/SettlementTransferStatus'
+          sourceTradingAccountId:
+            type: string
+            minLength: 1
+          sourceNetworkAccountId:
+            type: string
+            title: uuid
+          destinationTradingAccountId:
+            type: string
+            minLength: 1
+          destinationNetworkAccountId:
+            type: string
+            title: uuid
+        required:
+          - id
+          - createdAt
+          - updatedAt
+          - currency
+          - disputeClosureId
+          - quantity
+          - txIds
+          - status
+          - sourceTradingAccountId
+          - destinationTradingAccountId
+          - destinationNetworkAccountId
     DistributedCustody:
       title: DistributedCustody
       type: object
@@ -53579,6 +53667,19 @@ components:
           properties: {}
         - $ref: '#/components/schemas/V1AllocationsReleasedPayload'
         - $ref: '#/components/schemas/V1ErrorPayload'
+    V1AssignedDisputesWithClosureOutput:
+      title: V1AssignedDisputesWithClosureOutput
+      type: array
+      items:
+        allOf:
+          - type: object
+            properties:
+              settledInSettlementId:
+                type: string
+                title: uuid
+            required:
+              - settledInSettlementId
+          - $ref: '#/components/schemas/V1ClosedDisputeWithClosureOutput'
     V1ClearedAllocation:
       title: V1ClearedAllocation
       type: object
@@ -53676,9 +53777,15 @@ components:
           $ref: '#/components/schemas/V1SettlementOutput'
         settlementTransfers:
           $ref: '#/components/schemas/MaskedV1SettlementTransfersOutput'
+        settlingDisputes:
+          $ref: '#/components/schemas/V1AssignedDisputesWithClosureOutput'
+        settlementDisputes:
+          $ref: '#/components/schemas/V1DisputesWithClosureOutput'
       required:
         - settlement
         - settlementTransfers
+        - settlingDisputes
+        - settlementDisputes
     V1ClientGetSettlementTransfersOkPayload:
       title: V1ClientGetSettlementTransfersOkPayload
       type: object
@@ -53727,6 +53834,20 @@ components:
           $ref: '#/components/schemas/V1ClientsOutput'
       required:
         - client
+    V1ClosedDisputeWithClosureOutput:
+      title: V1ClosedDisputeWithClosureOutput
+      allOf:
+        - type: object
+          properties:
+            disputeClosureId:
+              type: string
+              title: uuid
+            disputeClosure:
+              $ref: '#/components/schemas/DisputeClosureOutput'
+          required:
+            - disputeClosureId
+            - disputeClosure
+        - $ref: '#/components/schemas/V1DisputeOutput'
     V1CompleteSettlementOutput:
       title: V1CompleteSettlementOutput
       type: object
@@ -53774,6 +53895,10 @@ components:
           type: boolean
         cutoffAt:
           type: string
+          format: date-time
+          title: ISO Date String
+        disputed:
+          type: boolean
       required:
         - id
         - partnerId
@@ -54084,6 +54209,70 @@ components:
               - $ref: '#/components/schemas/V1ConnectionWithOwnerAndTargetListResponse'
       required:
         - listingEntries
+    V1DisputeOutput:
+      title: V1DisputeOutput
+      type: object
+      properties:
+        id:
+          type: string
+          title: uuid
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        connectionId:
+          type: string
+          title: uuid
+        disputedSettlementId:
+          type: string
+          title: uuid
+        settledInSettlementId:
+          type: string
+          title: uuid
+        userId:
+          type: string
+          minLength: 1
+        reason:
+          type: string
+          minLength: 1
+        retracted:
+          type: boolean
+        retractedBy:
+          type: string
+          minLength: 1
+        retractedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        disputeClosureId:
+          type: string
+          title: uuid
+        retractedReason:
+          type: string
+          minLength: 1
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - connectionId
+        - disputedSettlementId
+        - userId
+        - reason
+        - retracted
+    V1DisputesWithClosureOutput:
+      title: V1DisputesWithClosureOutput
+      type: array
+      items:
+        allOf:
+          - type: object
+            properties:
+              disputeClosure:
+                $ref: '#/components/schemas/DisputeClosureOutput'
+          - $ref: '#/components/schemas/V1DisputeOutput'
     V1EnterpriseSupportedCurrenciesResponse:
       title: V1EnterpriseSupportedCurrenciesResponse
       type: object
@@ -54169,6 +54358,10 @@ components:
           type: boolean
         cutoffAt:
           type: string
+          format: date-time
+          title: ISO Date String
+        disputed:
+          type: boolean
       required:
         - id
         - partnerId
@@ -54246,9 +54439,15 @@ components:
               - sourceTradingAccountId
               - destinationTradingAccountId
               - destinationNetworkAccountId
+        settlingDisputes:
+          $ref: '#/components/schemas/V1AssignedDisputesWithClosureOutput'
+        settlementDisputes:
+          $ref: '#/components/schemas/V1DisputesWithClosureOutput'
       required:
         - settlement
         - settlementTransfers
+        - settlingDisputes
+        - settlementDisputes
     V1GlobalListingResponse:
       title: V1GlobalListingResponse
       type: object
@@ -54845,6 +55044,10 @@ components:
           type: boolean
         cutoffAt:
           type: string
+          format: date-time
+          title: ISO Date String
+        disputed:
+          type: boolean
       required:
         - id
         - partnerId
@@ -54915,6 +55118,10 @@ components:
           type: boolean
         cutoffAt:
           type: string
+          format: date-time
+          title: ISO Date String
+        disputed:
+          type: boolean
       required:
         - id
         - partnerId
