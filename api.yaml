@@ -26278,6 +26278,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/user/validatepasswordresettoken:
+    get:
+      summary: Validate Password Reset Token
+      description: Route to validate a user's password reset token.
+      operationId: v2.user.validatepasswordresettoken
+      tags:
+        - User
+      parameters:
+        - name: token
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}:
     get:
       summary: Get wallet by ID
@@ -28263,7 +28292,6 @@ paths:
               - Frankfurt DE Trust
               - BitGo Singapore
               - BitGo Korea
-              - BitGo Mena Fze
               - BitGo Custody MENA FZE
               - BitGo Sister Trust 1
       responses:
@@ -28368,7 +28396,6 @@ paths:
               - Frankfurt DE Trust
               - BitGo Singapore
               - BitGo Korea
-              - BitGo Mena Fze
               - BitGo Custody MENA FZE
               - BitGo Sister Trust 1
       responses:
@@ -34467,7 +34494,6 @@ components:
         - Frankfurt DE Trust
         - BitGo Singapore
         - BitGo Korea
-        - BitGo Mena Fze
         - BitGo Custody MENA FZE
         - BitGo Sister Trust 1
         - BitGo Inc
@@ -40231,7 +40257,6 @@ components:
                 - Frankfurt DE Trust
                 - BitGo Singapore
                 - BitGo Korea
-                - BitGo Mena Fze
                 - BitGo Custody MENA FZE
                 - BitGo Sister Trust 1
                 - BitGo Inc
@@ -40656,6 +40681,24 @@ components:
               rewardBalanceString:
                 type: string
                 description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the 'includeStakingBalances' query parameter is set to 'true'.
+              inboundBalance:
+                type: string
+                description: Inbound balance in millisatoshis (remote balance)
+              inboundPendingBalance:
+                type: string
+                description: Pending inbound balance in millisatoshis (pending open remote balance)
+              inboundUnsettledBalance:
+                type: string
+                description: Unsettled inbound balance in millisatoshis (unsettled remote balance)
+              outboundBalance:
+                type: string
+                description: Outbound balance in millisatoshis (local balance)
+              outboundPendingBalance:
+                type: string
+                description: Pending outbound balance in millisatoshis (pending open local balance)
+              outboundUnsettledBalance:
+                type: string
+                description: Unsettled outbound balance in millisatoshis (unsettled local balance)
             required:
               - coin
               - balanceString
@@ -51625,7 +51668,6 @@ components:
             - Frankfurt DE Trust
             - BitGo Singapore
             - BitGo Korea
-            - BitGo Mena Fze
             - BitGo Custody MENA FZE
             - BitGo Sister Trust 1
             - BitGo Inc
@@ -57677,7 +57719,6 @@ components:
                   - Frankfurt DE Trust
                   - BitGo Singapore
                   - BitGo Korea
-                  - BitGo Mena Fze
                   - BitGo Custody MENA FZE
                   - BitGo Sister Trust 1
                   - BitGo Inc
