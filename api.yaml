@@ -25595,6 +25595,86 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/pendingapprovals/bulkupdate:
+    put:
+      summary: Bulk update non-withdrawal pending approvals
+      operationId: v2.pendingapprovals.bulkUpdate
+      tags:
+        - Pending approval
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                approvals:
+                  type: array
+                  items:
+                    type: object
+                    description: List of approvals to process
+                    properties:
+                      paId:
+                        type: string
+                        description: Pending approval ID
+                        example: 59cd72485007a239fb00282ed480da1f
+                        pattern: ^[0-9a-f]{32}$
+                      status:
+                        allOf:
+                          - $ref: '#/components/schemas/ApprovalAction'
+                        description: Approval action status
+                    required:
+                      - paId
+                      - status
+                bailOnError:
+                  type: boolean
+                  default: false
+                  description: If true, stops processing on the first error. If false (default), continues processing all items.
+              required:
+                - approvals
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkUpdateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/pendingapprovals/count:
     get:
       summary: List counts of pending approvals
@@ -33473,6 +33553,13 @@ components:
         - usdVelocityLimit
         - velocityLimit
         - webhook
+    ApprovalAction:
+      title: ApprovalAction
+      type: string
+      enum:
+        - approved
+        - rejected
+      description: Status type for approval actions
     ApprovalsRequired:
       type: integer
       minimum: 1
@@ -34854,6 +34941,48 @@ components:
         - txInfo
         - recipients
         - nextContractSequenceId
+    BulkUpdateResponse:
+      title: BulkUpdateResponse
+      type: object
+      description: Response type for bulk update
+      properties:
+        results:
+          type: array
+          items:
+            oneOf:
+              - type: object
+                properties:
+                  paId:
+                    type: string
+                    description: Pending approval ID
+                  status:
+                    type: string
+                    enum:
+                      - success
+                    description: Result status
+                required:
+                  - paId
+                  - status
+              - type: object
+                properties:
+                  message:
+                    type: string
+                    description: Error message
+                  paId:
+                    type: string
+                    description: Pending approval ID
+                  status:
+                    type: string
+                    enum:
+                      - error
+                    description: Result status
+                required:
+                  - message
+                  - paId
+                  - status
+            description: Individual approval result item
+      required:
+        - results
     BusinessModel:
       title: BusinessModel
       type: string
