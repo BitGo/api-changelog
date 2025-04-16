@@ -38633,6 +38633,11 @@ components:
           description: The commitment share.
       required:
         - commitmentShare
+    ExpectedTransfersOutput:
+      title: ExpectedTransfersOutput
+      type: object
+      additionalProperties:
+        type: string
     ExpressAccelerateTxRequest:
       type: object
       properties:
@@ -52731,7 +52736,6 @@ components:
         - Frankfurt DE Trust
         - BitGo Singapore
         - BitGo Korea
-        - BitGo Mena Fze
         - BitGo Custody MENA FZE
         - BitGo Sister Trust 1
     TrustedTokenState:
@@ -54413,6 +54417,8 @@ components:
         reason:
           type: string
           minLength: 1
+        expectedTransfers:
+          $ref: '#/components/schemas/ExpectedTransfersOutput'
         retracted:
           type: boolean
         retractedBy:
@@ -54435,7 +54441,7 @@ components:
         - connectionId
         - disputedSettlementId
         - userId
-        - reason
+        - expectedTransfers
         - retracted
     V1DisputesWithClosureOutput:
       title: V1DisputesWithClosureOutput
