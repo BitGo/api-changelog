@@ -391,19 +391,16 @@ paths:
     post:
       summary: Add wallet webhook
       description: |-
-        Add a webhook to a wallet that sends an HTTP callback from BitGo to a specified URL when specific conditions occur.
-        A wallet can have up to 10 webhooks of each wallet-webhook type.
+        Add a webhook to a wallet that sends an HTTP callback from BitGo to a specified
+        URL when specific conditions occur. A wallet can have up to 10 webhooks of each
+        wallet-webhook 'type'. Learn more about webhooks on the
+        [Developer Portal](https://developers.bitgo.com/guides/wallets/webhooks).
 
-        Wallet-webhook types:
-        1. **Address confirmation** - An address initializes on chain (ETH and XRP only).
-        2. **Pending approval** - A wallet-level policy-triggering event occurs (such as a withdrawal, user change,
-        policy change, pending approval state updates, and so forth).
-
-        3. **Transaction request** - A transaction request state changes.
-        4. **Transfer** - Any transfer occurs.
-
-        **Note:** Unconfirmed webhook notifications don't trigger for [RBF](https://bitcoinops.org/en/topics/replace-by-fee/) transactions,
-        or if a transaction confirms on chain immediately after it's sent. BitGo doesn't send 'unconfirmed' notifications in these cases.
+        **Note:** Before you process webhook notifications, BitGo strongly recommends that
+        you verify response details by fetching the transfer or block data from BitGo. For
+        example, if you create a transfer webhook and you receive a transfer ID, pass that
+        ID to the [Get Transfer](/api/v2.wallet.gettransfer) endpoint to verify the transfer
+        details.
       operationId: v2.wallet.addwebhook
       tags:
         - Webhook
@@ -32991,7 +32988,7 @@ components:
             properties:
               item:
                 type: string
-                description: Either a valid address or a wallet or enterprise id. Must be unique in this whitelist.
+                description: Either a valid address or a wallet, enterprise, or organization id. Must be unique in this whitelist.
               metaData:
                 type: object
                 additionalProperties: {}
@@ -33017,7 +33014,7 @@ components:
       properties:
         item:
           type: string
-          description: Either a valid address or a wallet or enterprise id. Must be unique in this whitelist.
+          description: Either a valid address or a wallet, enterprise, or organization id. Must be unique in this whitelist.
         metaData:
           type: object
           additionalProperties: {}
@@ -33081,6 +33078,7 @@ components:
                 - address
                 - enterpriseId
                 - walletId
+                - organizationId
           required:
             - item
         verifyItems:
@@ -33099,6 +33097,7 @@ components:
         - address
         - enterpriseId
         - walletId
+        - organizationId
     AggregatorSourceType:
       title: AggregatorSourceType
       type: string
@@ -44447,6 +44446,7 @@ components:
       title: OrganizationRole
       type: string
       enum:
+        - serviceUser
         - admin
         - member
         - customer
@@ -45519,6 +45519,7 @@ components:
             role:
               type: string
               enum:
+                - serviceUser
                 - admin
                 - member
                 - customer
