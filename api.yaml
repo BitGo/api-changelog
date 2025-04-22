@@ -24722,6 +24722,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/keys:
+    get:
+      summary: Get keys
+      description: |-
+        Retrieve user keys using wallet IDs.
+        User must have spender permissions for the specified wallets.
+      operationId: v2.wallet.key.list
+      tags:
+        - Keys
+      parameters:
+        - name: walletIds
+          description: An array of wallet IDs. A maximum of 50 wallet ids are permitted.
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              example: 59cd72485007a239fb00282ed480da1f
+              minLength: 1
+              pattern: ^[0-9a-f]{32}$
+              description: An array of wallet IDs. A maximum of 50 wallet ids are permitted.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KeyListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/enterprise:
     get:
       summary: List enterprises for an organization
@@ -42067,6 +42114,33 @@ components:
           allOf:
             - $ref: '#/components/schemas/KeyPurpose'
           description: The purpose of the key.
+    KeyListItem:
+      title: KeyListItem
+      type: object
+      properties:
+        id:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        encryptedPrv:
+          type: string
+          description: The encrypted private key
+      required:
+        - id
+    KeyListResponse:
+      title: KeyListResponse
+      type: array
+      items:
+        type: object
+        properties:
+          walletId:
+            type: string
+          key:
+            allOf:
+              - $ref: '#/components/schemas/KeyListItem'
+            description: Represents a key associated with a wallet. The key can either be a valid 'Key' object or 'null' if no key is associated.
+        required:
+          - walletId
     KeyPurpose:
       type: string
       enum:
