@@ -20524,7 +20524,7 @@ paths:
                 $ref: '#/components/schemas/Error'
     post:
       summary: Place Order
-      description: Places a new order. There are several types of orders available - Market, Limit, and TWAP (with or without a limit). Orders can only be placed if your account has a sufficient balance. When an order is placed, funds will be reserved for the amount of the order.
+      description: Places a new order. There are several types of orders available - Market, Limit, TWAP and SteadyPace (with or without a limit). Orders can only be placed if your account has a sufficient balance. When an order is placed, funds will be reserved for the amount of the order.
       operationId: trade.orders.add
       tags:
         - Trade REST API
@@ -44840,6 +44840,58 @@ components:
         - $ref: '#/components/schemas/NewMarketOrderRequest'
         - $ref: '#/components/schemas/NewLimitOrderRequest'
         - $ref: '#/components/schemas/NewTWAPOrderRequest'
+        - $ref: '#/components/schemas/NewSteadyPaceOrderRequest'
+    NewSteadyPaceOrderRequest:
+      title: SteadyPace
+      required:
+        - product
+        - quantity
+        - quantityCurrency
+        - side
+        - type
+      type: object
+      properties:
+        clientOrderId:
+          type: string
+          description: Custom order ID. This must be a unique ID associated with an order and cannot be the same across multiple requests.
+          maxLength: 256
+        product:
+          type: string
+          description: Product name e.g. BTC-USD
+        type:
+          type: string
+          description: Must be set to "twap"
+        fundingType:
+          $ref: '#/components/schemas/FundingType'
+        side:
+          $ref: '#/components/schemas/Side'
+        quantity:
+          type: string
+          format: decimal
+        quantityCurrency:
+          type: string
+          description: The quantity currency must be in quote currency for buy unless a limit price is specified, in which case buy orders can only be placed in the base currency. For sell, the quantity currency must be in base. e.g. If product is BTC-USD, the base currency will be BTC.
+        limitPrice:
+          type: string
+          format: decimal
+        scheduledDate:
+          type: string
+          format: date-time
+        parameters:
+          allOf:
+            - $ref: '#/components/schemas/SteadyPaceOrderParameters'
+      example:
+        clientOrderId: myorder1
+        type: steady_pace
+        product: BTC-USD
+        side: buy
+        quantity: '100000'
+        quantityCurrency: USD
+        parameters:
+          interval: 5
+          intervalUnit: minute
+          subOrderSize: '20000'
+          variance: 0.02
     NewTWAPOrderRequest:
       title: TWAP
       required:
@@ -44883,23 +44935,9 @@ components:
         scheduledDate:
           type: string
           format: date-time
-        isTimeSliced:
-          type: boolean
-          description: |
-            The isTimeSliced field, when provided under the parameters section, determines the order's time slicing behavior:
-            - If isTimeSliced is set to true, the order will be executed using a time-sliced strategy.
-            - If isTimeSliced is set to false, the order will be executed using a regular TWAP strategy without time slicing.
-            - If isTimeSliced is not specified, the default behavior uses a regular TWAP strategy without time slicing.
-        boundsControl:
-          type: string
-          description: |
-            The boundsControl field, when provided under the parameters section, determines how strictly the TWAP algorithm adheres to the target fill progression.
-            - It is optional but can be provided for a regular TWAP strategy.
-            - Default value is 'standard'.
-          enum:
-            - narrow
-            - standard
-            - wide
+        parameters:
+          allOf:
+            - $ref: '#/components/schemas/TWAPOrderParameters'
       example:
         clientOrderId: myorder1
         type: twap
@@ -45301,14 +45339,9 @@ components:
             - insufficientFunds
           example: insufficientFunds
         parameters:
-          type: object
-          properties:
-            isTimeSliced:
-              type: boolean
-              description: Indicates if the order is a time-sliced TWAP.
-            boundsControl:
-              type: string
-              description: Defines the bounds control strategy used to manage a regular TWAP order.
+          allOf:
+            - $ref: '#/components/schemas/TWAPOrderParameters'
+            - $ref: '#/components/schemas/SteadyPaceOrderParameters'
       example:
         id: 67fd640c-cb6c-4218-80ae-49e79ec15646
         accountId: 60e740e7898f7d00064d43769a73dc48
@@ -50857,6 +50890,32 @@ components:
         - page
         - totalPages
         - totalElements
+    SteadyPaceOrderParameters:
+      type: object
+      required:
+        - interval
+        - intervalUnit
+        - subOrderSize
+      properties:
+        interval:
+          type: integer
+          description: The interval for the SteadyPace order, specified in conjunction with the interval unit.
+        intervalUnit:
+          type: string
+          description: The unit of time for the interval. Defaults to "minute".
+          enum:
+            - second
+            - minute
+            - hour
+            - day
+        subOrderSize:
+          type: string
+          description: The size of each sub-order in the SteadyPace order.
+        variance:
+          type: number
+          description: |
+            Optional degree of randomization for sub-order sizes. Accepts a decimal value rounded to two decimal places between 0 and 1, representing the variation in the size of each sub-order. 
+            For example, a value of 0.20 indicates a 20% variance.
     StellarAddress:
       title: Stellar Address
       type: object
@@ -51064,6 +51123,26 @@ components:
           type: string
       required:
         - tokenName
+    TWAPOrderParameters:
+      type: object
+      properties:
+        isTimeSliced:
+          type: boolean
+          description: |
+            The isTimeSliced field, when provided under the parameters section, determines the order's time slicing behavior:
+            - If isTimeSliced is set to true, the order will be executed using a time-sliced strategy.
+            - If isTimeSliced is set to false, the order will be executed using a regular TWAP strategy without time slicing.
+            - If isTimeSliced is not specified, the default behavior uses a regular TWAP strategy without time slicing.
+        boundsControl:
+          type: string
+          description: |
+            The boundsControl field, when provided under the parameters section, determines how strictly the TWAP algorithm adheres to the target fill progression.
+            - It is optional but can be provided for a regular TWAP strategy.
+            - Default value is 'standard'.
+          enum:
+            - narrow
+            - standard
+            - wide
     TaoStakeIntent:
       title: Tao Stake Intent
       allOf:
