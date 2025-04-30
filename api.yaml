@@ -2341,12 +2341,35 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients:
     post:
       summary: Create client
-      description: Create a new Go Network client.
+      description: |-
+        Create a new OES client for the specified enterprise. This endpoint allows enterprise users 
+        to create a new client within the OES system, establishing the foundation for future trading 
+        activities. The client will be automatically associated with the enterprise specified in the path 
+        parameter.
+
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or incomplete/
+        - Examples: Empty string supplied for enterpriseId.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the user does not have permission to create a client for this enterprise.
+        - Examples: Enterprise does not have OES license.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected error processing the request.
+        - Examples: Database connection failure, transient network error.
       operationId: v1ClientsPostRoute
       tags:
         - Client Onboarding
       parameters:
         - name: enterpriseId
+          description: Enterprise ID that this client will be associated with. The client will be created under this enterprise's context.
           in: path
           required: true
           schema:
@@ -2389,20 +2412,45 @@ paths:
       summary: List client allocations and deallocations
       description: |-
         This API call allows clients to get a list of allocations and deallocations for any connected network account.
-        Note that this endpoint requires a “types” query parameter set to “allocation” to view allocations
         or "deallocation" to view deallocations.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Empty string provided for enterpriseId, invalid UUID format for allocationId.
+        invalid date format for createdOnOrAfter/createdBefore, invalid pagination parameters.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise..
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have access to the requested allocation.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified enterprise cannot be found.
+        - Examples: Enterprise ID doesn't exist or doesn't belong to the client.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, error retrieving allocations data,
+        error transforming allocation data for response.
       operationId: v1ClientAllocationsGetRoute
       tags:
         - Client Allocations & Deallocations
       parameters:
         - name: allocationIds
+          description: Optional array of allocationIds. If provided will only return allocations/deallocations with those ids.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of allocationIds. If provided will only return allocations/deallocations with those ids.
         - name: types
+          description: Optional array of types. If provided will only return allocations/deallocations with those types. allocation = records for allocations to connections. deallocation = records for deallocations from connections.
           in: query
           schema:
             type: array
@@ -2411,7 +2459,9 @@ paths:
               enum:
                 - allocation
                 - deallocation
+              description: Optional array of types. If provided will only return allocations/deallocations with those types. allocation = records for allocations to connections. deallocation = records for deallocations from connections.
         - name: statuses
+          description: Optional array of statuses. If provided will only return allocations/deallocations with those statuses. cleared = records for allocations that have been cleared. released = records for allocations that have been released. reserved = records for allocations that are still reserved.
           in: query
           schema:
             type: array
@@ -2421,48 +2471,60 @@ paths:
                 - cleared
                 - released
                 - reserved
+              description: Optional array of statuses. If provided will only return allocations/deallocations with those statuses. cleared = records for allocations that have been cleared. released = records for allocations that have been released. reserved = records for allocations that are still reserved.
         - name: currencies
+          description: Optional array of currencies. If provided will only return allocations/deallocations with those currencies.
           in: query
           schema:
             type: array
             items:
               type: string
+              description: Optional array of currencies. If provided will only return allocations/deallocations with those currencies.
         - name: connectionIds
+          description: Optional array of connectionIds. If provided will only return allocations/deallocations for those connectionIds.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of connectionIds. If provided will only return allocations/deallocations for those connectionIds.
         - name: partnerIds
+          description: Optional array of partnerIds. If provided will only return allocations/deallocations for those partnerIds.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of partnerIds. If provided will only return allocations/deallocations for those partnerIds.
         - name: createdOnOrAfter
+          description: Optional date start range filter for createdAt (ISO Date). If provided will only return allocations/deallocations created on or after this date.
           in: query
           schema:
             type: string
             format: date-time
             title: ISO Date String
         - name: createdBefore
+          description: Optional date end range filter for createdAt (ISO Date). If provided will only return allocations/deallocations created on or before this date.
           in: query
           schema:
             type: string
             format: date-time
             title: ISO Date String
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: sortField
+          description: 'The field to sort results on. Possible values: - id: Sort by allocation ID. - updatedAt: Sort by the last updated timestamp. - quantity: Sort by the allocation amount quantity. - currency: Sort by the allocation currency code. Note: A finals sort is always applied on createdAt ascending and id ascending, regardless of the specified sortField. This ensures consistent ordering for items with the same primary sort value.'
           in: query
           schema:
             type: string
@@ -2472,6 +2534,7 @@ paths:
               - quantity
               - currency
         - name: sortDirection
+          description: 'The direction to sort results. Possible values: - ASC: Ascending order (lowest to highest, A to Z, oldest to newest). - DESC: Descending order (highest to lowest, Z to A, newest to oldest). If not specified, defaults to ASC (ascending).'
           in: query
           schema:
             type: string
@@ -2525,18 +2588,43 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/allocations/{allocationId}:
     get:
       summary: Get client allocation or deallocation
-      description: Returns an allocation or deallocation. For use only by Go Network clients.
+      description: |-
+        Returns an allocation or deallocation. For use only by OES clients.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or incomplete.
+        - Examples: Invalid UUID format for allocationId, invalid enterpriseId format.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have access to the requested allocation
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the requested allocation does not exist for this client
+        - Examples: Allocation with specified ID doesn't exist, allocation exists but belongs to different client
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected error processing the request
+        - Examples: Database connection failure, currency mapping error,
+        error transforming allocation data for response
       operationId: v1ClientAllocationGetRoute
       tags:
         - Client Allocations & Deallocations
       parameters:
         - name: allocationId
+          description: The unique identifier of the allocation to retrieve. This is a UUID that uniquely identifies the allocation record.
           in: path
           required: true
           schema:
             type: string
             title: uuid
         - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise that owns the allocation.
           in: path
           required: true
           schema:
@@ -2586,36 +2674,65 @@ paths:
       description: |-
         This API call allows clients to get trading and allocated balances at BitGo for any connected trading partner.
         The trading balances are live data. The data under networkBalances are not the live balances at the partner,
-        the live balances should be viewed on the partner’s platform.
+        the live balances should be viewed on the partner's platform.
         networkBalances will only update as a result of allocations, deallocations, and settlement.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed
+        - Examples: Invalid UUID format for enterpriseId, invalid filter parameters,
+        invalid pagination parameters, invalid connection or partner IDs
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions
+        - Examples: Client doesn't have permission to view balances. Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified enterprise or resources cannot be found
+        - Examples: Enterprise doesn't exist.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request
+        - Examples: Database connection issues, transient network errors,
       operationId: v1ClientBalancesGetRoute
       tags:
         - Client Balances
       parameters:
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: connectionIds
+          description: 'Optional array of connection IDs to filter by. If provided: - Only balances for connections with these specific IDs will be returned. - Useful for monitoring specific trading relationships or connections. - Can be used to focus on particular allocation targets. If omitted, results will include data for all your connections subject to other filters.'
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: 'Optional array of connection IDs to filter by. If provided: - Only balances for connections with these specific IDs will be returned. - Useful for monitoring specific trading relationships or connections. - Can be used to focus on particular allocation targets. If omitted, results will include data for all your connections subject to other filters.'
         - name: partnerIds
+          description: 'Optional array of partner IDs to filter by. If provided: - Only balances for connections to partners with these IDs will be returned. - Useful for focusing on balances with specific partner organizations. - Can be used to monitor exposure to particular partners. If omitted, results will include data for connections to all partners.'
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: 'Optional array of partner IDs to filter by. If provided: - Only balances for connections to partners with these IDs will be returned. - Useful for focusing on balances with specific partner organizations. - Can be used to monitor exposure to particular partners. If omitted, results will include data for connections to all partners.'
         - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise that owns the allocation.
           in: path
           required: true
           schema:
@@ -2662,17 +2779,43 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/connections:
     get:
       summary: List client connections
-      description: List all your Go network connections. For use only by Go network clients.
+      description: |-
+        List all your Go network connections. For use only by OES clients.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for enterpriseId, invalid filter parameters,
+        invalid pagination parameters, invalid partner IDs.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Missing or invalid auth token, expired credentials.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Client not authorized for this enterprise, client doesn't have
+        permission to view connections.
+
+        - 404: Not Found Error
+        - Occurs when the specified enterprise cannot be found.
+        - Examples: Enterprise ID doesn't exist or doesn't belong to the client.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, error retrieving connection data.
       operationId: v1ClientConnectionsGetRoute
       tags:
         - Client Activation
       parameters:
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
@@ -2751,9 +2894,36 @@ paths:
     post:
       summary: Connect to partner
       description: |-
-        Connect your Go Network client account to a Go Network partner, enabling you to
+        Connect your OES client account to an OES partner account, enabling you to
         trade funds that you have custodied with BitGo. You must have an account on the partner's site.
         Clients can have multiple connections to the same partner.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for enterpriseId or partnerId, missing required fields,
+        invalid payload format, invalid signature, payload doesn't match request data.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise. Payload/Signature are not valid.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified resources cannot be found.
+        - Examples: Enterprise ID doesn't exist, specified partner ID doesn't exist.
+
+        - 422: Unprocessable Content Error
+        - Occurs when the request is valid but cannot be processed due to business rules.
+        - Examples: Invalid connection key schema for partner, unsupported key schema,
+        partner is inactive, client and partner belong to different trust organizations.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues. Transient network errors,
       operationId: v1ClientConnectionsPostRoute
       tags:
         - Client Activation
@@ -2841,18 +3011,42 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/connections/{connectionId}:
     get:
       summary: Get Client Connection
-      description: Returns a BitGo Network connection by its connection ID. For use only by BitGo Network clients.
+      description: |-
+        Returns an OES connection by its connection ID. For use only by OES clients.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed
+        - Examples: Invalid UUID format for connectionId, invalid enterpriseId format
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified connection cannot be found.
+        - Examples: Connection ID doesn't exist, connection doesn't belong to this client.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, transient network errors.
       operationId: v1ClientConnectionGetRoute
       tags:
         - Client Activation
       parameters:
         - name: connectionId
+          description: The unique identifier of the connection to retrieve. This UUID uniquely identifies the connection between a client and partner.
           in: path
           required: true
           schema:
             type: string
             title: uuid
         - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise that owns the connection.
           in: path
           required: true
           schema:
@@ -2898,18 +3092,44 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
     put:
       summary: Update Client Connection
-      description: Update a BitGo Network connection by its connection ID. For use only by BitGo Network clients.
+      description: |-
+        Update a OES connection by its connection ID. For use only by OES clients.
+        Allows clients to modify connection properties such as name or active status.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for connectionId, invalid enterpriseId format,
+        malformed request body.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified connection cannot be found.
+        - Examples: Connection ID doesn't exist, connection doesn't belong to this client.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, transient network errors.
       operationId: v1ClientConnectionPutRoute
       tags:
         - Client Activation
       parameters:
         - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise that owns the connection.
           in: path
           required: true
           schema:
             type: string
             minLength: 1
         - name: connectionId
+          description: The unique identifier of the connection to update. This UUID uniquely identifies the connection between a client and a partner.
           in: path
           required: true
           schema:
@@ -2923,8 +3143,10 @@ paths:
               properties:
                 active:
                   type: boolean
+                  description: Whether the connection is active. When set to false, the connection is deactivated and cannot be allocated to until it is activated again (deallocations can still occur). When set to true, the connection is activated can be allocated to again.
                 name:
                   type: string
+                  description: A user-friendly name for the connection. Allows clients to provide a descriptive label for this particular connection.
                   minLength: 1
       responses:
         '200':
@@ -2983,12 +3205,14 @@ paths:
         - Client Allocations & Deallocations
       parameters:
         - name: connectionId
+          description: 'The unique identifier of the connection you want to allocate funds to. This connection: - Must be a valid, established connection between your enterprise and a partner. - Determines where the allocated funds will be available for use. - Should be pre-established before attempting to allocate funds.'
           in: path
           required: true
           schema:
             type: string
             title: uuid
         - name: enterpriseId
+          description: 'The unique identifier of your enterprise. This identifier: - Represents your organization within the BitGo system. - Is used to validate you have permission to perform this action. - Must match the enterprise associated with your API credentials.'
           in: path
           required: true
           schema:
@@ -3001,21 +3225,28 @@ paths:
               type: object
               properties:
                 amount:
-                  $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  allOf:
+                    - $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  description: The amount to allocate in base units. Contains both the currency identifier and the quantity in the currency's base units. The exact base units depend on the currency (e.g., satoshis for BTC, wei for ETH).
                 clientExternalId:
                   type: string
+                  description: 'A unique external identifier for the allocation. This identifier: - Must be unique for each distinct allocation request. - Is used for idempotence to prevent duplicate allocations. - Allows clients to correlate allocations with their own systems. - Should be stored by the client for tracking and reconciliation.'
                   minLength: 1
                 nonce:
                   type: string
+                  description: 'Unique nonce to prevent replay attacks. This value: - Must be unique for each request requiring a nonce. - Should be a cryptographically strong random value. - Is used as part of the request signing process. - Helps ensure the signature can only be used once.'
                   minLength: 1
                 notes:
                   type: string
+                  description: 'Optional notes to attach to the allocation. These notes: - Can provide additional context about the purpose of the allocation. - Are stored with the allocation record. - May be useful for auditing, record-keeping, or operational purposes. - Are visible to both client and partner.'
                   minLength: 1
                 payload:
                   type: string
+                  description: 'Payload formed by stringifying the object containing all other request properties. This includes: - amount: The amount to allocate. - clientExternalId: Your unique identifier for this allocation. - nonce: A unique value to prevent replay attacks. - notes: Optional notes about the allocation. - connectionId: The connection to allocate funds to. - enterpriseId: Your enterprise ID. The payload must be signed using your BitGo account''s private key to create the signature parameter.'
                   minLength: 1
                 signature:
                   type: string
+                  description: 'Digital signature of the payload parameter. This signature: - Must be created using your BitGo account''s private key. - Verifies that the request is authentic and hasn''t been tampered with. - Provides non-repudiation for the allocation request.'
                   minLength: 1
               required:
                 - amount
@@ -3078,12 +3309,14 @@ paths:
         - Client Allocations & Deallocations
       parameters:
         - name: connectionId
+          description: 'The unique identifier of the connection you want to allocate funds to. This connection: - Must be a valid, established connection between your enterprise and a partner. - Determines where the allocated funds will be available for use. - Should be pre-established before attempting to allocate funds.'
           in: path
           required: true
           schema:
             type: string
             title: uuid
         - name: enterpriseId
+          description: 'The unique identifier of your enterprise. This identifier: - Represents your organization within the BitGo system. - Is used to validate you have permission to perform this action. - Must match the enterprise associated with your API credentials.'
           in: path
           required: true
           schema:
@@ -3096,15 +3329,20 @@ paths:
               type: object
               properties:
                 amount:
-                  $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  allOf:
+                    - $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  description: The amount to allocate in base units. Contains both the currency identifier and the quantity in the currency's base units. The exact base units depend on the currency (e.g., satoshis for BTC, wei for ETH).
                 clientExternalId:
                   type: string
+                  description: 'A unique external identifier for the allocation. This identifier: - Must be unique for each distinct allocation request. - Is used for idempotence to prevent duplicate allocations. - Allows clients to correlate allocations with their own systems. - Should be stored by the client for tracking and reconciliation.'
                   minLength: 1
                 nonce:
                   type: string
+                  description: 'Unique nonce to prevent replay attacks. This value: - Must be unique for each request requiring a nonce. - Should be a cryptographically strong random value. - Is used as part of the request signing process. - Helps ensure the signature can only be used once.'
                   minLength: 1
                 notes:
                   type: string
+                  description: 'Optional notes to attach to the allocation. These notes: - Can provide additional context about the purpose of the allocation. - Are stored with the allocation record. - May be useful for auditing, record-keeping, or operational purposes. - Are visible to both client and partner.'
                   minLength: 1
               required:
                 - amount
@@ -3157,17 +3395,46 @@ paths:
         for actions (withdrawal/rebalancing) at BitGo.
         Note: Deallocations will happen synchronously and deallocated amounts can be viewed in the
         BitGo Application or via a balance endpoint.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for connectionId, invalid enterpriseId format,
+        malformed request body, invalid signature format.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified connection cannot be found.
+        - Examples: Connection ID doesn't exist, connection doesn't belong to this client.
+
+        - 422: Deallocation Error with Released Status
+        - Occurs when the deallocation cannot be processed due to business rules.
+        - Examples: Insufficient funds available for deallocation, connection is inactive,
+        deallocation amount exceeds available balance.
+
+        - 500: Internal Server Error or Reserved Deallocation
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, transient network errors.
       operationId: V1ClientDeallocationsPostRoute
       tags:
         - Client Allocations & Deallocations
       parameters:
         - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise that owns the connection.
           in: path
           required: true
           schema:
             type: string
             minLength: 1
         - name: connectionId
+          description: The unique identifier of the connection to deallocate from. This UUID uniquely identifies the connection between a client and a partner.
           in: path
           required: true
           schema:
@@ -3180,21 +3447,28 @@ paths:
               type: object
               properties:
                 amount:
-                  $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  allOf:
+                    - $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  description: The amount to deallocate from the connection. Contains both the currency identifier and the quantity in base units.
                 clientExternalId:
                   type: string
+                  description: External identifier provided by the client. Used for idempotence and correlation with client systems.
                   minLength: 1
                 nonce:
                   type: string
+                  description: A unique nonce value used for cryptographic operations. This provides additional security for deallocation operations.
                   minLength: 1
                 notes:
                   type: string
+                  description: Optional notes provided by the client when creating the deallocation. Can contain additional context or information about the purpose of the deallocation.
                   minLength: 1
                 payload:
                   type: string
+                  description: 'Payload formed by stringifying the object containing all other request properties. This includes: - amount: The amount to deallocate. - clientExternalId: Your unique identifier for this deallocation. - nonce: A unique value to prevent replay attacks. - notes: Optional notes about the deallocation. - connectionId: The connection to deallocate funds from. - enterpriseId: Your enterprise ID. The payload must be signed using your BitGo account''s private key to create the signature parameter.'
                   minLength: 1
                 signature:
                   type: string
+                  description: 'Digital signature of the payload parameter. This signature: - Must be created using your BitGo account''s private key - Verifies that the request is authentic and hasn''t been tampered with - Provides non-repudiation for the deallocation request'
                   minLength: 1
               required:
                 - amount
@@ -3251,18 +3525,48 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/connections/{connectionId}/deallocations/signing:
     get:
       summary: Get Signing Payload for Client Deallocations
-      description: This API call allows clients to get the client deallocations payload for signing.
+      description: |-
+        This API call allows clients to get the client deallocations payload for signing.
+        The returned payload should be cryptographically signed by the client and included
+        in the subsequent deallocation request.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for connectionId, malformed request body.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified connection cannot be found.
+        - Examples: Connection ID doesn't exist, connection doesn't belong to this client.
+
+        - 422: Unprocessable Entity Error
+        - Occurs when the request is valid but cannot be processed due to business rules.
+        - Examples: Connection is inactive, requested currency not supported.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues.
       operationId: V1ClientDeallocationsSigningGetRoute
       tags:
         - Client Allocations & Deallocations
       parameters:
         - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise that owns the connection.
           in: path
           required: true
           schema:
             type: string
             minLength: 1
         - name: connectionId
+          description: The unique identifier of the connection to deallocate from. This UUID uniquely identifies the connection between a client and a partner.
           in: path
           required: true
           schema:
@@ -3275,15 +3579,20 @@ paths:
               type: object
               properties:
                 amount:
-                  $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  allOf:
+                    - $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  description: The amount to deallocate from the connection. Contains both the currency identifier and the quantity in base units.
                 clientExternalId:
                   type: string
+                  description: External identifier provided by the client. Used for idempotence and correlation with client systems.
                   minLength: 1
                 nonce:
                   type: string
+                  description: A unique nonce value used for cryptographic operations. This provides additional security for deallocation operations.
                   minLength: 1
                 notes:
                   type: string
+                  description: Optional notes provided by the client when creating the deallocation. Can contain additional context or information about the purpose of the deallocation.
                   minLength: 1
               required:
                 - amount
@@ -3336,7 +3645,29 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/connections/signing:
     get:
       summary: Get Signing Payload for Client Connections
-      description: This API call allows clients to get the client connections payload for signing.
+      description: |-
+        This API call allows clients to get the client connections payload for signing.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed
+        - Examples: Empty string provided for entepriseId, missing required fields in request body.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified resources cannot be found.
+        - Examples: Enterprise ID doesn't exist, specified partner ID doesn't exist.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues. Transient network errors.
       operationId: V1ClientConnectionsSigningGetRoute
       tags:
         - Client Activation
@@ -3415,29 +3746,57 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/clients/settlements:
     get:
-      summary: List client settlements
-      description: This API call allows clients to get a list of settlements that involve their accounts and their metadata.
+      summary: List Client Settlements
+      description: |-
+        This API call allows clients to get a list of settlements that involve their accounts and their metadata.
+        Results can be filtered by various parameters and are paginated.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format, invalid pagination parameters.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified enterprise cannot be found.
+        - Examples: Enterprise ID doesn't exist.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, query errors.
       operationId: v1ClientSettlementsGetRoute
       tags:
         - Client Settlements & Transfers
       parameters:
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: settlementIds
+          description: Filter by specific settlement IDs. When provided, only settlements matching these IDs will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific settlement IDs. When provided, only settlements matching these IDs will be returned.
         - name: onlyShowDisputed
+          description: Filter to show only disputed settlements. When set to true, only settlements that have disputes will be returned. Setting to false will have no effect.
           in: query
           schema:
             type: string
@@ -3445,27 +3804,34 @@ paths:
               - 'true'
               - 'false'
         - name: partnerIds
+          description: Filter by specific partner IDs. When provided, only settlements involving these partners will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific partner IDs. When provided, only settlements involving these partners will be returned.
         - name: partyConnectionIds
+          description: Filter by specific party connection IDs. When provided, only settlements involving these connections as parties will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific party connection IDs. When provided, only settlements involving these connections as parties will be returned.
         - name: counterpartyConnectionIds
+          description: Filter by specific counterparty connection IDs. When provided, only settlements involving these connections as counterparties will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific counterparty connection IDs. When provided, only settlements involving these connections as counterparties will be returned.
         - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise making the API request.
           in: path
           required: true
           schema:
@@ -3511,37 +3877,64 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/clients/settlements/{settlementId}:
     get:
-      summary: Get client settlement
+      summary: Get Client Settlement
       description: |-
         This API call allows clients to get a list of settlement transactions for any connected network account,
         for a specific settlement. The settlement and its metadata will be returned along with all
         related settlement transfers in and out of the clients’ network accounts.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for settlementId, invalid enterpriseId format.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified settlement cannot be found.
+        - Examples: Settlement ID doesn't exist or the calling client isn't involved in the settlement.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues.
       operationId: v1ClientSettlementGetRoute
       tags:
         - Client Settlements & Transfers
       parameters:
         - name: currencies
+          description: Filter by specific currencies. When provided, only settlement transfers involving these currencies will be included.
           in: query
           schema:
             type: array
             items:
               type: string
+              description: Filter by specific currencies. When provided, only settlement transfers involving these currencies will be included.
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise making the API request.
           in: path
           required: true
           schema:
             type: string
             minLength: 1
         - name: settlementId
+          description: The unique identifier of the settlement to retrieve. This is a UUID that uniquely identifies the settlement record.
           in: path
           required: true
           schema:
@@ -3588,48 +3981,59 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/settlementTransfers:
     get:
       summary: List client settlement transfers
-      description: Lists all settlement transfers for your Go Network client account.
+      description: Lists all settlement transfers for your OES client account.
       operationId: v1ClientSettlementTransfersGetRoute
       tags:
         - Client Settlements & Transfers
       parameters:
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: currencies
+          description: Optional array of currencies. If provided will only return settlement transfers with those currencies.
           in: query
           schema:
             type: array
             items:
               type: string
+              description: Optional array of currencies. If provided will only return settlement transfers with those currencies.
         - name: initiatedBy
+          description: Optional array of user ids. If provided will only return settlement transfers for settlements initiated by those users.
           in: query
           schema:
             type: array
             items:
               type: string
               minLength: 1
+              description: Optional array of user ids. If provided will only return settlement transfers for settlements initiated by those users.
         - name: partnerIds
+          description: Optional array of partner ids. If provided will only return settlement transfers for settlements initiated by those partners.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of partner ids. If provided will only return settlement transfers for settlements initiated by those partners.
         - name: settlementIds
+          description: Optional array of settlement ids. If provided will only return settlement transfers for settlements with those ids.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of settlement ids. If provided will only return settlement transfers for settlements with those ids.
         - name: settlementStatuses
+          description: Optional array of settlement statuses. If provided will only return settlement transfers for settlements in those statuses.
           in: query
           schema:
             type: array
@@ -3640,13 +4044,16 @@ paths:
                 - completed
                 - pending
                 - rejected
+              description: Optional array of settlement statuses. If provided will only return settlement transfers for settlements in those statuses.
         - name: settlementUpdatedBefore
+          description: optional date start range filter for updatedAt (ISO 8601 Date). If provided will only return settlement transfers for settlements updated before the provided date.
           in: query
           schema:
             type: string
             format: date-time
             title: ISO Date String
         - name: settlementUpdatedOnOrAfter
+          description: optional date start range filter for updatedAt (ISO 8601 Date). If provided will only return settlement transfers for settlements updated on or after the provided date.
           in: query
           schema:
             type: string
@@ -3712,49 +4119,79 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners:
     get:
       summary: List Partners
-      description: Lists all Go Network Partners.
+      description: |-
+        Lists all OES Partners associated with the specified enterprise. 
+        Returns a collection of partners with information required to connect to them.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or incomplete.
+        - Examples: Empty string supplied for enterpriseId.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have access to create a partner.
+        - Examples: Enterprise does not have OES license.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected error processing the request
+        - Examples: Database connection failure, transient network error.
       operationId: v1PartnersGetRoute
       tags:
         - Partner Onboarding
       parameters:
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: ids
+          description: Filter by specific partner IDs. When provided, only partners with these IDs will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific partner IDs. When provided, only partners with these IDs will be returned.
         - name: names
+          description: Filter by partner names. When provided, only partners with these names will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               minLength: 1
+              description: Filter by partner names. When provided, only partners with these names will be returned.
         - name: institutionIds
+          description: Filter by institution IDs. When provided, only partners linked to these institutions will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by institution IDs. When provided, only partners linked to these institutions will be returned.
         - name: institutionIdentifiers
+          description: Filter by institution identifiers. When provided, only partners with these institution identifiers will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               minLength: 1
+              description: Filter by institution identifiers. When provided, only partners with these institution identifiers will be returned.
         - name: active
+          description: Filter by active status. When true, only active partners will be returned. When false, only inactive partners will be returned. When not provided, partners of any status will be returned.
           in: query
           schema:
             type: string
@@ -3762,6 +4199,7 @@ paths:
               - 'true'
               - 'false'
         - name: enterpriseId
+          description: The enterprise ID of the client making the request.
           in: path
           required: true
           schema:
@@ -3801,12 +4239,33 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
     post:
       summary: Create Partner
-      description: Create a new Go Network Partner.
+      description: |-
+        Create a new OES Partner. This endpoint allows enterprise users to add themselves as a partner in OES for 
+        clients to connect to.
+
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or incomplete.
+        - Examples: Empty string supplied for enterpriseId, invalid connection key schema.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have access to create a partner.
+        - Examples: Enterprise does not have OES license.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected error processing the request
+        - Examples: Database connection failure, transient network error.
       operationId: v1PartnersPostRoute
       tags:
         - Onboarding
       parameters:
         - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
           required: true
           schema:
@@ -3820,21 +4279,29 @@ paths:
               properties:
                 name:
                   type: string
+                  description: The name of the partner. This identifies the partner in the BitGo system and will be displayed in the UI.
                   minLength: 1
                 broker:
                   type: boolean
+                  description: Indicates whether the partner is a broker. If true, the partner can facilitate trading between clients. If false, the partner acts as an exchange with its own trading accounts.
                 institutionId:
                   type: string
+                  description: Optional UUID for the partner's institution record. Links the partner to an institution in the BitGo system.
                   title: uuid
                 institutionIdentifier:
                   type: string
+                  description: Optional external identifier for the partner's institution. Provides an alternative way to identify the institution.
                   minLength: 1
                 connectionKeySchema:
-                  $ref: '#/components/schemas/PartnerConnectionKeySchema'
+                  allOf:
+                    - $ref: '#/components/schemas/PartnerConnectionKeySchema'
+                  description: The key schema used for partner connections. Defines the structure and validation rules for connection keys.
                 clientDisputeWindowMinutes:
                   type: number
+                  description: Optional window (in minutes) for clients to dispute settlements. Defines how long after a settlement clients have to raise disputes. Null means no dispute window is configured.
                 topUpWindowMinutes:
                   type: number
+                  description: Optional window (in minutes) for topping up settlements. Defines the period during which a settlement can be topped up. Null means no top-up window is configured.
               required:
                 - name
                 - broker
@@ -3874,19 +4341,22 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/allocations:
     get:
       summary: List partner allocations and deallocations
-      description: Lists all allocations and deallocations. For use only by BitGo Network partners.
+      description: Lists all allocations and deallocations. For use only by OES partners.
       operationId: v1PartnerAllocationsGetRoute
       tags:
         - Partner Allocations & Deallocations
       parameters:
         - name: allocationIds
+          description: Optional array of allocationIds. If provided will only return allocations/deallocations with those ids.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of allocationIds. If provided will only return allocations/deallocations with those ids.
         - name: types
+          description: Optional array of types. If provided will only return allocations/deallocations with those types. allocation = records for allocations to connections. deallocation = records for deallocations from connections.
           in: query
           schema:
             type: array
@@ -3895,7 +4365,9 @@ paths:
               enum:
                 - allocation
                 - deallocation
+              description: Optional array of types. If provided will only return allocations/deallocations with those types. allocation = records for allocations to connections. deallocation = records for deallocations from connections.
         - name: statuses
+          description: Optional array of statuses. If provided will only return allocations/deallocations with those statuses. cleared = records for allocations that have been cleared. released = records for allocations that have been released. reserved = records for allocations that are still reserved.
           in: query
           schema:
             type: array
@@ -3905,44 +4377,56 @@ paths:
                 - cleared
                 - released
                 - reserved
+              description: Optional array of statuses. If provided will only return allocations/deallocations with those statuses. cleared = records for allocations that have been cleared. released = records for allocations that have been released. reserved = records for allocations that are still reserved.
         - name: currencies
+          description: Optional array of partner mapped currencies. If provided will only return allocations/deallocations with those currencies.
           in: query
           schema:
             type: array
             items:
               type: string
               minLength: 1
+              description: Optional array of partner mapped currencies. If provided will only return allocations/deallocations with those currencies.
         - name: connectionIds
+          description: Optional array of connectionIds. If provided will only return allocations/deallocations for those connectionIds.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of connectionIds. If provided will only return allocations/deallocations for those connectionIds.
         - name: partnerIds
+          description: Optional array of partnerIds. If provided will only return allocations/deallocations for those partnerIds.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of partnerIds. If provided will only return allocations/deallocations for those partnerIds.
         - name: clientIds
+          description: Optional array of clientIds. If provided will only return allocations/deallocations for those clientIds.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Optional array of clientIds. If provided will only return allocations/deallocations for those clientIds.
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: sortField
+          description: 'The field to sort results on. Possible values: - id: Sort by allocation ID. - updatedAt: Sort by the last updated timestamp. - quantity: Sort by the allocation amount quantity. Note: A final sort is always applied on createdAt ascending and id ascending, regardless of the specified sortField. This ensures consistent ordering for items with the same primary sort value.'
           in: query
           schema:
             type: string
@@ -3951,6 +4435,7 @@ paths:
               - updatedAt
               - quantity
         - name: sortDirection
+          description: 'The direction to sort results. Possible values: - ASC: Ascending order (lowest to highest, A to Z, oldest to newest) - DESC: Descending order (highest to lowest, Z to A, newest to oldest) If not specified, defaults to ASC (ascending).'
           in: query
           schema:
             type: string
@@ -4004,18 +4489,19 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/allocations/{allocationId}:
     get:
       summary: Get partner allocation or deallocation
-      description: Returns an allocation or deallocation. For use only by Go Network partners.
       operationId: v1PartnerAllocationGetRoute
       tags:
         - Partner Allocations & Deallocations
       parameters:
         - name: allocationId
+          description: The unique identifier of the allocation to retrieve. This is a UUID that uniquely identifies the allocation record.
           in: path
           required: true
           schema:
             type: string
             title: uuid
         - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
           required: true
           schema:
@@ -4062,49 +4548,83 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/balances:
     get:
       summary: List partner balances
-      description: Lists all your BitGo Network balances. For use only by BitGo Network partners.
+      description: |-
+        Lists all your OES balances. For use only by OES partners.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed
+        - Examples: Invalid UUID format for enterpriseId, invalid filter parameters,
+        invalid pagination parameters
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have necessary permissions
+        - Examples: Partner doesn't have permission to view balances. Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified enterprise cannot be found
+        - Examples: Enterprise ID doesn't exist or doesn't belong to the partner
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request
+        - Examples: Database connection issues, transient network errors.
       operationId: v1PartnerBalancesGetRoute
       tags:
         - Partner Balances
       parameters:
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: partnerIds
+          description: 'Optional array of partner IDs to filter by. If provided: - Only balances for partners with these IDs will be returned. - Only connections to these partners will be included. - Useful when a partner has multiple partner entities and wants to filter results. If omitted, results will include data for all partners the requester has access to.'
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: 'Optional array of partner IDs to filter by. If provided: - Only balances for partners with these IDs will be returned. - Only connections to these partners will be included. - Useful when a partner has multiple partner entities and wants to filter results. If omitted, results will include data for all partners the requester has access to.'
         - name: clientIds
+          description: 'Optional array of client IDs to filter by. If provided: - Only balances for clients with these IDs will be returned. - Useful for filtering results to specific client relationships. If omitted, results will include data for all clients connected to the partner.'
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: 'Optional array of client IDs to filter by. If provided: - Only balances for clients with these IDs will be returned. - Useful for filtering results to specific client relationships. If omitted, results will include data for all clients connected to the partner.'
         - name: connectionIds
+          description: 'Optional array of connection IDs to filter by. If provided: - Only balances for connections with these specific IDs will be returned. - Useful for querying balances for specific connections. If omitted, results will include data for all connections subject to other filters.'
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: 'Optional array of connection IDs to filter by. If provided: - Only balances for connections with these specific IDs will be returned. - Useful for querying balances for specific connections. If omitted, results will include data for all connections subject to other filters.'
         - name: partnersConnectionIds
+          description: 'Optional array of partner connection IDs to filter by. If provided: - Only balances for connections with these partner-specific IDs will be returned. - These are the IDs that partners use in their own systems to identify connections. - Useful when partners want to look up balances using their own identifiers. If omitted, results will include data for all connections subject to other filters.'
           in: query
           schema:
             type: array
             items:
               type: string
               minLength: 1
+              description: 'Optional array of partner connection IDs to filter by. If provided: - Only balances for connections with these partner-specific IDs will be returned. - These are the IDs that partners use in their own systems to identify connections. - Useful when partners want to look up balances using their own identifiers. If omitted, results will include data for all connections subject to other filters.'
         - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
           required: true
           schema:
@@ -4151,17 +4671,41 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/connections:
     get:
       summary: List Partner Connections
-      description: Returns all your Go network connections. For use only by Go Network partners.
+      description: |-
+        Returns all your OES connections. For use only by OES partners.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Empty string provided for enterpriseId. Invalid query values.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified enterprise cannot be found.
+        - Examples: Enterprise ID doesn't exist or doesn't belong to the partner.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, error retrieving connection data.
       operationId: v1PartnerConnectionsGetRoute
       tags:
         - Partner Activation
       parameters:
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
@@ -4254,18 +4798,43 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/connections/{connectionId}:
     get:
       summary: Get Partner Connection
-      description: Returns a Go Network connection by its connection ID. For use only by Go Network partners.
+      description: |-
+        Returns an OES connection by its connection ID. For use only by OES partners.
+        This endpoint allows partners to view connection details and status.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for connectionId, invalid enterpriseId format.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified connection cannot be found.
+        - Examples: Connection ID doesn't exist, connection doesn't belong to this partner.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, transient network errors.
       operationId: v1PartnerConnectionGetRoute
       tags:
         - Partner Activation
       parameters:
         - name: connectionId
+          description: The unique identifier of the connection to retrieve. This UUID uniquely identifies the connection between a client and a partner.
           in: path
           required: true
           schema:
             type: string
             title: uuid
         - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
           required: true
           schema:
@@ -4305,29 +4874,53 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements:
     get:
-      summary: List partner settlements
-      description: Lists all settlements for your Go Network partner account.
+      summary: List Partner Settlements
+      description: |-
+        Lists all settlements for your OES partner account with filtering options.
+        Results can be filtered by various parameters and are paginated.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format, invalid pagination parameters.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, query errors.
       operationId: v1PartnerSettlementsGetRoute
       tags:
         - Partner Settlements & Transfers
       parameters:
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: settlementIds
+          description: Filter by specific settlement IDs. When provided, only settlements matching these IDs will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific settlement IDs. When provided, only settlements matching these IDs will be returned.
         - name: onlyShowDisputed
+          description: Filter to show only disputed settlements. When set to true, only settlements that have disputes will be returned. Setting to false will have no effect.
           in: query
           schema:
             type: string
@@ -4335,58 +4928,71 @@ paths:
               - 'true'
               - 'false'
         - name: partnerIds
+          description: Filter by specific partner IDs. When provided, only settlements involving these partners will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific partner IDs. When provided, only settlements involving these partners will be returned.
         - name: partyConnectionIds
+          description: Filter by specific party connection IDs. When provided, only settlements involving these connections as parties will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific party connection IDs. When provided, only settlements involving these connections as parties will be returned.
         - name: counterpartyConnectionIds
+          description: Filter by specific counterparty connection IDs. When provided, only settlements involving these connections as counterparties will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific counterparty connection IDs. When provided, only settlements involving these connections as counterparties will be returned.
         - name: externalIds
+          description: Filter by specific external IDs. When provided, only settlements with these external IDs will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
               minLength: 1
+              description: Filter by specific external IDs. When provided, only settlements with these external IDs will be returned.
         - name: createdOnOrAfter
+          description: 'Filter for settlements created on or after this date. Format: ISO 8601 date string.'
           in: query
           schema:
             type: string
             format: date-time
             title: ISO Date String
         - name: createdBefore
+          description: 'Filter for settlements created before this date. Format: ISO 8601 date string.'
           in: query
           schema:
             type: string
             format: date-time
             title: ISO Date String
         - name: updatedOnOrAfter
+          description: 'Filter for settlements updated on or after this date. Format: ISO 8601 date string.'
           in: query
           schema:
             type: string
             format: date-time
             title: ISO Date String
         - name: updatedBefore
+          description: 'Filter for settlements updated before this date. Format: ISO 8601 date string.'
           in: query
           schema:
             type: string
             format: date-time
             title: ISO Date String
         - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
           required: true
           schema:
@@ -4425,8 +5031,32 @@ paths:
               schema:
                 $ref: '#/components/schemas/V1ErrorPayload'
     post:
-      summary: Perform partner settlement
-      description: Partner route to perform a settlement.
+      summary: Perform Partner Settlement
+      description: |-
+        Partner route to perform a settlement. This endpoint allows partners to create new settlements
+        between client accounts, transferring funds according to the specified amounts.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid format for settlement amounts, missing required fields,
+        invalid signature.
+
+        - 401: Authentication Error or Incomplete Settlement
+        - Occurs when the request is not authorized or cannot be completed immediately.
+        - Examples: Caller is not a member of the enterprise, signature verification failed.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 409: Conflict Error
+        - Occurs when the request conflicts with current state.
+        - Examples: Settlement already exists with the same externalId and different properties.
+
+        - 500: Internal Server Error or Incomplete Settlement
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, settlement initiated but not completed due to transient errors.
       operationId: v1PartnerSettlementsPostRoute
       tags:
         - Partner Settlements & Transfers
@@ -4445,14 +5075,17 @@ paths:
               properties:
                 externalId:
                   type: string
+                  description: External identifier for the settlement request. This should be unique for each settlement request and is used for idempotence and correlation with partner systems.
                   minLength: 1
                 notes:
                   type: string
+                  description: Optional notes about the settlement. Can contain additional context or information about the purpose of the settlement.
                   minLength: 1
                 settlementAmounts:
                   $ref: '#/components/schemas/UnmappedSettlementAmountsRecord'
                 nonce:
                   type: string
+                  description: A unique nonce value used for cryptographic operations. This provides additional security for settlement operations.
                   minLength: 1
                 payload:
                   type: string
@@ -4507,7 +5140,10 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements-signing:
     get:
       summary: Get Signing Payload for Partner Settlement
-      description: This API call allows partners to get the partner settlement payload for signing.
+      description: |-
+        This API call allows partners to get the partner settlement payload for signing.
+        The returned payload should be cryptographically signed by the partner and included
+        in the subsequent settlement creation request.
       operationId: v1PartnerSettlementSigningGetRoute
       tags:
         - Partner Settlements & Transfers
@@ -4523,17 +5159,23 @@ paths:
           application/json:
             schema:
               type: object
+              description: Common payload properties for settlement requests.
               properties:
                 externalId:
                   type: string
+                  description: External identifier for the settlement request. This should be unique for each settlement request and is used for idempotence and correlation with partner systems.
                   minLength: 1
                 notes:
                   type: string
+                  description: Optional notes about the settlement. Can contain additional context or information about the purpose of the settlement.
                   minLength: 1
                 settlementAmounts:
-                  $ref: '#/components/schemas/SettlementAmountsRecord'
+                  allOf:
+                    - $ref: '#/components/schemas/SettlementAmountsRecord'
+                  description: 'Contains instructions for the settlement. There are two options for the settlementAmounts record: - Connection liabilities - Expresses amounts owed to connections and owed by connections. - Structured as a Record<ConnectionId, Record<Currency, Amount>>. - Amount is either base units integer string or full units decimal string depending on partners configuration. - (+ amount for connection gain, - amount for connection loss) - Can be used by broker partners or exchange partners, however for broker partners the amounts for each currency must net to 0 (spread not yet supported). - Connection to connection liabilities - Expresses amounts each connection owes to one another. - Structured as a Record<ConnectionId, Record<ConnectionId, Record<Currency, Amount>>> - Amount is either base units integer string or full units decimal string depending on partners configuration. - (+ amount for connection gain, - amount for connection loss) This allows the API to handle both settlement patterns with a single type.'
                 nonce:
                   type: string
+                  description: A unique nonce value used for cryptographic operations. This provides additional security for settlement operations.
                   minLength: 1
               required:
                 - externalId
@@ -4579,62 +5221,100 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements/{settlementId}:
     get:
-      summary: Get partner settlement
-      description: Returns a settlement for your Go Network partner account.
+      summary: Get Partner Settlement
+      description: |-
+        Returns a settlement for your OES partner account by its ID.
+        This endpoint provides detailed information about a specific settlement, including its status,
+        amounts, and related transfers.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for settlementId, invalid enterpriseId format.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified settlement cannot be found.
+        - Examples: Settlement ID doesn't exist or doesn't belong to this partner.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues.
       operationId: v1PartnerSettlementGetRoute
       tags:
         - Partner Settlements & Transfers
       parameters:
         - name: sourceNetworkAccountIds
+          description: Filter by specific source network account IDs. When provided, only settlement transfers from these network accounts will be included.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific source network account IDs. When provided, only settlement transfers from these network accounts will be included.
         - name: sourceTradingAccountIds
+          description: Filter by specific source trading account IDs. When provided, only settlement transfers from these trading accounts will be included.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific source trading account IDs. When provided, only settlement transfers from these trading accounts will be included.
         - name: destinationNetworkAccountIds
+          description: Filter by specific destination network account IDs. When provided, only settlement transfers to these network accounts will be included.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific destination network account IDs. When provided, only settlement transfers to these network accounts will be included.
         - name: destinationTradingAccountIds
+          description: Filter by specific destination trading account IDs. When provided, only settlement transfers to these trading accounts will be included.
           in: query
           schema:
             type: array
             items:
               type: string
               title: uuid
+              description: Filter by specific destination trading account IDs. When provided, only settlement transfers to these trading accounts will be included.
         - name: currencies
+          description: Filter by specific currencies. When provided, only settlement transfers involving these currencies will be included.
           in: query
           schema:
             type: array
             items:
               type: string
+              description: Filter by specific currencies. When provided, only settlement transfers involving these currencies will be included.
         - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
           in: query
           schema:
             type: string
             format: integer
         - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
           in: query
           schema:
             type: string
         - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
           required: true
           schema:
             type: string
             minLength: 1
         - name: settlementId
+          description: The unique identifier of the settlement to retrieve. This is a UUID that uniquely identifies the settlement record.
           in: path
           required: true
           schema:
@@ -4680,7 +5360,7 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements/nonReconciled:
     post:
-      summary: '[DEPRECATED] Perform partner settlement'
+      summary: '[DEPRECATED] Perform Partner Settlement'
       description: |-
         [DEPRECATED] Partner route to perform a settlement.
 
@@ -4704,14 +5384,17 @@ paths:
               properties:
                 externalId:
                   type: string
+                  description: External identifier for the settlement request. This should be unique for each settlement request and is used for idempotence and correlation with partner systems.
                   minLength: 1
                 notes:
                   type: string
+                  description: Optional notes about the settlement. Can contain additional context or information about the purpose of the settlement.
                   minLength: 1
                 settlementAmounts:
                   $ref: '#/components/schemas/UnmappedSettlementAmountsRecord'
                 nonce:
                   type: string
+                  description: A unique nonce value used for cryptographic operations. This provides additional security for settlement operations.
                   minLength: 1
                 payload:
                   type: string
@@ -4765,13 +5448,38 @@ paths:
                 $ref: '#/components/schemas/V1PartnerIncompleteSettlementOrErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements/onchain:
     post:
-      summary: Initiate on-chain settlement
-      description: Partner route to initiate an on-chain settlement.
+      summary: Initiate On-Chain Settlement
+      description: |-
+        Partner route to initiate an on-chain settlement. This endpoint allows partners
+        to create settlements that will be processed on a blockchain, with multi-phase settlement flow.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid format for settlement amounts, missing required fields,
+        invalid signature.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise, signature verification failed.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license, on-chain settlements not enabled.
+
+        - 409: Conflict Error
+        - Occurs when the request conflicts with current state.
+        - Examples: Settlement already exists with the same externalId and different properties.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues.
       operationId: v1PartnerOnChainSettlementPostRoute
       tags:
         - Partner Settlements & Transfers
       parameters:
         - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
           required: true
           schema:
@@ -4785,20 +5493,27 @@ paths:
               properties:
                 externalId:
                   type: string
+                  description: External identifier for the settlement request. This should be unique for each settlement request and is used for idempotence and correlation with partner systems.
                   minLength: 1
                 notes:
                   type: string
+                  description: Optional notes about the settlement. Can contain additional context or information about the purpose of the settlement.
                   minLength: 1
                 settlementAmounts:
-                  $ref: '#/components/schemas/PartySettlementAmountsRecord'
+                  allOf:
+                    - $ref: '#/components/schemas/PartySettlementAmountsRecord'
+                  description: The settlement amounts to be processed. Only exchange-style settlements (where the exchange is the source) are supported for on-chain settlements.
                 nonce:
                   type: string
+                  description: A unique nonce value used for cryptographic operations. This provides additional security for settlement operations.
                   minLength: 1
                 payload:
                   type: string
+                  description: The signed payload for the settlement request. This contains a stringified version of request body less the payload/signature.
                   minLength: 1
                 signature:
                   type: string
+                  description: 'Digital signature of the payload parameter. This signature: - Must be created using your BitGo account''s private key - Verifies that the request is authentic and hasn''t been tampered with - Provides non-repudiation for the allocation request'
                   minLength: 1
               required:
                 - externalId
@@ -4853,7 +5568,37 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements/onchain/deposits:
     post:
       summary: Post deposit info for an on-chain settlement
-      description: Partner route for providing external deposit information tied to an on-chain settlement.
+      description: |-
+        Partner route for providing external deposit information tied to an on-chain settlement.
+        This endpoint allows partners to submit information about on-chain deposits that are
+        associated with a specific settlement. The deposits will be tracked and reconciled 
+        with the settlement transaction.
+
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or incomplete.
+        - Examples: Empty string supplied for enterpriseId.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have access to the specified settlement.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error 
+        - Occurs when the referenced settlement was not found.
+        - Examples: Settlement ID doesn't exist, settlement exists but for different partner.
+
+        - 409: Conflict Error
+        - Occurs when Deposit information is in conflict.
+        - Examples: Depsit information has already been submitted for a different settlement.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected error processing the request
+        - Examples: Database connection failure, transient network error.
       operationId: v1PartnerExtDepositsPostRoute
       tags:
         - Partner Settlements & Transfers
@@ -4872,9 +5617,11 @@ paths:
               properties:
                 externalSettlementId:
                   type: string
+                  description: Partner's unique identifier for the settlement. Used for correlation between BitGo and partner systems.
                   minLength: 1
                 settlementId:
                   type: string
+                  description: Optional BitGo settlement ID associated with these deposits. May be omitted if the deposits are being submitted before the settlement is created.
                   title: uuid
                 deposits:
                   type: array
@@ -4883,13 +5630,16 @@ paths:
                     properties:
                       currency:
                         type: string
+                        description: The currency code of the deposited asset. Identifies which cryptocurrency was deposited on-chain.
                         minLength: 1
                       onChainTxId:
                         type: string
+                        description: The transaction ID of the on-chain deposit. This is the unique identifier for the blockchain transaction.
                         minLength: 1
                     required:
                       - currency
                       - onChainTxId
+                    description: List of deposits associated with this settlement. Must contain at least one deposit.
                 payload:
                   type: string
                   minLength: 1
@@ -4948,7 +5698,11 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements/onchain/deposits/signing:
     get:
       summary: Get Signing Payload for Partner External Deposits
-      description: This API call allows partners to get the partner external deposits payload for signing.
+      description: |-
+        This API call allows partners to get the partner external deposits payload for signing.
+        Partners can use this endpoint to retrieve a formatted payload that should be signed
+        using their private key before submitting deposit information. This ensures that
+        deposit submissions are properly authenticated and attributed to the correct partner.
       operationId: v1PartnerExtDepositsSigningGetRoute
       tags:
         - Partner Settlements & Transfers
@@ -4964,12 +5718,15 @@ paths:
           application/json:
             schema:
               type: object
+              description: Common properties for external deposit requests. Used as the base for both signed and unsigned requests.
               properties:
                 externalSettlementId:
                   type: string
+                  description: Partner's unique identifier for the settlement. Used for correlation between BitGo and partner systems.
                   minLength: 1
                 settlementId:
                   type: string
+                  description: Optional BitGo settlement ID associated with these deposits. May be omitted if the deposits are being submitted before the settlement is created.
                   title: uuid
                 deposits:
                   type: array
@@ -4978,13 +5735,16 @@ paths:
                     properties:
                       currency:
                         type: string
+                        description: The currency code of the deposited asset. Identifies which cryptocurrency was deposited on-chain.
                         minLength: 1
                       onChainTxId:
                         type: string
+                        description: The transaction ID of the on-chain deposit. This is the unique identifier for the blockchain transaction.
                         minLength: 1
                     required:
                       - currency
                       - onChainTxId
+                    description: List of deposits associated with this settlement. Must contain at least one deposit.
               required:
                 - externalSettlementId
                 - deposits
@@ -5103,12 +5863,17 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/supportedCurrencies:
     get:
       summary: List Partner-Supported Currencies
-      description: List all the currencies a given Go Network Partner supports for allocation and deallocation.
+      description: |-
+        List all the currencies a given OES Partner supports for allocation and deallocation.
+        This endpoint returns a comprehensive list of currencies that can be used for allocations, 
+        deallocations and settlements for each partner.
+        with specific partners.
       operationId: v1EnterpriseSupportedCurrenciesRoute
       tags:
         - Client Allocations & Deallocations
       parameters:
         - name: partnerIds
+          description: Comma-separated list of partner UUIDs to filter results by. Only returns supported currencies for the specified partners.
           in: query
           required: true
           schema:
@@ -5116,7 +5881,9 @@ paths:
             items:
               type: string
               title: uuid
+              description: Comma-separated list of partner UUIDs to filter results by. Only returns supported currencies for the specified partners.
         - name: enterpriseId
+          description: Enterprise ID to check supported currencies for. The response will be filtered to partners accessible by this enterprise.
           in: path
           required: true
           schema:
@@ -32432,8 +33199,10 @@ components:
         properties:
           available:
             type: string
+            description: Amount of the specified currency available in the specified account. The amount is represented as a non-negative integer string in the currency's base units.
           held:
             type: string
+            description: Amount of the specified currency held (encumbered) in the specified account. The amount is represented as a non-negative integer string in the currency's base units.
         required:
           - available
           - held
@@ -35892,9 +36661,9 @@ components:
           type: object
           additionalProperties:
             type: string
-          description: For mapped settlement amounts where the amount will always be a bigint
-        description: Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>> For exchange-style settlements, where the exchange is always the source and client owned connections are the destination.
-      description: Record<Counterparty (source) connectionId, Record<Party (dest) connectionId, Record<Currency, Amount (bigint)>>> For broker-style settlements, where the source and destination are both client owned connections.
+          description: For mapped settlement amounts where the amount will always be a bigint. This ensures consistent handling of large monetary values in settlements.
+        description: Maps destination connection IDs to currency amounts for settlement. Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>> Used for exchange-style settlements, where the exchange is always the source and client owned connections are the destination. Each entry maps a destination connection ID to the currency amounts being settled to that connection.
+      description: Maps source connection IDs to destination connections and their currency amounts. Record<Counterparty (source) connectionId, Record<Party (dest) connectionId, Record<Currency, Amount (bigint)>>> Used for broker-style settlements, where the source and destination are both client-owned connections. This structure allows specifying multiple source connections, each with multiple destination connections, and the currency amounts being settled between them.
     CreateBitgoChallengeResponse:
       title: CreateBitgoChallengeResponse
       type: object
@@ -36636,44 +37405,59 @@ components:
         properties:
           id:
             type: string
+            description: The unique identifier of the settlement transfer. This is a UUID that uniquely identifies the settlement transfer record.
             title: uuid
           createdAt:
             type: string
+            description: The date and time when the settlement transfer was created. Represented as an ISO 8601 formatted date string.
             format: date-time
             title: ISO Date String
           updatedAt:
             type: string
+            description: The date and time when the settlement transfer was last updated. Represented as an ISO 8601 formatted date string.
             format: date-time
             title: ISO Date String
           currency:
             type: string
+            description: The currency involved in the settlement movement.
             minLength: 1
           settlementId:
             type: string
+            description: The unique identifier of the settlement the settlement transfer is associated with. This is a UUID that uniquely identifies the settlement. Will only be undefined if the settlement transfer is in 'pending_settlement_assignment' status.
             title: uuid
           disputeClosureId:
             type: string
+            description: The unique identifier of the dispute closure the settlement transfer was created from. This is a UUID that uniquely identifies dispute closure if the transfer was created as a result of closing a dispute.
             title: uuid
           quantity:
-            $ref: '#/components/schemas/NonZeroBigAmount'
+            allOf:
+              - $ref: '#/components/schemas/NonZeroBigAmount'
+            description: The amount of currency being transferred in the settlement transfer. This is a non-zero value represented as a string. If the value is positive, that means funds were moved from the source account to the destination account. If the value is negative, that means funds were moved from the destination account to the source account.
           txIds:
             type: array
             items:
               type: string
               minLength: 1
+              description: The transaction IDs associated with the settlement transfer. Only populated once the transfer is completed.
           status:
-            $ref: '#/components/schemas/SettlementTransferStatus'
+            allOf:
+              - $ref: '#/components/schemas/SettlementTransferStatus'
+            description: 'The status of the settlement transfer. Possible values and implications are: - pending: The transfer is pending and has not yet been processed. - pending_onchain: The transfer is pending on-chain movement (only relevant to on-chain settlements). - onchain_initiated: The transfer has been initiated on-chain (only relevant to on-chain settlements). - onchain_failed: The on-chain transfer has failed (only relevant to on-chain settlements). - completed: The transfer has been completed successfully. - failed: The transfer has failed. - rejected: The transfer has been rejected. - disputed: The transfer is disputed.'
           sourceTradingAccountId:
             type: string
+            description: The go account id of the source party.
             minLength: 1
           sourceNetworkAccountId:
             type: string
+            description: The network account id of the source party.
             title: uuid
           destinationTradingAccountId:
             type: string
+            description: The go account id of the destination party.
             minLength: 1
           destinationNetworkAccountId:
             type: string
+            description: The network account id of the destination party.
             title: uuid
         required:
           - id
@@ -39933,6 +40717,7 @@ components:
             type: string
           currency:
             type: string
+            description: The currency code of the deposited asset.
             minLength: 1
           quantity:
             type: number
@@ -39944,14 +40729,17 @@ components:
             title: uuid
           createdAt:
             type: string
+            description: ISO-formatted creation timestamp of the deposit record.
             format: date-time
             title: ISO Date String
           updatedAt:
             type: string
+            description: ISO-formatted timestamp of the last update to the deposit record.
             format: date-time
             title: ISO Date String
           externalSettlementId:
             type: string
+            description: Partner's unique identifier for the settlement associated with this deposit.
             minLength: 1
         required:
           - onChainTxId
@@ -43371,67 +44159,90 @@ components:
         properties:
           sourceTradingAccountId:
             type: string
+            description: The go account id of the source party.
             minLength: 1
           sourceNetworkAccountId:
             type: string
+            description: The network account id of the source party.
             title: uuid
           destinationTradingAccountId:
             type: string
+            description: The go account id of the destination party.
             minLength: 1
           destinationNetworkAccountId:
             type: string
+            description: The network account id of the destination party (if the destination party is a connection).
             title: uuid
           currency:
             type: string
+            description: The currency involved in the settlement movement.
             minLength: 1
           quantity:
-            $ref: '#/components/schemas/NonZeroBigAmount'
+            allOf:
+              - $ref: '#/components/schemas/NonZeroBigAmount'
+            description: The amount of currency being transferred in the settlement transfer. This is a non-zero value represented as a string. If the value is positive, that means funds were moved from the source account to the destination account. If the value is negative, that means funds were moved from the destination account to the source account.
           txIds:
             type: array
             items:
               type: string
               minLength: 1
+              description: The transaction IDs associated with the settlement transfer. Only populated once the transfer is completed.
           status:
-            $ref: '#/components/schemas/SettlementTransferStatus'
+            allOf:
+              - $ref: '#/components/schemas/SettlementTransferStatus'
+            description: 'The status of the settlement transfer. Possible values and implications are: - pending: The transfer is pending and has not yet been processed. - pending_onchain: The transfer is pending on-chain movement (only relevant to on-chain settlements). - onchain_initiated: The transfer has been initiated on-chain (only relevant to on-chain settlements). - onchain_failed: The on-chain transfer has failed (only relevant to on-chain settlements). - completed: The transfer has been completed successfully. - failed: The transfer has failed. - rejected: The transfer has been rejected. - disputed: The transfer is disputed.'
           usdValue:
             nullable: true
             oneOf:
               - type: string
                 format: number
               - type: number
+            description: The USD value of the settlement transfer in cents. This is a non-negative value represented as a string.
           settlementId:
             type: string
+            description: The unique identifier of the settlement the settlement transfer is associated with. This is a UUID that uniquely identifies the settlement.
             title: uuid
           disputeClosureId:
             type: string
+            description: The unique identifier of the dispute closure the settlement transfer was created from. This is a UUID that uniquely identifies dispute closure if the transfer was created as a result of closing a dispute.
             title: uuid
           id:
             type: string
+            description: The unique identifier of the settlement transfer. This is a UUID that uniquely identifies the settlement transfer record.
             title: uuid
           createdAt:
             type: string
+            description: The date and time when the settlement transfer was created. Represented as an ISO 8601 formatted date string.
             format: date-time
             title: ISO Date String
           updatedAt:
             type: string
+            description: The date and time when the settlement transfer was last updated. Represented as an ISO 8601 formatted date string.
             format: date-time
             title: ISO Date String
           settlementStatus:
-            $ref: '#/components/schemas/SettlementStatuses'
+            allOf:
+              - $ref: '#/components/schemas/SettlementStatuses'
+            description: 'The status of the settlement the settlement transfer is associated with. Possible values and implications are: - pending: The settlement is pending and has not yet been processed. - failed: The settlement has failed to process. This is a non-terminal state and should be retried. - completed: The settlement has been completed successfully. - rejected: The settlement has been rejected by a BitGo admin (only relevant to on-chain settlements).'
           settlementNotes:
             type: string
+            description: Optional notes for the settlement
             minLength: 1
           sourceClientName:
             type: string
+            description: The client name of the source party. Will be obfuscated if the source party is not the calling client.
             minLength: 1
           destinationClientName:
             type: string
+            description: The client name of the destination party. Will be obfuscated if the destination party is not the calling client.
             minLength: 1
           sourceConnectionName:
             type: string
+            description: The name of the source connection (if the source party is a connection). Will be obfuscated if the source party is not the calling client.
             minLength: 1
           destinationConnectionName:
             type: string
+            description: The name of the destination connection (if the destination party is a connection). Will be obfuscated if the destination party is not the calling client.
             minLength: 1
         required:
           - currency
@@ -43908,20 +44719,27 @@ components:
       type: object
       additionalProperties:
         type: object
+        description: Network account balance information formatted for client consumption. Contains details about a partner connection and associated balances.
         properties:
           partnerId:
             type: string
+            description: Unique identifier of the partner associated with this connection. This UUID uniquely identifies the OES partner within the BitGo system.
             title: uuid
           partnersConnectionId:
             type: string
+            description: External identifier of the connection as known by the partner system. This is the identifier that the partner uses to reference this connection.
             minLength: 1
           name:
             type: string
+            description: Human-readable name of the connection. This is typically set during connection creation to help identify the connection.
             minLength: 1
           balances:
-            $ref: '#/components/schemas/AccountBalanceRecord'
+            allOf:
+              - $ref: '#/components/schemas/AccountBalanceRecord'
+            description: Balances available for this connection, indexed by currency code. Represents the funds that have been allocated to this connection and their status.
           partnerInstitutionIdentifier:
             type: string
+            description: Optional institution identifier of the partner. When present, provides an additional identifier that may be useful for integration with external systems or regulatory reporting.
             minLength: 1
         required:
           - partnerId
@@ -44701,8 +45519,8 @@ components:
         type: object
         additionalProperties:
           type: string
-        description: For mapped settlement amounts where the amount will always be a bigint
-      description: Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>> For exchange-style settlements, where the exchange is always the source and client owned connections are the destination.
+        description: For mapped settlement amounts where the amount will always be a bigint. This ensures consistent handling of large monetary values in settlements.
+      description: Maps destination connection IDs to currency amounts for settlement. Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>> Used for exchange-style settlements, where the exchange is always the source and client owned connections are the destination. Each entry maps a destination connection ID to the currency amounts being settled to that connection.
     PaymentFailureReason:
       title: PaymentFailureReason
       type: string
@@ -53033,7 +53851,7 @@ components:
           type: object
           additionalProperties:
             type: string
-            description: For unmapped settlement amounts where the amount can be BigAmount(BigNumberFromString, BigIntFromString)
+            description: For unmapped settlement amounts where the amount can be either BigNumberFromString or BigIntFromString. This provides flexibility in how monetary values are represented in settlement requests.
     UnmappedPartySettlementAmountsRecord:
       title: UnmappedPartySettlementAmountsRecord
       type: object
@@ -53041,7 +53859,7 @@ components:
         type: object
         additionalProperties:
           type: string
-          description: For unmapped settlement amounts where the amount can be BigAmount(BigNumberFromString, BigIntFromString)
+          description: For unmapped settlement amounts where the amount can be either BigNumberFromString or BigIntFromString. This provides flexibility in how monetary values are represented in settlement requests.
     UnmappedSettlementAmountsRecord:
       title: UnmappedSettlementAmountsRecord
       oneOf:
@@ -53797,42 +54615,58 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the allocation/deallocation. This is a UUID that uniquely identifies the allocation record.
           title: uuid
         amount:
-          $ref: '#/components/schemas/PositiveAllocationAmount'
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: The amount of the allocation/deallocation. Contains both the currency identifier and the quantity in base units.
         connectionId:
           type: string
+          description: The unique identifier of the connection this allocation is for. This identifies a connection between a client and partner.
           title: uuid
         clientExternalId:
           type: string
+          description: External identifier provided by the client when creating the allocation/deallocation. Used for idempotence and correlation with client systems.
           minLength: 1
         partnerExternalId:
           type: string
+          description: External identifier of the allocation/deallocation in the partner system. May be populated when partners provide their own identifier for the allocation.
           minLength: 1
         initiatedBy:
           type: string
+          description: The identifier of the user that initiated the allocation/deallocation. Represents the user ID from the BitGo platform.
           minLength: 1
         notes:
           type: string
+          description: Optional notes provided by the client when creating the allocation/deallocation. Can contain additional context or information about the purpose of the allocation.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the allocation/deallocation was created. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the allocation/deallocation was last updated. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         retriable:
           type: boolean
+          description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
         reason:
           nullable: true
           type: string
           minLength: 1
+          description: The reason that the allocation/deallocation is not cleared. Provides a descriptive explanation for why the allocation is in the reserved state. Will not be defined if the allocation is cleared.
         status:
-          $ref: '#/components/schemas/AllocationStatus'
+          allOf:
+            - $ref: '#/components/schemas/AllocationStatus'
+          description: 'Status of the allocation/deallocation. Possible values: - reserved: The amount for allocation/deallocation is reserved but operation has not completed. This is a temporary state awaiting final resolution. - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds have been successfully allocated. This indicates a successful operation. - released: Terminal state; the amount for allocation/deallocation is released and funds have been returned. This indicates the operation failed, either because balance was insufficient for allocation/deallocation, or that the partner rejected the request to allocate/deallocate.'
         type:
-          $ref: '#/components/schemas/AllocationType'
+          allOf:
+            - $ref: '#/components/schemas/AllocationType'
+          description: 'The type of the entity. Possible values: - allocation: Represents an allocation of funds to a connection. This moves funds from a client''s BitGo account to make them available for the specified connection. - deallocation: Represents a deallocation of funds from a connection. This moves funds from a connection back to the client''s BitGo account.'
       required:
         - id
         - amount
@@ -53858,7 +54692,9 @@ components:
       type: object
       properties:
         allocation:
-          $ref: '#/components/schemas/V1ClearedAllocation'
+          allOf:
+            - $ref: '#/components/schemas/V1ClearedAllocation'
+          description: The allocation record in its cleared state. This contains all allocation details with a status of 'cleared', indicating the allocation was successfully completed.
       required:
         - allocation
     V1AllocationsGetPayload:
@@ -53872,42 +54708,58 @@ components:
             properties:
               id:
                 type: string
+                description: The unique identifier of the allocation/deallocation. This is a UUID that uniquely identifies the allocation record.
                 title: uuid
               amount:
-                $ref: '#/components/schemas/PositiveAllocationAmount'
+                allOf:
+                  - $ref: '#/components/schemas/PositiveAllocationAmount'
+                description: The amount of the allocation/deallocation. Contains both the currency identifier and the quantity in base units.
               connectionId:
                 type: string
+                description: The unique identifier of the connection this allocation is for. This identifies a connection between a client and partner.
                 title: uuid
               clientExternalId:
                 type: string
+                description: External identifier provided by the client when creating the allocation/deallocation. Used for idempotence and correlation with client systems.
                 minLength: 1
               partnerExternalId:
                 type: string
+                description: External identifier of the allocation/deallocation in the partner system. May be populated when partners provide their own identifier for the allocation.
                 minLength: 1
               initiatedBy:
                 type: string
+                description: The identifier of the user that initiated the allocation/deallocation. Represents the user ID from the BitGo platform.
                 minLength: 1
               notes:
                 type: string
+                description: Optional notes provided by the client when creating the allocation/deallocation. Can contain additional context or information about the purpose of the allocation.
                 minLength: 1
               createdAt:
                 type: string
+                description: The date and time when the allocation/deallocation was created. Represented as an ISO 8601 formatted date string.
                 format: date-time
                 title: ISO Date String
               updatedAt:
                 type: string
+                description: The date and time when the allocation/deallocation was last updated. Represented as an ISO 8601 formatted date string.
                 format: date-time
                 title: ISO Date String
               retriable:
                 type: boolean
+                description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
               reason:
                 nullable: true
                 type: string
                 minLength: 1
+                description: The reason that the allocation/deallocation is not cleared. Provides a descriptive explanation for why the allocation is in the reserved state. Will not be defined if the allocation is cleared.
               status:
-                $ref: '#/components/schemas/AllocationStatus'
+                allOf:
+                  - $ref: '#/components/schemas/AllocationStatus'
+                description: 'Status of the allocation/deallocation. Possible values: - reserved: The amount for allocation/deallocation is reserved but operation has not completed. This is a temporary state awaiting final resolution. - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds have been successfully allocated. This indicates a successful operation. - released: Terminal state; the amount for allocation/deallocation is released and funds have been returned. This indicates the operation failed, either because balance was insufficient for allocation/deallocation, or that the partner rejected the request to allocate/deallocate.'
               type:
-                $ref: '#/components/schemas/AllocationType'
+                allOf:
+                  - $ref: '#/components/schemas/AllocationType'
+                description: 'The type of the entity. Possible values: - allocation: Represents an allocation of funds to a connection. This moves funds from a client''s BitGo account to make them available for the specified connection. - deallocation: Represents a deallocation of funds from a connection. This moves funds from a connection back to the client''s BitGo account.'
             required:
               - id
               - amount
@@ -53920,6 +54772,7 @@ components:
               - reason
               - status
               - type
+            description: Array of allocation records matching the query criteria. The array may be empty if no allocations match the query criteria.
       required:
         - allocations
     V1AllocationsReleasedPayload:
@@ -53927,7 +54780,9 @@ components:
       type: object
       properties:
         allocation:
-          $ref: '#/components/schemas/V1ReleasedAllocation'
+          allOf:
+            - $ref: '#/components/schemas/V1ReleasedAllocation'
+          description: The allocation record in its released state. This contains all allocation details with a status of 'released', indicating the allocation was not completed and funds were returned. The reason field will explain why the allocation was released.
       required:
         - allocation
     V1AllocationsReleasedWithErrorPostPayload:
@@ -53956,40 +54811,52 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the allocation/deallocation. This is a UUID that uniquely identifies the allocation record.
           title: uuid
         amount:
-          $ref: '#/components/schemas/PositiveAllocationAmount'
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: The amount of the allocation/deallocation. Contains both the currency identifier and the quantity in base units.
         connectionId:
           type: string
+          description: The unique identifier of the connection this allocation is for. This identifies a connection between a client and partner.
           title: uuid
         clientExternalId:
           type: string
+          description: External identifier provided by the client when creating the allocation/deallocation. Used for idempotence and correlation with client systems.
           minLength: 1
         partnerExternalId:
           type: string
+          description: External identifier of the allocation/deallocation in the partner system. May be populated when partners provide their own identifier for the allocation.
           minLength: 1
         initiatedBy:
           type: string
+          description: The identifier of the user that initiated the allocation/deallocation. Represents the user ID from the BitGo platform.
           minLength: 1
         notes:
           type: string
+          description: Optional notes provided by the client when creating the allocation/deallocation. Can contain additional context or information about the purpose of the allocation.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the allocation/deallocation was created. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the allocation/deallocation was last updated. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         retriable:
           type: boolean
           enum:
             - false
+          description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
         status:
           type: string
           enum:
             - cleared
+          description: 'Status of the allocation/deallocation. Possible values: - reserved: The amount for allocation/deallocation is reserved but operation has not completed. This is a temporary state awaiting final resolution. - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds have been successfully allocated. This indicates a successful operation. - released: Terminal state; the amount for allocation/deallocation is released and funds have been returned. This indicates the operation failed, either because balance was insufficient for allocation/deallocation, or that the partner rejected the request to allocate/deallocate.'
       required:
         - id
         - amount
@@ -54006,6 +54873,7 @@ components:
       properties:
         payload:
           type: string
+          description: 'Payload string to sign based on the provided request parameters. This string: - Contains a JSON representation of the allocation request parameters. - Should be signed using the client''s private key. - The resulting signature should be included in the subsequent allocation creation request. - Helps ensure that allocation requests are authenticated and tamper-proof.'
       required:
         - payload
     V1ClientBalancesGetPayload:
@@ -54014,11 +54882,16 @@ components:
       properties:
         clientId:
           type: string
+          description: Unique identifier of the client whose balances are being returned. This UUID corresponds to your organization within the BitGo system.
           title: uuid
         balances:
-          $ref: '#/components/schemas/AccountBalanceRecord'
+          allOf:
+            - $ref: '#/components/schemas/AccountBalanceRecord'
+          description: A record of account balances indexed by currency code. Each key in this record is a currency identifier (e.g., "ofcbtc", "ofceth", "ofcusdc"), and the corresponding value is an AccountBalance object containing the available and held amounts for that currency.
         networkBalances:
-          $ref: '#/components/schemas/NetworkAccountBalanceRecordForClient'
+          allOf:
+            - $ref: '#/components/schemas/NetworkAccountBalanceRecordForClient'
+          description: 'Detailed information about balances across all your partner connections. This record contains: - Keys: Connection IDs that uniquely identify each connection - Values: Detailed information about the connection and its balances'
       required:
         - clientId
         - balances
@@ -54037,6 +54910,7 @@ components:
       properties:
         payload:
           type: string
+          description: The payload string that should be signed. This string should be cryptographically signed by the client and included in the subsequent deallocation request along with the signature.
       required:
         - payload
     V1ClientGetSettlementOkPayload:
@@ -54044,13 +54918,21 @@ components:
       type: object
       properties:
         settlement:
-          $ref: '#/components/schemas/V1SettlementOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1SettlementOutput'
+          description: The complete settlement object.
         settlementTransfers:
-          $ref: '#/components/schemas/MaskedV1SettlementTransfersOutput'
+          allOf:
+            - $ref: '#/components/schemas/MaskedV1SettlementTransfersOutput'
+          description: The settlement transfers associated with the settlement.
         settlingDisputes:
-          $ref: '#/components/schemas/V1AssignedDisputesWithClosureOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1AssignedDisputesWithClosureOutput'
+          description: The disputes that are being settled as part of this settlement.
         settlementDisputes:
-          $ref: '#/components/schemas/V1DisputesWithClosureOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1DisputesWithClosureOutput'
+          description: The disputes that were raised on this settlement.
       required:
         - settlement
         - settlementTransfers
@@ -54067,28 +54949,37 @@ components:
     V1ClientsOutput:
       title: V1ClientsOutput
       type: object
+      description: Output representation of a OES client. Contains all client properties with ISO-formatted date strings for timestamps.
       properties:
         id:
           type: string
+          description: The id of the client.
           title: uuid
         enterpriseId:
           type: string
+          description: The enterprise ID that this client is associated with.
           minLength: 1
         trustOrg:
-          $ref: '#/components/schemas/TrustOrg'
+          allOf:
+            - $ref: '#/components/schemas/TrustOrg'
+          description: The trust organization that this client is associated with.
         walletId:
           type: string
+          description: The Go Account ID that the client is associated with
           minLength: 1
         createdAt:
           type: string
+          description: The timestamp when the client was created. (ISO 8601 format)
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The timestamp when the client was last updated. (ISO 8601 format)
           format: date-time
           title: ISO Date String
         balanceAlertLastSent:
           type: string
+          description: Last time a balance alert was sent. Typically will be undefined.
       required:
         - id
         - enterpriseId
@@ -54101,7 +54992,9 @@ components:
       type: object
       properties:
         client:
-          $ref: '#/components/schemas/V1ClientsOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1ClientsOutput'
+          description: The complete client object that was successfully created.
       required:
         - client
     V1ClosedDisputeWithClosureOutput:
@@ -54124,33 +55017,43 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the settlement. This is a UUID that uniquely identifies the settlement record.
           title: uuid
         partnerId:
           type: string
+          description: The unique identifier of the partner the settlement is associated with. This is a UUID that uniquely identifies the partner.
           title: uuid
         externalId:
           type: string
+          description: External identifier provided by the partner when creating the settlement.
           minLength: 1
         status:
           type: string
           enum:
             - completed
         settlementType:
-          $ref: '#/components/schemas/SettlementTypes'
+          allOf:
+            - $ref: '#/components/schemas/SettlementTypes'
+          description: 'The type of settlement. Possible values are: - onchain: The settlement is on-chain. - offchain: The settlement is off-chain.'
         reconciled:
           type: boolean
+          description: Whether or not the settlement is reconciled against trade data. Currently there are no reconciled settlements. This field is always false.
         initiatedBy:
           type: string
+          description: Id of the user which initiated the settlement.
           minLength: 1
         notes:
           type: string
+          description: The notes associated with the settlement. This is a free-form text field that can contain any additional information about the settlement.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the settlement was created. This is a timestamp in ISO 8601 format.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the settlement was last updated. This is a timestamp in ISO 8601 format.
           format: date-time
           title: ISO Date String
         finalizedAt:
@@ -54159,16 +55062,21 @@ components:
           title: ISO Date String
         rtId:
           type: string
+          description: Routed transaction id associated with the settlement. This is a UUID that uniquely identifies the routed transaction. This field is only populated for on-chain settlements for partners with automation enabled.
         lossSLAAlertSent:
           type: boolean
+          description: Whether or not an alert has been sent if loss settlement SLA is close to being breached. Only relevant for on-chain settlements.
         gainSLAAlertSent:
           type: boolean
+          description: Whether or not an alert has been sent if gain settlement SLA is close to being breached. Only relevant for on-chain settlements.
         cutoffAt:
           type: string
+          description: The date and time of the newest trade being settled in the partner system. This is a timestamp in ISO 8601 format. This field is only populated for dispute enabled partners.
           format: date-time
           title: ISO Date String
         disputed:
           type: boolean
+          description: Whether or not a dispute was raised on this settlement.
       required:
         - id
         - partnerId
@@ -54237,45 +55145,58 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the connection. This UUID uniquely identifies the connection between a client and partner.
           title: uuid
         name:
           type: string
+          description: A user-friendly name for the connection. This is a descriptive label provided by the client for this particular connection.
           minLength: 1
         clientId:
           type: string
+          description: The unique identifier of the client associated with this connection. This UUID uniquely identifies the client organization within the BitGo system.
           title: uuid
         partnerId:
           type: string
+          description: The unique identifier of the partner associated with this connection. This UUID uniquely identifies the partner organization within the BitGo system.
           title: uuid
         networkAccountId:
           type: string
+          description: The unique identifier of the network account associated with this connection. This references the account where allocated funds are held for this connection.
           title: uuid
         createdAt:
           type: string
+          description: The date and time when the connection was created. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the connection was last updated. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         active:
           type: boolean
+          description: Indicates whether the connection is active. When false, the connection is deactivated and no operations (like allocations) can be performed on it. When true, the connection is active and operations can be performed on it.
         proof:
           type: string
+          description: The cryptographic proof associated with the connection. This is used for verifying the authenticity of the connection. Derived from the payload and signature submitted when the connection was created.
           minLength: 1
         nonce:
           type: string
+          description: A nonce value used in the connection cryptographic operations. This provides additional security for connection operations.
           minLength: 1
         partnersConnectionId:
           nullable: true
           type: string
           minLength: 1
+          description: The partner's identifier for this connection. This is the identifier used by the partner in their system to refer to this connection. Will be null if the connection hasn't been initialized by the partner.
         partnersClientId:
           nullable: true
           type: string
           minLength: 1
+          description: The partner's identifier for the client. This is the identifier used by the partner in their system to refer to the client. Will be null if the connection hasn't been initialized by the partner.
         initialized:
           type: boolean
+          description: Indicates whether the connection has been initialized by the partner. When true, the partner has established this connection on their side. When false, the connection is pending initialization by the partner.
       required:
         - id
         - name
@@ -54293,9 +55214,12 @@ components:
     V1ConnectionPayload:
       title: V1ConnectionPayload
       type: object
+      description: API response payload containing a single connection. This structure wraps the connection data for API responses.
       properties:
         connection:
-          $ref: '#/components/schemas/V1ConnectionOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1ConnectionOutput'
+          description: The connection details. Contains all information about a specific client-partner connection.
       required:
         - connection
     V1ConnectionResponse:
@@ -54387,45 +55311,58 @@ components:
             properties:
               id:
                 type: string
+                description: The unique identifier of the connection. This UUID uniquely identifies the connection between a client and partner.
                 title: uuid
               name:
                 type: string
+                description: A user-friendly name for the connection. This is a descriptive label provided by the client for this particular connection.
                 minLength: 1
               clientId:
                 type: string
+                description: The unique identifier of the client associated with this connection. This UUID uniquely identifies the client organization within the BitGo system.
                 title: uuid
               partnerId:
                 type: string
+                description: The unique identifier of the partner associated with this connection. This UUID uniquely identifies the partner organization within the BitGo system.
                 title: uuid
               networkAccountId:
                 type: string
+                description: The unique identifier of the network account associated with this connection. This references the account where allocated funds are held for this connection.
                 title: uuid
               createdAt:
                 type: string
+                description: The date and time when the connection was created. Represented as an ISO 8601 formatted date string.
                 format: date-time
                 title: ISO Date String
               updatedAt:
                 type: string
+                description: The date and time when the connection was last updated. Represented as an ISO 8601 formatted date string.
                 format: date-time
                 title: ISO Date String
               active:
                 type: boolean
+                description: Indicates whether the connection is active. When false, the connection is deactivated and no operations (like allocations) can be performed on it. When true, the connection is active and operations can be performed on it.
               proof:
                 type: string
+                description: The cryptographic proof associated with the connection. This is used for verifying the authenticity of the connection. Derived from the payload and signature submitted when the connection was created.
                 minLength: 1
               nonce:
                 type: string
+                description: A nonce value used in the connection cryptographic operations. This provides additional security for connection operations.
                 minLength: 1
               partnersConnectionId:
                 nullable: true
                 type: string
                 minLength: 1
+                description: The partner's identifier for this connection. This is the identifier used by the partner in their system to refer to this connection. Will be null if the connection hasn't been initialized by the partner.
               partnersClientId:
                 nullable: true
                 type: string
                 minLength: 1
+                description: The partner's identifier for the client. This is the identifier used by the partner in their system to refer to the client. Will be null if the connection hasn't been initialized by the partner.
               initialized:
                 type: boolean
+                description: Indicates whether the connection has been initialized by the partner. When true, the partner has established this connection on their side. When false, the connection is pending initialization by the partner.
             required:
               - id
               - name
@@ -54447,7 +55384,9 @@ components:
       type: object
       properties:
         deallocation:
-          $ref: '#/components/schemas/V1ClearedAllocation'
+          allOf:
+            - $ref: '#/components/schemas/V1ClearedAllocation'
+          description: The deallocation record in its cleared state. This contains all deallocation details with a status of 'cleared', indicating the allocation was successfully completed.
       required:
         - deallocation
     V1DeallocationReleasedPayload:
@@ -54455,7 +55394,9 @@ components:
       type: object
       properties:
         deallocation:
-          $ref: '#/components/schemas/V1ReleasedAllocation'
+          allOf:
+            - $ref: '#/components/schemas/V1ReleasedAllocation'
+          description: The deallocation record in its released state. This contains all deallocation details with a status of 'released', indicating the allocation was not completed and funds were returned. The reason field will explain why the deallocation was released.
       required:
         - deallocation
     V1DeallocationReleasedWithErrorPostPayload:
@@ -54550,9 +55491,12 @@ components:
       type: object
       properties:
         supportedCurrencies:
-          $ref: '#/components/schemas/V1SupportedCurrencies'
+          allOf:
+            - $ref: '#/components/schemas/V1SupportedCurrencies'
+          description: Record where the keys represent either partner IDs. The values are arrays of currency metadata objects that describe the currencies supported by that organization.
         domain:
           type: string
+          description: The domain name of the API server that processed the request. Will always be 'bitgo-network'.
           minLength: 1
       required:
         - supportedCurrencies
@@ -54581,7 +55525,9 @@ components:
       type: object
       properties:
         deposits:
-          $ref: '#/components/schemas/ExtDepositsResp'
+          allOf:
+            - $ref: '#/components/schemas/ExtDepositsResp'
+          description: Array of deposit records that were created or retrieved.
       required:
         - deposits
     V1FailedSettlementOutput:
@@ -54590,12 +55536,15 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the settlement. This is a UUID that uniquely identifies the settlement record.
           title: uuid
         partnerId:
           type: string
+          description: The unique identifier of the partner the settlement is associated with. This is a UUID that uniquely identifies the partner.
           title: uuid
         externalId:
           type: string
+          description: External identifier provided by the partner when creating the settlement.
           minLength: 1
         reason:
           type: string
@@ -54605,35 +55554,47 @@ components:
           enum:
             - failed
         settlementType:
-          $ref: '#/components/schemas/SettlementTypes'
+          allOf:
+            - $ref: '#/components/schemas/SettlementTypes'
+          description: 'The type of settlement. Possible values are: - onchain: The settlement is on-chain. - offchain: The settlement is off-chain.'
         reconciled:
           type: boolean
+          description: Whether or not the settlement is reconciled against trade data. Currently there are no reconciled settlements. This field is always false.
         initiatedBy:
           type: string
+          description: Id of the user which initiated the settlement.
           minLength: 1
         notes:
           type: string
+          description: The notes associated with the settlement. This is a free-form text field that can contain any additional information about the settlement.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the settlement was created. This is a timestamp in ISO 8601 format.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the settlement was last updated. This is a timestamp in ISO 8601 format.
           format: date-time
           title: ISO Date String
         rtId:
           type: string
+          description: Routed transaction id associated with the settlement. This is a UUID that uniquely identifies the routed transaction. This field is only populated for on-chain settlements for partners with automation enabled.
         lossSLAAlertSent:
           type: boolean
+          description: Whether or not an alert has been sent if loss settlement SLA is close to being breached. Only relevant for on-chain settlements.
         gainSLAAlertSent:
           type: boolean
+          description: Whether or not an alert has been sent if gain settlement SLA is close to being breached. Only relevant for on-chain settlements.
         cutoffAt:
           type: string
+          description: The date and time of the newest trade being settled in the partner system. This is a timestamp in ISO 8601 format. This field is only populated for dispute enabled partners.
           format: date-time
           title: ISO Date String
         disputed:
           type: boolean
+          description: Whether or not a dispute was raised on this settlement.
       required:
         - id
         - partnerId
@@ -54652,7 +55613,9 @@ components:
       type: object
       properties:
         settlement:
-          $ref: '#/components/schemas/V1SettlementOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1SettlementOutput'
+          description: The complete settlement object.
         settlementTransfers:
           type: array
           items:
@@ -54660,44 +55623,59 @@ components:
             properties:
               id:
                 type: string
+                description: The unique identifier of the settlement transfer. This is a UUID that uniquely identifies the settlement transfer record.
                 title: uuid
               createdAt:
                 type: string
+                description: The date and time when the settlement transfer was created. Represented as an ISO 8601 formatted date string.
                 format: date-time
                 title: ISO Date String
               updatedAt:
                 type: string
+                description: The date and time when the settlement transfer was last updated. Represented as an ISO 8601 formatted date string.
                 format: date-time
                 title: ISO Date String
               currency:
                 type: string
+                description: The currency involved in the settlement movement.
                 minLength: 1
               settlementId:
                 type: string
+                description: The unique identifier of the settlement the settlement transfer is associated with. This is a UUID that uniquely identifies the settlement.
                 title: uuid
               disputeClosureId:
                 type: string
+                description: The unique identifier of the dispute closure the settlement transfer was created from. This is a UUID that uniquely identifies dispute closure if the transfer was created as a result of closing a dispute.
                 title: uuid
               quantity:
-                $ref: '#/components/schemas/NonZeroBigAmount'
+                allOf:
+                  - $ref: '#/components/schemas/NonZeroBigAmount'
+                description: The amount of currency being transferred in the settlement transfer. This is a non-zero value represented as a string. If the value is positive, that means funds were moved from the source account to the destination account. If the value is negative, that means funds were moved from the destination account to the source account.
               txIds:
                 type: array
                 items:
                   type: string
                   minLength: 1
+                  description: The transaction IDs associated with the settlement transfer. Only populated once the transfer is completed.
               status:
-                $ref: '#/components/schemas/SettlementTransferStatus'
+                allOf:
+                  - $ref: '#/components/schemas/SettlementTransferStatus'
+                description: 'The status of the settlement transfer. Possible values and implications are: - pending: The transfer is pending and has not yet been processed. - pending_onchain: The transfer is pending on-chain movement (only relevant to on-chain settlements). - onchain_initiated: The transfer has been initiated on-chain (only relevant to on-chain settlements). - onchain_failed: The on-chain transfer has failed (only relevant to on-chain settlements). - completed: The transfer has been completed successfully. - failed: The transfer has failed. - rejected: The transfer has been rejected. - disputed: The transfer is disputed.'
               sourceTradingAccountId:
                 type: string
+                description: The go account id of the source party.
                 minLength: 1
               sourceNetworkAccountId:
                 type: string
+                description: The network account id of the source party.
                 title: uuid
               destinationTradingAccountId:
                 type: string
+                description: The go account id of the destination party.
                 minLength: 1
               destinationNetworkAccountId:
                 type: string
+                description: The network account id of the destination party.
                 title: uuid
             required:
               - id
@@ -54711,10 +55689,15 @@ components:
               - sourceTradingAccountId
               - destinationTradingAccountId
               - destinationNetworkAccountId
+            description: The settlement transfers associated with the settlement.
         settlingDisputes:
-          $ref: '#/components/schemas/V1AssignedDisputesWithClosureOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1AssignedDisputesWithClosureOutput'
+          description: The disputes that are being settled as part of this settlement.
         settlementDisputes:
-          $ref: '#/components/schemas/V1DisputesWithClosureOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1DisputesWithClosureOutput'
+          description: The disputes that were raised on this settlement.
       required:
         - settlement
         - settlementTransfers
@@ -54981,20 +55964,29 @@ components:
         type: object
         properties:
           held:
-            $ref: '#/components/schemas/NonNegativeBigAmount'
+            allOf:
+              - $ref: '#/components/schemas/NonNegativeBigAmount'
+            description: Amount of the specified currency held (encumbered) in the account. The amount is represented as a non-negative integer or decimal string depending on partner configuration.
           available:
-            $ref: '#/components/schemas/NonNegativeBigAmount'
+            allOf:
+              - $ref: '#/components/schemas/NonNegativeBigAmount'
+            description: Amount of the specified currency available in the account. The amount is represented as a non-negative integer or decimal string depending on partner configuration.
         required:
           - held
           - available
+      description: A record of account balances for a partner, indexed by the partner's currency codes. Each key in this record is a currency identifier in the partner's naming convention, and the corresponding value contains the available and held amounts for that currency. Note that currency codes here may differ from BitGo's internal currency codes, as they are mapped to match the partner's expected currency identifiers.
     V1PartnerBalancesGetPayload:
       title: V1PartnerBalancesGetPayload
       type: object
       properties:
         networkBalances:
-          $ref: '#/components/schemas/V1PartnerNetworkAccountBalanceRecordOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1PartnerNetworkAccountBalanceRecordOutput'
+          description: 'Detailed information about balances across all client connections to this partner. This record contains: - Keys: Connection IDs that uniquely identify each connection - Values: Detailed information about the connection and its balances This provides a comprehensive view of client funds allocated to each connection and their current availability.'
         balances:
-          $ref: '#/components/schemas/V1PartnerAccountBalanceRecordOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1PartnerAccountBalanceRecordOutput'
+          description: 'Information on the balances for the partner''s own BitGo account. This object, when present, contains: - Keys: Currency identifiers (e.g., "BTC", "ETH", "USDC") in the partner''s currency naming convention - Values: Balance information including available and held amounts for each currency This allows partners to see their own BitGo account balances alongside client connection balances, providing a complete view of their financial position within the BitGo system. Note: This field may be omitted if the partner doesn''t have permission to view their own BitGo account balances.'
       required:
         - networkBalances
     V1PartnerExtDepositsSigningPayload:
@@ -55003,6 +55995,7 @@ components:
       properties:
         payload:
           type: string
+          description: String payload that should be signed with the partner's private key. This signed payload should be included when submitting deposit information.
       required:
         - payload
     V1PartnerIncompleteSettlementOrErrorPayload:
@@ -55018,20 +56011,26 @@ components:
         properties:
           clientId:
             type: string
+            description: Unique identifier of the client associated with this connection. This UUID uniquely identifies the client organization within the BitGo system that has allocated funds to this connection.
             title: uuid
           partnerId:
             type: string
+            description: Unique identifier of the partner associated with this connection. This UUID uniquely identifies your partner organization within the BitGo system.
             title: uuid
           partnersConnectionId:
             type: string
+            description: External identifier of the connection as known by your partner system. This is your own identifier for this connection, which you can use to correlate with your internal systems.
             minLength: 1
           balances:
-            $ref: '#/components/schemas/V1PartnerAccountBalanceRecordOutput'
+            allOf:
+              - $ref: '#/components/schemas/V1PartnerAccountBalanceRecordOutput'
+            description: 'The balances for this connection, indexed by currency code. This object contains: - Keys: Currency identifiers in the partner''s naming convention - Values: Balance information including available and held amounts These balances represent funds that have been allocated by the client to this specific connection and are available for operations by the partner.'
         required:
           - clientId
           - partnerId
           - partnersConnectionId
           - balances
+      description: A record of network account balances for a partner, indexed by connection ID. Each key in this record is a connection ID, and the corresponding value contains details about the connection and its balances across different currencies.
     V1PartnerSettlementIncompletePayload:
       title: V1PartnerSettlementIncompletePayload
       type: object
@@ -55078,36 +56077,50 @@ components:
             properties:
               id:
                 type: string
+                description: Unique identifier for the partner.
                 title: uuid
               name:
                 type: string
+                description: Display name of the partner.
                 minLength: 1
               institutionId:
                 type: string
+                description: Optional identifier linking the partner to an institution in external systems.
               institutionIdentifier:
                 type: string
+                description: Optional string identifier for the institution.
               connectionKeySchema:
-                $ref: '#/components/schemas/PartnerConnectionKeySchema'
+                allOf:
+                  - $ref: '#/components/schemas/PartnerConnectionKeySchema'
+                description: Schema defining which connection request schema is required for this partner. Can be 'token', 'tokenAndSignature', 'apiKeyAndSecret', or 'clearloop'.
               active:
                 type: boolean
+                description: Boolean flag indicating whether the partner is currently active in the system.
               settlementTransactionRouteId:
                 type: string
+                description: Optional identifier for the settlement transaction route associated with this partner.
               publicKey:
                 type: string
+                description: Optional RSA public key used for secure communication with the partner.
               enterpriseId:
                 type: string
+                description: Enterprise ID associated with this partner, if any.
               clientDisputeWindowMinutes:
                 type: number
+                description: Time window in minutes during which clients can dispute transactions.
               topUpWindowMinutes:
                 type: number
+                description: Time window in minutes after which dispute window ends for processing top-up operations.
               stablePartner:
                 type: boolean
+                description: Flag indicating whether the partner has demonstrated operational stability. Used when partner is initially launched to demonstrate that the partner is still in beta and not yet stable.
             required:
               - id
               - name
               - connectionKeySchema
               - active
               - stablePartner
+            description: Array of partner objects with limited properties and stability indicators.
       required:
         - partners
     V1PartnersOutput:
@@ -55133,10 +56146,12 @@ components:
           $ref: '#/components/schemas/PartnerConnectionKeySchema'
         createdAt:
           type: string
+          description: Timestamp when the partner was created in the system.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: Timestamp of the most recent update to the partner record.
           format: date-time
           title: ISO Date String
         clientId:
@@ -55154,6 +56169,7 @@ components:
           type: number
         publicKey:
           type: string
+          description: Optional RSA public key associated with the partner. This key is used for secure communication and encrypting connection keys. If not supplied, encryption is not required for the partner.
       required:
         - id
         - enterpriseId
@@ -55170,7 +56186,9 @@ components:
       type: object
       properties:
         partner:
-          $ref: '#/components/schemas/V1PartnersOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1PartnersOutput'
+          description: The complete partner object that was successfully created.
       required:
         - partner
     V1PendingApproval:
@@ -55279,47 +56297,62 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the settlement. This is a UUID that uniquely identifies the settlement record.
           title: uuid
         partnerId:
           type: string
+          description: The unique identifier of the partner the settlement is associated with. This is a UUID that uniquely identifies the partner.
           title: uuid
         externalId:
           type: string
+          description: External identifier provided by the partner when creating the settlement.
           minLength: 1
         status:
           type: string
           enum:
             - pending
         settlementType:
-          $ref: '#/components/schemas/SettlementTypes'
+          allOf:
+            - $ref: '#/components/schemas/SettlementTypes'
+          description: 'The type of settlement. Possible values are: - onchain: The settlement is on-chain. - offchain: The settlement is off-chain.'
         reconciled:
           type: boolean
+          description: Whether or not the settlement is reconciled against trade data. Currently there are no reconciled settlements. This field is always false.
         initiatedBy:
           type: string
+          description: Id of the user which initiated the settlement.
           minLength: 1
         notes:
           type: string
+          description: The notes associated with the settlement. This is a free-form text field that can contain any additional information about the settlement.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the settlement was created. This is a timestamp in ISO 8601 format.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the settlement was last updated. This is a timestamp in ISO 8601 format.
           format: date-time
           title: ISO Date String
         rtId:
           type: string
+          description: Routed transaction id associated with the settlement. This is a UUID that uniquely identifies the routed transaction. This field is only populated for on-chain settlements for partners with automation enabled.
         lossSLAAlertSent:
           type: boolean
+          description: Whether or not an alert has been sent if loss settlement SLA is close to being breached. Only relevant for on-chain settlements.
         gainSLAAlertSent:
           type: boolean
+          description: Whether or not an alert has been sent if gain settlement SLA is close to being breached. Only relevant for on-chain settlements.
         cutoffAt:
           type: string
+          description: The date and time of the newest trade being settled in the partner system. This is a timestamp in ISO 8601 format. This field is only populated for dispute enabled partners.
           format: date-time
           title: ISO Date String
         disputed:
           type: boolean
+          description: Whether or not a dispute was raised on this settlement.
       required:
         - id
         - partnerId
@@ -55346,12 +56379,15 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the settlement. This is a UUID that uniquely identifies the settlement record.
           title: uuid
         partnerId:
           type: string
+          description: The unique identifier of the partner the settlement is associated with. This is a UUID that uniquely identifies the partner.
           title: uuid
         externalId:
           type: string
+          description: External identifier provided by the partner when creating the settlement.
           minLength: 1
         reason:
           type: string
@@ -55361,21 +56397,28 @@ components:
           enum:
             - rejected
         settlementType:
-          $ref: '#/components/schemas/SettlementTypes'
+          allOf:
+            - $ref: '#/components/schemas/SettlementTypes'
+          description: 'The type of settlement. Possible values are: - onchain: The settlement is on-chain. - offchain: The settlement is off-chain.'
         reconciled:
           type: boolean
+          description: Whether or not the settlement is reconciled against trade data. Currently there are no reconciled settlements. This field is always false.
         initiatedBy:
           type: string
+          description: Id of the user which initiated the settlement.
           minLength: 1
         notes:
           type: string
+          description: The notes associated with the settlement. This is a free-form text field that can contain any additional information about the settlement.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the settlement was created. This is a timestamp in ISO 8601 format.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the settlement was last updated. This is a timestamp in ISO 8601 format.
           format: date-time
           title: ISO Date String
         finalizedAt:
@@ -55384,16 +56427,21 @@ components:
           title: ISO Date String
         rtId:
           type: string
+          description: Routed transaction id associated with the settlement. This is a UUID that uniquely identifies the routed transaction. This field is only populated for on-chain settlements for partners with automation enabled.
         lossSLAAlertSent:
           type: boolean
+          description: Whether or not an alert has been sent if loss settlement SLA is close to being breached. Only relevant for on-chain settlements.
         gainSLAAlertSent:
           type: boolean
+          description: Whether or not an alert has been sent if gain settlement SLA is close to being breached. Only relevant for on-chain settlements.
         cutoffAt:
           type: string
+          description: The date and time of the newest trade being settled in the partner system. This is a timestamp in ISO 8601 format. This field is only populated for dispute enabled partners.
           format: date-time
           title: ISO Date String
         disputed:
           type: boolean
+          description: Whether or not a dispute was raised on this settlement.
       required:
         - id
         - partnerId
@@ -55414,42 +56462,55 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the allocation/deallocation. This is a UUID that uniquely identifies the allocation record.
           title: uuid
         amount:
-          $ref: '#/components/schemas/PositiveAllocationAmount'
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: The amount of the allocation/deallocation. Contains both the currency identifier and the quantity in base units.
         connectionId:
           type: string
+          description: The unique identifier of the connection this allocation is for. This identifies a connection between a client and partner.
           title: uuid
         clientExternalId:
           type: string
+          description: External identifier provided by the client when creating the allocation/deallocation. Used for idempotence and correlation with client systems.
           minLength: 1
         partnerExternalId:
           type: string
+          description: External identifier of the allocation/deallocation in the partner system. May be populated when partners provide their own identifier for the allocation.
           minLength: 1
         initiatedBy:
           type: string
+          description: The identifier of the user that initiated the allocation/deallocation. Represents the user ID from the BitGo platform.
           minLength: 1
         notes:
           type: string
+          description: Optional notes provided by the client when creating the allocation/deallocation. Can contain additional context or information about the purpose of the allocation.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the allocation/deallocation was created. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the allocation/deallocation was last updated. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         retriable:
           type: boolean
           enum:
             - false
+          description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
         status:
           type: string
           enum:
             - released
+          description: 'Status of the allocation/deallocation. Possible values: - reserved: The amount for allocation/deallocation is reserved but operation has not completed. This is a temporary state awaiting final resolution. - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds have been successfully allocated. This indicates a successful operation. - released: Terminal state; the amount for allocation/deallocation is released and funds have been returned. This indicates the operation failed, either because balance was insufficient for allocation/deallocation, or that the partner rejected the request to allocate/deallocate.'
         reason:
           type: string
+          description: The reason that the allocation/deallocation is not cleared. Provides a descriptive explanation for why the allocation is in the reserved state. Will not be defined if the allocation is cleared.
           minLength: 1
       required:
         - id
@@ -55480,9 +56541,12 @@ components:
     V1ReservedDeallocationsPostPayload:
       title: V1ReservedDeallocationsPostPayload
       type: object
+      description: Response payload for a deallocation in the reserved state. Returned when a deallocation request has been accepted but is still being processed.
       properties:
         deallocation:
-          $ref: '#/components/schemas/V1ReservedAllocationOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1ReservedAllocationOutput'
+          description: The deallocation record in its reserved state. This contains all deallocation details with a status of 'reserved', which could be either retriable or non-retriable based on the retriable field.
       required:
         - deallocation
     V1ReservedNonRetriableAllocationOutput:
@@ -55491,43 +56555,56 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the allocation/deallocation. This is a UUID that uniquely identifies the allocation record.
           title: uuid
         amount:
-          $ref: '#/components/schemas/PositiveAllocationAmount'
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: The amount of the allocation/deallocation. Contains both the currency identifier and the quantity in base units.
         connectionId:
           type: string
+          description: The unique identifier of the connection this allocation is for. This identifies a connection between a client and partner.
           title: uuid
         clientExternalId:
           type: string
+          description: External identifier provided by the client when creating the allocation/deallocation. Used for idempotence and correlation with client systems.
           minLength: 1
         partnerExternalId:
           type: string
+          description: External identifier of the allocation/deallocation in the partner system. May be populated when partners provide their own identifier for the allocation.
           minLength: 1
         initiatedBy:
           type: string
+          description: The identifier of the user that initiated the allocation/deallocation. Represents the user ID from the BitGo platform.
           minLength: 1
         notes:
           type: string
+          description: Optional notes provided by the client when creating the allocation/deallocation. Can contain additional context or information about the purpose of the allocation.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the allocation/deallocation was created. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the allocation/deallocation was last updated. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         retriable:
           type: boolean
           enum:
             - false
+          description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
         reason:
           type: string
+          description: The reason that the allocation/deallocation is not cleared. Provides a descriptive explanation for why the allocation is in the reserved state. Will not be defined if the allocation is cleared.
           minLength: 1
         status:
           type: string
           enum:
             - reserved
+          description: 'Status of the allocation/deallocation. Possible values: - reserved: The amount for allocation/deallocation is reserved but operation has not completed. This is a temporary state awaiting final resolution. - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds have been successfully allocated. This indicates a successful operation. - released: Terminal state; the amount for allocation/deallocation is released and funds have been returned. This indicates the operation failed, either because balance was insufficient for allocation/deallocation, or that the partner rejected the request to allocate/deallocate.'
       required:
         - id
         - amount
@@ -55542,9 +56619,12 @@ components:
     V1ReservedNonRetriableAllocationsPostPayload:
       title: V1ReservedNonRetriableAllocationsPostPayload
       type: object
+      description: Response payload for an allocation that is in a reserved state but is not retriable. This represents a pending allocation that is being processed asynchronously.
       properties:
         allocation:
-          $ref: '#/components/schemas/V1ReservedNonRetriableAllocationOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1ReservedNonRetriableAllocationOutput'
+          description: The allocation record in its reserved, non-retriable state. This contains all allocation details with a status of 'reserved' and retriable=false, indicating the allocation is being processed asynchronously and does not require a retry to progress.
       required:
         - allocation
     V1ReservedRetriableAllocationOutput:
@@ -55553,43 +56633,56 @@ components:
       properties:
         id:
           type: string
+          description: The unique identifier of the allocation/deallocation. This is a UUID that uniquely identifies the allocation record.
           title: uuid
         amount:
-          $ref: '#/components/schemas/PositiveAllocationAmount'
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: The amount of the allocation/deallocation. Contains both the currency identifier and the quantity in base units.
         connectionId:
           type: string
+          description: The unique identifier of the connection this allocation is for. This identifies a connection between a client and partner.
           title: uuid
         clientExternalId:
           type: string
+          description: External identifier provided by the client when creating the allocation/deallocation. Used for idempotence and correlation with client systems.
           minLength: 1
         partnerExternalId:
           type: string
+          description: External identifier of the allocation/deallocation in the partner system. May be populated when partners provide their own identifier for the allocation.
           minLength: 1
         initiatedBy:
           type: string
+          description: The identifier of the user that initiated the allocation/deallocation. Represents the user ID from the BitGo platform.
           minLength: 1
         notes:
           type: string
+          description: Optional notes provided by the client when creating the allocation/deallocation. Can contain additional context or information about the purpose of the allocation.
           minLength: 1
         createdAt:
           type: string
+          description: The date and time when the allocation/deallocation was created. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         updatedAt:
           type: string
+          description: The date and time when the allocation/deallocation was last updated. Represented as an ISO 8601 formatted date string.
           format: date-time
           title: ISO Date String
         retriable:
           type: boolean
           enum:
             - true
+          description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
         reason:
           type: string
+          description: The reason that the allocation/deallocation is not cleared. Provides a descriptive explanation for why the allocation is in the reserved state. Will not be defined if the allocation is cleared.
           minLength: 1
         status:
           type: string
           enum:
             - reserved
+          description: 'Status of the allocation/deallocation. Possible values: - reserved: The amount for allocation/deallocation is reserved but operation has not completed. This is a temporary state awaiting final resolution. - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds have been successfully allocated. This indicates a successful operation. - released: Terminal state; the amount for allocation/deallocation is released and funds have been returned. This indicates the operation failed, either because balance was insufficient for allocation/deallocation, or that the partner rejected the request to allocate/deallocate.'
       required:
         - id
         - amount
@@ -55606,7 +56699,9 @@ components:
       type: object
       properties:
         allocation:
-          $ref: '#/components/schemas/V1ReservedRetriableAllocationOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1ReservedRetriableAllocationOutput'
+          description: The allocation record in its reserved, retriable state. This contains all allocation details with a status of 'reserved' and retriable=true, indicating a temporary issue that clients should retry.
       required:
         - allocation
     V1ReservedRetriableDeallocationOutput:
@@ -55614,7 +56709,9 @@ components:
       type: object
       properties:
         deallocation:
-          $ref: '#/components/schemas/V1ReservedRetriableAllocationOutput'
+          allOf:
+            - $ref: '#/components/schemas/V1ReservedRetriableAllocationOutput'
+          description: The retriable reserved deallocation details. Contains information about the deallocation that is in the reserved state (pending) and can be retried if needed.
       required:
         - deallocation
     V1SettlementOutput:
