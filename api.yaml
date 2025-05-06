@@ -17489,6 +17489,18 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/Id'
+        - name: orgId
+          description: The organization ID to filter the users enterprises.
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: maxEnterprises
+          description: Specifies the maximum number of enterprises to return. An organization ID must be provided. The maximum limit is 50 enterprises.
+          in: query
+          required: false
+          schema:
+            type: integer
       responses:
         '200':
           description: OK
@@ -35268,7 +35280,7 @@ components:
             - oneOf:
                 - $ref: '#/components/schemas/AddressString3'
                 - $ref: '#/components/schemas/Id'
-          description: Either a valid address or a wallet or enterprise id. Must be unique in this whitelist.
+          description: A valid blockchain address, wallet ID, enterprise ID, or organization ID. Must be unique in this whitelist.
         metaData:
           type: object
           description: Any data about this entry that is not used to determine when to enforce the policy
@@ -35278,7 +35290,7 @@ components:
               description: A client-specified label for this entry. Label must be unique or not set.
             owner:
               type: string
-              description: The legal owner of the address/ wallet/ enterprise
+              description: The legal owner of the address, wallet, enterprise, or organization.
               example: Legal Owner LLC
             address:
               type: string
@@ -37069,7 +37081,9 @@ components:
             value:
               type: string
           description: |
-            Memo for Stellar or EOS. Type is only required for memos in Stellar transactions. The memo contains optional extra information that can also be used to identify payments in Stellar or EOS.
+            Extra transaction information for CSPR, EOS, HBAR, RUNE, STX, TON, XLM, and XRP. Required for XLM transactions.
+
+            Note: For XRP this is the destination tag (DT). For CSPR this is the transfer ID.
         comment:
           type: string
           description: |
@@ -39980,6 +39994,12 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/AuditableItem'
+    EnterpriseKycState:
+      type: string
+      enum:
+        - unverified
+        - approved
+        - rejected
     EnterpriseMember:
       title: EnterpriseMember
       type: string
@@ -45899,7 +45919,9 @@ components:
         value:
           type: string
       description: |
-        Memo for Stellar or EOS. Type is only required for memos in Stellar transactions. The memo contains optional extra information that can also be used to identify payments in Stellar or EOS.
+        Extra transaction information for CSPR, EOS, HBAR, RUNE, STX, TON, XLM, and XRP. Required for XLM transactions.
+
+        Note: For XRP this is the destination tag (DT). For CSPR this is the transfer ID.
     MemoString:
       type: string
       maxLength: 100
@@ -56380,6 +56402,22 @@ components:
         state:
           type: string
           example: New York
+        enterprise:
+          type: array
+          description: enterprises associated with the user
+          items:
+            type: object
+            properties:
+              beneficialOwner:
+                type: boolean
+              acceptedInvite:
+                type: boolean
+              id:
+                $ref: '#/components/schemas/Id'
+              kycState:
+                $ref: '#/components/schemas/EnterpriseKycState'
+              organization:
+                $ref: '#/components/schemas/Id'
     User2:
       title: User
       allOf:
