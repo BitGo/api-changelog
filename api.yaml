@@ -3749,6 +3749,144 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/clients/settlement/disputes:
+    get:
+      summary: List Settlement Disputes for a Client
+      description: This API call allows clients to list disputes associated with their settlements.
+      operationId: listClientSettlementDisputes
+      tags:
+        - Settlement Disputes
+      parameters:
+        - name: settlementIds
+          description: Optional array of settlement ids. If provided will only return disputes with a disputedSettlementId matching one of the provided settlementIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of settlement ids. If provided will only return disputes with a disputedSettlementId matching one of the provided settlementIds.
+        - name: settledInSettlementIds
+          description: Optional array of settlement ids. If provided will only return disputes with a settledInSettlementId matching one of the provided settlementIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of settlement ids. If provided will only return disputes with a settledInSettlementId matching one of the provided settlementIds.
+        - name: connectionIds
+          description: Optional array of connection ids. If provided will only return disputes with a connectionId matching one of the provided connectionIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of connection ids. If provided will only return disputes with a connectionId matching one of the provided connectionIds.
+        - name: partnerIds
+          description: Optional array of partner ids. If provided will only return disputes for settlements initiated by a partner with an id matching one of the provided partnerIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of partner ids. If provided will only return disputes for settlements initiated by a partner with an id matching one of the provided partnerIds.
+        - name: closed
+          description: Optional boolean value indicating whether to include only closed/open disputes in the response. If true is provided, only closed disputes will be returned. If false is provided, only open disputes will be returned. If not provided, all disputes will be returned.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: disputeIds
+          description: Optional array of disputeIds. If provided will only return disputes with an id matching one of the provided disputeIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of disputeIds. If provided will only return disputes with an id matching one of the provided disputeIds.
+        - name: disputeClosureIds
+          description: Optional array of disputeClosureIds. If provided will only return disputes with a disputeClosureId matching one of the provided disputeClosureIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of disputeClosureIds. If provided will only return disputes with a disputeClosureId matching one of the provided disputeClosureIds.
+        - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
+          in: query
+          schema:
+            type: string
+            format: integer
+        - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
+          in: query
+          schema:
+            type: string
+        - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise that owns the allocation.
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1DisputesWithClosureWithTransfersOutput'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/clients/settlements:
     get:
       summary: List Client Settlements
@@ -3973,6 +4111,316 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/clients/settlements/{settlementId}/disputes:
+    post:
+      summary: Dispute a Settlement
+      description: This API call allows clients to dispute a settlement (if within the dispute window).
+      operationId: createClientSettlementDispute
+      tags:
+        - Settlement Disputes
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: settlementId
+          in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                connectionId:
+                  type: string
+                  title: uuid
+                reason:
+                  type: string
+                expectedTransfers:
+                  $ref: '#/components/schemas/ExpectedTransfersRequest'
+                payload:
+                  type: string
+                  minLength: 1
+                signature:
+                  type: string
+                  minLength: 1
+                nonce:
+                  type: string
+                  minLength: 1
+              required:
+                - connectionId
+                - expectedTransfers
+                - payload
+                - signature
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1DisputePayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/clients/settlements/disputes/{disputeId}:
+    put:
+      summary: Update a Settlement Dispute
+      description: This API call allows clients to retract or un-retract a dispute (if within the dispute window).
+      operationId: updateClientSettlementDispute
+      tags:
+        - Settlement Disputes
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: disputeId
+          description: The unique identifier of the dispute you want to update.
+          in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                connectionId:
+                  type: string
+                  description: The unique identifier of the connection under which the dispute was created.
+                  title: uuid
+                retracted:
+                  type: boolean
+                  description: Retraction state you wish to update to. - if true is supplied, your dispute will transition to a retracted state and the settlement transfers will be executed at the time of settlement provided it remains in a retracted state. - if false is supplied, your dispute will transition to a non-retracted state and the settlement transfers will not be executed at the time of settlement provided it remains in an non-retracted state.
+                reason:
+                  type: string
+                  description: The optional reason for retracting/un-retracting. If retracting, the reason will be persisted and returned in the retractionReason field on the disptue object. If un-retracting, the reason will be persisted and returned in the reason field on the dispute object.
+                  minLength: 1
+                expectedTransfers:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Optional object representing the transfers you expected to be included in the settlement that this dispute is assiciated with. If provided, the expectedTransfers property on the dispute will be updated based on the provided value. The object is represented as a record where the keys are currency identifiers and the values are the amounts you expected to be transacted for the associated currency represented in base units of the currency (i.e. sats for BTC, wei for ETH. A positive amount indicates that you expected to receive that amount of the associated currency, where a negative amount indicates that you expected to send that amount of the associated currencies. Zero values are not accepted; if you didn't expect to send or recieve a given currency, simply omit that currency from the expectedTransfers object.
+                payload:
+                  type: string
+                  description: Payload formed by stringifying the object containing all request body properties and the disputeId & settlementId parameters. The payload must be signed using your BitGo account's private key to create the signature parameter.
+                  minLength: 1
+                signature:
+                  type: string
+                  description: 'Digital signature of the payload parameter. This signature: - Must be created using your BitGo account''s private key. - Verifies that the request is authentic and hasn''t been tampered with. - Provides non-repudiation for the allocation request.'
+                  minLength: 1
+                nonce:
+                  type: string
+                  description: 'Unique nonce to prevent replay attacks. This value: - Must be unique for each request requiring a nonce. - Should be a cryptographically strong random value. - Is used as part of the request signing process. - Helps ensure the signature can only be used once.'
+                  minLength: 1
+              required:
+                - connectionId
+                - retracted
+                - payload
+                - signature
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1DisputePayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/clients/settlements/disputes/{disputeId}/close:
+    post:
+      summary: Close a dispute
+      description: |-
+        Close a dispute for cases when their dispute is invalid. 
+        If the dispute was valid and instructions need to be adjusted then a bitgo admin will need to close it.
+      operationId: V1ClientSettlementDisputeClosurePostRoute
+      tags:
+        - Settlement Disputes
+      parameters:
+        - name: enterpriseId
+          description: The enterprise identifier of the client. This identifies the client enterprise that owns the allocation.
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: disputeId
+          description: The unique identifier of the dispute to be closed. This is a UUID that uniquely identifies the dispute record.
+          in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                payload:
+                  type: string
+                  description: 'Payload formed by stringifying the object containing all other request properties. This includes: - enterpriseId - disputeId - notes - nonce The payload must be signed using your BitGo account''s private key to create the signature parameter.'
+                  minLength: 1
+                signature:
+                  type: string
+                  description: 'Digital signature of the payload parameter. This signature: - Must be created using your BitGo account''s private key. - Verifies that the request is authentic and hasn''t been tampered with. - Provides non-repudiation for the allocation request.'
+                  minLength: 1
+                notes:
+                  type: string
+                  description: Notes for why the dispute is being closed with the original settlement transfers
+                  minLength: 1
+                nonce:
+                  type: string
+                  description: 'Unique nonce to prevent replay attacks. This value: - Must be unique for each request requiring a nonce. - Should be a cryptographically strong random value. - Is used as part of the request signing process. - Helps ensure the signature can only be used once.'
+                  minLength: 1
+              required:
+                - payload
+                - signature
+                - notes
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ClientDisputeClosurePayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
           content:
             application/json:
               schema:
@@ -4877,6 +5325,183 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/partners/settlement/disputes:
+    get:
+      summary: List Settlement Disputes for a Partner
+      description: This API call allows partners to list disputes associated with their settlements.
+      operationId: listPartnerSettlementDisputes
+      tags:
+        - Settlement Disputes
+      parameters:
+        - name: settlementIds
+          description: Optional array of settlement ids. If provided will only return disputes with a disputedSettlementId matching one of the provided settlementIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of settlement ids. If provided will only return disputes with a disputedSettlementId matching one of the provided settlementIds.
+        - name: settledInSettlementIds
+          description: Optional array of settlement ids. If provided will only return disputes with a settledInSettlementId matching one of the provided settlementIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of settlement ids. If provided will only return disputes with a settledInSettlementId matching one of the provided settlementIds.
+        - name: connectionIds
+          description: Optional array of connection ids. If provided will only return disputes with a connectionId matching one of the provided connectionIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of connection ids. If provided will only return disputes with a connectionId matching one of the provided connectionIds.
+        - name: partnerIds
+          description: Optional array of partner ids. If provided will only return disputes for settlements initiated by a partner with an id matching one of the provided partnerIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of partner ids. If provided will only return disputes for settlements initiated by a partner with an id matching one of the provided partnerIds.
+        - name: closed
+          description: Optional boolean value indicating whether to include only closed/open disputes in the response. If true is provided, only closed disputes will be returned. If false is provided, only open disputes will be returned. If not provided, all disputes will be returned.
+          in: query
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+        - name: disputeIds
+          description: Optional array of disputeIds. If provided will only return disputes with an id matching one of the provided disputeIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of disputeIds. If provided will only return disputes with an id matching one of the provided disputeIds.
+        - name: disputeClosureIds
+          description: Optional array of disputeClosureIds. If provided will only return disputes with a disputeClosureId matching one of the provided disputeClosureIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of disputeClosureIds. If provided will only return disputes with a disputeClosureId matching one of the provided disputeClosureIds.
+        - name: pageNumber
+          description: The page number (integer) you wish to fetch. When provided, the API will skip pageSize * pageNumber records. Page numbers are zero-based, so the first page is 0. If not provided, defaults to 0.
+          in: query
+          schema:
+            type: string
+            format: integer
+        - name: pageSize
+          description: The page size (integer) you wish to fetch. When provided, the API will return at most pageSize records per page. If not provided, a default page size defined by the server will be used.
+          in: query
+          schema:
+            type: string
+        - name: settlementExternalIds
+          description: Optional array of settlement externalIds. If provided will only return disputes with a disputedSettlementId of a settlement with an externalId matching one of the provided settlementExternalIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              description: Optional array of settlement externalIds. If provided will only return disputes with a disputedSettlementId of a settlement with an externalId matching one of the provided settlementExternalIds.
+        - name: settledInSettlementExternalIds
+          description: Optional array of settlement externalIds. If provided will only return disputes with a settledInSettlementId of a settlement with an externalId matching one of the provided settlementExternalIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              description: Optional array of settlement externalIds. If provided will only return disputes with a settledInSettlementId of a settlement with an externalId matching one of the provided settlementExternalIds.
+        - name: showRetracted
+          description: Optional boolean value indicating whether to include only retracted disputes in the response. If true is provided, retracted and non-retracted disputes will be returned. If false is provided or not provided, only non-retracted disputes will be returned.
+          in: query
+          schema:
+            oneOf:
+              - type: string
+                enum:
+                  - 'true'
+                  - 'false'
+              - type: boolean
+                enum:
+                  - false
+        - name: clientIds
+          description: Optional array of clientIds. If provided will only return disputes for settlements initiated by a client with an id matching one of the provided clientIds.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Optional array of clientIds. If provided will only return disputes for settlements initiated by a client with an id matching one of the provided clientIds.
+        - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1DisputesWithClosureWithTransfersOutput'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/partners/settlements:
     get:
       summary: List Partner Settlements
@@ -5038,8 +5663,14 @@ paths:
     post:
       summary: Perform Partner Settlement
       description: |-
-        Partner route to perform a settlement. This endpoint allows partners to create new settlements
-        between client accounts, transferring funds according to the specified amounts.
+        Partner route to perform a settlement. This endpoint allows partners without disputes enabled to create
+        new settlements between client accounts, transferring funds according to the specified amounts.
+
+        Please note that this endpoint cannot be used by partners with disputes enabled, instead use the 
+        V2 Settlement endpoint. This is because dispute enabled partners must have an asyncronous settlement 
+        process to allow clients time to review the settlement and reconcile liabilities agains their trading 
+        activity on your platform. In the event that you cal this endpoint and you have disputes enabled, you 
+        will recieve a 403 response.
 
         Error scenarios:
         - 400: Invalid Request Error
@@ -5053,7 +5684,7 @@ paths:
 
         - 403: Permission Denied Error
         - Occurs when the authenticated partner doesn't have necessary permissions.
-        - Examples: Enterprise does not have OES license.
+        - Examples: Enterprise does not have OES license, partner is enabled for disputes.
 
         - 409: Conflict Error
         - Occurs when the request conflicts with current state.
@@ -38167,13 +38798,21 @@ components:
             anyOf:
               - $ref: '#/components/schemas/WhitelistedAddressValue'
               - $ref: '#/components/schemas/NonWhitelistedAddressValue'
-    DisputeClosureOutput:
-      title: DisputeClosureOutput
+    DisputeClosure:
+      title: DisputeClosure
       type: object
       properties:
         id:
           type: string
           title: uuid
+        createdAt:
+          oneOf:
+            - type: string
+            - {}
+        updatedAt:
+          oneOf:
+            - type: string
+            - {}
         closedBy:
           $ref: '#/components/schemas/ClosedByUnion'
         userId:
@@ -38182,8 +38821,41 @@ components:
         notes:
           type: string
           minLength: 1
+        payload:
+          type: string
+        signature:
+          type: string
+      required:
+        - id
+        - createdAt
+        - updatedAt
+        - closedBy
+        - userId
+        - notes
+    DisputeClosureOutput:
+      title: DisputeClosureOutput
+      type: object
+      properties:
+        id:
+          type: string
+          description: The unique identifier of the dispute closure.
+          title: uuid
+        closedBy:
+          allOf:
+            - $ref: '#/components/schemas/ClosedByUnion'
+          description: Who closed the dispute. - `admin` - The dispute was closed by an admin. - `client` - The dispute was closed by a client.
+        userId:
+          type: string
+          description: The id of the user who closed the dispute.
+          minLength: 1
+        notes:
+          type: string
+          description: notes entered by the user when closing the dispute.
+          minLength: 1
         adjustedSettlementTransfers:
-          $ref: '#/components/schemas/DisputedSettlementTransfersOutput'
+          allOf:
+            - $ref: '#/components/schemas/DisputedSettlementTransfersOutput'
+          description: The resulting settlement transfers generated when the dispute was closed
       required:
         - id
         - closedBy
@@ -38198,8 +38870,36 @@ components:
         properties:
           id:
             type: string
-            description: The unique identifier of the settlement transfer. This is a UUID that uniquely identifies the settlement transfer record.
+            description: The unique identifier of the settlement transfer.
             title: uuid
+          sourceTradingAccountId:
+            type: string
+            description: The go account id of the source party.
+            minLength: 1
+          destinationTradingAccountId:
+            type: string
+            description: The go account id of the destination party.
+            minLength: 1
+          destinationNetworkAccountId:
+            type: string
+            description: The network account id of the destination party.
+            title: uuid
+          disputeClosureId:
+            type: string
+            description: The unique identifier of the dispute closure the settlement transfer was created from. This is a UUID that uniquely identifies dispute closure if the transfer was created as a result of closing a dispute.
+            title: uuid
+          currency:
+            type: string
+            description: The currency involved in the settlement movement.
+            minLength: 1
+          quantity:
+            allOf:
+              - $ref: '#/components/schemas/NonZeroBigAmount'
+            description: The amount of currency being transferred in the settlement transfer. This is a non-zero value represented as a string. If the value is positive, that means funds were moved from the source account to the destination account. If the value is negative, that means funds were moved from the destination account to the source account.
+          status:
+            allOf:
+              - $ref: '#/components/schemas/SettlementTransferStatus'
+            description: 'The status of the settlement transfer. Possible values and implications are: - pending: The transfer is pending and has not yet been processed. - pending_onchain: The transfer is pending on-chain movement (only relevant to on-chain settlements). - onchain_initiated: The transfer has been initiated on-chain (only relevant to on-chain settlements). - onchain_failed: The on-chain transfer has failed (only relevant to on-chain settlements). - completed: The transfer has been completed successfully. - failed: The transfer has failed. - rejected: The transfer has been rejected. - disputed: The transfer is disputed.'
           createdAt:
             type: string
             description: The date and time when the settlement transfer was created. Represented as an ISO 8601 formatted date string.
@@ -38210,60 +38910,25 @@ components:
             description: The date and time when the settlement transfer was last updated. Represented as an ISO 8601 formatted date string.
             format: date-time
             title: ISO Date String
-          currency:
-            type: string
-            description: The currency involved in the settlement movement.
-            minLength: 1
           settlementId:
             type: string
             description: The unique identifier of the settlement the settlement transfer is associated with. This is a UUID that uniquely identifies the settlement. Will only be undefined if the settlement transfer is in `pending_settlement_assignment` status.
             title: uuid
-          disputeClosureId:
-            type: string
-            description: The unique identifier of the dispute closure the settlement transfer was created from. This is a UUID that uniquely identifies dispute closure if the transfer was created as a result of closing a dispute.
-            title: uuid
-          quantity:
-            allOf:
-              - $ref: '#/components/schemas/NonZeroBigAmount'
-            description: The amount of currency being transferred in the settlement transfer. This is a non-zero value represented as a string. If the value is positive, that means funds were moved from the source account to the destination account. If the value is negative, that means funds were moved from the destination account to the source account.
-          txIds:
-            type: array
-            items:
-              type: string
-              minLength: 1
-              description: The transaction IDs associated with the settlement transfer. Only populated once the transfer is completed.
-          status:
-            allOf:
-              - $ref: '#/components/schemas/SettlementTransferStatus'
-            description: 'The status of the settlement transfer. Possible values and implications are: - pending: The transfer is pending and has not yet been processed. - pending_onchain: The transfer is pending on-chain movement (only relevant to on-chain settlements). - onchain_initiated: The transfer has been initiated on-chain (only relevant to on-chain settlements). - onchain_failed: The on-chain transfer has failed (only relevant to on-chain settlements). - completed: The transfer has been completed successfully. - failed: The transfer has failed. - rejected: The transfer has been rejected. - disputed: The transfer is disputed.'
-          sourceTradingAccountId:
-            type: string
-            description: The go account id of the source party.
-            minLength: 1
           sourceNetworkAccountId:
             type: string
             description: The network account id of the source party.
             title: uuid
-          destinationTradingAccountId:
-            type: string
-            description: The go account id of the destination party.
-            minLength: 1
-          destinationNetworkAccountId:
-            type: string
-            description: The network account id of the destination party.
-            title: uuid
         required:
           - id
-          - createdAt
-          - updatedAt
-          - currency
-          - disputeClosureId
-          - quantity
-          - txIds
-          - status
           - sourceTradingAccountId
           - destinationTradingAccountId
           - destinationNetworkAccountId
+          - disputeClosureId
+          - currency
+          - quantity
+          - status
+          - createdAt
+          - updatedAt
     DistributedCustody:
       title: DistributedCustody
       type: object
@@ -40272,6 +40937,11 @@ components:
         - commitmentShare
     ExpectedTransfersOutput:
       title: ExpectedTransfersOutput
+      type: object
+      additionalProperties:
+        type: string
+    ExpectedTransfersRequest:
+      title: ExpectedTransfersRequest
       type: object
       additionalProperties:
         type: string
@@ -56375,6 +57045,14 @@ components:
           description: The payload string that should be signed. This string should be cryptographically signed by the client and included in the subsequent deallocation request along with the signature.
       required:
         - payload
+    V1ClientDisputeClosurePayload:
+      title: V1ClientDisputeClosurePayload
+      type: object
+      properties:
+        disputeClosure:
+          $ref: '#/components/schemas/DisputeClosure'
+      required:
+        - disputeClosure
     V1ClientGetSettlementOkPayload:
       title: V1ClientGetSettlementOkPayload
       type: object
@@ -56903,19 +57581,19 @@ components:
         disputedSettlementId:
           type: string
           title: uuid
-        settledInSettlementId:
-          type: string
-          title: uuid
         userId:
-          type: string
-          minLength: 1
-        reason:
           type: string
           minLength: 1
         expectedTransfers:
           $ref: '#/components/schemas/ExpectedTransfersOutput'
         retracted:
           type: boolean
+        settledInSettlementId:
+          type: string
+          title: uuid
+        reason:
+          type: string
+          minLength: 1
         retractedBy:
           type: string
           minLength: 1
@@ -56938,6 +57616,14 @@ components:
         - userId
         - expectedTransfers
         - retracted
+    V1DisputePayload:
+      title: V1DisputePayload
+      type: object
+      properties:
+        dispute:
+          $ref: '#/components/schemas/V1DisputeOutput'
+      required:
+        - dispute
     V1DisputesWithClosureOutput:
       title: V1DisputesWithClosureOutput
       type: array
@@ -56948,6 +57634,14 @@ components:
               disputeClosure:
                 $ref: '#/components/schemas/DisputeClosureOutput'
           - $ref: '#/components/schemas/V1DisputeOutput'
+    V1DisputesWithClosureWithTransfersOutput:
+      title: V1DisputesWithClosureWithTransfersOutput
+      type: object
+      properties:
+        disputes:
+          $ref: '#/components/schemas/V1DisputesWithClosureOutput'
+      required:
+        - disputes
     V1EnterpriseSupportedCurrenciesResponse:
       title: V1EnterpriseSupportedCurrenciesResponse
       type: object
