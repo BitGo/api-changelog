@@ -18365,39 +18365,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/wallet/{walletId}/spending:
-    get:
-      tags:
-        - Wallet
-      summary: Get spending limits and current amount spent
-      description: |
-        Returns the wallet's currently configured spending limits and the current
-        amount spent during the periods defined by the spending limits.
-      operationId: v2.wallet.spending
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WalletSpending'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
   /api/v2/wallet/{walletId}/reservedunspents:
     post:
       tags:
@@ -60455,38 +60422,6 @@ components:
             type: number
         required:
           - walletSharesCount
-    WalletSpending:
-      type: object
-      properties:
-        velocityLimitSpending:
-          type: array
-          items:
-            type: object
-            properties:
-              coin:
-                allOf:
-                  - $ref: '#/components/schemas/Coin'
-                  - example: btc
-              timeWindow:
-                allOf:
-                  - $ref: '#/components/schemas/IntegerString'
-                  - example: '3600'
-                description: |
-                  String representation of the time window in seconds (ex: 0 = per transaction, 3600 = hourly,
-                  86400 = daily).
-              limitAmountString:
-                allOf:
-                  - $ref: '#/components/schemas/IntegerString'
-                  - example: '1000000'
-                description: |
-                  String representation of the spending limit in base units.
-              amountSpentString:
-                allOf:
-                  - $ref: '#/components/schemas/IntegerString'
-                  - example: '148310'
-                description: |
-                  String representation of the current amount spent in base units. Guaranteed to not lose
-                  precision.
     WalletStakingDisclaimerAttributes:
       type: object
       properties:
