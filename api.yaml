@@ -21904,6 +21904,91 @@ paths:
                   - $ref: '#/components/schemas/TradeOrdersResponse'
         '403':
           description: Forbidden - Missing or invalid access token header
+  /api/staking/v1/{coin}/wallets/{walletId}/requests/{stakingRequestId}:
+    delete:
+      tags:
+        - Staking Request
+      summary: Cancel staking request
+      description: Cancel an existing staking request.
+      operationId: v1.staking.request.cancel
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathWalletId1'
+        - name: stakingRequestId
+          in: path
+          description: The ID for the staking request to cancel.
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Successful Cancellation of Staking Request
+          content:
+            application/json:
+              schema:
+                type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/StakingError'
+              example:
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
+        '404':
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
+        '500':
+          description: Server Error - Transient error please try again
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/wallets/{walletId}/requests:
     post:
       tags:
@@ -21919,11 +22004,17 @@ paths:
           application/json:
             schema:
               oneOf:
+                - $ref: '#/components/schemas/AdaStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/AdaUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AtomStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AtomUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/AvaxPStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/BeraStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/BeraUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/BtcStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/BtcUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/CosmosLikeStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/CosmosLikeUnStakingRequestPOSTBody'
-                - $ref: '#/components/schemas/AvaxPStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/DotStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/DotUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/EthStakingRequestPOSTBody'
@@ -21933,11 +22024,25 @@ paths:
                 - $ref: '#/components/schemas/NearUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/StxStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/StxUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TaoStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TaoUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/TonStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/TonUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/WctStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/WctUnStakingRequestPOSTBody'
             examples:
               AvaxPStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/AvaxPStakingRequestPOSTBodyExample'
+              BeraStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/BeraStakingRequestPOSTBodyExample'
+              BeraUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/BeraUnStakingRequestPOSTBodyExample'
+              BtcStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/BtcStakingRequestPOSTBodyExample'
+              BtcUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/BtcUnStakingRequestPOSTBodyExample'
               DotStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/DotStakingRequestPOSTBodyExample'
               DotUnStakingRequestPOSTBodyExample:
@@ -21956,10 +22061,22 @@ paths:
                 $ref: '#/components/examples/SolStakingRequestPOSTBodyExample'
               SolUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SolUnStakingRequestPOSTBodyExample'
+              StxStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/StxStakingRequestPOSTBodyExample'
+              StxUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/StxUnStakingRequestPOSTBodyExample'
               TaoStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/TaoStakingRequestPOSTBodyExample'
               TaoUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/TaoUnStakingRequestPOSTBodyExample'
+              TonStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/TonStakingRequestPOSTBodyExample'
+              TonUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/TonUnStakingRequestPOSTBodyExample'
+              WctStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/WctStakingRequestPOSTBodyExample'
+              WctUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/WctUnStakingRequestPOSTBodyExample'
       responses:
         '202':
           description: Successful Staking Request Accepted and Needs Approval
@@ -21967,15 +22084,21 @@ paths:
             application/json:
               schema:
                 oneOf:
+                  - $ref: '#/components/schemas/AdaStakingRequest'
+                  - $ref: '#/components/schemas/AtomStakingRequest'
                   - $ref: '#/components/schemas/AvaxPStakingRequest'
+                  - $ref: '#/components/schemas/BeraStakingRequest'
+                  - $ref: '#/components/schemas/BtcStakingRequest'
+                  - $ref: '#/components/schemas/CosmosLikeStakingRequest'
                   - $ref: '#/components/schemas/DotStakingRequest'
                   - $ref: '#/components/schemas/EthStakingRequest'
                   - $ref: '#/components/schemas/MaticStakingRequest'
                   - $ref: '#/components/schemas/NearStakingRequest'
-                  - $ref: '#/components/schemas/CosmosLikeStakingRequest'
-                  - $ref: '#/components/schemas/AtomStakingRequest'
                   - $ref: '#/components/schemas/SolStakingRequest'
+                  - $ref: '#/components/schemas/StxStakingRequest'
                   - $ref: '#/components/schemas/TaoStakingRequest'
+                  - $ref: '#/components/schemas/TonStakingRequest'
+                  - $ref: '#/components/schemas/WctStakingRequest'
               examples:
                 AvaxPStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/AvaxPStakingRequestWithoutDelegationsExample'
@@ -22309,15 +22432,21 @@ paths:
             application/json:
               schema:
                 oneOf:
+                  - $ref: '#/components/schemas/AdaStakingRequest'
                   - $ref: '#/components/schemas/AtomStakingRequest'
-                  - $ref: '#/components/schemas/CosmosLikeStakingRequest'
                   - $ref: '#/components/schemas/AvaxPStakingRequest'
+                  - $ref: '#/components/schemas/BeraStakingRequest'
+                  - $ref: '#/components/schemas/BtcStakingRequest'
+                  - $ref: '#/components/schemas/CosmosLikeStakingRequest'
                   - $ref: '#/components/schemas/DotStakingRequest'
                   - $ref: '#/components/schemas/EthStakingRequest'
                   - $ref: '#/components/schemas/MaticStakingRequest'
                   - $ref: '#/components/schemas/NearStakingRequest'
                   - $ref: '#/components/schemas/SolStakingRequest'
+                  - $ref: '#/components/schemas/StxStakingRequest'
                   - $ref: '#/components/schemas/TaoStakingRequest'
+                  - $ref: '#/components/schemas/TonStakingRequest'
+                  - $ref: '#/components/schemas/WctStakingRequest'
               examples:
                 AvaxPStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/AvaxPStakingRequestWithTransactionsExample'
@@ -22910,6 +23039,28 @@ paths:
                 delegated: '6400000000000000000'
                 rewards: '1000000000000000'
                 apy: '8.2'
+  /api/staking/v1/{coin}/enterprises/{enterpriseId}/tokens:
+    get:
+      tags:
+        - Staking State Information
+      summary: List staking details by enterprise tokens
+      description: Retrieve staking information at the enterprise and token level.
+      operationId: v1.staking.enterprise.tokens
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - name: enterpriseId
+          in: path
+          description: The enterprise ID representing the enterprise a user staked from.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful Retrieving Staking Information For An Enterprise At Token Level
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingEnterprise'
         '400':
           description: Bad Request
           content:
@@ -23190,6 +23341,76 @@ paths:
               example:
                 error: Conflicting clientID
                 errorName: Conflict
+                reqId: some-id
+        '500':
+          description: Server Error - Transient error please try again
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
+  /api/staking/v1/{coin}/wallets/{walletId}/tokens:
+    get:
+      tags:
+        - Staking State Information
+      summary: List staking wallet tokens
+      description: Get staking wallets for a specific wallet ID that has been used for staking tokens.
+      operationId: v1.staking.wallet.tokens
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathWalletId1'
+        - $ref: '#/components/parameters/queryPage'
+        - $ref: '#/components/parameters/queryPageSize'
+      responses:
+        '200':
+          description: Successful Retrieving Staking Wallet Tokens
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingWalletsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/StakingError'
+              example:
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
+        '404':
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Wallet not found
+                errorName: NotFound
                 reqId: some-id
         '500':
           description: Server Error - Transient error please try again
@@ -31031,6 +31252,37 @@ components:
             max: '0'
             min: '0'
             multipleDelegations: false
+    BeraStakingRequestPOSTBodyExample:
+      summary: BERA Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1000000000000000000'
+        type: STAKE
+        subType: INFRARED_LIQUID_STAKE
+        gasPrice: '1000000000000000'
+    BeraUnStakingRequestPOSTBodyExample:
+      summary: BERA UnStaking Request POST Body Example
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
+        amount: '1000000000000000000'
+    BtcStakingRequestPOSTBodyExample:
+      summary: BTC Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '10000000'
+        type: STAKE
+        validator: '0x1234567890abcdef1234567890abcdef12345678'
+        coredao:
+          expireAt: 2025-01-01T00:00:00.000Z
+          rewardAddress: '0x1234567890abcdef1234567890abcdef12345678'
+    BtcUnStakingRequestPOSTBodyExample:
+      summary: BTC UnStaking Request POST Body Example
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
     CreatePolicyRuleExample:
       summary: A create policy rule request
       value:
@@ -33264,6 +33516,22 @@ components:
           walletId: 48dd72485007a239fb00282ed480da1f
           idempotencyKey: v28e44259cf048638a293e7850594e39
           txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+    StxStakingRequestPOSTBodyExample:
+      summary: STX Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1000000000000000'
+        type: STAKE
+        subType: STACK
+        duration: '100'
+        btcRewardAddress: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq
+        contractName: pox-4
+    StxUnStakingRequestPOSTBodyExample:
+      summary: STX UnStaking Request POST Body Example
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
     SuiStakingPartneredValidatorsResultsExample:
       summary: SUI Staking Partnered Validators Results Example
       value:
@@ -33426,6 +33694,20 @@ components:
         statusModifiedDate: 2022-01-10T14:32:28.000Z
         status: NEW
         amount: '1012000000'
+    TonStakingRequestPOSTBodyExample:
+      summary: TON Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1000000000'
+        type: STAKE
+        subType: MULTI_NOMINATOR_STAKE
+        validator: EQCi7ER3y9j-FFY3M31JNtJuVM-04Y4lDd4pykDVyQRhlUMH
+    TonUnStakingRequestPOSTBodyExample:
+      summary: TON UnStaking Request POST Body Example
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
     TouchpointConditionsExample:
       summary: Touchpoint Conditions
       description: A successful response with 5 Touchpoint Conditions.
@@ -33606,6 +33888,20 @@ components:
             max: '0'
             min: '0'
             multipleDelegations: false
+    WctStakingRequestPOSTBodyExample:
+      summary: WCT Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1000000000000000000'
+        type: STAKE
+        subType: WCT_STAKE
+        validator: '0x1234567890abcdef1234567890abcdef12345678'
+    WctUnStakingRequestPOSTBodyExample:
+      summary: WCT UnStaking Request POST Body Example
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
   headers: {}
   links: {}
   parameters:
@@ -34050,12 +34346,18 @@ components:
         oneOf:
           - type: string
             enum:
+              - ADA
               - AVAXP
+              - BERA
+              - BTC
               - DOT
               - ETH
               - MATIC
               - NEAR
               - SOL
+              - STX
+              - TON
+              - WCT
           - type: string
     pathEnterpriseId:
       name: enterpriseId
@@ -34140,12 +34442,18 @@ components:
         oneOf:
           - type: string
             enum:
+              - ADA
               - AVAXP
+              - BERA
+              - BTC
               - DOT
               - ETH
               - MATIC
               - NEAR
               - SOL
+              - STX
+              - TON
+              - WCT
           - type: string
     queryFederationQ:
       name: q
@@ -34788,6 +35096,100 @@ components:
                 The pool key hash to which the coins will be delegated to.
           required:
             - poolKeyHash
+    AdaStakingDelegation:
+      title: ADA
+      allOf:
+        - $ref: '#/components/schemas/StakingDelegation'
+      type: object
+      properties:
+        rewardAddress:
+          description: The reward address for staking rewards.
+          type: string
+        dRepId:
+          description: The delegated representative ID.
+          type: string
+        isVoteDelegationRequest:
+          description: Whether this is a vote delegation request.
+          type: boolean
+    AdaStakingRequest:
+      title: ADA
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/AdaStakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+        amount:
+          description: Amount to stake in base units.
+          type: string
+        rewardAddress:
+          description: The reward address for staking rewards.
+          type: string
+        dRepId:
+          description: The delegated representative ID.
+          type: string
+        isVoteDelegationRequest:
+          description: Whether this is a vote delegation request.
+          type: boolean
+    AdaStakingRequestPOSTBody:
+      title: ADA stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          description: Amount to stake in base units.
+          type: string
+          example: '10000000000'
+        type:
+          description: Staking Request type = 'STAKE'.
+          type: string
+          example: STAKE
+        validator:
+          description: The validator address or other identifier.
+          type: string
+        rewardAddress:
+          description: The reward address for staking rewards.
+          type: string
+        dRepId:
+          description: The delegated representative ID.
+          type: string
+        isVoteDelegationRequest:
+          description: Whether this is a vote delegation request.
+          type: boolean
+      required:
+        - amount
+        - type
+    AdaUnStakingRequestPOSTBody:
+      title: ADA unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
+      properties:
+        type:
+          description: Staking Request type = 'UNSTAKE'.
+          type: string
+          example: UNSTAKE
+        delegationId:
+          description: The delegation ID representing the delegation to unstake.
+          type: string
+        amount:
+          description: Amount to unstake in base units.
+          type: string
+          example: '10000000000'
+      required:
+        - type
+        - delegationId
     AdaUnstakeIntent:
       title: ADA Unstake Intent
       allOf:
@@ -36791,6 +37193,113 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
+    BeraStakingDelegation:
+      title: BERA
+      allOf:
+        - $ref: '#/components/schemas/StakingDelegation'
+      type: object
+      properties:
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - NATIVE_STAKE
+            - INFRARED_LIQUID_STAKE
+        operator:
+          description: The operator address.
+          type: string
+    BeraStakingRequest:
+      title: BERA
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/BeraStakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+        amount:
+          description: Amount to stake in base units.
+          type: string
+        gasPrice:
+          type: string
+          description: User overridden gas price to apply for the generated transactions for this request.
+        subType:
+          description: The staking type (NATIVE_STAKE, INFRARED_LIQUID_STAKE).
+          type: string
+          enum:
+            - NATIVE_STAKE
+            - INFRARED_LIQUID_STAKE
+        operator:
+          description: The operator address.
+          type: string
+    BeraStakingRequestPOSTBody:
+      title: BERA stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          description: Amount to stake in base units.
+          type: string
+          example: '1000000000000000000'
+        type:
+          description: Staking Request type = 'STAKE'.
+          type: string
+          example: STAKE
+        validator:
+          description: The validator pubkey.
+          type: string
+        gasPrice:
+          description: User overridden gas price to apply for the generated transactions for this request. GasPrice is in base units.
+          type: string
+        subType:
+          description: The staking type (NATIVE_STAKE, INFRARED_LIQUID_STAKE).
+          type: string
+          enum:
+            - NATIVE_STAKE
+            - INFRARED_LIQUID_STAKE
+          default: INFRARED_LIQUID_STAKE
+        operator:
+          description: The operator address.
+          type: string
+        withdrawCredentials:
+          description: The withdraw credentials.
+          type: string
+        depositSignature:
+          description: The deposit signature.
+          type: string
+      required:
+        - amount
+        - type
+    BeraUnStakingRequestPOSTBody:
+      title: BERA unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
+      properties:
+        type:
+          description: Staking Request type = 'UNSTAKE'.
+          type: string
+          example: UNSTAKE
+        delegationId:
+          description: The delegation ID representing the delegation to unstake.
+          type: string
+        amount:
+          description: Amount to unstake in base units.
+          type: string
+          example: '1000000000000000000'
+      required:
+        - type
+        - delegationId
     Bitcoin:
       type: string
       enum:
@@ -36912,6 +37421,92 @@ components:
             - validatorAddress
             - requestNumber
         - $ref: '#/components/schemas/WithdrawIntent'
+    BtcStakingDelegation:
+      title: BTC
+      allOf:
+        - $ref: '#/components/schemas/StakingDelegation'
+      type: object
+    BtcStakingRequest:
+      title: BTC
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/BtcStakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+        amount:
+          description: Amount to stake in base units.
+          type: string
+    BtcStakingRequestPOSTBody:
+      title: BTC stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          description: Amount to stake in base units.
+          type: string
+          example: '10000000000'
+        type:
+          description: Staking Request type = 'STAKE'.
+          type: string
+          example: STAKE
+        validator:
+          description: The validator address or other identifier.
+          type: string
+        coredao:
+          type: object
+          properties:
+            expireAt:
+              description: The expiration date of the staking.
+              type: string
+              format: date-time
+              example: 2025-01-01T00:00:00.000Z
+            rewardAddress:
+              description: The address where rewards will be sent.
+              type: string
+              example: '0x1234567890abcdef1234567890abcdef12345678'
+        babylon:
+          type: object
+          properties:
+            duration:
+              description: The duration of staking in seconds.
+              type: integer
+              format: int64
+              example: 2592000
+            rewardAddress:
+              description: The address where rewards will be sent.
+              type: string
+              example: '0x1234567890abcdef1234567890abcdef12345678'
+      required:
+        - amount
+        - type
+    BtcUnStakingRequestPOSTBody:
+      title: BTC unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
+      properties:
+        type:
+          description: Staking Request type = 'UNSTAKE'.
+          type: string
+          example: UNSTAKE
+        delegationId:
+          description: The delegation ID representing the delegation to unstake.
+          type: string
+      required:
+        - type
+        - delegationId
     BuildParams:
       type: object
       properties:
@@ -38657,12 +39252,17 @@ components:
           maxItems: 500
           items:
             oneOf:
+              - $ref: '#/components/schemas/BeraStakingDelegation'
+              - $ref: '#/components/schemas/BtcStakingDelegation'
               - $ref: '#/components/schemas/CosmosLikeStakingDelegation'
               - $ref: '#/components/schemas/DotStakingDelegation'
               - $ref: '#/components/schemas/EthStakingDelegation'
               - $ref: '#/components/schemas/MaticStakingDelegation'
               - $ref: '#/components/schemas/NearStakingDelegation'
               - $ref: '#/components/schemas/SolStakingDelegation'
+              - $ref: '#/components/schemas/StxStakingDelegation'
+              - $ref: '#/components/schemas/TonStakingDelegation'
+              - $ref: '#/components/schemas/WctStakingDelegation'
         page:
           type: integer
           description: The page number for paging purposes.
@@ -52453,7 +53053,7 @@ components:
         type:
           $ref: '#/components/schemas/StakingRequestType'
         coin:
-          description: The coin to be staked (ETH, MATIC, NEAR, SOL).
+          description: The coin to be staked (BTC, BERA, ETH, MATIC, NEAR, SOL, STX, TON, WCT, etc).
           type: string
         createdDate:
           description: The date the staking request was created.
@@ -52688,6 +53288,9 @@ components:
         txRequestId:
           description: Transaction Request ID for the Transaction Request API
           type: string
+        coin:
+          description: The coin associated with this staking transaction.
+          type: string
       required:
         - stakingRequestId
         - transactionType
@@ -52921,6 +53524,114 @@ components:
         - pendingChainInitialization
         - creationFailure
         - lastMemoId
+    StxStakingDelegation:
+      title: STX
+      allOf:
+        - $ref: '#/components/schemas/StakingDelegation'
+      type: object
+      properties:
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - STACK
+        btcRewardAddress:
+          description: The BTC address where rewards will be sent.
+          type: string
+    StxStakingRequest:
+      title: STX
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/StxStakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+        amount:
+          description: Amount to stake in base units.
+          type: string
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - STACK
+        duration:
+          description: The staking duration in blocks.
+          type: string
+    StxStakingRequestPOSTBody:
+      title: STX stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          description: Amount to stake in base units.
+          type: string
+          example: '1000000000000000'
+        type:
+          description: Staking Request type = 'STAKE'.
+          type: string
+          example: STAKE
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - STACK
+          default: STACK
+        duration:
+          description: The staking duration in blocks.
+          type: string
+          example: '100'
+        validator:
+          description: The validator address.
+          type: string
+        btcRewardAddress:
+          description: The BTC address where rewards will be sent.
+          type: string
+        signerPub:
+          description: The public key of the signer.
+          type: string
+        signerSignature:
+          description: The signature of the signer.
+          type: string
+        authId:
+          description: The authorization ID.
+          type: string
+        maxAmount:
+          description: The maximum amount that can be staked.
+          type: string
+        contractName:
+          description: The name of the staking contract.
+          type: string
+          default: pox-4
+      required:
+        - amount
+        - type
+    StxUnStakingRequestPOSTBody:
+      title: STX unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
+      properties:
+        type:
+          description: Staking Request type = 'UNSTAKE'.
+          type: string
+          example: UNSTAKE
+        delegationId:
+          description: The delegation ID representing the delegation to unstake.
+          type: string
+      required:
+        - type
+        - delegationId
     SubstrateAccountBaseBuildOptions:
       title: SubstrateAccountBaseBuildOptions
       allOf:
@@ -53441,6 +54152,89 @@ components:
             memo:
               $ref: '#/components/schemas/optionalString'
         - $ref: '#/components/schemas/PaymentIntent'
+    TonStakingDelegation:
+      title: TON
+      allOf:
+        - $ref: '#/components/schemas/StakingDelegation'
+      type: object
+      properties:
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - MULTI_NOMINATOR_STAKE
+    TonStakingRequest:
+      title: TON
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/TonStakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+        amount:
+          description: Amount to stake in base units.
+          type: string
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - MULTI_NOMINATOR_STAKE
+    TonStakingRequestPOSTBody:
+      title: TON stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          description: Amount to stake in base units.
+          type: string
+          example: '1000000000'
+        type:
+          description: Staking Request type = 'STAKE'.
+          type: string
+          example: STAKE
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - MULTI_NOMINATOR_STAKE
+          default: MULTI_NOMINATOR_STAKE
+        duration:
+          description: The staking duration.
+          type: string
+          default: '0'
+        validator:
+          description: The validator address.
+          type: string
+      required:
+        - amount
+        - type
+    TonUnStakingRequestPOSTBody:
+      title: TON unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
+      properties:
+        type:
+          description: Staking Request type = 'UNSTAKE'.
+          type: string
+          example: UNSTAKE
+        delegationId:
+          description: The delegation ID representing the delegation to unstake.
+          type: string
+      required:
+        - type
+        - delegationId
     TonUndelegateIntent:
       title: TON Undelegate Intent
       allOf:
@@ -60771,6 +61565,92 @@ components:
           required:
             - sharedStakingObjectId
         - $ref: '#/components/schemas/SuiUnstakingIntent'
+    WctStakingDelegation:
+      title: WCT
+      allOf:
+        - $ref: '#/components/schemas/StakingDelegation'
+      type: object
+      properties:
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - WCT_STAKE
+    WctStakingRequest:
+      title: WCT
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/WctStakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+        amount:
+          description: Amount to stake in base units.
+          type: string
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - WCT_STAKE
+    WctStakingRequestPOSTBody:
+      title: WCT stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          description: Amount to stake in base units.
+          type: string
+          example: '1000000000000000000'
+        type:
+          description: Staking Request type = 'STAKE'.
+          type: string
+          example: STAKE
+        validator:
+          description: The validator address.
+          type: string
+        duration:
+          description: The staking duration.
+          type: string
+        subType:
+          description: The staking type.
+          type: string
+          enum:
+            - WCT_STAKE
+          default: WCT_STAKE
+      required:
+        - amount
+        - type
+    WctUnStakingRequestPOSTBody:
+      title: WCT unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
+      properties:
+        type:
+          description: Staking Request type = 'UNSTAKE'.
+          type: string
+          example: UNSTAKE
+        delegationId:
+          description: The delegation ID representing the delegation to unstake.
+          type: string
+        amount:
+          description: Amount to unstake in base units.
+          type: string
+          example: '1000000000000000000'
+      required:
+        - type
+        - delegationId
     WebSocketSubscription:
       oneOf:
         - $ref: '#/components/schemas/OrderBooksRequest'
