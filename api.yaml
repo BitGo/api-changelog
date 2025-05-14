@@ -26383,26 +26383,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/internal/pendingapprovals/trust/counts:
-    get:
-      summary: Get pending approval count for real time monitoring
-      operationId: v2.internal.pending.approval.trust.counts
-      tags:
-        - Pending approval
-      parameters: []
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApprovalsCount'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/keys:
     get:
       summary: Get keys
@@ -49214,52 +49194,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/PendingApproval1'
-    PendingApprovalsCount:
-      title: PendingApprovalsCount
-      type: object
-      description: Response type for getting pending approval counts grouped by various criteria
-      properties:
-        byState:
-          type: object
-          additionalProperties:
-            type: number
-        byBitgoOrg:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: number
-            description: Record type for state counts
-        byCoinFamily:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: number
-            description: Record type for state counts
-        bySource:
-          type: object
-          additionalProperties:
-            type: object
-            additionalProperties:
-              type: number
-            description: Record type for state counts
-        byCoinType:
-          type: object
-          properties:
-            fiat:
-              $ref: '#/components/schemas/StateCountRecord'
-            crypto:
-              $ref: '#/components/schemas/StateCountRecord'
-          required:
-            - fiat
-            - crypto
-      required:
-        - byState
-        - byBitgoOrg
-        - byCoinFamily
-        - bySource
-        - byCoinType
     PendingApprovalsCountSchema:
       title: PendingApprovalsCountSchema
       type: object
@@ -53556,12 +53490,6 @@ components:
         - page
         - totalPages
         - totalElements
-    StateCountRecord:
-      title: StateCountRecord
-      type: object
-      additionalProperties:
-        type: number
-      description: Record type for state counts
     SteadyPaceOrderParameters:
       type: object
       required:
