@@ -17490,13 +17490,15 @@ paths:
           schema:
             $ref: '#/components/schemas/Id'
         - name: orgId
-          description: The organization ID by which to filter the user's enterprises.
+          description: The organization ID to filter the users enterprises.
           in: query
+          required: false
           schema:
             type: string
         - name: maxEnterprises
           description: Specifies the maximum number of enterprises to return. An organization ID must be provided. The maximum limit is 50 enterprises.
           in: query
+          required: false
           schema:
             type: integer
       responses:
@@ -40595,6 +40597,12 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/AuditableItem'
+    EnterpriseKycState:
+      type: string
+      enum:
+        - unverified
+        - approved
+        - rejected
     EnterpriseMember:
       title: EnterpriseMember
       type: string
@@ -50444,6 +50452,9 @@ components:
           allOf:
             - $ref: '#/components/schemas/ActionType'
           description: The type of the action
+        approvalsRequired:
+          type: number
+          description: The number of approvals required
         userIds:
           type: array
           items:
@@ -50491,6 +50502,8 @@ components:
             - getCustodianApproval
             - getIdVerification
             - noop
+        approvalsRequired:
+          $ref: '#/components/schemas/ApprovalsRequired'
         userIds:
           description: For a final approver action, who can approve
           type: array
@@ -57186,15 +57199,22 @@ components:
         state:
           type: string
           example: New York
-        kycStatus:
-          type: string
-          example: approved
-          description: user's overall KYC status
-          enum:
-            - approved
-            - pending
-            - rejected
-            - unverified
+        enterprise:
+          type: array
+          description: enterprises associated with the user
+          items:
+            type: object
+            properties:
+              beneficialOwner:
+                type: boolean
+              acceptedInvite:
+                type: boolean
+              id:
+                $ref: '#/components/schemas/Id'
+              kycState:
+                $ref: '#/components/schemas/EnterpriseKycState'
+              organization:
+                $ref: '#/components/schemas/Id'
     User2:
       title: User
       allOf:
