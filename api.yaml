@@ -4939,6 +4939,140 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorPayload'
+    put:
+      summary: Update Partner Allocations
+      description: |-
+        This API call allows partners to inform the OES system about an update to an allocation made to one of 
+        their connections. This endpoint is only relevant to OES partners that have async allocations enabled.
+
+        A successful response indicates that the allocation was successfully updated in the OES system and the funds 
+        are cleared (if cleared is passed for status) or released (if released is passed for status).
+      operationId: v1PartnerAllocationsPutRoute
+      tags:
+        - Partner Allocations & Deallocations
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                allocationId:
+                  type: string
+                  description: The unique identifier of the allocation to update. This UUID uniquely identifies the allocation record.
+                  title: uuid
+                amount:
+                  allOf:
+                    - $ref: '#/components/schemas/PositivePartnerCurrencyAmount'
+                  description: The currency/quantity the allocation was made in. This is a base unit amount. The exact base units depend on the currency (e.g., satoshis for BTC, wei for ETH).
+                clientId:
+                  type: string
+                  description: The unique identifier of the client associated with the allocation. This UUID uniquely identifies the client within the BitGo system.
+                  title: uuid
+                connectionId:
+                  type: string
+                  description: The unique identifier of the connection associated with the allocation. This UUID uniquely identifies the connection between a client and a partner.
+                  title: uuid
+                partnersClientId:
+                  type: string
+                  description: The unique identifier of the client in the partner system. This value uniquely identifies the client within the partner's system.
+                  minLength: 1
+                partnersConnectionId:
+                  type: string
+                  description: The unique identifier of the connection in the partner system. This value uniquely identifies the connection between a client and a partner in the partner's system.
+                  minLength: 1
+                partnersAllocationId:
+                  type: string
+                  description: The unique identifier of the allocation in the partner system. This value uniquely identifies the allocation record within the partner's system.
+                  minLength: 1
+                status:
+                  allOf:
+                    - $ref: '#/components/schemas/PartnerAllocationStatusUpdate'
+                  description: The status to update the allocation to. The status can be either 'cleared' or 'released'. If the status is 'released', a reason for the release must be provided in the form of a non-empty string.
+                nonce:
+                  type: string
+                  description: 'Unique nonce to prevent replay attacks. This value: - Must be unique for each request requiring a nonce. - Should be a cryptographically strong random value. - Is used as part of the request signing process. - Helps ensure the signature can only be used once.'
+                  minLength: 1
+                rejectReason:
+                  type: string
+                  description: The reason for releasing the allocation.
+                  minLength: 1
+                payload:
+                  type: string
+                  description: 'Payload formed by stringifying the object containing all other request properties. This includes: - status - rejectReason (only if status is ''released'') - allocationId - amount - clientId - connectionId - partnersClientId - partnersConnectionId - partnersAllocationId - nonce The payload must be signed using your BitGo account''s private key to create the signature parameter.'
+                  minLength: 1
+                signature:
+                  type: string
+                  description: 'Digital signature of the payload parameter. This signature: - Must be created using your BitGo account''s private key. - Verifies that the request is authentic and hasn''t been tampered with. - Provides non-repudiation for the allocation request.'
+                  minLength: 1
+              required:
+                - allocationId
+                - amount
+                - clientId
+                - connectionId
+                - partnersClientId
+                - partnersConnectionId
+                - partnersAllocationId
+                - status
+                - nonce
+                - payload
+                - signature
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PartnerUpdateAllocationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/partners/allocations/{allocationId}:
     get:
       summary: Get partner allocation or deallocation
@@ -5315,6 +5449,141 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v1/enterprises/{enterpriseId}/partners/deallocations:
+    put:
+      summary: Update Partner Deallocations
+      description: |-
+        This API call allows partners to inform the OES system about an update to a deallocation made to one of 
+        their connections. This endpoint is only relevant to OES partners that have async deallocations enabled.
+
+        A successful response indicates that the allocation was successfully updated in the OES system and the funds 
+        are cleared (if cleared is passed for status) or released (if released is passed for status).
+      operationId: V1PartnerDeallocationsPutRoute
+      tags:
+        - Partner Allocations & Deallocations
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                deallocationId:
+                  type: string
+                  description: The unique identifier of the deallocation to update. This UUID uniquely identifies the deallocation record.
+                  title: uuid
+                amount:
+                  allOf:
+                    - $ref: '#/components/schemas/PositivePartnerCurrencyAmount'
+                  description: The currency/quantity that was submitted for deallocation. This is a base unit amount. The exact base units depend on the currency (e.g., satoshis for BTC, wei for ETH).
+                clientId:
+                  type: string
+                  description: The unique identifier of the client which initiated the deallocation. This UUID uniquely identifies the client within the BitGo system.
+                  title: uuid
+                connectionId:
+                  type: string
+                  description: The unique identifier of the connection to deallocate from. This UUID uniquely identifies the connection between a client and a partner.
+                  title: uuid
+                partnersClientId:
+                  type: string
+                  description: The unique identifier of the client in the partner system. This value uniquely identifies the client within the partner's system.
+                  minLength: 1
+                partnersConnectionId:
+                  type: string
+                  description: The unique identifier of the connection in the partner system. This value uniquely identifies the connection between a client and a partner in the partner's system.
+                  minLength: 1
+                partnersDeallocationId:
+                  type: string
+                  description: The unique identifier of the deallocation in the partner system. This value uniquely identifies the deallocation record within the partner's system.
+                  minLength: 1
+                status:
+                  allOf:
+                    - $ref: '#/components/schemas/PartnerAllocationStatusUpdate'
+                  description: The status to update the deallocation to. The status can be either 'cleared' or 'released'. If the status is 'released', a reason for the release must be provided in the form of a non-empty string.
+                nonce:
+                  type: string
+                  description: 'Unique nonce to prevent replay attacks. This value: - Must be unique for each request requiring a nonce. - Should be a cryptographically strong random value. - Is used as part of the request signing process. - Helps ensure the signature can only be used once.'
+                  minLength: 1
+                rejectReason:
+                  type: string
+                  description: The reason for releasing the deallocation.
+                  minLength: 1
+                payload:
+                  type: string
+                  description: 'Payload formed by stringifying the object containing all other request properties. This includes: - status - rejectReason (only if status is ''released'') - deallocationId - amount - clientId - connectionId - partnersClientId - partnersConnectionId - partnersDeallocationId - nonce The payload must be signed using your BitGo account''s private key to create the signature parameter.'
+                  minLength: 1
+                signature:
+                  type: string
+                  description: 'Digital signature of the payload parameter. This signature: - Must be created using your BitGo account''s private key. - Verifies that the request is authentic and hasn''t been tampered with. - Provides non-repudiation for the allocation request.'
+                  minLength: 1
+              required:
+                - deallocationId
+                - amount
+                - clientId
+                - connectionId
+                - partnersClientId
+                - partnersConnectionId
+                - partnersDeallocationId
+                - status
+                - nonce
+                - payload
+                - signature
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PartnerUpdateDeallocationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
           content:
             application/json:
               schema:
@@ -6541,6 +6810,151 @@ paths:
                 properties: {}
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+  /api/network/v2/enterprises/{enterpriseId}/partners/settlements:
+    post:
+      summary: Initiate partner settlement
+      description: |-
+        Used by dispute enabled exchange partners to stage a settlement for connected clients. 
+
+        This endpoint will:
+        1. Authenticate the request by verifying the payload and signature provided.
+        2. Create entities:
+        a. Create the settlement entity
+        b. Map provided settlement amounts to settlement transfer records for execution.
+        3. Assign closed, unassigned disputes from prior settlements to this settlement
+        a. Pull in any adjustedSettlementTransfers from said disputes. 
+        b. Update the settledInSettlementId on said disputes.
+        4. Verify the relevant connection balances against liabilities based on provided settlementAmounts 
+        and assigned settlement transfers from disputes being assigned.
+        5. Notify connection owners of a new settlement. 
+        6. Queue an event to finalize the settlement once the dispute window ends.
+
+        This endpoint is idempotent and can safely be called again with the same exact request body
+        without worrying about creating multiple settlements.
+
+        Please note that provided settlement amounts should be based solely on new trading activity 
+        that was not included in the last settlement. Instructions from closed, unsettled disputes should
+        not be included in the calculation of settlement instructions on the 
+        Settlement will be processed asynchronously once initiated, after dispute / top up window have elapsed.
+
+        * Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid format for settlement amounts, missing required fields,
+        invalid signature.
+
+        - 401: Authentication Error or Incomplete Settlement
+        - Occurs when the request is not authorized or cannot be completed immediately.
+        - Examples: Caller is not a member of the enterprise, signature verification failed.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated partner doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license
+
+        - 409: Conflict Error
+        - Occurs when the request conflicts with current state.
+        - Examples: Settlement already exists with the same externalId and different properties.
+
+        - 422: Unprocessable Content
+        - Occurs when the request is authenticated and permitted but is unable to be processed.
+        - Examples: the liabilities for one or more connection exceed their allocated balance.
+
+        - 500: Internal Server Error or Incomplete Settlement
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues, settlement initiated but not completed due to transient errors.
+      operationId: v2PartnerSettlementsPostRoute
+      tags:
+        - Partner Settlements & Transfers
+      parameters:
+        - name: enterpriseId
+          description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                externalId:
+                  type: string
+                  description: External identifier for the settlement request. This should be unique for each settlement request and is used for idempotence and correlation with partner systems.
+                  minLength: 1
+                notes:
+                  type: string
+                  description: Optional notes about the settlement. Can contain additional context or information about the purpose of the settlement.
+                  minLength: 1
+                settlementAmounts:
+                  $ref: '#/components/schemas/UnmappedSettlementAmountsRecord'
+                nonce:
+                  type: string
+                  description: A unique nonce value used for cryptographic operations. This provides additional security for settlement operations.
+                  minLength: 1
+                payload:
+                  type: string
+                  minLength: 1
+                signature:
+                  type: string
+                  minLength: 1
+                cutoffAt:
+                  type: string
+                  description: The date and time of the most recent trade being settled, represented in ISO 8601 format
+                  format: date-time
+                  title: ISO Date String
+              required:
+                - externalId
+                - settlementAmounts
+                - nonce
+                - payload
+                - signature
+                - cutoffAt
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V2PartnerSettlementOkPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
           content:
             application/json:
               schema:
@@ -47916,6 +48330,12 @@ components:
         - minerFee
         - outputs
         - spendAmount
+    PartnerAllocationStatusUpdate:
+      title: PartnerAllocationStatusUpdate
+      type: string
+      enum:
+        - cleared
+        - released
     PartnerConnectionKeySchema:
       title: PartnerConnectionKeySchema
       type: string
@@ -50679,6 +51099,18 @@ components:
         - quantity
     PositiveCurrencyAmount:
       title: PositiveCurrencyAmount
+      type: object
+      properties:
+        currency:
+          type: string
+          minLength: 1
+        quantity:
+          type: string
+      required:
+        - currency
+        - quantity
+    PositivePartnerCurrencyAmount:
+      title: PositivePartnerCurrencyAmount
       type: object
       properties:
         currency:
@@ -59108,6 +59540,86 @@ components:
           type: string
       required:
         - payload
+    V1PartnerUpdateAllocationResponse:
+      title: V1PartnerUpdateAllocationResponse
+      type: object
+      properties:
+        allocationId:
+          type: string
+          description: The unique identifier of the allocation to update. This UUID uniquely identifies the allocation record.
+          title: uuid
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/PositivePartnerCurrencyAmount'
+          description: The currency/quantity the allocation was made in. This is a base unit amount. The exact base units depend on the currency (e.g., satoshis for BTC, wei for ETH).
+        clientId:
+          type: string
+          description: The unique identifier of the client associated with the allocation. This UUID uniquely identifies the client within the BitGo system.
+          title: uuid
+        connectionId:
+          type: string
+          description: The unique identifier of the connection associated with the allocation. This UUID uniquely identifies the connection between a client and a partner.
+          title: uuid
+        partnersClientId:
+          type: string
+          description: The unique identifier of the client in the partner system. This value uniquely identifies the client within the partner's system.
+          minLength: 1
+        partnersConnectionId:
+          type: string
+          description: The unique identifier of the connection in the partner system. This value uniquely identifies the connection between a client and a partner in the partner's system.
+          minLength: 1
+        partnersAllocationId:
+          type: string
+          description: The unique identifier of the allocation in the partner system. This value uniquely identifies the allocation record within the partner's system.
+          minLength: 1
+      required:
+        - allocationId
+        - amount
+        - clientId
+        - connectionId
+        - partnersClientId
+        - partnersConnectionId
+        - partnersAllocationId
+    V1PartnerUpdateDeallocationResponse:
+      title: V1PartnerUpdateDeallocationResponse
+      type: object
+      properties:
+        deallocationId:
+          type: string
+          description: The unique identifier of the deallocation to update. This UUID uniquely identifies the deallocation record.
+          title: uuid
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/PositivePartnerCurrencyAmount'
+          description: The currency/quantity that was submitted for deallocation. This is a base unit amount. The exact base units depend on the currency (e.g., satoshis for BTC, wei for ETH).
+        clientId:
+          type: string
+          description: The unique identifier of the client which initiated the deallocation. This UUID uniquely identifies the client within the BitGo system.
+          title: uuid
+        connectionId:
+          type: string
+          description: The unique identifier of the connection to deallocate from. This UUID uniquely identifies the connection between a client and a partner.
+          title: uuid
+        partnersClientId:
+          type: string
+          description: The unique identifier of the client in the partner system. This value uniquely identifies the client within the partner's system.
+          minLength: 1
+        partnersConnectionId:
+          type: string
+          description: The unique identifier of the connection in the partner system. This value uniquely identifies the connection between a client and a partner in the partner's system.
+          minLength: 1
+        partnersDeallocationId:
+          type: string
+          description: The unique identifier of the deallocation in the partner system. This value uniquely identifies the deallocation record within the partner's system.
+          minLength: 1
+      required:
+        - deallocationId
+        - amount
+        - clientId
+        - connectionId
+        - partnersClientId
+        - partnersConnectionId
+        - partnersDeallocationId
     V1PartnersGetOkPayload:
       title: V1PartnersGetOkPayload
       type: object
@@ -59781,6 +60293,34 @@ components:
             - type: object
               properties: {}
             - $ref: '#/components/schemas/BNMetadata'
+    V2PartnerSettlementOkPayload:
+      title: V2PartnerSettlementOkPayload
+      type: object
+      properties:
+        settlement:
+          allOf:
+            - $ref: '#/components/schemas/V2PendingSettlement'
+          description: The initiated settlement object in it's pending state.
+      required:
+        - settlement
+    V2PendingSettlement:
+      title: V2PendingSettlement
+      allOf:
+        - type: object
+          properties:
+            cutoffAt:
+              type: string
+              description: The datetime provided by the partner representing the timestamp of the most recent trade being settled.
+              format: date-time
+              title: ISO Date String
+            settlingDisputes:
+              allOf:
+                - $ref: '#/components/schemas/V1AssignedDisputesWithClosureOutput'
+              description: Array of disputes that were closed and not yet assigned at the time the request was first received. These disputes are assigned to the settlement and their associated adjustedSettlementTransfers will be executed with this settlement regardless of whether or not the associated client(s) dispute.
+          required:
+            - cutoffAt
+            - settlingDisputes
+        - $ref: '#/components/schemas/V1PendingSettlementOutput'
     ValidValues:
       type: array
       description: A list of valid values, only values from this list will be accepted.
