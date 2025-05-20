@@ -1229,13 +1229,13 @@ paths:
         - Transaction request
       parameters:
         - name: txRequestIds
-          description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Transaction request was canceled by a wallet spender before approval or sending. - `delivered`: Transaction request was inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: Initial state when a transaction request is created, before any policy evaluation occurs. `pendingApproval`: Transaction request triggered a policy that requires approval to move forward. `pendingDelivery`: Transaction request requires further action to proceed. For example, transaction requests pending signature, or transaction requests that trigger a circuit breaker and require you to accept or reject them with BitGo. This state is only used with apiVersion "full". - `pendingUserCommitment`: Transaction request is ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Transaction request is ready to receive your gShare. - `pendingUserRShare`: Transaction request is ready to receive your rShare. - `pendingUserSignature`: Transaction request is ready to receive your user signature. Get the unsigned transaction from BitGo and sign it. This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Transaction request is ready send (share combination is complete). - `rejected`: Transaction request was rejected by an approver. - `signed`: All transactions for the transaction request were signed. All future updates will be in the transfer document.'
+          description: If provided, only the specified transaction requests will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
-              description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Transaction request was canceled by a wallet spender before approval or sending. - `delivered`: Transaction request was inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: Initial state when a transaction request is created, before any policy evaluation occurs. `pendingApproval`: Transaction request triggered a policy that requires approval to move forward. `pendingDelivery`: Transaction request requires further action to proceed. For example, transaction requests pending signature, or transaction requests that trigger a circuit breaker and require you to accept or reject them with BitGo. This state is only used with apiVersion "full". - `pendingUserCommitment`: Transaction request is ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Transaction request is ready to receive your gShare. - `pendingUserRShare`: Transaction request is ready to receive your rShare. - `pendingUserSignature`: Transaction request is ready to receive your user signature. Get the unsigned transaction from BitGo and sign it. This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Transaction request is ready send (share combination is complete). - `rejected`: Transaction request was rejected by an approver. - `signed`: All transactions for the transaction request were signed. All future updates will be in the transfer document.'
+              description: If provided, only the specified transaction requests will be returned.
         - name: idempotencyKeys
           description: If provided, only transaction requests with the matching idempotencyKeys will be returned.
           in: query
@@ -1253,7 +1253,7 @@ paths:
               type: string
               description: A "sequenceId" is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a "sequenceId" you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per "sequenceId" (and fails all subsequent attempts), you can retry sending without the risk of double spending. The "sequenceId" is only visible to users on the wallet and is not shared publicly.
         - name: states
-          description: If provided, only transaction requests of the specified state will be returned.
+          description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
           in: query
           schema:
             type: array
@@ -1273,7 +1273,7 @@ paths:
                 - readyToSend
                 - signed
                 - failed
-              description: If provided, only transaction requests of the specified state will be returned.
+              description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
         - name: latest
           description: If provided, only the latest transaction request version will be returned.
           in: query
@@ -25804,13 +25804,13 @@ paths:
         - Transaction request
       parameters:
         - name: txRequestIds
-          description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Transaction request was canceled by a wallet spender before approval or sending. - `delivered`: Transaction request was inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: Initial state when a transaction request is created, before any policy evaluation occurs. `pendingApproval`: Transaction request triggered a policy that requires approval to move forward. `pendingDelivery`: Transaction request requires further action to proceed. For example, transaction requests pending signature, or transaction requests that trigger a circuit breaker and require you to accept or reject them with BitGo. This state is only used with apiVersion "full". - `pendingUserCommitment`: Transaction request is ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Transaction request is ready to receive your gShare. - `pendingUserRShare`: Transaction request is ready to receive your rShare. - `pendingUserSignature`: Transaction request is ready to receive your user signature. Get the unsigned transaction from BitGo and sign it. This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Transaction request is ready send (share combination is complete). - `rejected`: Transaction request was rejected by an approver. - `signed`: All transactions for the transaction request were signed. All future updates will be in the transfer document.'
+          description: If provided, only the specified transaction requests will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
-              description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Transaction request was canceled by a wallet spender before approval or sending. - `delivered`: Transaction request was inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: Initial state when a transaction request is created, before any policy evaluation occurs. `pendingApproval`: Transaction request triggered a policy that requires approval to move forward. `pendingDelivery`: Transaction request requires further action to proceed. For example, transaction requests pending signature, or transaction requests that trigger a circuit breaker and require you to accept or reject them with BitGo. This state is only used with apiVersion "full". - `pendingUserCommitment`: Transaction request is ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Transaction request is ready to receive your gShare. - `pendingUserRShare`: Transaction request is ready to receive your rShare. - `pendingUserSignature`: Transaction request is ready to receive your user signature. Get the unsigned transaction from BitGo and sign it. This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Transaction request is ready send (share combination is complete). - `rejected`: Transaction request was rejected by an approver. - `signed`: All transactions for the transaction request were signed. All future updates will be in the transfer document.'
+              description: If provided, only the specified transaction requests will be returned.
         - name: idempotencyKeys
           description: If provided, only transaction requests with the matching idempotencyKeys will be returned.
           in: query
@@ -25828,7 +25828,7 @@ paths:
               type: string
               description: A "sequenceId" is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a "sequenceId" you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per "sequenceId" (and fails all subsequent attempts), you can retry sending without the risk of double spending. The "sequenceId" is only visible to users on the wallet and is not shared publicly.
         - name: states
-          description: If provided, only transaction requests of the specified state will be returned.
+          description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
           in: query
           schema:
             type: array
@@ -25848,7 +25848,7 @@ paths:
                 - readyToSend
                 - signed
                 - failed
-              description: If provided, only transaction requests of the specified state will be returned.
+              description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
         - name: latest
           description: If provided, only the latest transaction request version will be returned.
           in: query
@@ -25936,7 +25936,7 @@ paths:
                 - trading
               description: If present, filters transaction requests by the specified wallet types
         - name: states
-          description: If present, filters transaction requests by state
+          description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
           in: query
           schema:
             type: array
@@ -25956,7 +25956,7 @@ paths:
                 - readyToSend
                 - signed
                 - failed
-              description: If present, filters transaction requests by state
+              description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
         - name: walletPermissions
           description: If present, filters transaction requests by wallet permissions. If not present will default to view permissions
           in: query
@@ -27322,6 +27322,7 @@ paths:
               - address_confirmation
               - lowFee
               - circuitBreaker
+              - lowFeeAddressBalance
               - wallet_confirmation
               - bankAccount
               - userKycState
@@ -30102,13 +30103,13 @@ paths:
             minimum: 1
             maximum: 500
         - name: txRequestIds
-          description: If provided, only transaction requests specified will be returned.
+          description: If provided, only the specified transaction requests will be returned.
           in: query
           schema:
             type: array
             items:
               type: string
-              description: If provided, only transaction requests specified will be returned.
+              description: If provided, only the specified transaction requests will be returned.
         - name: walletPermissions
           description: If provided, the result will be filtered by the users wallet permissions.
           in: query
@@ -34934,17 +34935,12 @@ components:
             recipients:
               type: array
               items:
-                type: object
-                properties:
-                  address:
-                    $ref: '#/components/schemas/Address'
-                  amount:
-                    $ref: '#/components/schemas/Amount'
-                  data:
-                    $ref: '#/components/schemas/optionalString'
-                required:
-                  - address
-                  - amount
+                allOf:
+                  - type: object
+                    properties:
+                      tokenData:
+                        $ref: '#/components/schemas/TokenData'
+                  - $ref: '#/components/schemas/RecipientEntry'
             keepAlive:
               $ref: '#/components/schemas/optionalBoolean'
           required:
@@ -36715,11 +36711,27 @@ components:
               type: string
               enum:
                 - createBtcDelegation
+              description: Register a BTC delegation on the Babylon chain for Baby BTC staking.
             createBtcDelegationBytes:
               type: string
           required:
             - intentType
             - createBtcDelegationBytes
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    BabyWithdrawRewardIntent:
+      title: Baby WithdrawReward Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+            type:
+              type: string
+          required:
+            - intentType
+            - type
         - $ref: '#/components/schemas/BaseStakeIntent'
     BackingValue:
       title: Backing hot wallet
@@ -41212,8 +41224,6 @@ components:
                     properties:
                       tokenData:
                         $ref: '#/components/schemas/TokenData'
-                    required:
-                      - tokenData
                   - $ref: '#/components/schemas/RecipientEntry'
             consolidateId:
               $ref: '#/components/schemas/optionalString'
@@ -44546,6 +44556,7 @@ components:
         - closeAssociatedTokenAccount
         - stakeWithCallData
         - feeAddressTransfer
+        - tokenApproval
         - createBtcDelegation
     IntentType1:
       title: IntentType
@@ -44590,10 +44601,13 @@ components:
           type: string
         oauthProvider:
           $ref: '#/components/schemas/OAuthProvider'
+        clientSecret:
+          type: string
       required:
         - clientId
         - tenantId
         - oauthProvider
+        - clientSecret
     InternationalWireBankAccount:
       title: International Wire Bank Account
       type: object
@@ -52517,8 +52531,6 @@ components:
               $ref: '#/components/schemas/optionalStringArray'
             stakingAddress:
               $ref: '#/components/schemas/optionalString'
-            isMarinade:
-              type: boolean
           required:
             - intentType
             - validatorAddress
@@ -52542,10 +52554,26 @@ components:
               type: string
             amount:
               $ref: '#/components/schemas/Amount'
+            isMarinade:
+              type: boolean
           required:
             - validatorAddress
             - amount
         - $ref: '#/components/schemas/StakeIntent'
+        - $ref: '#/components/schemas/SolBuildOptions'
+    SolStakeIntent1:
+      title: SOL Stake Intent
+      allOf:
+        - type: object
+          properties:
+            validatorAddress:
+              type: string
+            amount:
+              $ref: '#/components/schemas/Amount1'
+          required:
+            - validatorAddress
+            - amount
+        - $ref: '#/components/schemas/StakeIntent1'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolStakingDelegation:
       title: SOL
@@ -52648,6 +52676,20 @@ components:
                 - value
             isMarinade:
               type: boolean
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    $ref: '#/components/schemas/Address'
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  data:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - address
+                  - amount
           required:
             - stakingAddress
         - $ref: '#/components/schemas/UnstakeIntent'
@@ -52787,6 +52829,18 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
+    StakeIntent1:
+      title: StakeIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stake
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent1'
     StakeIntent2:
       allOf:
         - $ref: '#/components/schemas/BaseStakeIntent2'
@@ -54068,6 +54122,21 @@ components:
         - schema
         - connectionToken
         - signature
+    TokenApprovalIntent:
+      title: Intent for approving tokens for spending by a batcher contract
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - tokenApproval
+            tokenName:
+              type: string
+          required:
+            - intentType
+            - tokenName
+        - $ref: '#/components/schemas/BaseIntent'
     TokenConnectionKey:
       title: TokenConnectionKey
       type: object
@@ -54723,6 +54792,7 @@ components:
         - $ref: '#/components/schemas/AtomUnstakeIntent'
         - $ref: '#/components/schemas/AtomWithdrawIntent'
         - $ref: '#/components/schemas/BabyCreateBtcDelegationIntent'
+        - $ref: '#/components/schemas/BabyWithdrawRewardIntent'
         - $ref: '#/components/schemas/BscDelegateIntent'
         - $ref: '#/components/schemas/BscUnDelegateIntent'
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
@@ -54771,6 +54841,7 @@ components:
         - $ref: '#/components/schemas/SuiUnstakingIntent'
         - $ref: '#/components/schemas/TaoStakeIntent'
         - $ref: '#/components/schemas/TaoUnstakeIntent'
+        - $ref: '#/components/schemas/TokenApprovalIntent'
         - $ref: '#/components/schemas/TonConsolidateIntent'
         - $ref: '#/components/schemas/TonDelegateIntent'
         - $ref: '#/components/schemas/TonPaymentIntent'
@@ -55073,7 +55144,7 @@ components:
         - $ref: '#/components/schemas/NearWithdrawIntent1'
         - $ref: '#/components/schemas/SolClaimIntent'
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
-        - $ref: '#/components/schemas/SolStakeIntent'
+        - $ref: '#/components/schemas/SolStakeIntent1'
         - $ref: '#/components/schemas/SolUnstakeIntent1'
         - $ref: '#/components/schemas/TransferTokenIntent1'
         - $ref: '#/components/schemas/UnstakeIntent2'
@@ -56187,8 +56258,6 @@ components:
                     properties:
                       tokenData:
                         $ref: '#/components/schemas/TokenData'
-                    required:
-                      - tokenData
                   - $ref: '#/components/schemas/RecipientEntry'
           required:
             - intentType
@@ -61509,6 +61578,7 @@ components:
         - address_confirmation
         - lowFee
         - circuitBreaker
+        - lowFeeAddressBalance
         - transaction_finality_on_l1
         - fundsDeposited
     WalletsResponse:
@@ -61964,6 +62034,7 @@ components:
         - address_confirmation
         - lowFee
         - circuitBreaker
+        - lowFeeAddressBalance
         - wallet_confirmation
         - bankAccount
         - userKycState
