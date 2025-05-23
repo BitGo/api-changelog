@@ -489,6 +489,10 @@ paths:
                       - invalidSignature
                       - rejected
                     description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
+                customHttpHeaders:
+                  type: object
+                  additionalProperties:
+                    type: string
               required:
                 - type
                 - url
@@ -54221,7 +54225,9 @@ components:
       title: Substrate Payment Intent
       allOf:
         - type: object
-          properties: {}
+          properties:
+            memo:
+              $ref: '#/components/schemas/optionalString'
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     SuiBuildOptions:
