@@ -25694,6 +25694,7 @@ paths:
                     - changePolicyServicePolicy
                     - removePolicy
                     - removePolicyServicePolicy
+                    - unlockPolicyServicePolicy
                     - approvePolicy
                     - approvePolicyServicePolicy
                     - approvePolicyServiceSettlement
@@ -25882,6 +25883,8 @@ paths:
                     - updateTransferEntries
                     - addTrustedDevice
                     - deletedTrustedDevice
+                    - deletedTrustedDevices
+                    - adminDeletedTrustedDevices
         - name: userId
           description: The user ID to filter by
           in: query
@@ -35322,7 +35325,6 @@ components:
         - getApproval
         - getEnterpriseUserApproval
         - getAnyApproval
-        - getGroupApproval
         - getFinalApproval
         - getVideoApproval
         - getIdVerification
@@ -36692,6 +36694,7 @@ components:
         - changePolicyServicePolicy
         - removePolicy
         - removePolicyServicePolicy
+        - unlockPolicyServicePolicy
         - approvePolicy
         - approvePolicyServicePolicy
         - approvePolicyServiceSettlement
@@ -36880,6 +36883,8 @@ components:
         - updateTransferEntries
         - addTrustedDevice
         - deletedTrustedDevice
+        - deletedTrustedDevices
+        - adminDeletedTrustedDevices
     AuditableItem:
       type: object
       properties:
@@ -38423,6 +38428,7 @@ components:
         - create
         - update
         - delete
+        - unlock
     Clause:
       type: object
       description: |
@@ -44395,12 +44401,6 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: The transfer amount must be greater than the given limit for the condition to trigger
-    GroupApprovalRequirementOperator:
-      title: GroupApprovalRequirementOperator
-      type: string
-      enum:
-        - and
-        - or
     HederaAddress:
       title: Hedera Address
       type: object
@@ -48720,32 +48720,6 @@ components:
         version:
           type: number
           description: Version of the pending approval
-        groupApprovalRequirement:
-          type: object
-          description: Requirements for providing group approval.
-          properties:
-            items:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: The ID of the group
-                  minimumApprovals:
-                    type: number
-                    description: The name of the group
-                  type:
-                    type: string
-                    description: The type of the group
-                required:
-                  - id
-                  - type
-            operator:
-              $ref: '#/components/schemas/GroupApprovalRequirementOperator'
-          required:
-            - items
-            - operator
         policyEvaluationId:
           type: string
           description: ID for the policy evaluation
@@ -50930,32 +50904,6 @@ components:
           items:
             type: string
             description: The user IDs associated with the action
-        groupApprovalRequirement:
-          type: object
-          description: The group approval requirement
-          properties:
-            items:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                    description: The ID of the group
-                  minimumApprovals:
-                    type: number
-                    description: The name of the group
-                  type:
-                    type: string
-                    description: The type of the group
-                required:
-                  - id
-                  - type
-            operator:
-              $ref: '#/components/schemas/GroupApprovalRequirementOperator'
-          required:
-            - items
-            - operator
       required:
         - type
     PolicyRuleActions:
