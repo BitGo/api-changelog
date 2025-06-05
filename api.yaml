@@ -18680,56 +18680,6 @@ paths:
                 $ref: '#/components/schemas/PlatformError3'
         '404':
           description: Not Found
-  /api/v2/{coin}/wallet/{walletId}/unspents:
-    get:
-      tags:
-        - Wallet
-      summary: Get unspents
-      description: Returns unspent transaction outputs for a wallet
-      operationId: v2.wallet.unspents
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-        - $ref: '#/components/parameters/limit'
-        - $ref: '#/components/parameters/maxValue'
-        - $ref: '#/components/parameters/minConfirms'
-        - $ref: '#/components/parameters/enforceMinConfirmsForChange'
-        - $ref: '#/components/parameters/minHeight'
-        - $ref: '#/components/parameters/minValue'
-        - $ref: '#/components/parameters/prevId'
-        - $ref: '#/components/parameters/segwit'
-        - name: includeRbf
-          in: query
-          description: True, if including Replace-By-Fee (RBF) unspents.
-          schema:
-            type: boolean
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WalletUnspents'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
   /api/v2/{coin}/wallet/{walletId}/maximumSpendable:
     get:
       tags:
@@ -34895,12 +34845,6 @@ components:
       description: Query for `Wallets` with a label containing this string
       schema:
         type: string
-    segwit:
-      name: segwit
-      in: query
-      description: DEPRECATED. Mutually exclusive with `chains`. Returns only `p2shP2wsh` unspents/addresses on true. Returns only `p2sh` unspents/addresses on false. Equivalent to passing 10 and 11 as the only value in `chains` on true, 0 and 1 on false.
-      schema:
-        type: boolean
     showAllWallets:
       name: showAllWallets
       description: Include wallets that have `deleted` or `creationFailed` set to **true**
@@ -62055,15 +61999,6 @@ components:
         - hot
         - trading
         - distributedCustody
-    WalletUnspents:
-      type: object
-      properties:
-        coin:
-          $ref: '#/components/schemas/Coin'
-        unspents:
-          type: array
-          items:
-            $ref: '#/components/schemas/Unspent'
     WalletUpdateCoinSpecific:
       type: object
       properties:
