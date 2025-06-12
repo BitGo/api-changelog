@@ -44411,38 +44411,9 @@ components:
                 type: string
                 description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
               offchain:
-                type: object
+                allOf:
+                  - $ref: '#/components/schemas/OffChainWalletBalance'
                 description: Lightning Balances
-                properties:
-                  inboundBalance:
-                    type: string
-                    description: Inbound balance in millisatoshis (remote balance)
-                  inboundPendingBalance:
-                    type: string
-                    description: Pending inbound balance in millisatoshis (pending open remote balance)
-                  inboundUnsettledBalance:
-                    type: string
-                    description: Unsettled inbound balance in millisatoshis (unsettled remote balance)
-                  outboundBalance:
-                    type: string
-                    description: Outbound balance in millisatoshis (local balance)
-                  outboundPendingBalance:
-                    type: string
-                    description: Pending outbound balance in millisatoshis (pending open local balance)
-                  outboundUnsettledBalance:
-                    type: string
-                    description: Unsettled outbound balance in millisatoshis (unsettled local balance)
-                  outboundLockedBalance:
-                    type: string
-                    description: Locked (from pending force closed channels) outbound balance in millisatoshis (locked local balance)
-                required:
-                  - inboundBalance
-                  - inboundPendingBalance
-                  - inboundUnsettledBalance
-                  - outboundBalance
-                  - outboundPendingBalance
-                  - outboundUnsettledBalance
-                  - outboundLockedBalance
             required:
               - coin
               - balanceString
@@ -47955,6 +47926,39 @@ components:
           required:
             - clientSecret
         - $ref: '#/components/schemas/InternalUserOAuthSetting'
+    OffChainWalletBalance:
+      title: OffChainWalletBalance
+      type: object
+      properties:
+        inboundBalance:
+          type: string
+          description: Inbound balance in millisatoshis (remote balance)
+        inboundPendingBalance:
+          type: string
+          description: Pending inbound balance in millisatoshis (pending open remote balance)
+        inboundUnsettledBalance:
+          type: string
+          description: Unsettled inbound balance in millisatoshis (unsettled remote balance)
+        outboundBalance:
+          type: string
+          description: Outbound balance in millisatoshis (local balance)
+        outboundPendingBalance:
+          type: string
+          description: Pending outbound balance in millisatoshis (pending open local balance)
+        outboundUnsettledBalance:
+          type: string
+          description: Unsettled outbound balance in millisatoshis (unsettled local balance)
+        outboundLockedBalance:
+          type: string
+          description: Locked (from pending force closed channels) outbound balance in millisatoshis (locked local balance)
+      required:
+        - inboundBalance
+        - inboundPendingBalance
+        - inboundUnsettledBalance
+        - outboundBalance
+        - outboundPendingBalance
+        - outboundUnsettledBalance
+        - outboundLockedBalance
     Offchain:
       title: Offchain
       type: object
@@ -60768,6 +60772,10 @@ components:
         rewardBalanceString:
           type: string
           description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+        offchain:
+          allOf:
+            - $ref: '#/components/schemas/OffChainWalletBalance'
+          description: Lightning Balances
         users:
           type: array
           items:
@@ -61621,6 +61629,10 @@ components:
               rewardBalanceString:
                 type: string
                 description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+              offchain:
+                allOf:
+                  - $ref: '#/components/schemas/OffChainWalletBalance'
+                description: Lightning Balances
               users:
                 type: array
                 items:
