@@ -21885,8 +21885,54 @@ paths:
                 properties:
                   availableCurrencies:
                     type: array
+                    description: Returns a Currency object that consists of the ID, Name and Symbol for the instrument
                     items:
                       $ref: '#/components/schemas/Currency'
+  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/transferred:
+    get:
+      summary: List transferred collateral
+      description: Returns the balance of assets deposited as collateral for the specified account.
+      operationId: trade.margin.collateral.transferred.list
+      tags:
+        - Trade REST API
+      parameters:
+        - name: accountID
+          in: path
+          required: true
+          description: The ID of the account
+          schema:
+            type: string
+      responses:
+        '200':
+          description: A list of transferred collateral
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  balances:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        currency:
+                          type: string
+                          description: Symbol of the collateral asset
+                        quantity:
+                          type: string
+                          description: Number representing the balance for the specified collateral
+                        balanceValue:
+                          allOf:
+                            - $ref: '#/components/schemas/Amount4'
+                            - type: object
+                              description: Returns the value of the collateral. Has 2 fields denoting the currency used and the actual value.
+                example:
+                  balances:
+                    - currency: BTC
+                      quantity: '2'
+                      balanceValue:
+                        quantity: '1000000'
+                        currency: USD
   /api/prime/trading/v1/accounts/{accountID}/margin/risksettings:
     get:
       summary: Get margin risk settings
@@ -21910,14 +21956,20 @@ paths:
                 type: object
                 properties:
                   totalShortPositionLimit:
-                    $ref: '#/components/schemas/Amount4'
+                    allOf:
+                      - $ref: '#/components/schemas/Amount4'
+                      - type: object
+                        description: Quantity representing the total NOP limit across all currencies. It sets a limit that is compared to the total short position across all currencies (eg. 1000000). Currency represents the currency that the quantity is valued in (eg. USD)
                   marginCallPercentage:
+                    description: Number representing the percentage at which a margin call will be initiated if the margin percentage falls below this number. It is in decimal form (eg. 0.8 to mean 80%)
                     type: number
                     format: decimal
                   liquidationThresholdPercentage:
+                    description: Number representing the liquidation threshold percentage at which positions will be automatically liquidated if the margin utilization exceeds this level. It is in decimal form (eg. 1.2 to mean 120%)
                     type: number
                     format: decimal
                   marginRequirementPercentage:
+                    description: Number representing the margin requirement percentage which is used with the NOP to determine the margin required. It is in decimal form (eg.0.2 for 20%)
                     type: number
                     format: decimal
                 example:
@@ -22013,18 +22065,34 @@ paths:
                     type: object
                     properties:
                       netOpenPosition:
-                        $ref: '#/components/schemas/Amount4'
+                        allOf:
+                          - $ref: '#/components/schemas/Amount4'
+                          - type: object
+                            description: Quantity representing the total NOP limit across all currencies. It sets a limit that is compared to the total short position across all currencies (eg. 1000000). Currency represents the currency that the quantity is valued in (eg. USD)
                       transferredCollateral:
-                        $ref: '#/components/schemas/Amount4'
+                        allOf:
+                          - $ref: '#/components/schemas/Amount4'
+                          - type: object
+                            description: Quantity representing the notional value of all collateral balances. This may change as the value of collateral changes with market movements. Currency represents the notional currency (eg. USD)
                       unrealizedPnL:
-                        $ref: '#/components/schemas/Amount4'
+                        allOf:
+                          - $ref: '#/components/schemas/Amount4'
+                          - type: object
+                            description: Quantity representing the sum of unrealized profit and loss across all per-asset open positions. Currency represents the notional currency (eg. USD)
                       marginBalance:
-                        $ref: '#/components/schemas/Amount4'
+                        allOf:
+                          - $ref: '#/components/schemas/Amount4'
+                          - type: object
+                            description: Quantity representing the sum of the transferredCollateral and unrealizedPnL. Currency represents the notional currency (eg. USD)
                       marginRequirement:
-                        $ref: '#/components/schemas/Amount4'
+                        allOf:
+                          - $ref: '#/components/schemas/Amount4'
+                          - type: object
+                            description: Quantity representing the marginBalance required to continue trading without risk of margin call or liquidation. If margin requirement is not present, either netOpenPosition is zero or there is no requirement. Currency represents the notional currency (eg. USD)
                       marginUtilizationPercentage:
                         type: number
                         nullable: true
+                        description: Quantity representing the ratio of marginRequirement to marginBalance, measured directly against liquidation and margin call thresholds. This is null if there is no margin requirement.
                 example:
                   riskProfile:
                     netOpenPosition:
@@ -22081,10 +22149,15 @@ paths:
                 properties:
                   currency:
                     type: string
+                    description: Symbol of the collateral asset
                   quantity:
                     type: string
+                    description: Number representing the balance for the specified collateral
                   balanceValue:
-                    $ref: '#/components/schemas/Amount4'
+                    allOf:
+                      - $ref: '#/components/schemas/Amount4'
+                      - type: object
+                        description: Returns the value of the collateral.
                 example:
                   currency: BTC
                   quantity: '2'
@@ -22129,10 +22202,15 @@ paths:
                 properties:
                   currency:
                     type: string
+                    description: Symbol of the collateral asset
                   quantity:
                     type: number
+                    description: Number representing the balance for the specified collateral
                   balanceValue:
-                    $ref: '#/components/schemas/Amount4'
+                    allOf:
+                      - $ref: '#/components/schemas/Amount4'
+                      - type: object
+                        description: Returns the value of the collateral. Has 2 fields denoting the currency used and the actual value.
                 example:
                   currency: BTC
                   quantity: 2
@@ -22189,10 +22267,15 @@ paths:
                       properties:
                         currency:
                           type: string
+                          description: Symbol of the margin position asset
                         quantity:
                           type: number
+                          description: Number representing the balance for the specified margin position
                         balanceValue:
-                          $ref: '#/components/schemas/Amount4'
+                          allOf:
+                            - $ref: '#/components/schemas/Amount4'
+                            - type: object
+                              description: Returns the value of the margin position. Has 2 fields denoting the currency used and the actual value.
                 example:
                   balances:
                     - currency: BTC
@@ -22237,7 +22320,7 @@ paths:
                     all: true
       responses:
         '202':
-          description: Acknowledgement that the action was received
+          description: Returns an acknowledgement that the action was received. Async process will kick off to perform trades to close out open positions.
   /api/prime/trading/v1/ws:
     get:
       summary: Get WebSocket connection
@@ -39429,10 +39512,13 @@ components:
         id:
           type: string
           format: uuid
+          description: ID of the currency
         symbol:
           type: string
+          description: Symbol of the currency
         name:
           type: string
+          description: Name of the currency
       example:
         id: 6016e0a9-545a-45fb-8370-caab1680956a
         symbol: BTC
@@ -46763,24 +46849,38 @@ components:
       properties:
         currency:
           type: string
+          description: Symbol of the instrument (ex. BTC)
         enterpriseId:
           type: string
           format: uuid
+          description: Enterprise ID for the margin NOP limit
         netOpenPosition:
           type: number
           format: decimal
+          description: Number representing the current net open position for the NOP instrument in question (ex. -10 BTC). Negative means a short position and positive means a long position.
         netOpenPositionValue:
           type: number
           format: decimal
+          description: Number representing the net open position denoted in notional amount (ex 600,000 USD)
         shortMarginPositionNotionalLimit:
-          $ref: '#/components/schemas/Amount4'
+          allOf:
+            - $ref: '#/components/schemas/Amount4'
+            - type: object
+              description: Number representing the maximum open margin position that can be short in terms of the notional instrument (ex. 10,000 USD) in absolute notional terms, as the NOP is signed
         longMarginPositionNotionalLimit:
-          $ref: '#/components/schemas/Amount4'
+          allOf:
+            - $ref: '#/components/schemas/Amount4'
+            - type: object
+              description: Number representing the maximum open margin position that can be long in terms of the notional instrument (ex. 10,000 USD)
         unrealizedPnL:
-          $ref: '#/components/schemas/Amount4'
+          allOf:
+            - $ref: '#/components/schemas/Amount4'
+            - type: object
+              description: Number representing the unrealized profit and loss. Difference between the NOP value at the time of creation and the NOP value as of now.
         lastModified:
           type: string
           format: date-time
+          description: ISO format datetime for date and time the record was last updated in the database
       example:
         currency: BTC
         enterpriseId: 63925f940c259a00061853808ffea830
@@ -46806,12 +46906,20 @@ components:
       properties:
         enterpriseId:
           type: string
+          description: The unique identifier for the enterprise (e.g., "enterprise-123").
         currency:
           type: string
+          description: The currency symbol for the net open position limit (e.g., "BTC").
         shortMarginPositionNotionalLimit:
-          $ref: '#/components/schemas/Amount4'
+          allOf:
+            - $ref: '#/components/schemas/Amount4'
+            - type: object
+              description: Quantity representing the notional limit for short margin positions in the specified currency (e.g., "1000000"). Currency represents the currency in which the quantity is valued (e.g., "BTC").
         longMarginPositionNotionalLimit:
-          $ref: '#/components/schemas/Amount4'
+          allOf:
+            - $ref: '#/components/schemas/Amount4'
+            - type: object
+              description: Quantity representing the notional limit for long margin positions in the specified currency (e.g., "2000000"). Currency represents the currency in which the quantity is valued (e.g., "BTC").
       example:
         enterpriseId: enterprise-123
         currency: BTC
