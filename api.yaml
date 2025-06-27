@@ -4642,6 +4642,18 @@ paths:
             enum:
               - 'true'
               - 'false'
+        - name: filterByTrustOrg
+          description: Filter by trust organization. When provided, only partners belonging to this trust organization will be returned.
+          in: query
+          schema:
+            oneOf:
+              - type: string
+                enum:
+                  - 'true'
+                  - 'false'
+              - type: boolean
+                enum:
+                  - true
         - name: enterpriseId
           description: The enterprise ID of the client making the request.
           in: path
@@ -59835,6 +59847,10 @@ components:
               topUpWindowMinutes:
                 type: number
                 description: Time window in minutes after which dispute window ends for processing top-up operations.
+              trustOrg:
+                allOf:
+                  - $ref: '#/components/schemas/TrustOrg'
+                description: Identifier for the trust organization this partner belongs to. Used for filtering and categorization of partners.
               stablePartner:
                 type: boolean
                 description: Flag indicating whether the partner has demonstrated operational stability. Used when partner is initially launched to demonstrate that the partner is still in beta and not yet stable.
@@ -59843,6 +59859,7 @@ components:
               - name
               - connectionKeySchema
               - active
+              - trustOrg
               - stablePartner
             description: Array of partner objects with limited properties and stability indicators.
       required:
