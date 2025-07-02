@@ -1334,6 +1334,242 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/address-book/v1/block-list:
+    get:
+      summary: Get Block Lists
+      operationId: V1GetBlockListsRoute
+      tags:
+        - Counterparties
+      parameters:
+        - name: limit
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
+        - name: offset
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
+        - name: orderBy
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - id
+              - ownerListingId
+              - blockedListingId
+              - blockedGlobalListingId
+              - createdAt
+        - name: orderDirection
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1BlockListArrayResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+    post:
+      summary: Add Block List Entry
+      operationId: V1PostBlockListRoute
+      tags:
+        - Counterparties
+      parameters:
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                blockedListingId:
+                  type: string
+                  title: uuid
+              required:
+                - blockedListingId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1BlockListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/address-book/v1/block-list/{blockListId}:
+    delete:
+      summary: Delete Block List Entry
+      operationId: V1DeleteBlockListRoute
+      tags:
+        - Counterparties
+      parameters:
+        - name: blockListId
+          in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1BlockListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/address-book/v1/connections:
     get:
       summary: List Go Account connections
@@ -1378,6 +1614,8 @@ paths:
                 - PENDING_ACTIVATION
                 - ACTIVE
                 - INACTIVE
+                - UNDER_REVIEW
+                - REQUESTED
               description: codec for valid connection statuses
         - name: connectionType
           in: query
@@ -1426,6 +1664,21 @@ paths:
             items:
               type: string
               minLength: 1
+        - name: hiddenConnections
+          in: query
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
+              - show-only-hidden
+        - name: includeTotalCount
+          in: query
+          schema:
+            type: string
+            enum:
+              - include
+              - exclude
         - name: enterprise-id
           in: header
           required: true
@@ -1589,10 +1842,13 @@ paths:
                     type: string
                     title: uuid
                 status:
-                  $ref: '#/components/schemas/UpdatableConnectionStatus'
+                  type: string
+                  enum:
+                    - PENDING_DEACTIVATION
+                hidden:
+                  type: boolean
               required:
                 - connectionIds
-                - status
       responses:
         '200':
           description: OK
@@ -1669,6 +1925,8 @@ paths:
                 - PENDING_ACTIVATION
                 - ACTIVE
                 - INACTIVE
+                - UNDER_REVIEW
+                - REQUESTED
               description: codec for valid connection statuses
         - name: orderBy
           in: query
@@ -38795,6 +39053,8 @@ components:
         - PENDING_ACTIVATION
         - ACTIVE
         - INACTIVE
+        - UNDER_REVIEW
+        - REQUESTED
       description: codec for valid connection statuses
     ConnectionType:
       title: ConnectionType
@@ -57625,11 +57885,6 @@ components:
           $ref: '#/components/schemas/optionalString'
         decimals:
           $ref: '#/components/schemas/optionalNumber'
-    UpdatableConnectionStatus:
-      title: UpdatableConnectionStatus
-      type: string
-      enum:
-        - PENDING_DEACTIVATION
     UpdateBankAccountRequest:
       type: object
       description: Updates some fields on a bank account. The server only allows updating of bank accounts that have their verificationState set to `rejected` or 'approved'. Does not allow updating of critical fields like accountNumber, enterpriseId, id, routingNumber, swiftCode.
@@ -58437,6 +58692,70 @@ components:
             required:
               - settledInSettlementId
           - $ref: '#/components/schemas/V1ClosedDisputeWithClosureOutput'
+    V1BlockListArray:
+      title: V1BlockListArray
+      type: array
+      items:
+        type: object
+        description: codec for global listing http response
+        properties:
+          id:
+            type: string
+            title: uuid
+          ownerListingId:
+            type: string
+            title: uuid
+          blockedListingId:
+            type: string
+            title: uuid
+          blockedGlobalListingId:
+            type: string
+            title: uuid
+          createdAt:
+            type: string
+            format: date-time
+            title: ISO Date String
+        required:
+          - id
+          - ownerListingId
+          - blockedListingId
+          - blockedGlobalListingId
+          - createdAt
+    V1BlockListArrayResponse:
+      title: V1BlockListArrayResponse
+      type: object
+      properties:
+        blockList:
+          $ref: '#/components/schemas/V1BlockListArray'
+      required:
+        - blockList
+    V1BlockListResponse:
+      title: V1BlockListResponse
+      type: object
+      description: codec for global listing http response
+      properties:
+        id:
+          type: string
+          title: uuid
+        ownerListingId:
+          type: string
+          title: uuid
+        blockedListingId:
+          type: string
+          title: uuid
+        blockedGlobalListingId:
+          type: string
+          title: uuid
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+      required:
+        - id
+        - ownerListingId
+        - blockedListingId
+        - blockedGlobalListingId
+        - createdAt
     V1ClearedAllocation:
       title: V1ClearedAllocation
       type: object
@@ -58768,6 +59087,24 @@ components:
                 type: string
                 format: date-time
                 title: ISO Date String
+              linkedConnectionId:
+                type: string
+                title: uuid
+              hidden:
+                oneOf:
+                  - type: boolean
+                  - type: boolean
+                    enum:
+                      - false
+              requestRemindersSent:
+                type: number
+              requestReminderLastSent:
+                type: string
+                format: date-time
+                title: ISO Date String
+              evaluationId:
+                type: string
+                minLength: 1
             required:
               - id
               - type
@@ -58777,6 +59114,7 @@ components:
               - updatedBy
               - createdAt
               - updatedAt
+              - hidden
       required:
         - connections
     V1ConnectionOutput:
@@ -58894,6 +59232,24 @@ components:
           type: string
           format: date-time
           title: ISO Date String
+        linkedConnectionId:
+          type: string
+          title: uuid
+        hidden:
+          oneOf:
+            - type: boolean
+            - type: boolean
+              enum:
+                - false
+        requestRemindersSent:
+          type: number
+        requestReminderLastSent:
+          type: string
+          format: date-time
+          title: ISO Date String
+        evaluationId:
+          type: string
+          minLength: 1
       required:
         - id
         - type
@@ -58903,6 +59259,7 @@ components:
         - updatedBy
         - createdAt
         - updatedAt
+        - hidden
     V1ConnectionWithOwnerAndTargetListResponse:
       title: V1ConnectionWithOwnerAndTargetListResponse
       type: object
@@ -58921,6 +59278,8 @@ components:
                   - ownerListingEntry
                   - targetListingEntry
               - $ref: '#/components/schemas/V1ConnectionResponse'
+        totalCount:
+          type: number
       required:
         - connections
     V1ConnectionWithOwnerListResponse:
