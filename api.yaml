@@ -32300,6 +32300,17 @@ components:
             max: '20384805835211'
             min: '1000000000000'
             multipleDelegations: false
+    EnterpriseStakeableCoinsResultExample:
+      summary: Enterprise Stakeable Coins Result Example
+      value:
+        - symbol: tmatic
+          disclaimer:
+            staking:
+              rewardPercentageRate: '4.2'
+        - symbol: gteth
+          disclaimer:
+            staking:
+              rewardPercentageRate: '6.5100'
     EthDelegationResultsExample:
       summary: Ethereum Delegation Results Example
       value:
@@ -40151,6 +40162,35 @@ components:
             anyOf:
               - $ref: '#/components/schemas/WhitelistedAddressValue'
               - $ref: '#/components/schemas/NonWhitelistedAddressValue'
+    DisclaimerAttributes:
+      type: object
+      properties:
+        staking:
+          type: object
+          properties:
+            info:
+              type: array
+              items:
+                type: string
+            transactionsNeeded:
+              type: number
+            stakeWarmupPeriodDesc:
+              type: string
+            rewardPercentageRate:
+              type: string
+            rewardsCompounding:
+              type: boolean
+        unstaking:
+          type: object
+          properties:
+            info:
+              type: array
+              items:
+                type: string
+            transactionsNeeded:
+              type: number
+            unStakeCooldownPeriodDesc:
+              type: string
     DisputeClosure:
       title: DisputeClosure
       type: object
@@ -53764,6 +53804,8 @@ components:
           type: boolean
         l1Chain:
           type: string
+        disclaimer:
+          $ref: '#/components/schemas/DisclaimerAttributes'
     StakeableCoinsResult:
       title: Stakeable coins
       type: object
