@@ -1396,7 +1396,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1BlockListArrayResponse'
+                $ref: '#/components/schemas/V1BlockListWithListingArrayResponse'
         '400':
           description: Bad Request
           content:
@@ -58734,43 +58734,6 @@ components:
             required:
               - settledInSettlementId
           - $ref: '#/components/schemas/V1ClosedDisputeWithClosureOutput'
-    V1BlockListArray:
-      title: V1BlockListArray
-      type: array
-      items:
-        type: object
-        description: codec for global listing http response
-        properties:
-          id:
-            type: string
-            title: uuid
-          ownerListingId:
-            type: string
-            title: uuid
-          blockedListingId:
-            type: string
-            title: uuid
-          blockedGlobalListingId:
-            type: string
-            title: uuid
-          createdAt:
-            type: string
-            format: date-time
-            title: ISO Date String
-        required:
-          - id
-          - ownerListingId
-          - blockedListingId
-          - blockedGlobalListingId
-          - createdAt
-    V1BlockListArrayResponse:
-      title: V1BlockListArrayResponse
-      type: object
-      properties:
-        blockList:
-          $ref: '#/components/schemas/V1BlockListArray'
-      required:
-        - blockList
     V1BlockListResponse:
       title: V1BlockListResponse
       type: object
@@ -58798,6 +58761,26 @@ components:
         - blockedListingId
         - blockedGlobalListingId
         - createdAt
+    V1BlockListWithListingArrayResponse:
+      title: V1BlockListWithListingArrayResponse
+      type: object
+      properties:
+        blockList:
+          $ref: '#/components/schemas/V1BlockListsWithListingResponse'
+      required:
+        - blockList
+    V1BlockListsWithListingResponse:
+      title: V1BlockListsWithListingResponse
+      type: array
+      items:
+        allOf:
+          - type: object
+            properties:
+              blockedListing:
+                $ref: '#/components/schemas/V1ListingResponse'
+            required:
+              - blockedListing
+          - $ref: '#/components/schemas/V1BlockListResponse'
     V1ClearedAllocation:
       title: V1ClearedAllocation
       type: object
