@@ -480,6 +480,7 @@ paths:
                   type: object
                   additionalProperties:
                     type: string
+                  description: Custom HTTP header key/values to be included with every notification for the webhook.
               required:
                 - type
                 - url
@@ -21208,6 +21209,36 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/wallet/{walletId}/lightning/payment/{paymentHash}:
+    get:
+      tags:
+        - Lightning
+      summary: Lightning - Get Payment
+      operationId: v2.wallet.lightning.payment.get
+      description: Retrieve Lightning Network payment information for the given payment hash.
+      parameters:
+        - $ref: '#/components/parameters/pathWalletId'
+        - name: paymentHash
+          in: path
+          required: true
+          schema:
+            type: string
+            description: The payment hash of the Lightning Network payment.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LightningPaymentInfo'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/wallet/{walletId}/lightning/backup:
     get:
       tags:
@@ -26057,6 +26088,7 @@ paths:
                     - removePolicy
                     - removePolicyServicePolicy
                     - unlockPolicyServicePolicy
+                    - policyServicePolicyUnlocked
                     - approvePolicy
                     - approvePolicyServicePolicy
                     - approvePolicyServiceSettlement
@@ -26065,6 +26097,7 @@ paths:
                     - rejectPolicyServiceSettlement
                     - policyUpdated
                     - policyServicePolicyUpdated
+                    - optOutOfPolicyServicePolicyLocking
                     - updatePolicyMutability
                     - freezeUser
                     - adminFreezeUser
@@ -29925,6 +29958,10 @@ paths:
             type: string
             format: date-time
             title: ISO Date String
+        - name: paymentHash
+          in: query
+          schema:
+            type: string
         - name: prevId
           in: query
           schema:
@@ -29961,13 +29998,11 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/wallet/{walletId}/lightning/payment/{paymentHash}:
+  /api/v2/wallet/{walletId}/lightning/payment/{paymentId}:
     get:
-      summary: Fetch lightning payment for a payment hash
-      description: |-
-        This API call is used to fetch lightning payment for a given payment hash.
-        Payment hash is a unique identifier for a lightning payment.
-      operationId: v2.wallet.lightning.payment.get
+      summary: Fetch lightning payment for a payment id
+      description: This API call is used to fetch lightning payment for a given payment id.
+      operationId: v2.wallet.lightning.payment.get1
       tags:
         - Lightning
       parameters:
@@ -29976,7 +30011,7 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/WalletIdString'
-        - name: paymentHash
+        - name: paymentId
           in: path
           required: true
           schema:
@@ -29996,7 +30031,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidWalletId1'
-                  - $ref: '#/components/schemas/InvalidPaymentHash'
+                  - $ref: '#/components/schemas/InvalidPaymentId'
         '404':
           description: Not Found
           content:
@@ -30004,7 +30039,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/InvalidWalletId1'
-                  - $ref: '#/components/schemas/InvalidPaymentHash'
+                  - $ref: '#/components/schemas/InvalidPaymentId'
         '500':
           description: Internal Server Error
           content:
@@ -30165,6 +30200,67 @@ paths:
                   - $ref: '#/components/schemas/InvalidTxId'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/msgrequests:
+    post:
+      summary: Create message-based transaction request
+      description: Create a transaction request for signing a message with the wallet keys.
+      operationId: v2.wallet.msgrequests.create
+      tags:
+        - Wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                intent:
+                  $ref: '#/components/schemas/MessageIntent'
+                apiVersion:
+                  $ref: '#/components/schemas/TransactionRequestApiVersion'
+                preview:
+                  type: boolean
+                idempotencyKey:
+                  type: string
+              required:
+                - intent
+                - apiVersion
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionRequest1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -37103,6 +37199,7 @@ components:
         - removePolicy
         - removePolicyServicePolicy
         - unlockPolicyServicePolicy
+        - policyServicePolicyUnlocked
         - approvePolicy
         - approvePolicyServicePolicy
         - approvePolicyServiceSettlement
@@ -37111,6 +37208,7 @@ components:
         - rejectPolicyServiceSettlement
         - policyUpdated
         - policyServicePolicyUpdated
+        - optOutOfPolicyServicePolicyLocking
         - updatePolicyMutability
         - freezeUser
         - adminFreezeUser
@@ -37771,6 +37869,16 @@ components:
         - approved
         - rejected
         - removed
+    BaseGoStakeIntent:
+      title: BaseGoStakeIntent
+      allOf:
+        - type: object
+          properties:
+            goStakingRequestId:
+              type: string
+          required:
+            - goStakingRequestId
+        - $ref: '#/components/schemas/BaseIntent'
     BaseIntent:
       title: Intent
       type: object
@@ -38594,6 +38702,8 @@ components:
       type: string
       enum:
         - bitgoAsAService
+        - cryptoAsAServiceParent
+        - cryptoAsAServiceChild
     CBITBankAccount:
       title: CBIT Bank Account
       type: object
@@ -44237,6 +44347,8 @@ components:
             type: object
             description: Off-chain payment information
             properties:
+              id:
+                type: string
               paymentHash:
                 type: string
               walletId:
@@ -44271,6 +44383,7 @@ components:
               paymentPreimage:
                 type: string
             required:
+              - id
               - paymentHash
               - walletId
               - txRequestId
@@ -44725,6 +44838,115 @@ components:
                         - state
                         - unsignedTx
                       description: The transactions associated with the transaction request
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      description: The messages associated with the transaction request
+                      properties:
+                        state:
+                          allOf:
+                            - $ref: '#/components/schemas/TransactionState'
+                          description: The current state of the message
+                        signatureShares:
+                          type: array
+                          items:
+                            allOf:
+                              - type: object
+                                properties:
+                                  privateShareProof:
+                                    type: string
+                                    description: The private share proof
+                                  publicShare:
+                                    type: string
+                                    description: The public share
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
+                              - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                            description: Signature shares for the message
+                        privateSignatureShares:
+                          type: array
+                          items:
+                            allOf:
+                              - type: object
+                                properties:
+                                  privateShareProof:
+                                    type: string
+                                    description: The private share proof
+                                  publicShare:
+                                    type: string
+                                    description: The public share
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
+                              - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                            description: Private signature shares for the message
+                        commitmentShares:
+                          type: array
+                          items:
+                            allOf:
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - commitment
+                                    description: The type of the commitment share
+                                required:
+                                  - type
+                              - $ref: '#/components/schemas/BaseShare'
+                            description: Commitment shares for the message (used for EdDSA)
+                        encryptedShares:
+                          type: array
+                          items:
+                            allOf:
+                              - type: object
+                                properties:
+                                  type:
+                                    $ref: '#/components/schemas/ShareType'
+                                required:
+                                  - type
+                              - $ref: '#/components/schemas/BaseShare'
+                            description: Encrypted shares for the message
+                        txHash:
+                          type: string
+                          description: Transaction hash
+                        updatedDate:
+                          type: string
+                          description: Date when the message was last updated
+                          format: date-time
+                          title: ISO Date String
+                        createdDate:
+                          type: string
+                          description: Date when the message was created
+                          format: date-time
+                          title: ISO Date String
+                        messageRaw:
+                          type: string
+                          description: The raw message to be signed
+                        messageEncoded:
+                          type: string
+                          description: The encoded message
+                        messageStandardType:
+                          type: string
+                          description: The encoded message
+                        derivationPath:
+                          type: string
+                          description: Derivation path for the message
+                        combineSigShare:
+                          type: string
+                          description: Combined signature share
+                        coin:
+                          type: string
+                          description: Coin type for the message
+                        bitgoPaillierChallenge: {}
+                        encryptedChallenge:
+                          type: string
+                          description: BitGo's encrypted challenge for ECDSA with Range Proofs
+                      required:
+                        - state
+                        - messageRaw
               - $ref: '#/components/schemas/TransactionRequestBase'
       required:
         - txRequests
@@ -44799,6 +45021,34 @@ components:
             - confirmedBalance
             - spendableBalance
         - $ref: '#/components/schemas/baseBalanceStrings'
+    GoUnstakeIntent:
+      title: GoUnstakeIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - goUnstake
+              description: Unstake and transfer funds from a staking wallet to a go account.
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    $ref: '#/components/schemas/Address'
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  data:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - address
+                  - amount
+          required:
+            - intentType
+            - recipients
+        - $ref: '#/components/schemas/BaseGoStakeIntent'
     GrantTypes:
       title: GrantTypes
       type: string
@@ -45468,6 +45718,7 @@ components:
         - stakeWithCallData
         - feeAddressTransfer
         - tokenApproval
+        - goUnstake
         - createBtcDelegation
     IntentType1:
       title: IntentType
@@ -45730,6 +45981,18 @@ components:
               type: string
               enum:
                 - InvalidPaymentHash
+          required:
+            - name
+        - $ref: '#/components/schemas/InvalidId'
+    InvalidPaymentId:
+      title: Invalid Payment Id
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              enum:
+                - InvalidPaymentId
           required:
             - name
         - $ref: '#/components/schemas/InvalidId'
@@ -46467,6 +46730,53 @@ components:
         * EXCESS_WALLET_BALANCE - Excess custodial lightning balance
         * INVOICE_EXPIRED - Invoice has expired
         * CANCELED - Payment was canceled
+    LightningPaymentInfo:
+      type: object
+      properties:
+        paymentHash:
+          type: string
+          description: Payment hash of the payment
+        walletId:
+          type: string
+          description: The public BitGo walletId to which this payment belongs
+        txRequestId:
+          type: string
+          description: Transaction request ID
+        status:
+          type: string
+          enum:
+            - in_flight
+            - settled
+            - failed
+          description: Current status of the payment
+        invoice:
+          type: string
+          description: The BOLT 11 encoded invoice string
+        feeLimitMsat:
+          type: string
+          description: Fee limit in millisatoshis
+        destination:
+          type: string
+          description: Destination of the payment
+        updatedAt:
+          type: string
+          format: date-time
+          description: Last update date in ISO format
+        createdAt:
+          type: string
+          format: date-time
+          description: Creation date in ISO format
+        amountMsat:
+          type: string
+          description: Amount in millisatoshis
+        feeMsat:
+          type: string
+          description: Fee in millisatoshis
+        failureReason:
+          $ref: '#/components/schemas/LightningPaymentFailureReason'
+        paymentPreimage:
+          type: string
+          description: Payment preimage
     LightningPaymentIntent:
       title: Lightning Payment Intent
       oneOf:
@@ -46972,6 +47282,115 @@ components:
                         - state
                         - unsignedTx
                       description: The transactions associated with the transaction request
+                  messages:
+                    type: array
+                    items:
+                      type: object
+                      description: The messages associated with the transaction request
+                      properties:
+                        state:
+                          allOf:
+                            - $ref: '#/components/schemas/TransactionState'
+                          description: The current state of the message
+                        signatureShares:
+                          type: array
+                          items:
+                            allOf:
+                              - type: object
+                                properties:
+                                  privateShareProof:
+                                    type: string
+                                    description: The private share proof
+                                  publicShare:
+                                    type: string
+                                    description: The public share
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
+                              - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                            description: Signature shares for the message
+                        privateSignatureShares:
+                          type: array
+                          items:
+                            allOf:
+                              - type: object
+                                properties:
+                                  privateShareProof:
+                                    type: string
+                                    description: The private share proof
+                                  publicShare:
+                                    type: string
+                                    description: The public share
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
+                              - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                            description: Private signature shares for the message
+                        commitmentShares:
+                          type: array
+                          items:
+                            allOf:
+                              - type: object
+                                properties:
+                                  type:
+                                    type: string
+                                    enum:
+                                      - commitment
+                                    description: The type of the commitment share
+                                required:
+                                  - type
+                              - $ref: '#/components/schemas/BaseShare'
+                            description: Commitment shares for the message (used for EdDSA)
+                        encryptedShares:
+                          type: array
+                          items:
+                            allOf:
+                              - type: object
+                                properties:
+                                  type:
+                                    $ref: '#/components/schemas/ShareType'
+                                required:
+                                  - type
+                              - $ref: '#/components/schemas/BaseShare'
+                            description: Encrypted shares for the message
+                        txHash:
+                          type: string
+                          description: Transaction hash
+                        updatedDate:
+                          type: string
+                          description: Date when the message was last updated
+                          format: date-time
+                          title: ISO Date String
+                        createdDate:
+                          type: string
+                          description: Date when the message was created
+                          format: date-time
+                          title: ISO Date String
+                        messageRaw:
+                          type: string
+                          description: The raw message to be signed
+                        messageEncoded:
+                          type: string
+                          description: The encoded message
+                        messageStandardType:
+                          type: string
+                          description: The encoded message
+                        derivationPath:
+                          type: string
+                          description: Derivation path for the message
+                        combineSigShare:
+                          type: string
+                          description: Combined signature share
+                        coin:
+                          type: string
+                          description: Coin type for the message
+                        bitgoPaillierChallenge: {}
+                        encryptedChallenge:
+                          type: string
+                          description: BitGo's encrypted challenge for ECDSA with Range Proofs
+                      required:
+                        - state
+                        - messageRaw
               - $ref: '#/components/schemas/TransactionRequestBase'
         bitgoRangeProofChallenge:
           allOf:
@@ -47507,6 +47926,23 @@ components:
       required:
         - messageRaw
         - state
+    MessageIntent:
+      title: MessageIntent
+      type: object
+      properties:
+        messageRaw:
+          type: string
+        intentType:
+          $ref: '#/components/schemas/IntentType'
+        custodianMessageId:
+          type: string
+        isTss:
+          type: boolean
+        messageStandardType:
+          type: string
+      required:
+        - messageRaw
+        - intentType
     MinRequireActionParameter:
       title: Minimum number of approvals required
       type: object
@@ -48329,9 +48765,14 @@ components:
         user:
           type: string
         date:
-          type: string
-          format: date-time
-          title: ISO Date String
+          oneOf:
+            - type: string
+            - type: string
+              format: date-time
+              title: ISO Date String
+            - type: string
+              format: date
+              title: Date String
         ip:
           type: string
       required:
@@ -48884,12 +49325,16 @@ components:
         - INVOICE_EXPIRED
         - CANCELED
         - FORCE_FAILED
-        - PAYMENT_ALREADY_EXISTS
+        - PAYMENT_ALREADY_SETTLED
+        - PAYMENT_ALREADY_IN_FLIGHT
+        - TRANSIENT_ERROR_RETRY_LATER
     PaymentInfo:
       title: PaymentInfo
       type: object
       description: Off-chain payment information
       properties:
+        id:
+          type: string
         paymentHash:
           type: string
         walletId:
@@ -48924,6 +49369,7 @@ components:
         paymentPreimage:
           type: string
       required:
+        - id
         - paymentHash
         - walletId
         - txRequestId
@@ -51533,6 +51979,92 @@ components:
                 A list of Policy Rules matching the search criteria.
               items:
                 $ref: '#/components/schemas/PolicyRule1'
+    PolyxBaseIntent:
+      title: POLYX Base Intent
+      allOf:
+        - type: object
+          properties:
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    $ref: '#/components/schemas/Address'
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  data:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - address
+                  - amount
+          required:
+            - recipients
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
+    PolyxCreateAccountIntent:
+      title: POLYX Create Account Intent
+      allOf:
+        - type: object
+          properties:
+            memo:
+              $ref: '#/components/schemas/optionalString'
+            index:
+              $ref: '#/components/schemas/optionalNumber'
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    $ref: '#/components/schemas/Address'
+                  amount:
+                    $ref: '#/components/schemas/Amount'
+                  data:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - address
+                  - amount
+        - $ref: '#/components/schemas/AccountBaseCreateAccountIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
+    PolyxStakeIntent:
+      title: POLYX Stake Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stake
+            addToStake:
+              $ref: '#/components/schemas/optionalBoolean'
+          required:
+            - intentType
+        - $ref: '#/components/schemas/PolyxBaseIntent'
+    PolyxUnstakeIntent:
+      title: POLYX Unstake Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - unstake
+          required:
+            - intentType
+        - $ref: '#/components/schemas/PolyxBaseIntent'
+    PolyxWithdrawIntent:
+      title: POLYX Withdraw Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - claim
+          required:
+            - intentType
+        - $ref: '#/components/schemas/PolyxBaseIntent'
     PositiveAllocationAmount:
       title: PositiveAllocationAmount
       oneOf:
@@ -53026,10 +53558,16 @@ components:
                 - $ref: '#/components/schemas/optionalString'
               description: An encoded string
               example: 'for EVM: \x19Ethereum Signed Message:\n12test message'
+            messageStandardType:
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: The type of message standard, e.g. 'EIP191', 'EIP712', 'CIP8' etc.
+              example: 'for EVM: EIP191'
           required:
             - intentType
             - messageRaw
             - messageEncoded
+            - messageStandardType
         - $ref: '#/components/schemas/BaseIntent'
     SignatureShare:
       type: object
@@ -53455,6 +53993,13 @@ components:
             - stakingAddresses
             - stakingAddress
         - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/SolBuildOptions'
+    SolGoUnstakeIntent:
+      title: SolGoUnstakeIntent
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/GoUnstakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolPaymentIntent:
       title: SolPaymentIntent
@@ -54720,6 +55265,13 @@ components:
           type: number
       required:
         - gasLimit
+    SuiGoUnstakeIntent:
+      title: SuiGoUnstakeIntent
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/GoUnstakeIntent'
+        - $ref: '#/components/schemas/SuiBuildOptions'
     SuiPaymentIntent:
       title: SUI Payment Intent
       allOf:
@@ -55744,6 +56296,10 @@ components:
         - $ref: '#/components/schemas/NearStakeIntent'
         - $ref: '#/components/schemas/NearUnstakeIntent'
         - $ref: '#/components/schemas/NearWithdrawIntent'
+        - $ref: '#/components/schemas/PolyxCreateAccountIntent'
+        - $ref: '#/components/schemas/PolyxStakeIntent'
+        - $ref: '#/components/schemas/PolyxUnstakeIntent'
+        - $ref: '#/components/schemas/PolyxWithdrawIntent'
         - $ref: '#/components/schemas/SolAuthorizeIntent'
         - $ref: '#/components/schemas/SolClaimIntent'
         - $ref: '#/components/schemas/SolCloseAssociatedTokenAccountIntent'
@@ -55751,6 +56307,7 @@ components:
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
         - $ref: '#/components/schemas/SolDeactivateIntent'
         - $ref: '#/components/schemas/SolDelegateIntent'
+        - $ref: '#/components/schemas/SolGoUnstakeIntent'
         - $ref: '#/components/schemas/SolPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
@@ -55758,6 +56315,7 @@ components:
         - $ref: '#/components/schemas/SubstratePaymentIntent'
         - $ref: '#/components/schemas/SuiConsolidateIntent'
         - $ref: '#/components/schemas/SuiCustomTxIntent'
+        - $ref: '#/components/schemas/SuiGoUnstakeIntent'
         - $ref: '#/components/schemas/SuiPaymentIntent'
         - $ref: '#/components/schemas/SuiStakingIntent'
         - $ref: '#/components/schemas/SuiUnstakingIntent'
@@ -55797,6 +56355,12 @@ components:
       oneOf:
         - $ref: '#/components/schemas/TransactionRequestLite2'
         - $ref: '#/components/schemas/TransactionRequestFull'
+    TransactionRequestApiVersion:
+      title: TransactionRequestApiVersion
+      type: string
+      enum:
+        - lite
+        - full
     TransactionRequestBase:
       title: TransactionRequestBase
       type: object
@@ -56009,6 +56573,115 @@ components:
                   - state
                   - unsignedTx
                 description: The transactions associated with the transaction request
+            messages:
+              type: array
+              items:
+                type: object
+                description: The messages associated with the transaction request
+                properties:
+                  state:
+                    allOf:
+                      - $ref: '#/components/schemas/TransactionState'
+                    description: The current state of the message
+                  signatureShares:
+                    type: array
+                    items:
+                      allOf:
+                        - type: object
+                          properties:
+                            privateShareProof:
+                              type: string
+                              description: The private share proof
+                            publicShare:
+                              type: string
+                              description: The public share
+                            vssProof:
+                              type: string
+                              description: The VSS proof of the signature share
+                        - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                      description: Signature shares for the message
+                  privateSignatureShares:
+                    type: array
+                    items:
+                      allOf:
+                        - type: object
+                          properties:
+                            privateShareProof:
+                              type: string
+                              description: The private share proof
+                            publicShare:
+                              type: string
+                              description: The public share
+                            vssProof:
+                              type: string
+                              description: The VSS proof of the signature share
+                        - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                      description: Private signature shares for the message
+                  commitmentShares:
+                    type: array
+                    items:
+                      allOf:
+                        - type: object
+                          properties:
+                            type:
+                              type: string
+                              enum:
+                                - commitment
+                              description: The type of the commitment share
+                          required:
+                            - type
+                        - $ref: '#/components/schemas/BaseShare'
+                      description: Commitment shares for the message (used for EdDSA)
+                  encryptedShares:
+                    type: array
+                    items:
+                      allOf:
+                        - type: object
+                          properties:
+                            type:
+                              $ref: '#/components/schemas/ShareType'
+                          required:
+                            - type
+                        - $ref: '#/components/schemas/BaseShare'
+                      description: Encrypted shares for the message
+                  txHash:
+                    type: string
+                    description: Transaction hash
+                  updatedDate:
+                    type: string
+                    description: Date when the message was last updated
+                    format: date-time
+                    title: ISO Date String
+                  createdDate:
+                    type: string
+                    description: Date when the message was created
+                    format: date-time
+                    title: ISO Date String
+                  messageRaw:
+                    type: string
+                    description: The raw message to be signed
+                  messageEncoded:
+                    type: string
+                    description: The encoded message
+                  messageStandardType:
+                    type: string
+                    description: The encoded message
+                  derivationPath:
+                    type: string
+                    description: Derivation path for the message
+                  combineSigShare:
+                    type: string
+                    description: Combined signature share
+                  coin:
+                    type: string
+                    description: Coin type for the message
+                  bitgoPaillierChallenge: {}
+                  encryptedChallenge:
+                    type: string
+                    description: BitGo's encrypted challenge for ECDSA with Range Proofs
+                required:
+                  - state
+                  - messageRaw
         - $ref: '#/components/schemas/TransactionRequestBase'
     TransactionRequestFull1:
       title: Full
@@ -63257,6 +63930,44 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: The destination is whitelisted
+    WireWithdrawalCoinSpecific:
+      title: WireWithdrawalCoinSpecific
+      type: object
+      properties:
+        transactionType:
+          type: string
+          description: Type of transaction
+          example: WITHDRAWAL
+        settlementFeeString:
+          type: string
+          description: Settlement fee amount
+          example: '0'
+        referenceType:
+          type: string
+          description: Reference type for the transaction
+          example: withdraw
+        referenceValue:
+          type: string
+          description: Reference value for the transaction
+          example: '146697'
+        originalDestination:
+          type: string
+          description: Original destination identifier
+          example: ab4efe649c63aa30
+        fees:
+          type: array
+          items:
+            type: object
+            properties:
+              amount:
+                type: string
+                description: Amount of the fee
+                example: '-100'
+              category:
+                type: string
+                description: Category of the fee
+                example: bank
+            description: Array of associated fees
     WireWithdrawalConfirmationAction:
       title: WireWithdrawalConfirmationAction
       type: string
@@ -63272,47 +63983,6 @@ components:
           items:
             type: object
             properties:
-              baseValue:
-                type: number
-                description: The value (in base units) sent by this transfer, excluding network fees. BitGo is deprecating this field in the future.
-              baseValueString:
-                type: string
-                description: The value (in base units) sent by this transfer, excluding network fees represented as a string. BitGo is deprecating this field in the future.
-                example: '2000000'
-                pattern: ^-?\d+$
-              coin:
-                $ref: '#/components/schemas/CoinString'
-              comment:
-                nullable: true
-                type: string
-                description: A comment from the user
-              date:
-                type: string
-                description: The date this Transfer was last updated
-                format: date-time
-                title: ISO Date String
-              enterprise:
-                type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              organization:
-                type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              bitgoOrg:
-                type: string
-                enum:
-                  - BitGo Trust
-                  - BitGo New York
-                  - BitGo Germany
-                  - BitGo Switzerland
-                  - BitGo Europe ApS
-                  - Frankfurt DE Trust
-                  - BitGo Singapore
-                  - BitGo Korea
-                  - BitGo Custody MENA FZE
-                  - BitGo Sister Trust 1
-                  - BitGo Inc
               entries:
                 type: array
                 items:
@@ -63320,183 +63990,44 @@ components:
                   properties:
                     address:
                       type: string
-                      description: An address affected by this Transfer
-                      example: 2NAUwNgXaoFj2VVnSEvNLGuez8CfdU2UCMZ
-                    valueString:
-                      type: string
-                      description: The change (in base units) in the address' balance represented as a string
-                      example: '20000'
-                      pattern: '"^-?\d+$"'
-                    isChange:
-                      type: boolean
-                      description: True if this address is a change address (only exists for UTXO coins) and if this is a "send" transfer
+                      description: The address associated with this transfer entry
+                      example: 6680ad9d5650cdf891898f13b8016ef2
                     wallet:
                       type: string
-                      description: Only visible when the user has access to the wallet
-                      example: 59cd72485007a239fb00282ed480da1f
-                      pattern: ^[0-9a-f]{32}$
-                    value:
-                      type: number
-                      description: The change (in base units) in the address' balance
-                    nftSymbol:
+                      description: The wallet identifier associated with this entry
+                      example: 6680ad9d5650cdf891898f13b8016ef2
+                    valueString:
                       type: string
-                    type:
-                      type: string
-                      enum:
-                        - flushForwarderTokens
-                        - walletFunding
-                        - walletInitialization
-                        - addressInitialization
-                        - importedOutput
+                      description: The transfer amount represented
+                      example: '-1000'
                     isPayGo:
                       type: boolean
-                      description: True if this address is the BitGo PayGo wallet
-                    token:
-                      type: string
-                      description: If this is a token entry, the token's symbol
-                      example: omg
-                    failed:
-                      type: boolean
-                      description: True if this entry is failed
-                    associatedNativeCoinAddress:
-                      type: string
-                      description: The native coin receive address associated with the solana ATA address. This is currently present only for BitGo addresses. This change was done so that there is a mapping between the two addresses in the transfer entries.
-                    isFee:
-                      type: boolean
-                      description: Indicates if this entry is a fee
-                    isInternal:
-                      type: boolean
-                      description: Indicates if this entry is internal
-                    memo:
-                      type: string
-                      description: Memo associated with this entry
-                    rewardAddress:
-                      type: string
-                      description: Reward address associated with this entry
-                    subtype:
-                      type: string
-                      description: Subtype of this entry
+                      description: Indicates if this is a PayGo transaction
+                      example: false
                     backingFeeString:
                       type: string
-                      description: Backing fee represented as a string
-                    nftId:
+                      description: The backing fee amount
+                      example: '-100'
+                    token:
                       type: string
-                      description: NFT ID associated with this entry
-                    tokenContractHash:
-                      type: string
-                      description: Token contract hash associated with this entry
-                    isReward:
-                      type: boolean
-                      description: Indicates if this entry is a reward
+                      description: The token identifier used in the transfer
+                      example: ofcusd
                   required:
                     - address
-                  description: An array of objects describing the change in address balances made as a result of this Transfer
-              history:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    action:
-                      $ref: '#/components/schemas/TransferAction'
-                    comment:
-                      nullable: true
-                      type: string
-                      description: If this history object is of action "commented", this is the comment from the user
-                    date:
-                      type: string
-                      description: The date of this history object
-                      format: date-time
-                      title: ISO Date String
-                    transferId:
-                      type: string
-                      description: The ID of the transfer that this history object is associated with
-                    txid:
-                      type: string
-                      description: The transaction ID of the transaction that this history object is associated with
-                    user:
-                      type: string
-                      example: 59cd72485007a239fb00282ed480da1f
-                      pattern: ^[0-9a-f]{32}$
-                  required:
-                    - action
-                    - date
-                  description: An audit log of events that have happened to the Transfer during its lifecycle
+                  description: List of transfer entries containing transaction details
               id:
                 type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              pendingApproval:
-                type: string
-              state:
-                $ref: '#/components/schemas/TransferState1'
-              stakingParams:
-                type: object
-                properties:
-                  actionType:
-                    type: string
-                  coreDao:
-                    type: object
-                    properties:
-                      amount:
-                        type: string
-                        format: number
-                      expiration:
-                        type: string
-                        format: date-time
-                        title: ISO Date String
-                      fee:
-                        type: number
-                      rewardAddress:
-                        type: string
-                      validator:
-                        type: string
-                      version:
-                        type: number
-                    required:
-                      - amount
-                      - expiration
-                      - fee
-                      - rewardAddress
-                      - validator
-                      - version
-                  requestId:
-                    type: string
-                  source:
-                    type: string
-                    enum:
-                      - external
-                      - internal
-                  validator:
-                    type: string
-                required:
-                  - actionType
-                  - requestId
-              txid:
-                type: string
-                description: The on-chain transaction id
-                example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-              type:
+                description: Unique identifier for the transfer
+                example: 67abcb899639d543ee979ed327dd5f5d
+              coin:
                 allOf:
-                  - $ref: '#/components/schemas/TransferType1'
-                description: Defines whether or not this Transfer was sent or received by the user
-              usd:
-                type: number
-                description: The amount of USD of this Transfer (will be negative if it's a send)
-              usdRate:
-                type: number
-                description: The USD rate at the time this Transfer was created
-              value:
-                type: number
-                description: The total value (in base units) sent by this Transfer (may be approximate for ETH and other coins where amounts in base units can exceed 2^53 - 1)
-              valueString:
-                type: string
-                description: The total value (in base units) sent by this Transfer represented as a String
-                example: '2000000'
-                pattern: ^-?\d+$
+                  - $ref: '#/components/schemas/CoinString'
+                description: Coin type for the transfer
+                example: ofcusd
               wallet:
                 type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
+                description: Wallet identifier
+                example: 6680ad9d5650cdf891898f13b8016ef2
               walletType:
                 type: string
                 enum:
@@ -63506,29 +64037,227 @@ components:
                   - custodialPaired
                   - hot
                   - trading
-                description: Wallet type
-              replaces:
+                description: Type of wallet
+                example: trading
+              enterprise:
+                type: string
+                description: Enterprise identifier
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organization:
+                type: string
+                description: Organization identifier
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              txid:
+                type: string
+                description: Transaction ID
+                example: 266b937f2e92e5bbb6973f1317b286a7240157ffbc2743f220ab16336391d1ad
+              txidType:
+                type: string
+                description: Type of transaction ID
+                example: transactionHash
+              height:
+                type: number
+                description: Block height
+                example: 0
+              heightId:
+                type: string
+                description: Combined height and transfer ID
+                example: 000000000-67abcb899639d543ee979ed327dd5f5d
+              date:
+                type: string
+                description: Timestamp of the transfer
+                example: '2025-02-13T21:18:07.220Z'
+                format: date-time
+                title: ISO Date String
+              type:
+                allOf:
+                  - $ref: '#/components/schemas/TransferType1'
+                description: Type of transfer
+                example: send
+              subType:
+                type: string
+                description: Subtype of transfer
+                example: ofc_withdrawal
+              value:
+                type: number
+                description: Numeric value of the transfer
+                example: -1000
+              valueString:
+                type: string
+                description: String representation of the transfer value
+                example: '-1000'
+              intendedValueString:
+                type: string
+                description: Intended value of the transfer
+                example: '-1100'
+              baseValue:
+                type: number
+                description: Base value of the transfer
+                example: -1000
+              baseValueString:
+                type: string
+                description: String representation of the base value
+                example: '-1000'
+              baseValueWithoutFees:
+                type: number
+                description: Base value without fees
+                example: -1000
+              baseValueWithoutFeesString:
+                type: string
+                description: String representation of base value without fees
+                example: '-1000'
+              feeString:
+                nullable: true
+                type: string
+                description: Fee amount
+                example: 'null'
+              payGoFee:
+                type: number
+                description: PayGo fee amount
+                example: 0
+              payGoFeeString:
+                type: string
+                description: PayGo fee amount as string
+                example: '0'
+              usd:
+                type: number
+                description: USD value of the transfer
+                example: -10
+              usdRate:
+                type: number
+                description: USD exchange rate
+                example: 1
+              state:
+                allOf:
+                  - $ref: '#/components/schemas/TransferState1'
+                description: Current state of the transfer
+                example: confirmed
+              instant:
+                type: boolean
+                description: Whether the transfer is instant
+                example: false
+              isReward:
+                type: boolean
+                description: Whether the transfer is a reward
+                example: false
+              isUnlock:
+                type: boolean
+                description: Whether the transfer is an unlock
+                example: false
+              isFee:
+                type: boolean
+                description: Whether the transfer is a fee
+                example: false
+              senderInformationVerified:
+                type: boolean
+                description: Whether sender information is verified
+                example: false
+              tags:
                 type: array
                 items:
                   type: string
-                  description: Transaction IDs that this transfer replaces.
-              replacedBy:
+                  description: List of associated tags
+              history:
                 type: array
                 items:
-                  type: string
-                  description: Transaction IDs that replace this transfer.
+                  type: object
+                  properties:
+                    date:
+                      type: string
+                      description: Timestamp of the historical event
+                      example: '2025-02-13T21:18:07.220Z'
+                      format: date-time
+                      title: ISO Date String
+                    action:
+                      allOf:
+                        - $ref: '#/components/schemas/TransferAction'
+                      description: Type of action
+                      example: confirmed
+                    comment:
+                      nullable: true
+                      type: string
+                      description: comment associated with the action
+                      example: 'null'
+                    user:
+                      type: string
+                      description: User who performed the action
+                      example: 60524c9aee8800002a3c3b3b7d6afe5f
+                  required:
+                    - date
+                    - action
+                  description: List of historical events
+              signedDate:
+                type: string
+                description: Timestamp when the transfer was signed
+                example: '2025-02-11T22:13:30.024Z'
+                format: date-time
+                title: ISO Date String
+              coinSpecific:
+                allOf:
+                  - $ref: '#/components/schemas/WireWithdrawalCoinSpecific'
+                description: Coin-specific details
+              usersNotified:
+                type: boolean
+                description: Whether users have been notified
+                example: true
+              metadata:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                      description: Key identifying the metadata type
+                      example: onChainTxId
+                    value:
+                      type: string
+                      description: Value associated with the metadata
+                      example: 3d59f68ebbb3675b36b300b9c46efbdd2a7a9e0be24481677d38ca17c18047a8
+                  required:
+                    - key
+                    - value
+                  description: Additional metadata
+              confirmedTime:
+                type: string
+                description: Timestamp when the transfer was confirmed
+                example: '2025-02-13T21:18:07.220Z'
+                format: date-time
+                title: ISO Date String
+              unconfirmedTime:
+                type: string
+                description: Timestamp when the transfer became unconfirmed
+                example: '2025-02-11T22:13:26.827Z'
+                format: date-time
+                title: ISO Date String
+              signedTime:
+                type: string
+                description: Timestamp when the transfer was signed
+                example: '2025-02-11T22:13:30.024Z'
+                format: date-time
+                title: ISO Date String
+              createdTime:
+                type: string
+                description: Timestamp when the transfer was created
+                example: '2025-02-11T22:13:29.032Z'
+                format: date-time
+                title: ISO Date String
             required:
-              - coin
-              - date
               - entries
-              - history
               - id
-              - state
+              - coin
+              - wallet
+              - date
               - type
               - valueString
-              - wallet
+              - state
+              - history
+            description: List of wire withdrawal transfers
         nextBatchPrevId:
           type: string
+          description: ID for fetching the next batch of results
+          example: 000000000-67abcb899639d543ee979ed327dd5f5d
       required:
         - transfers
     WithdrawIntent:
