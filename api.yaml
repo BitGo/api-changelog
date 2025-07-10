@@ -21209,36 +21209,6 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
-  /api/v2/wallet/{walletId}/lightning/payment/{paymentHash}:
-    get:
-      tags:
-        - Lightning
-      summary: Lightning - Get Payment
-      operationId: v2.wallet.lightning.payment.get
-      description: Retrieve Lightning Network payment information for the given payment hash.
-      parameters:
-        - $ref: '#/components/parameters/pathWalletId'
-        - name: paymentHash
-          in: path
-          required: true
-          schema:
-            type: string
-            description: The payment hash of the Lightning Network payment.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LightningPaymentInfo'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/wallet/{walletId}/lightning/backup:
     get:
       tags:
@@ -30002,7 +29972,7 @@ paths:
     get:
       summary: Fetch lightning payment for a payment id
       description: This API call is used to fetch lightning payment for a given payment id.
-      operationId: v2.wallet.lightning.payment.get1
+      operationId: v2.wallet.lightning.payment.get
       tags:
         - Lightning
       parameters:
@@ -46730,53 +46700,6 @@ components:
         * EXCESS_WALLET_BALANCE - Excess custodial lightning balance
         * INVOICE_EXPIRED - Invoice has expired
         * CANCELED - Payment was canceled
-    LightningPaymentInfo:
-      type: object
-      properties:
-        paymentHash:
-          type: string
-          description: Payment hash of the payment
-        walletId:
-          type: string
-          description: The public BitGo walletId to which this payment belongs
-        txRequestId:
-          type: string
-          description: Transaction request ID
-        status:
-          type: string
-          enum:
-            - in_flight
-            - settled
-            - failed
-          description: Current status of the payment
-        invoice:
-          type: string
-          description: The BOLT 11 encoded invoice string
-        feeLimitMsat:
-          type: string
-          description: Fee limit in millisatoshis
-        destination:
-          type: string
-          description: Destination of the payment
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update date in ISO format
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation date in ISO format
-        amountMsat:
-          type: string
-          description: Amount in millisatoshis
-        feeMsat:
-          type: string
-          description: Fee in millisatoshis
-        failureReason:
-          $ref: '#/components/schemas/LightningPaymentFailureReason'
-        paymentPreimage:
-          type: string
-          description: Payment preimage
     LightningPaymentIntent:
       title: Lightning Payment Intent
       oneOf:
