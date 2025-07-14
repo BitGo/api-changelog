@@ -18534,6 +18534,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
+  /api/v2/{coin}/wallet/{walletId}/depositinfo:
+    get:
+      tags:
+        - Bank account
+      summary: Get deposit information
+      description: Collects all information needed for a deposit.
+      operationId: v2.wallet.depositinfo
+      parameters:
+        - $ref: '#/components/parameters/pathCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Deposit'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/transfer/{transferId}:
     get:
       tags:
@@ -40152,6 +40177,26 @@ components:
           type: string
       required:
         - txId
+    Deposit:
+      type: object
+      properties:
+        toAddress:
+          type: string
+          description: The address the deposit will be received at
+          example: 1234567890ABCDEF-XJBCOEF
+        valueString:
+          allOf:
+            - $ref: '#/components/schemas/IntegerString'
+          description: The value (in cents/base units) of the deposit
+        token:
+          type: string
+          description: If this is a token entry, the token's symbol
+          example: ousd
+        toBankAccount:
+          $ref: '#/components/schemas/BankAccountRequest'
+      required:
+        - toAddress
+        - token
     DestinationTypeCoinConditionParameter:
       title: Asset
       type: object
