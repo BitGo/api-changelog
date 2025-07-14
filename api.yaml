@@ -38942,6 +38942,8 @@ components:
         - update
         - delete
         - unlock
+        - bulkUnlock
+        - bulkArchive
     Clause:
       type: object
       description: |
@@ -50227,6 +50229,23 @@ components:
             proposedId:
               type: string
               description: The proposed ID associated with the request
+            resources:
+              type: array
+              items:
+                type: object
+                properties:
+                  currentId:
+                    type: string
+                  metadata:
+                    type: object
+                    additionalProperties:
+                      oneOf:
+                        - type: string
+                        - type: number
+                        - type: boolean
+                  proposedId:
+                    type: string
+                description: The resources associated with the request
             resourceType:
               type: string
               description: The resource type of the request
