@@ -5,7 +5,6 @@ info:
 servers:
   - url: ''
 tags:
-  - name: Broker Support
   - name: Compliance Transaction Monitoring
   - name: CryptoCompare
     description: CryptoCompare is a partner API from CryptoCompare that you can use to compare prices of cryptocurrency, tokens, and fiat.
@@ -22206,7 +22205,7 @@ paths:
                           description: Number representing the balance for the specified collateral
                         balanceValue:
                           allOf:
-                            - $ref: '#/components/schemas/Amount4'
+                            - $ref: '#/components/schemas/Amount3'
                             - type: object
                               description: Returns the value of the collateral. Has 2 fields denoting the currency used and the actual value.
                 example:
@@ -22240,7 +22239,7 @@ paths:
                 properties:
                   totalShortPositionLimit:
                     allOf:
-                      - $ref: '#/components/schemas/Amount4'
+                      - $ref: '#/components/schemas/Amount3'
                       - type: object
                         description: Quantity representing the total NOP limit across all currencies. It sets a limit that is compared to the total short position across all currencies (eg. 1000000). Currency represents the currency that the quantity is valued in (eg. USD)
                   marginCallPercentage:
@@ -22349,27 +22348,27 @@ paths:
                     properties:
                       netOpenPosition:
                         allOf:
-                          - $ref: '#/components/schemas/Amount4'
+                          - $ref: '#/components/schemas/Amount3'
                           - type: object
                             description: Quantity representing the total NOP limit across all currencies. It sets a limit that is compared to the total short position across all currencies (eg. 1000000). Currency represents the currency that the quantity is valued in (eg. USD)
                       transferredCollateral:
                         allOf:
-                          - $ref: '#/components/schemas/Amount4'
+                          - $ref: '#/components/schemas/Amount3'
                           - type: object
                             description: Quantity representing the notional value of all collateral balances. This may change as the value of collateral changes with market movements. Currency represents the notional currency (eg. USD)
                       unrealizedPnL:
                         allOf:
-                          - $ref: '#/components/schemas/Amount4'
+                          - $ref: '#/components/schemas/Amount3'
                           - type: object
                             description: Quantity representing the sum of unrealized profit and loss across all per-asset open positions. Currency represents the notional currency (eg. USD)
                       marginBalance:
                         allOf:
-                          - $ref: '#/components/schemas/Amount4'
+                          - $ref: '#/components/schemas/Amount3'
                           - type: object
                             description: Quantity representing the sum of the transferredCollateral and unrealizedPnL. Currency represents the notional currency (eg. USD)
                       marginRequirement:
                         allOf:
-                          - $ref: '#/components/schemas/Amount4'
+                          - $ref: '#/components/schemas/Amount3'
                           - type: object
                             description: Quantity representing the marginBalance required to continue trading without risk of margin call or liquidation. If margin requirement is not present, either netOpenPosition is zero or there is no requirement. Currency represents the notional currency (eg. USD)
                       marginUtilizationPercentage:
@@ -22438,7 +22437,7 @@ paths:
                     description: Number representing the balance for the specified collateral
                   balanceValue:
                     allOf:
-                      - $ref: '#/components/schemas/Amount4'
+                      - $ref: '#/components/schemas/Amount3'
                       - type: object
                         description: Returns the value of the collateral.
                 example:
@@ -22491,7 +22490,7 @@ paths:
                     description: Number representing the balance for the specified collateral
                   balanceValue:
                     allOf:
-                      - $ref: '#/components/schemas/Amount4'
+                      - $ref: '#/components/schemas/Amount3'
                       - type: object
                         description: Returns the value of the collateral. Has 2 fields denoting the currency used and the actual value.
                 example:
@@ -22556,7 +22555,7 @@ paths:
                           description: Number representing the balance for the specified margin position
                         balanceValue:
                           allOf:
-                            - $ref: '#/components/schemas/Amount4'
+                            - $ref: '#/components/schemas/Amount3'
                             - type: object
                               description: Returns the value of the margin position. Has 2 fields denoting the currency used and the actual value.
                 example:
@@ -35686,7 +35685,7 @@ components:
       required:
         - id
         - isExtensible
-    Account1:
+    Account:
       required:
         - id
         - name
@@ -35820,7 +35819,7 @@ components:
     Accounts:
       type: array
       items:
-        $ref: '#/components/schemas/Account1'
+        $ref: '#/components/schemas/Account'
     ActionType:
       title: ActionType
       type: string
@@ -36802,7 +36801,7 @@ components:
       required:
         - value
         - symbol
-    Amount4:
+    Amount3:
       type: object
       required:
         - quantity
@@ -47571,17 +47570,17 @@ components:
           description: Number representing the net open position denoted in notional amount (ex 600,000 USD)
         shortMarginPositionNotionalLimit:
           allOf:
-            - $ref: '#/components/schemas/Amount4'
+            - $ref: '#/components/schemas/Amount3'
             - type: object
               description: Number representing the maximum open margin position that can be short in terms of the notional instrument (ex. 10,000 USD) in absolute notional terms, as the NOP is signed
         longMarginPositionNotionalLimit:
           allOf:
-            - $ref: '#/components/schemas/Amount4'
+            - $ref: '#/components/schemas/Amount3'
             - type: object
               description: Number representing the maximum open margin position that can be long in terms of the notional instrument (ex. 10,000 USD)
         unrealizedPnL:
           allOf:
-            - $ref: '#/components/schemas/Amount4'
+            - $ref: '#/components/schemas/Amount3'
             - type: object
               description: Number representing the unrealized profit and loss. Difference between the NOP value at the time of creation and the NOP value as of now.
         lastModified:
@@ -47619,12 +47618,12 @@ components:
           description: The currency symbol for the net open position limit (e.g., "BTC").
         shortMarginPositionNotionalLimit:
           allOf:
-            - $ref: '#/components/schemas/Amount4'
+            - $ref: '#/components/schemas/Amount3'
             - type: object
               description: Quantity representing the notional limit for short margin positions in the specified currency (e.g., "1000000"). Currency represents the currency in which the quantity is valued (e.g., "BTC").
         longMarginPositionNotionalLimit:
           allOf:
-            - $ref: '#/components/schemas/Amount4'
+            - $ref: '#/components/schemas/Amount3'
             - type: object
               description: Quantity representing the notional limit for long margin positions in the specified currency (e.g., "2000000"). Currency represents the currency in which the quantity is valued (e.g., "BTC").
       example:
