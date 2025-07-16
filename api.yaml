@@ -59524,7 +59524,7 @@ components:
         balances:
           allOf:
             - $ref: '#/components/schemas/AccountBalanceRecord'
-          description: A record of account balances indexed by currency code. Each key in this record is a currency identifier (e.g., "ofcbtc", "ofceth", "ofcusdc"), and the corresponding value is an AccountBalance object containing the available and held amounts for that currency.
+          description: A record of account balances indexed by currency code. Each key in this record is a currency identifier (e.g., "ofcbtc", "ofceth", "ofcusdc"), and the corresponding value is an AccountBalance object containing the available and held amounts for that currency in base units.
         networkBalances:
           allOf:
             - $ref: '#/components/schemas/NetworkAccountBalanceRecordForClient'
@@ -60683,11 +60683,11 @@ components:
         networkBalances:
           allOf:
             - $ref: '#/components/schemas/V1PartnerNetworkAccountBalanceRecordOutput'
-          description: 'Detailed information about balances across all client connections to this partner. This record contains: - Keys: Connection IDs that uniquely identify each connection - Values: Detailed information about the connection and its balances This provides a comprehensive view of client funds allocated to each connection and their current availability.'
+          description: 'Detailed information about balances across all client connections to this partner. This record contains: - Keys: Connection IDs that uniquely identify each connection. - Values: Detailed information about the connection and its balances. This provides a comprehensive view of client funds allocated to each connection and their current availability.'
         balances:
           allOf:
             - $ref: '#/components/schemas/V1PartnerAccountBalanceRecordOutput'
-          description: 'Information on the balances for the partner''s own BitGo account. This object, when present, contains: - Keys: Currency identifiers (e.g., "BTC", "ETH", "USDC") in the partner''s currency naming convention - Values: Balance information including available and held amounts for each currency This allows partners to see their own BitGo account balances alongside client connection balances, providing a complete view of their financial position within the BitGo system. Note: This field may be omitted if the partner doesn''t have permission to view their own BitGo account balances.'
+          description: 'Information on the balances for the partner''s own BitGo account. This object, when present, contains: - Keys: Currency identifiers (e.g., "BTC", "ETH", "USDC") in the partner''s currency naming convention - Values: Balance information in base units including available and held amounts for each currency This allows partners to see their own BitGo account balances alongside client connection balances, providing a complete view of their financial position within the BitGo system. Note: This field may be omitted if the partner doesn''t have permission to view their own BitGo account balances.'
       required:
         - networkBalances
     V1PartnerExtDepositsSigningPayload:
@@ -60725,7 +60725,7 @@ components:
           balances:
             allOf:
               - $ref: '#/components/schemas/V1PartnerAccountBalanceRecordOutput'
-            description: 'The balances for this connection, indexed by currency code. This object contains: - Keys: Currency identifiers in the partner''s naming convention - Values: Balance information including available and held amounts These balances represent funds that have been allocated by the client to this specific connection and are available for operations by the partner.'
+            description: 'The balances for this connection, indexed by currency code. This object contains: - Keys: Currency identifiers in the partner''s naming convention. - Values: Balance information in base units, including available and held amounts. These balances represent funds that have been allocated by the client to this specific connection and are available for operations by the partner.'
         required:
           - clientId
           - partnerId
