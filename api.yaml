@@ -24653,6 +24653,32 @@ paths:
                 error: Database is down
                 errorName: Internal_Server_Error
                 reqId: some-id
+  /api/staking/v1/enterprises/{enterpriseId}/stakeable-coins:
+    get:
+      tags:
+        - Staking State Information
+      summary: List coins available to enterprise for staking
+      description: Retrieve a list of coins available for staking.
+      operationId: v1.enterprise.stakeableCoins
+      parameters:
+        - name: enterpriseId
+          in: path
+          description: The enterprise ID.
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Successful Retrieving a List of Stakeable Coins
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StakeableCoins'
+              examples:
+                EnterpriseStakeableCoinsResultExample:
+                  $ref: '#/components/examples/EnterpriseStakeableCoinsResultExample'
   /api/v1/user/login:
     post:
       summary: Login Request
@@ -32393,16 +32419,14 @@ components:
     EnterpriseStakeableCoinsResultExample:
       summary: Enterprise Stakeable Coins Result Example
       value:
-        coins:
-          - symbol: tmatic
-            disclaimer:
-              staking:
-                rewardPercentageRate: '4.2'
-          - symbol: gteth
-            disclaimer:
-              staking:
-                rewardPercentageRate: '6.5100'
-        staked: true
+        - symbol: tmatic
+          disclaimer:
+            staking:
+              rewardPercentageRate: '4.2'
+        - symbol: gteth
+          disclaimer:
+            staking:
+              rewardPercentageRate: '6.5100'
     EthDelegationResultsExample:
       summary: Ethereum Delegation Results Example
       value:
