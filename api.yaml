@@ -29762,6 +29762,40 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/liability-proofs:
+    get:
+      summary: Fetch liability proofs for a given wallet.
+      description: This API call is used to fetch liability proofs for a specific wallet identified by its ID.
+      operationId: '''v2.wallet.proofs.liability.get'''
+      tags:
+        - ProofsService
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserVerificationElements'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/lightning/invoice:
     get:
       summary: Fetch lightning invoices
@@ -47571,6 +47605,31 @@ components:
         - token_type
         - grant_type
         - user
+    LowerProof:
+      title: LowerProof
+      type: object
+      properties:
+        Proof:
+          type: string
+        VerificationKey:
+          type: string
+        MerkleRoot:
+          type: string
+        MerkleRootWithAssetSumHash:
+          type: string
+        MerklePath:
+          type: array
+          items:
+            type: string
+        MerklePosition:
+          type: number
+      required:
+        - Proof
+        - VerificationKey
+        - MerkleRoot
+        - MerkleRootWithAssetSumHash
+        - MerklePath
+        - MerklePosition
     MarginNetOpenPosition:
       type: object
       required:
@@ -55861,6 +55920,28 @@ components:
         - memoId
         - lastMemoId
         - seqno
+    TopProof:
+      title: TopProof
+      type: object
+      properties:
+        Proof:
+          type: string
+        VerificationKey:
+          type: string
+        MerkleRoot:
+          type: string
+        MerkleRootWithAssetSumHash:
+          type: string
+        AssetSum:
+          type: array
+          items:
+            type: string
+      required:
+        - Proof
+        - VerificationKey
+        - MerkleRoot
+        - MerkleRootWithAssetSumHash
+        - AssetSum
     Touchpoint:
       type: object
       description: A Touchpoint. For example the Transfer from a Wallet Touchpoint.
@@ -59149,6 +59230,46 @@ components:
       properties:
         email:
           $ref: '#/components/schemas/Email'
+    UserVerificationElements:
+      title: UserVerificationElements
+      type: object
+      properties:
+        AccountInfo:
+          type: object
+          properties:
+            UserId:
+              type: string
+            Balance:
+              type: array
+              items:
+                type: string
+          required:
+            - UserId
+            - Balance
+        ProofInfo:
+          type: object
+          properties:
+            UserMerklePath:
+              type: array
+              items:
+                type: string
+            UserMerklePosition:
+              type: number
+            BottomProof:
+              $ref: '#/components/schemas/LowerProof'
+            MiddleProof:
+              $ref: '#/components/schemas/LowerProof'
+            TopProof:
+              $ref: '#/components/schemas/TopProof'
+          required:
+            - UserMerklePath
+            - UserMerklePosition
+            - BottomProof
+            - MiddleProof
+            - TopProof
+      required:
+        - AccountInfo
+        - ProofInfo
     UtxoAddress:
       title: Utxo Address
       type: object
