@@ -31486,6 +31486,27 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/solvency-data:
+    get:
+      summary: Get proof of solvency data.
+      description: Get proof of solvency data for Go Accounts. This data consists of the list of supported assets (for proof of solvency), the total liabilities for those assets, BitGo's total reserves for those assets, and the ratio of reserves to liabilities for each asset.
+      operationId: v2.wallet.solvency.data.get
+      tags:
+        - Solvency
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SolvencyData'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallets:
     get:
       summary: List wallets
@@ -54308,6 +54329,32 @@ components:
         - pendingChainInitialization
         - minimumFunding
         - trustedTokens
+    SolvencyData:
+      title: SolvencyData
+      type: object
+      description: 'Solvency data schema consists of: - assets: array of supported asset symbols - liabilities: array of total liabilities for each asset - reserves: array of total reserves for each asset - ratios: ratio of reserves to liabilities for each asset'
+      properties:
+        assets:
+          type: array
+          items:
+            type: string
+        liabilities:
+          type: array
+          items:
+            type: string
+        reserves:
+          type: array
+          items:
+            type: string
+        ratios:
+          type: array
+          items:
+            type: number
+      required:
+        - assets
+        - liabilities
+        - reserves
+        - ratios
     SpendingLimits:
       type: object
       additionalProperties:
