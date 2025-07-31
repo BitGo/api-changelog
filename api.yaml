@@ -202,50 +202,32 @@ paths:
           description: Include data for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: unspentCount
           description: True, if including unspent count for UTXO-based coins.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: includeRbf
           description: True, if including Replace-By-Fee (RBF) transactions in the total balance amount.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: expandAdvancedWhitelist
           description: True, if including the advanced whitelist wallet address in the response. The address is annotated as part of the whitelist entry metadata
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: includeStakingBalances
           description: Includes the staked balance and reward balance of the wallet
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: includeBalance
           description: Omit trying to fetch the wallet balance
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: coin
           in: path
           required: true
@@ -624,18 +606,12 @@ paths:
           description: True, if returning the total number of wallets for each enterprise.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: excludeWalletMemberships
           description: True, if excluding enterprises that the user joined only through wallet memberships.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
       responses:
         '200':
           description: OK
@@ -703,18 +679,12 @@ paths:
           description: True, if excluding "wallets" field containing v1 wallet addresses from the enterprise
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: expandTotalWalletsCount
           description: True, if returning the total number of wallets for this enterprise
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: enterpriseId
           in: path
           required: true
@@ -971,10 +941,7 @@ paths:
           description: If true, adds "addressLabels" to each returned pending approval associated with recipient's addresses
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: approvalId
           description: ''
           in: path
@@ -1269,10 +1236,7 @@ paths:
           description: If provided, only the latest transaction request version will be returned.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: limit
           description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
           in: query
@@ -17979,6 +17943,7 @@ paths:
         to annotate blockchain information.
       operationId: v2.enterprise.listtransfers
       parameters:
+        - $ref: '#/components/parameters/coinArray'
         - $ref: '#/components/parameters/pathEnterpriseId'
         - $ref: '#/components/parameters/dateGte'
         - $ref: '#/components/parameters/dateLt'
@@ -17996,6 +17961,23 @@ paths:
               - id
               - date
         - $ref: '#/components/parameters/txRequestSortDirection'
+        - name: id
+          in: query
+          description: Filter for a transfer by one or more transfer ids
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: address
+          in: query
+          description: Return transfers with elements in `entries` that have an `address` field set to this value
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/AddressString3'
+        - name: txid
+          in: query
+          description: Return transfers with a matching 'txid'
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -25217,29 +25199,20 @@ paths:
           description: Whether to include address balances
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: includeTokens
           description: Whether to include token addresses
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: includeAllTokenAddresses
           description: Whether to include all token addresses for receiver addresses
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: labelContains
           description: A case-insensitive regular expression which will be used to filter returned addresses based on their address label.
           in: query
@@ -25299,11 +25272,8 @@ paths:
           description: For large wallets (>100k addresses), include total count of addresses (including addresses pending on-chain) matching the query.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: prevId
           description: Return the next batch of results, based on the nextBatchPrevId value from the previous batch
           in: query
@@ -25334,10 +25304,7 @@ paths:
           description: DEPRECATED. Mutually exclusive with 'chains'. Returns only 'p2shP2wsh' unspents/addresses on true. Returns only 'p2sh' unspents/addresses on false. Equivalent to passing 10 and 11 as the only value in 'chains' on true, 0 and 1 on false.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: coin
           in: path
           required: true
@@ -25688,11 +25655,8 @@ paths:
           description: True, if expanding the send transfer for each stuck transaction if one is available.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: txid
           description: The transaction ID of the stuck transaction.
           in: query
@@ -25960,10 +25924,7 @@ paths:
           description: Include balances for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: enterprise
           description: Filter by enterprise ID
           in: query
@@ -25979,20 +25940,14 @@ paths:
           description: Include wallets that have 'deleted' or 'creationFailed' set to **true**
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: includeStakingBalances
           description: Include `stakingBalanceString` and `rewardBalanceString` properties for each staking wallet.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: coin
           in: path
           required: true
@@ -26046,10 +26001,7 @@ paths:
           description: Whether to include all tokens
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: dateGte
           description: Date greater than or equal to
           in: query
@@ -26073,10 +26025,7 @@ paths:
           description: Whether to include v1 audit logs
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: limit
           description: Limit the number of results
           in: query
@@ -26341,20 +26290,14 @@ paths:
           description: True, if returning tokens.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: excludeOfcCoins
           description: True, if excluding off-chain assets.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: enterpriseId
           description: ''
           in: path
@@ -26694,10 +26637,7 @@ paths:
           description: If provided, only the latest transaction request version will be returned.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: limit
           description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
           in: query
@@ -28780,18 +28720,12 @@ paths:
           description: True, if returning pending approvals that are actionable by the current user.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: byOrganization
           description: True, if returning counts of pending approvals by organizations that the current user is a part of.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
       responses:
         '200':
           description: OK
@@ -29678,50 +29612,32 @@ paths:
           description: Include data for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: unspentCount
           description: True, if including unspent count for UTXO-based coins.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: includeRbf
           description: True, if including Replace-By-Fee (RBF) transactions in the total balance amount.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: expandAdvancedWhitelist
           description: True, if including the advanced whitelist wallet address in the response. The address is annotated as part of the whitelist entry metadata
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: includeStakingBalances
           description: Includes the staked balance and reward balance of the wallet
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: includeBalance
           description: Omit trying to fetch the wallet balance
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: walletId
           in: path
           required: true
@@ -31326,10 +31242,7 @@ paths:
           description: Include balances for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: coin
           description: Filter by coin
           in: query
@@ -31347,11 +31260,8 @@ paths:
           description: Filter by deleted state
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: enterprise
           description: Filter by enterprise ID
           in: query
@@ -31367,29 +31277,20 @@ paths:
           description: Exclude tokens with zero balance. When allTokens is passed, then every token supported by BitGo will be included, regardless of balance.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: excludeSpendableBalances
           description: Skip spendable balance calculations and only include confirmed balances. If absent, defaults to false.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: expandCustodialWallet
           description: Whether balances of linked custodial wallets should be included
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: id
           description: Filter by wallet ID
           in: query
@@ -31405,11 +31306,8 @@ paths:
           description: Include `stakingBalanceString` and `rewardBalanceString` properties for each staking wallet.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: labelContains
           description: Filter by label substring
           in: query
@@ -31419,20 +31317,14 @@ paths:
           description: Do not include pending withdrawals when determining total balances. By default, pending withdrawals will be considered.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: skipTxCounts
           description: True, if excluding transfer counts when calculating total balances. If absent, defaults to false.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: type
           description: Filter by wallet type
           in: query
@@ -31571,10 +31463,7 @@ paths:
           description: Filter by deleted state
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: prevId
           description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
           in: query
@@ -31591,49 +31480,31 @@ paths:
           description: Add "balanceString", "confirmedBalanceString" and "spendableBalanceString" to each wallet
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: excludeSpendableBalance
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: expandPolicy
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: expandCustodialWallet
           description: Whether linked custodial wallets should be expanded inline
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: ignoreErrors
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: includeStakingBalances
           description: Include `stakingBalanceString` and `rewardBalanceString` properties for each staking wallet. Requires `expandBalance` to be set to true.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: limit
           description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
           in: query
@@ -31652,11 +31523,8 @@ paths:
           description: Do not add "receiveAddress" to each wallet
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
-            default: 'false'
+            type: boolean
+            default: false
         - name: permission
           description: Return only wallets for which the user has the given permission
           in: query
@@ -31769,10 +31637,7 @@ paths:
           description: Filter by deleted state.
           in: query
           schema:
-            type: string
-            enum:
-              - 'true'
-              - 'false'
+            type: boolean
         - name: labelContains
           description: Filter by label substring
           in: query
