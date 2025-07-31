@@ -17979,6 +17979,7 @@ paths:
         to annotate blockchain information.
       operationId: v2.enterprise.listtransfers
       parameters:
+        - $ref: '#/components/parameters/coinArray'
         - $ref: '#/components/parameters/pathEnterpriseId'
         - $ref: '#/components/parameters/dateGte'
         - $ref: '#/components/parameters/dateLt'
@@ -17996,6 +17997,23 @@ paths:
               - id
               - date
         - $ref: '#/components/parameters/txRequestSortDirection'
+        - name: id
+          in: query
+          description: Filter for a transfer by one or more transfer ids
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: address
+          in: query
+          description: Return transfers with elements in `entries` that have an `address` field set to this value
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/AddressString3'
+        - name: txid
+          in: query
+          description: Return transfers with a matching 'txid'
+          schema:
+            type: string
       responses:
         '200':
           description: OK
