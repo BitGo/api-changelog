@@ -39246,6 +39246,11 @@ components:
                     - $ref: '#/components/schemas/WalletAdminActionRequest'
                     - $ref: '#/components/schemas/FinalApprovalActionRequest'
                     - $ref: '#/components/schemas/EnterpriseUsersActionRequest'
+                    - $ref: '#/components/schemas/EnterpriseAdminsActionRequest'
+                    - $ref: '#/components/schemas/LivenessVerificationFromEnterpriseAdminActionRequest'
+                    - $ref: '#/components/schemas/LivenessVerificationFromRequestorActionRequest'
+                    - $ref: '#/components/schemas/LivenessVerificationFromEnterpriseUsersActionRequest'
+                    - $ref: '#/components/schemas/NoneActionRequest'
         filteringConditions:
           type: array
           description: List of Filtering Conditions that must trigger for the policy rule to be Evaluated.
@@ -39254,6 +39259,7 @@ components:
               - $ref: '#/components/schemas/WalletIdsFilteringCondition'
               - $ref: '#/components/schemas/WalletTypeFilteringCondition'
               - $ref: '#/components/schemas/WalletAllFilteringCondition'
+              - $ref: '#/components/schemas/RuleAllFilteringCondition'
         lockType:
           type: string
           description: |
@@ -40955,6 +40961,37 @@ components:
           enum:
             - approvals.customer.enterpriseAdmin
           example: approvals.customer.enterpriseAdmin
+        operator:
+          $ref: '#/components/schemas/OperatorType'
+    EnterpriseAdminsActionRequest:
+      title: Enterprise admin approval
+      type: object
+      description: Require approval from enterprise admins.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.customer.enterpriseAdmin
+          example: approvals.customer.enterpriseAdmin
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+          required:
+            - minRequired
+          properties:
+            minRequired:
+              type: number
+              description: Minimum required number of approvers
+              example: 1
+            initiatorIsAllowedToApprove:
+              type: boolean
+              description: Whether the initiator is allowed to approve this action. false by default.
+              example: false
+              default: false
         operator:
           $ref: '#/components/schemas/OperatorType'
     EnterpriseAvailableUI:
@@ -46958,6 +46995,105 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WalletShare1'
+    LivenessVerificationFromEnterpriseAdminActionRequest:
+      title: Liveness Verification From Enterprise Admins
+      type: object
+      description: Require liveness verification from enterprise admins.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.bitgo.livenessVerificationFromEnterpriseAdmins
+          example: approvals.bitgo.livenessVerificationFromEnterpriseAdmins
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+          required:
+            - minRequired
+          properties:
+            minRequired:
+              type: number
+              description: Minimum required number of approvers
+              example: 1
+            initiatorIsAllowedToApprove:
+              type: boolean
+              description: Whether the initiator is allowed to approve this action. false by default.
+              example: false
+              default: false
+        operator:
+          $ref: '#/components/schemas/OperatorType'
+    LivenessVerificationFromEnterpriseUsersActionRequest:
+      title: Liveness Verification From Specific Users
+      type: object
+      description: Require liveness verification from specific users.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.bitgo.livenessVerificationFromUsers
+          example: approvals.bitgo.livenessVerificationFromUsers
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+          required:
+            - userIds
+            - minRequired
+          properties:
+            userIds:
+              type: array
+              items:
+                type: string
+                example: 63cf101298470200073bbae71add80d5
+              description: List of enterprise users for approval
+              example:
+                - 63cf101298470200073bbae71add80d5
+            minRequired:
+              type: number
+              description: Minimum required number of approvers
+              example: 1
+            initiatorIsAllowedToApprove:
+              type: boolean
+              description: Whether the initiator is allowed to approve this action. false by default.
+              example: false
+              default: false
+        operator:
+          $ref: '#/components/schemas/OperatorType'
+    LivenessVerificationFromRequestorActionRequest:
+      title: Liveness Verification From Requestor
+      type: object
+      description: Require liveness verification from the requestor.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.bitgo.livenessVerificationFromRequestor
+          example: approvals.bitgo.livenessVerificationFromRequestor
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+          properties:
+            minRequired:
+              type: number
+              description: Minimum required number of approvers
+              example: 1
+            initiatorIsAllowedToApprove:
+              type: boolean
+              description: Whether the initiator is allowed to approve this action. false by default.
+              example: false
+              default: false
+        operator:
+          $ref: '#/components/schemas/OperatorType'
     LivenessVerificationParameter:
       title: LivenessVerificationParameter
       type: string
@@ -48046,6 +48182,25 @@ components:
     NonZeroBigAmount:
       title: NonZeroBigAmount
       type: string
+    NoneActionRequest:
+      title: None
+      type: object
+      description: No action required.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.bitgo.noop
+          example: approvals.bitgo.noop
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+          additionalProperties: true
+        operator:
+          $ref: '#/components/schemas/OperatorType'
     NtildeProof:
       title: NtildeProof
       type: object
@@ -51226,11 +51381,13 @@ components:
             * `INACTIVE` - Will NOT be Evaluated.
             * `DENIED` - The requested policy rule change was Denied.
             * `PENDING_APPROVAL` - This version of the policy rule is Pending Approval before it can be activated.
+            * `UNLOCK_PENDING` - This version of the policy rule is created when a request to unlock a policy is initiated.
           enum:
             - ACTIVE
             - INACTIVE
             - DENIED
             - PENDING_APPROVAL
+            - UNLOCK_PENDING
           example: ACTIVE
         version:
           type: integer
@@ -52383,6 +52540,23 @@ components:
         - walletId
         - expireTime
         - userId
+    RuleAllFilteringCondition:
+      title: All rules
+      type: object
+      description: Filter by all rules.
+      required:
+        - name
+      properties:
+        name:
+          type: string
+          description: Name of the condition.
+          enum:
+            - rule.all
+          example: rule.all
+        parameters:
+          type: object
+          description: Required data needed to evaluate the Filtering Condition.
+          additionalProperties: true
     STXStakingOptions:
       title: STX
       type: object
