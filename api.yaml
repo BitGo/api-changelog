@@ -37130,6 +37130,19 @@ components:
           type: integer
           description: the height of the block that provides the base values
           example: 11228504
+    BalancesCodec:
+      title: BalancesCodec
+      type: array
+      items:
+        type: object
+        properties:
+          Asset:
+            type: string
+          Amount:
+            type: string
+        required:
+          - Asset
+          - Amount
     BankAccountCurrency:
       title: BankAccountCurrency
       description: |
@@ -53930,24 +53943,15 @@ components:
       type: object
       description: 'Solvency data schema consists of: - assets: array of supported asset symbols - liabilities: array of total liabilities for each asset - reserves: array of total reserves for each asset - ratios: ratio of reserves to liabilities for each asset'
       properties:
-        assets:
-          type: array
-          items:
-            type: string
         liabilities:
-          type: array
-          items:
-            type: string
+          $ref: '#/components/schemas/BalancesCodec'
         reserves:
-          type: array
-          items:
-            type: string
+          $ref: '#/components/schemas/BalancesCodec'
         ratios:
           type: array
           items:
             type: number
       required:
-        - assets
         - liabilities
         - reserves
         - ratios
@@ -55587,9 +55591,7 @@ components:
         MerkleRootWithAssetSumHash:
           type: string
         AssetSum:
-          type: array
-          items:
-            type: string
+          $ref: '#/components/schemas/BalancesCodec'
       required:
         - Proof
         - VerificationKey
@@ -58907,9 +58909,7 @@ components:
             UserId:
               type: string
             Balance:
-              type: array
-              items:
-                type: string
+              $ref: '#/components/schemas/BalancesCodec'
           required:
             - UserId
             - Balance
