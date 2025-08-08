@@ -24535,7 +24535,7 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/queryCoin'
+        - $ref: '#/components/parameters/queryCoins'
         - $ref: '#/components/parameters/queryLabel'
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize'
@@ -34997,29 +34997,17 @@ components:
       schema:
         $ref: '#/components/schemas/Id'
       description: Return the next batch of results, based on the `nextBatchPrevId` value from the previous batch.
-    queryCoin:
+    queryCoins:
       name: coin
       in: query
-      description: The staking asset.
+      description: Filter by one or more staking assets.
       required: false
+      style: form
+      explode: true
       schema:
-        type: string
-        oneOf:
-          - type: string
-            enum:
-              - ADA
-              - AVAXP
-              - BERA
-              - BTC
-              - DOT
-              - ETH
-              - MATIC
-              - NEAR
-              - SOL
-              - STX
-              - TON
-              - WCT
-          - type: string
+        type: array
+        items:
+          $ref: '#/components/schemas/Coin1'
     queryFederationQ:
       name: q
       in: query
@@ -38514,6 +38502,22 @@ components:
       description: A cryptocurrency or token ticker symbol.
       type: string
       example: btc
+    Coin1:
+      type: string
+      description: The staking asset.
+      enum:
+        - ADA
+        - AVAXP
+        - BERA
+        - BTC
+        - DOT
+        - ETH
+        - MATIC
+        - NEAR
+        - SOL
+        - STX
+        - TON
+        - WCT
     CoinConditionParameter:
       title: Coin
       type: object
