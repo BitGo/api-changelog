@@ -24619,6 +24619,613 @@ paths:
               examples:
                 EnterpriseStakeableCoinsResultExample:
                   $ref: '#/components/examples/EnterpriseStakeableCoinsResultExample'
+  /api/stablecoin/v1/{token}/constants:
+    get:
+      summary: Get Token Constants
+      description: Retrieves token constants.
+      operationId: stablecoin.v1.token.constants.get
+      tags:
+        - Stablecoin
+      parameters:
+        - name: token
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTokenConstantsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/stablecoin/v1/assets:
+    get:
+      summary: List supported assets
+      description: Returns a list of assets.
+      operationId: stablecoin.v1.assets.get
+      tags:
+        - Stablecoin
+      parameters:
+        - name: ids
+          description: Unique identifier for the asset.
+          in: query
+          schema:
+            type: string
+            example: d1c27189-764c-4197-af06-e2623658f410
+            minLength: 1
+            format: uuid
+        - name: token
+          description: Token symbol or identifier for the stablecoin.
+          in: query
+          schema:
+            type: string
+            example: eth:usd1
+            minLength: 1
+        - name: chain
+          description: Blockchain network or chain name where the asset exists.
+          in: query
+          schema:
+            type: string
+            example: eth
+            minLength: 1
+        - name: isIssuedByBitgo
+          description: Flag to filter assets based on whether they were issued by BitGo.
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssetsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/stablecoin/v1/enterprise/{enterpriseId}/order:
+    post:
+      summary: Create stablecoin order
+      description: Creates a mint or burn order.
+      operationId: stablecoin.v1.enterprise.order.post
+      tags:
+        - Stablecoin
+      parameters:
+        - name: enterpriseId
+          description: Enterprise id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 67bc4ae090e8af8f9b412d3d67e85252
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - mint
+                    - burn
+                  description: Type of order operation (mint or burn)
+                  example: mint
+                fromAssetId:
+                  type: string
+                  description: Source asset identifier
+                  example: 9025338d-ed25-4da0-aff3-ad970be213a9
+                  title: uuid
+                fromAmount:
+                  type: string
+                  description: Amount to be transferred from source asset, specified in its lowest denomination.
+                  example: '100'
+                toAssetId:
+                  type: string
+                  description: Destination asset identifier
+                  example: d634310c-3359-4fc3-b7d0-96e593f7660e
+                  title: uuid
+                destinationType:
+                  type: string
+                  enum:
+                    - go_account
+                    - address
+                    - wallet
+                  description: Type of destination for the order
+                  example: go_account
+                destinationWalletId:
+                  type: string
+                  description: Destination wallet identifier for go_account type
+                  example: 8iMXoeSpS1d1ziEJ
+                  minLength: 1
+                destinationAddress:
+                  type: string
+                  description: Destination blockchain address
+                  minLength: 1
+                sourceWalletId:
+                  type: string
+                  minLength: 1
+              required:
+                - type
+                - fromAssetId
+                - fromAmount
+                - toAssetId
+                - destinationType
+                - sourceWalletId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/stablecoin/v1/enterprise/{enterpriseId}/orders:
+    get:
+      summary: List stablecoin orders by enterprise
+      description: Retrieves a list of orders for a specific enterprise.
+      operationId: stablecoin.v1.enterprise.order.get
+      tags:
+        - Stablecoin
+      parameters:
+        - name: searchLabel
+          description: SearchLabel can represent either an Order Id or a Transaction Id.
+          in: query
+          schema:
+            type: string
+            example: 512f64d10b5f358f6dbf3303f90013cfa46006b02a03282456d6bd6432cc5daf
+            minLength: 1
+        - name: ids
+          description: Specific order identifiers
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: stablecoinAssetId
+          description: Stablecoin asset identifier
+          in: query
+          schema:
+            type: string
+            example: d1c27189-764c-4197-af06-e2623658f410
+            minLength: 1
+        - name: type
+          description: Order type
+          in: query
+          schema:
+            type: string
+            enum:
+              - mint
+              - burn
+              - reward
+            example: mint
+        - name: status
+          description: Order processing status
+          in: query
+          schema:
+            oneOf:
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - created
+                    - confirmed_fiat_deposit
+                    - confirmed_token_deposit
+                    - initiated_burn_token_transfer
+                    - completed_burn_token_transfer
+                    - approved_mint
+                    - triggering_mint
+                    - triggering_burn
+                    - completed_burn
+                    - approved_client_disbursal
+                    - initiated_client_disbursal
+                    - fulfilled
+                    - failed_mint_initiation
+                    - failed_mint_transaction
+                    - failed_burn_transaction
+                    - failed_burn_token_transfer
+                    - failed_to_mint
+                    - failed_to_burn
+                    - failed_to_initiate_disbursal
+                    - failed_to_complete_disbursal
+              - type: string
+                enum:
+                  - created
+                  - confirmed_fiat_deposit
+                  - confirmed_token_deposit
+                  - initiated_burn_token_transfer
+                  - completed_burn_token_transfer
+                  - approved_mint
+                  - triggering_mint
+                  - triggering_burn
+                  - completed_burn
+                  - approved_client_disbursal
+                  - initiated_client_disbursal
+                  - fulfilled
+                  - failed_mint_initiation
+                  - failed_mint_transaction
+                  - failed_burn_transaction
+                  - failed_burn_token_transfer
+                  - failed_to_mint
+                  - failed_to_burn
+                  - failed_to_initiate_disbursal
+                  - failed_to_complete_disbursal
+            example: created
+        - name: fromDate
+          description: Start date for order search
+          in: query
+          schema:
+            type: string
+            example: '2025-05-24T07:28:17.042Z'
+            format: date-time
+            title: ISO Date String
+        - name: toDate
+          description: End date for order search
+          in: query
+          schema:
+            type: string
+            example: '2025-06-23T07:28:17.042Z'
+            format: date-time
+            title: ISO Date String
+        - name: limit
+          description: Maximum results per page
+          in: query
+          schema:
+            type: string
+            example: '10'
+            format: number
+        - name: skip
+          description: Results to skip
+          in: query
+          schema:
+            type: string
+            example: '0'
+            format: number
+        - name: sortBy
+          description: Field name for sorting
+          in: query
+          schema:
+            type: string
+        - name: sortOrder
+          description: Sort direction
+          in: query
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+            example: DESC
+        - name: enterpriseId
+          description: Enterprise id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 67bc4ae090e8af8f9b412d3d67e85252
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        fromAssetId:
+                          type: string
+                          description: Source asset identifier
+                          example: 08c1271e-b15d-4af8-8929-f75383903da4
+                          format: uuid
+                          title: uuid
+                        fromAmount:
+                          type: string
+                          description: Amount to be transferred from source asset, specified in its lowest denomination.
+                          example: '500'
+                          minLength: 1
+                        toAssetId:
+                          type: string
+                          description: Destination asset identifier
+                          example: 49ff49ea-3355-4717-bbb0-5e8f5cae2202
+                          format: uuid
+                          title: uuid
+                        toAmount:
+                          type: string
+                          description: Amount to be received in destination asset
+                          example: '5000000'
+                          minLength: 1
+                        destinationType:
+                          type: string
+                          enum:
+                            - go_account
+                            - address
+                            - wallet
+                          description: Type of destination for the order
+                          example: go_account
+                        sourceWalletId:
+                          type: string
+                          description: Source wallet identifier for the order
+                          example: 67bc4b038f5408faefbfc8edcf6e6577
+                          minLength: 1
+                          pattern: ^[0-9a-f]{32}$
+                        destinationWalletId:
+                          type: string
+                          description: Destination wallet identifier for go_account type
+                          example: 67bc4b038f5408faefbfc8edcf6e6577
+                          pattern: ^[0-9a-f]{32}$
+                        destinationAddress:
+                          type: string
+                          description: Destination blockchain address
+                          example: default_address
+                          minLength: 1
+                        userId:
+                          type: string
+                          description: User identifier who initiated the order
+                          example: 677cfdceca8396cf5f7534ddeb8d11e3
+                          minLength: 1
+                          pattern: ^[0-9a-f]{32}$
+                        clientDepositTxHash:
+                          type: string
+                          description: Transaction hash of the client deposit
+                          example: 512f64d10b5f358f6dbf3303f90013cfa46006b02a03282456d6bd6432cc5daf
+                          minLength: 1
+                        orderHistories:
+                          type: array
+                          items:
+                            allOf:
+                              - $ref: '#/components/schemas/OrderHistoryBase'
+                            description: Array of order status changes with timestamps
+                        transactions:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              txId:
+                                type: string
+                                description: Transaction identifier
+                                example: 512f64d10b5f358f6dbf3303f90013cfa46006b02a03282456d6bd6432cc5daf
+                                minLength: 1
+                              orderId:
+                                type: string
+                                description: Associated order identifier
+                                example: 95bdbd9c-9cdc-41a4-ae70-165387b7aa51
+                                format: uuid
+                                title: uuid
+                              assetId:
+                                type: string
+                                description: Asset identifier involved in transaction
+                                example: 08c1271e-b15d-4af8-8929-f75383903da4
+                                format: uuid
+                                title: uuid
+                              type:
+                                type: string
+                                enum:
+                                  - clientDeposit
+                                  - mint
+                                  - burn
+                                  - burnTokenTransfer
+                                  - clientDisbursement
+                                description: Type of transaction
+                                example: clientDeposit
+                              sender:
+                                type: string
+                                description: Sender identifier
+                                example: client
+                                minLength: 1
+                              senderType:
+                                type: string
+                                enum:
+                                  - go_account
+                                  - address
+                                  - wallet
+                                description: Type of sender
+                                example: go_account
+                              senderId:
+                                type: string
+                                description: Unique identifier of sender
+                                example: 67bc4b038f5408faefbfc8edcf6e6577
+                                minLength: 1
+                                pattern: ^[0-9a-f]{32}$
+                              sendAmount:
+                                type: string
+                                description: Amount sent in transaction
+                                example: '500'
+                                minLength: 1
+                              receiver:
+                                type: string
+                                description: Receiver identifier
+                                example: trust
+                                minLength: 1
+                              receiverType:
+                                type: string
+                                enum:
+                                  - go_account
+                                  - address
+                                description: Type of receiver
+                                example: go_account
+                              receiverId:
+                                type: string
+                                description: Unique identifier of receiver
+                                example: 6698e670115059e2efe672436a3aea3b
+                                minLength: 1
+                                pattern: ^[0-9a-f]{32}$
+                              receiveAmount:
+                                type: string
+                                description: Amount received in transaction
+                                example: '500'
+                                minLength: 1
+                              status:
+                                type: string
+                                enum:
+                                  - initiated
+                                  - signed
+                                  - unconfirmed
+                                  - confirmed
+                                  - rejected
+                                  - failed
+                                description: Current status of transaction
+                                example: confirmed
+                              createdAt:
+                                type: string
+                                description: Timestamp when transaction was created
+                                example: '2025-04-04T09:26:21.600Z'
+                              updatedAt:
+                                type: string
+                                description: Timestamp when transaction was last updated
+                                example: '2025-04-04T09:26:21.600Z'
+                              pendingApprovalId:
+                                type: string
+                                description: Pending approval id
+                                minLength: 1
+                            required:
+                              - txId
+                              - orderId
+                              - assetId
+                              - type
+                              - sender
+                              - senderType
+                              - senderId
+                              - sendAmount
+                              - receiver
+                              - receiverType
+                              - receiverId
+                              - receiveAmount
+                              - status
+                              - createdAt
+                              - updatedAt
+                              - pendingApprovalId
+                            description: List of transactions associated with the order
+                        metadata:
+                          type: string
+                          description: Additional metadata about the order
+                          minLength: 1
+                        createdAt:
+                          type: string
+                          description: Timestamp when the order was created
+                          example: '2025-04-04T09:25:48.216Z'
+                          format: date-time
+                          title: ISO Date String
+                        updatedAt:
+                          type: string
+                          description: Timestamp when the order was last updated
+                          example: '2025-04-04T09:55:09.136Z'
+                          format: date-time
+                          title: ISO Date String
+                      required:
+                        - fromAssetId
+                        - fromAmount
+                        - toAssetId
+                        - toAmount
+                        - destinationType
+                    - $ref: '#/components/schemas/OrderResponseBase'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/stablecoin/v1/enterprise/{enterpriseId}/orders/{orderId}:
+    get:
+      summary: Get stablecoin order by ID
+      description: Retrieves a order by its ID for a specific enterprise.
+      operationId: stablecoin.v1.enterprise.order.getById
+      tags:
+        - Stablecoin
+      parameters:
+        - name: enterpriseId
+          description: Enterprise id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 67bc4ae090e8af8f9b412d3d67e85252
+            minLength: 1
+        - name: orderId
+          description: Order identifier
+          in: path
+          required: true
+          schema:
+            type: string
+            example: ec84b11f-491b-465f-a118-403a3485452b
+            title: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /api/v1/user/login:
     post:
       summary: Login Request
@@ -36706,6 +37313,52 @@ components:
       type: integer
       minimum: 1
       example: 1
+    AssetsResponse:
+      title: AssetsResponse
+      type: array
+      items:
+        type: object
+        properties:
+          id:
+            type: string
+            description: Unique identifier for the asset.
+            example: d1c27189-764c-4197-af06-e2623658f410
+            minLength: 1
+            format: uuid
+          token:
+            type: string
+            description: Token symbol
+            example: eth:usd1
+            minLength: 1
+          name:
+            type: string
+            description: Human-readable name of the token
+            example: USD1
+            minLength: 1
+          decimals:
+            type: number
+            description: Number of decimal places for token precision
+            example: 18
+          isIssuedByBitgo:
+            type: boolean
+            description: Flag indicating if BitGo issued this token
+            example: false
+          chain:
+            type: string
+            description: Blockchain network identifier for the token
+            example: eth
+            minLength: 1
+          backingAsset:
+            type: string
+            description: Token that provides backing value
+            example: fiatusd
+            minLength: 1
+        required:
+          - id
+          - token
+          - name
+          - decimals
+          - isIssuedByBitgo
     AtomAddress:
       title: Atom Address
       type: object
@@ -44334,6 +44987,16 @@ components:
               - contractSequenceId
       required:
         - sequenceIds
+    GetTokenConstantsResponse:
+      title: GetTokenConstantsResponse
+      type: object
+      properties:
+        trustAccountWalletId:
+          type: string
+          description: Identifier for the trust account wallet that holds and manages token assets
+          example: fake_trust_go_account_id
+      required:
+        - trustAccountWalletId
     GetTransactionRequestsResponse:
       title: GetTransactionRequestsResponse
       type: object
@@ -48792,6 +49455,309 @@ components:
         quantity: '1.01'
         cumulativeQuantity: '0.50'
         averagePrice: '7090.1'
+    OrderHistoryBase:
+      title: OrderHistoryBase
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - created
+            - confirmed_fiat_deposit
+            - confirmed_token_deposit
+            - initiated_burn_token_transfer
+            - completed_burn_token_transfer
+            - approved_mint
+            - triggering_mint
+            - triggering_burn
+            - completed_burn
+            - approved_client_disbursal
+            - initiated_client_disbursal
+            - fulfilled
+            - failed_mint_initiation
+            - failed_mint_transaction
+            - failed_burn_transaction
+            - failed_burn_token_transfer
+            - failed_to_mint
+            - failed_to_burn
+            - failed_to_initiate_disbursal
+            - failed_to_complete_disbursal
+          description: Status of the order
+          example: created
+        timestamp:
+          type: string
+          description: Timestamp when the status was updated
+          example: '2025-04-04T09:25:48.216Z'
+          format: date-time
+          title: ISO Date String
+      required:
+        - status
+        - timestamp
+    OrderResponse:
+      title: OrderResponse
+      allOf:
+        - type: object
+          properties:
+            fromAssetId:
+              type: string
+              description: Source asset identifier
+              example: 08c1271e-b15d-4af8-8929-f75383903da4
+              format: uuid
+              title: uuid
+            fromAmount:
+              type: string
+              description: Amount to be transferred from source asset, specified in its lowest denomination.
+              example: '500'
+              minLength: 1
+            toAssetId:
+              type: string
+              description: Destination asset identifier
+              example: 49ff49ea-3355-4717-bbb0-5e8f5cae2202
+              format: uuid
+              title: uuid
+            toAmount:
+              type: string
+              description: Amount to be received in destination asset
+              example: '5000000'
+              minLength: 1
+            destinationType:
+              type: string
+              enum:
+                - go_account
+                - address
+                - wallet
+              description: Type of destination for the order
+              example: go_account
+            sourceWalletId:
+              type: string
+              description: Source wallet identifier for the order
+              example: 67bc4b038f5408faefbfc8edcf6e6577
+              minLength: 1
+              pattern: ^[0-9a-f]{32}$
+            destinationWalletId:
+              type: string
+              description: Destination wallet identifier for go_account type
+              example: 67bc4b038f5408faefbfc8edcf6e6577
+              pattern: ^[0-9a-f]{32}$
+            destinationAddress:
+              type: string
+              description: Destination blockchain address
+              example: default_address
+              minLength: 1
+            userId:
+              type: string
+              description: User identifier who initiated the order
+              example: 677cfdceca8396cf5f7534ddeb8d11e3
+              minLength: 1
+              pattern: ^[0-9a-f]{32}$
+            clientDepositTxHash:
+              type: string
+              description: Transaction hash of the client deposit
+              example: 512f64d10b5f358f6dbf3303f90013cfa46006b02a03282456d6bd6432cc5daf
+              minLength: 1
+            orderHistories:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/OrderHistoryBase'
+                description: Array of order status changes with timestamps
+            transactions:
+              type: array
+              items:
+                type: object
+                properties:
+                  txId:
+                    type: string
+                    description: Transaction identifier
+                    example: 512f64d10b5f358f6dbf3303f90013cfa46006b02a03282456d6bd6432cc5daf
+                    minLength: 1
+                  orderId:
+                    type: string
+                    description: Associated order identifier
+                    example: 95bdbd9c-9cdc-41a4-ae70-165387b7aa51
+                    format: uuid
+                    title: uuid
+                  assetId:
+                    type: string
+                    description: Asset identifier involved in transaction
+                    example: 08c1271e-b15d-4af8-8929-f75383903da4
+                    format: uuid
+                    title: uuid
+                  type:
+                    type: string
+                    enum:
+                      - clientDeposit
+                      - mint
+                      - burn
+                      - burnTokenTransfer
+                      - clientDisbursement
+                    description: Type of transaction
+                    example: clientDeposit
+                  sender:
+                    type: string
+                    description: Sender identifier
+                    example: client
+                    minLength: 1
+                  senderType:
+                    type: string
+                    enum:
+                      - go_account
+                      - address
+                      - wallet
+                    description: Type of sender
+                    example: go_account
+                  senderId:
+                    type: string
+                    description: Unique identifier of sender
+                    example: 67bc4b038f5408faefbfc8edcf6e6577
+                    minLength: 1
+                    pattern: ^[0-9a-f]{32}$
+                  sendAmount:
+                    type: string
+                    description: Amount sent in transaction
+                    example: '500'
+                    minLength: 1
+                  receiver:
+                    type: string
+                    description: Receiver identifier
+                    example: trust
+                    minLength: 1
+                  receiverType:
+                    type: string
+                    enum:
+                      - go_account
+                      - address
+                    description: Type of receiver
+                    example: go_account
+                  receiverId:
+                    type: string
+                    description: Unique identifier of receiver
+                    example: 6698e670115059e2efe672436a3aea3b
+                    minLength: 1
+                    pattern: ^[0-9a-f]{32}$
+                  receiveAmount:
+                    type: string
+                    description: Amount received in transaction
+                    example: '500'
+                    minLength: 1
+                  status:
+                    type: string
+                    enum:
+                      - initiated
+                      - signed
+                      - unconfirmed
+                      - confirmed
+                      - rejected
+                      - failed
+                    description: Current status of transaction
+                    example: confirmed
+                  createdAt:
+                    type: string
+                    description: Timestamp when transaction was created
+                    example: '2025-04-04T09:26:21.600Z'
+                  updatedAt:
+                    type: string
+                    description: Timestamp when transaction was last updated
+                    example: '2025-04-04T09:26:21.600Z'
+                  pendingApprovalId:
+                    type: string
+                    description: Pending approval id
+                    minLength: 1
+                required:
+                  - txId
+                  - orderId
+                  - assetId
+                  - type
+                  - sender
+                  - senderType
+                  - senderId
+                  - sendAmount
+                  - receiver
+                  - receiverType
+                  - receiverId
+                  - receiveAmount
+                  - status
+                  - createdAt
+                  - updatedAt
+                  - pendingApprovalId
+                description: List of transactions associated with the order
+            metadata:
+              type: string
+              description: Additional metadata about the order
+              minLength: 1
+            createdAt:
+              type: string
+              description: Timestamp when the order was created
+              example: '2025-04-04T09:25:48.216Z'
+              format: date-time
+              title: ISO Date String
+            updatedAt:
+              type: string
+              description: Timestamp when the order was last updated
+              example: '2025-04-04T09:55:09.136Z'
+              format: date-time
+              title: ISO Date String
+          required:
+            - fromAssetId
+            - fromAmount
+            - toAssetId
+            - toAmount
+            - destinationType
+        - $ref: '#/components/schemas/OrderResponseBase'
+    OrderResponseBase:
+      title: OrderResponseBase
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the order
+          example: 95bdbd9c-9cdc-41a4-ae70-165387b7aa51
+          format: uuid
+          title: uuid
+        type:
+          type: string
+          enum:
+            - mint
+            - burn
+            - reward
+          description: Type of order operation
+          example: mint
+        status:
+          type: string
+          enum:
+            - created
+            - confirmed_fiat_deposit
+            - confirmed_token_deposit
+            - initiated_burn_token_transfer
+            - completed_burn_token_transfer
+            - approved_mint
+            - triggering_mint
+            - triggering_burn
+            - completed_burn
+            - approved_client_disbursal
+            - initiated_client_disbursal
+            - fulfilled
+            - failed_mint_initiation
+            - failed_mint_transaction
+            - failed_burn_transaction
+            - failed_burn_token_transfer
+            - failed_to_mint
+            - failed_to_burn
+            - failed_to_initiate_disbursal
+            - failed_to_complete_disbursal
+          description: Current status of the order
+          example: fulfilled
+        enterpriseId:
+          type: string
+          description: The Enterprise ID
+          example: 67bc4ae090e8af8f9b412d3d67e85252
+          minLength: 1
+          pattern: ^[0-9a-f]{32}$
+      required:
+        - id
+        - type
+        - status
+        - enterpriseId
     OrderStatus:
       type: string
       enum:
