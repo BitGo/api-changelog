@@ -22194,6 +22194,11 @@ paths:
                     description: Number representing the margin requirement percentage which is used with the NOP to determine the margin required. It is in decimal form (eg.0.2 for 20%)
                     type: number
                     format: decimal
+                  minimumCollateralValue:
+                    allOf:
+                      - $ref: '#/components/schemas/Amount3'
+                      - type: object
+                        description: Quantity representing the minimum collateral value required for margin trading. Currency represents the currency that the quantity is valued in (eg. USD)
                 example:
                   totalShortPositionLimit:
                     quantity: '1000000'
@@ -22201,6 +22206,9 @@ paths:
                   marginCallPercentage: '1.1'
                   liquidationThresholdPercentage: '1.2'
                   marginRequirementPercentage: '0.2'
+                  minimumCollateralValue:
+                    quantity: '50000'
+                    currency: USD
   /api/prime/trading/v1/accounts/{accountID}/margin/netopenpositions:
     get:
       summary: Get net open margin positions
