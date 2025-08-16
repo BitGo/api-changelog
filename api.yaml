@@ -54657,6 +54657,48 @@ components:
           properties: {}
         - $ref: '#/components/schemas/EnableTokenIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+    SolCustomTxIntent:
+      title: SOL Custom Transaction Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - customTx
+            solInstructions:
+              type: array
+              items:
+                type: object
+                properties:
+                  programId:
+                    type: string
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        pubkey:
+                          type: string
+                        isSigner:
+                          type: boolean
+                        isWritable:
+                          type: boolean
+                      required:
+                        - pubkey
+                        - isSigner
+                        - isWritable
+                  data:
+                    type: string
+                required:
+                  - programId
+                  - keys
+                  - data
+          required:
+            - intentType
+            - solInstructions
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/SolBuildOptions'
     SolDeactivateIntent:
       title: SOL Deactivate Intent
       allOf:
@@ -54723,9 +54765,17 @@ components:
               $ref: '#/components/schemas/Amount'
             isMarinade:
               type: boolean
+              deprecated: true
+            stakingType:
+              type: string
+              enum:
+                - NATIVE
+                - MARINADE
+                - JITO
           required:
             - validatorAddress
             - amount
+            - stakingType
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolStakeIntent1:
@@ -54843,6 +54893,13 @@ components:
                 - value
             isMarinade:
               type: boolean
+              deprecated: true
+            stakingType:
+              type: string
+              enum:
+                - NATIVE
+                - MARINADE
+                - JITO
             recipients:
               type: array
               items:
@@ -57046,6 +57103,7 @@ components:
         - $ref: '#/components/schemas/SolCloseAssociatedTokenAccountIntent'
         - $ref: '#/components/schemas/SolConsolidateIntent'
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
+        - $ref: '#/components/schemas/SolCustomTxIntent'
         - $ref: '#/components/schemas/SolDeactivateIntent'
         - $ref: '#/components/schemas/SolDelegateIntent'
         - $ref: '#/components/schemas/SolGoUnstakeIntent'
@@ -57067,6 +57125,7 @@ components:
         - $ref: '#/components/schemas/TonDelegateIntent'
         - $ref: '#/components/schemas/TonPaymentIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
+        - $ref: '#/components/schemas/VetStakingIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
@@ -62479,6 +62538,22 @@ components:
       required:
         - webhookId
         - isValid
+    VetStakingIntent:
+      title: VET Staking Intent
+      allOf:
+        - type: object
+          properties:
+            amount:
+              $ref: '#/components/schemas/Amount'
+            stakingContractAddress:
+              type: string
+              minLength: 1
+            nftTokenId:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - amount
+            - stakingContractAddress
+        - $ref: '#/components/schemas/StakeIntent'
     VideoApprovers:
       type: array
       items:
@@ -63218,6 +63293,7 @@ components:
         - solOfcStaking
         - suiOfcStaking
         - enableWalletConnect
+        - enableSolCustomTx
     WalletId:
       type: string
       example: 59cd72485007a239fb00282ed480da1f
