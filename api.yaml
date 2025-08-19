@@ -18476,9 +18476,12 @@ paths:
   /api/v2/{coin}/wallet/{walletId}/depositinfo:
     get:
       tags:
-        - Bank account
-      summary: Get deposit information
-      description: Collects all information needed for a deposit.
+        - Fiat
+      summary: Get deposit information [DEPRECATED]
+      description: |
+        Collects all information needed for a deposit.
+        DEPRECATED - The new API can be found at /api/v2/bankaccounts/deposit/info
+      deprecated: true
       operationId: v2.wallet.depositinfo
       parameters:
         - $ref: '#/components/parameters/pathCoin'
@@ -20056,281 +20059,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/bankaccounts:
-    post:
-      tags:
-        - Bank account
-      summary: Create a bank account
-      operationId: v2.bankaccount.create
-      description: ''
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/BankAccountRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-    get:
-      tags:
-        - Bank account
-      summary: List bank accounts
-      operationId: v2.bankaccount.list
-      description: |
-        This route is potentially useful for finding the `idHash` of the desired account to use for fiat withdrawals. The `idHash` field
-        is used as the recipient address along with an optional hyphen separator and memo (example: `5812dcaa9a285aa6-memohere`).
-      parameters:
-        - name: verificationState
-          in: query
-          schema:
-            $ref: '#/components/schemas/BankAccountVerificationState'
-        - name: bankAccountIdHash
-          in: query
-          schema:
-            $ref: '#/components/schemas/BankAccountIdHash'
-        - name: bankAccountId
-          in: query
-          schema:
-            $ref: '#/components/schemas/BankAccountId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListBankAccountsResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-  /api/v2/bankaccounts/{bankAccountId}:
-    get:
-      tags:
-        - Bank account
-      summary: Get bank account
-      description: |
-        This route is potentially useful for finding the `idHash` of the desired account to use for fiat withdrawals. The `idHash` field
-        is used as the recipient address along with an optional hyphen separator and memo (example: `5812dcaa9a285aa6-memohere`).
-      operationId: v2.bankaccount.get
-      parameters:
-        - $ref: '#/components/parameters/pathBankAccountId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-    put:
-      tags:
-        - Bank account
-      summary: Update bank account
-      operationId: v2.bankaccount.update
-      parameters:
-        - $ref: '#/components/parameters/pathBankAccountId'
-      description: ''
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateBankAccountRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-    delete:
-      tags:
-        - Bank account
-      summary: Delete bank account
-      operationId: v2.bankaccount.delete
-      parameters:
-        - $ref: '#/components/parameters/pathBankAccountId'
-      description: Removes a bank account
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/BankAccountResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/ErrorPayload'
   /api/v2/pingexpress:
     get:
       tags:
@@ -35499,12 +35227,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Id'
-    pathBankAccountId:
-      name: bankAccountId
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/BankAccountId'
     pathBitcoin:
       name: coin
       in: path
@@ -37806,46 +37528,6 @@ components:
         - fiateur
         - null
       example: fiatusd
-    BankAccountFee:
-      type: object
-      description: |
-        A fee that's associated with a bank account.
-      properties:
-        feeInfo:
-          type: object
-          properties:
-            bank:
-              type: string
-              enum:
-                - customers_sftp
-                - customers_api
-                - bcbgroup
-              description: |
-                The bank that the fee is associated with.
-            type:
-              type: string
-              enum:
-                - static
-                - variable
-              description: |
-                The type of fee.
-            amount:
-              type: string
-              description: |
-                The fee amount.
-            coin:
-              $ref: '#/components/schemas/BankAccountCurrency'
-    BankAccountId:
-      title: ID
-      type: string
-      pattern: ^[0-9a-f]{32}$ OR UUID
-      example: 59cd72485007a239fb00282ed480da1f
-    BankAccountIdHash:
-      type: string
-      example: 5c645791cf8eb19304292a8e3365fee3
-      description: |
-        Unique identifier for this account, derived from `accountNumber`,
-        `routingNumber`, and `swiftCode`
     BankAccountJson:
       title: BankAccountJson
       type: object
@@ -37897,116 +37579,11 @@ components:
         - owner
         - idHash
         - verificationState
-    BankAccountPendingActivity:
-      type: string
-      enum:
-        - trust
     BankAccountRequest:
       anyOf:
         - $ref: '#/components/schemas/DomesticWireBankAccount'
         - $ref: '#/components/schemas/InternationalWireBankAccount'
         - $ref: '#/components/schemas/CBITBankAccount'
-    BankAccountResponse:
-      type: object
-      description: |
-        An external bank account. `routingNumber` must be set for US bank accounts.
-        `swiftCode` must be set for banks outside the US.
-      properties:
-        accountNumber:
-          description: Bank account number or IBAN.
-          type: string
-          minLength: 1
-          maxLength: 34
-          example: 114584906
-        enterpriseId:
-          $ref: '#/components/schemas/Id'
-        address:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        address1:
-          type: string
-          example: 2390 El Camino Real
-        address2:
-          type: string
-          example: Palo Alto, CA 94306
-        address3:
-          type: string
-          example: ''
-        id:
-          $ref: '#/components/schemas/Id'
-        name:
-          type: string
-          example: America California Bank
-        ownerName:
-          type: string
-          example: Donald E. Knuth
-        ownerAddress:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        owner:
-          type: object
-          description: Bank account owner
-          properties:
-            name:
-              type: string
-              example: Donald E. Knuth
-            address1:
-              type: string
-              example: Computer Science Department
-            address2:
-              type: string
-              example: Stanford University
-            address3:
-              type: string
-              example: Stanford, CA 94305-9045
-          required:
-            - name
-            - address1
-        routingNumber:
-          description: US bank routing number
-          type: string
-          example: '129131673'
-          minLength: 9
-          maxLength: 9
-          pattern: ^[0-9]+$
-        shortCountryCode:
-          $ref: '#/components/schemas/ShortCountryCode'
-        swiftCode:
-          description: Bank identifier code, as specified by ISO 9362.  Used by banks outside the US.
-          type: string
-          example: DEUTDEFF500
-          minLength: 8
-          maxLength: 11
-          pattern: ^[A-Z]{6}[0-9A-Z]{2}([0-9A-Z]{3})?$
-        type:
-          $ref: '#/components/schemas/BankAccountType'
-        currency:
-          $ref: '#/components/schemas/BankAccountCurrency'
-        externalId:
-          type: string
-          example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
-        furtherCreditTo:
-          type: string
-          example: Donald E. Knuth
-        intermediaryBankName:
-          type: string
-          example: America California Bank
-        intermediaryBankId:
-          type: string
-          example: 59cd72485007a239fb00282ed480da1f
-        idHash:
-          $ref: '#/components/schemas/BankAccountIdHash'
-        trustOrg:
-          $ref: '#/components/schemas/BitgoOrg1'
-        token:
-          type: string
-          example: fiat
-        verificationState:
-          $ref: '#/components/schemas/BankAccountVerificationState'
-        pendingActivity:
-          $ref: '#/components/schemas/BankAccountPendingActivity'
-        fee:
-          $ref: '#/components/schemas/BankAccountFee'
     BankAccountType:
       title: BankAccountType
       description: |
@@ -38018,13 +37595,6 @@ components:
         - cbit
         - null
       example: wire
-    BankAccountVerificationState:
-      type: string
-      enum:
-        - pending
-        - approved
-        - rejected
-        - removed
     BaseGoStakeIntent:
       title: BaseGoStakeIntent
       allOf:
@@ -38373,23 +37943,6 @@ components:
         - BitGo India
         - BitGo Sister Trust 1
         - BitGo Inc
-    BitgoOrg1:
-      type: string
-      description: BitGo Organization related to this entity
-      enum:
-        - BitGo Inc
-        - BitGo Trust
-        - BitGo New York
-        - BitGo Germany
-        - BitGo Switzerland
-        - Frankfurt DE Trust
-        - BitGo Sister Trust 1
-        - BitGo Korea
-        - BitGo Singapore
-        - BitGo Europe ApS
-        - BitGo Mena Fze
-        - BitGo Custody MENA FZE
-        - BitGo India
     BitgoTSSPublicKeyResponse:
       title: BitgoTSSPublicKeyResponse
       type: object
@@ -38565,6 +38118,19 @@ components:
             For XRP, possible types include: `payment` and `accountSet`. The default is `payment`.
 
             For STX, type is required.
+        messages:
+          description: '[UTXO only] An array of messages that you sign with the wallet keys using the BIP322 format. If passed, the `recipients` array must be empty.'
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+                description: The address for which you're proving ownership. This address must belong to the wallet.
+              message:
+                type: string
+                description: Message that is being signed.
+                example: BIP322 test message.
         numBlocks:
           type: integer
           description: |
@@ -42117,16 +41683,6 @@ components:
         error: invalid permission
         errorName: backend:common:forbidden
         reqId: d41d4d21e63d63b293caf55f2a739a79
-    ErrorPayload:
-      type: object
-      properties:
-        error:
-          type: string
-        errorName:
-          type: string
-      required:
-        - error
-        - errorName
     EstimateTransactionFees:
       title: Bitcoin
       type: object
@@ -47131,13 +46687,6 @@ components:
           example: 59cd72485007a239fb00282ed480da1f
       required:
         - logs
-    ListBankAccountsResponse:
-      type: object
-      properties:
-        bankAccounts:
-          type: array
-          items:
-            $ref: '#/components/schemas/BankAccountResponse'
     ListEnterpriseWebhooksResponse:
       title: ListEnterpriseWebhooksResponse
       type: object
@@ -59407,63 +58956,6 @@ components:
           $ref: '#/components/schemas/optionalString'
         decimals:
           $ref: '#/components/schemas/optionalNumber'
-    UpdateBankAccountRequest:
-      type: object
-      description: Updates some fields on a bank account. The server only allows updating of bank accounts that have their verificationState set to `rejected` or 'approved'. Does not allow updating of critical fields like accountNumber, enterpriseId, id, routingNumber, swiftCode.
-      properties:
-        address1:
-          type: string
-          example: 2390 El Camino Real
-        address2:
-          type: string
-          example: Palo Alto, CA 94306
-        address3:
-          type: string
-          example: ''
-        name:
-          type: string
-          example: America California Bank
-        owner:
-          type: object
-          description: Bank account owner
-          properties:
-            name:
-              type: string
-              example: Donald E. Knuth
-            address1:
-              type: string
-              example: Computer Science Department
-            address2:
-              type: string
-              example: Stanford University
-            address3:
-              type: string
-              example: Stanford, CA 94305-9045
-        shortCountryCode:
-          $ref: '#/components/schemas/ShortCountryCode'
-        address:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        ownerName:
-          type: string
-          example: Donald E. Knuth
-        ownerAddress:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        type:
-          type: string
-          enum:
-            - checking
-            - savings
-        furtherCreditTo:
-          type: string
-          example: Donald E. Knuth
-        intermediaryBankId:
-          type: string
-          example: 5c645791cf8eb19304292a8e3365fee3
-        intermediaryBankName:
-          type: string
-          example: Bank of America
     UpdateBitgoChallenge:
       title: UpdateBitgoChallenge
       type: object
