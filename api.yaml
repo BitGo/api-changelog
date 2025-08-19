@@ -24355,6 +24355,950 @@ paths:
               examples:
                 EnterpriseStakeableCoinsResultExample:
                   $ref: '#/components/examples/EnterpriseStakeableCoinsResultExample'
+  /api/fiat/v1/transaction/ach-debit:
+    post:
+      summary: Initiate ACH deposit
+      description: Initiates an ACH deposit transaction from a linked bank account
+      operationId: fiat.ach.deposit
+      tags:
+        - Fiat
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  type: string
+                  description: The amount to deposit in USD cents (base units)
+                  minLength: 1
+                checkboxAgreement:
+                  type: boolean
+                  description: Indicates user agreement to the ACH terms
+                bankId:
+                  type: string
+                  description: ID of the ACH bank account to debit from
+                  minLength: 1
+                goAccountId:
+                  type: string
+                  description: ID of the destination account
+                  minLength: 1
+              required:
+                - amount
+                - checkboxAgreement
+                - bankId
+                - goAccountId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  txId:
+                    type: string
+                    description: The ID of the created transaction
+                required:
+                  - txId
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/enterprise-transfer-limits/{enterpriseId}/{currency}/{transferType}/{transferDirection}:
+    get:
+      summary: Get enterprise transfer limits
+      description: Retrieves transfer limits for an enterprise based on currency, transfer type, and direction
+      operationId: tradfi.v1.enterprise.transfer.limits
+      tags:
+        - Fiat
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+          description: The ID of the enterprise
+        - name: currency
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TradfyCurrency'
+          description: The currency for the transfer limits
+        - name: transferType
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TradfyTransferType'
+          description: The type of transfer (e.g., ach-us)
+        - name: transferDirection
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TradfyTransferDirection'
+          description: The direction of the transfer (e.g., in for deposits)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Unique identifier for the transfer limit
+                  maximumTransferAllowed:
+                    type: string
+                    description: Maximum transfer amount allowed in formatted currency
+                  maximumTransferAllowedBase:
+                    type: integer
+                    description: Maximum transfer amount allowed in base units (e.g., cents for USD)
+                  noLimit:
+                    type: boolean
+                    description: Indicates if there is no upper limit for transfers
+                  transferDirection:
+                    allOf:
+                      - $ref: '#/components/schemas/TradfyTransferDirection'
+                    description: Direction of the transfer
+                  transferType:
+                    allOf:
+                      - $ref: '#/components/schemas/TradfyTransferType'
+                    description: Type of transfer
+                required:
+                  - id
+                  - maximumTransferAllowed
+                  - maximumTransferAllowedBase
+                  - noLimit
+                  - transferDirection
+                  - transferType
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/fiat/v1/transaction/ach-debit/agreement:
+    get:
+      summary: Get ACH agreement
+      operationId: fiat.ach.agreement
+      tags:
+        - Fiat
+      parameters:
+        - name: bankId
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: amount
+          in: query
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  achAuthorizationLanguage:
+                    type: object
+                    required:
+                      - reviewAuthorization
+                      - accountInformation
+                      - authorizationDetails
+                      - acknowledgment
+                    properties:
+                      reviewAuthorization:
+                        type: string
+                        description: The authorization language for the ACH debit
+                      accountInformation:
+                        type: object
+                        required:
+                          - accountHolderName
+                          - bankName
+                          - accountNumber
+                          - routingNumber
+                          - accountType
+                        properties:
+                          accountHolderName:
+                            type: string
+                            description: Name of the account holder
+                          bankName:
+                            type: string
+                            description: Name of the financial institution
+                          accountNumber:
+                            type: string
+                            description: Masked account number
+                          routingNumber:
+                            type: string
+                            description: Routing number of the financial institution
+                          accountType:
+                            type: string
+                            description: Type of bank account (checking or savings)
+                            enum:
+                              - checking
+                              - savings
+                      authorizationDetails:
+                        type: string
+                        description: Details of the transaction being authorized
+                      acknowledgment:
+                        type: string
+                        description: Legal acknowledgment text for the ACH transaction
+                required:
+                  - achAuthorizationLanguage
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/accounts/internal/v1/bankaccounts:
+    post:
+      tags:
+        - Fiat
+      operationId: V1PostBankAccountsInternalRoute
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                shortCountryCode:
+                  type: string
+                  minLength: 1
+                accountNumber:
+                  type: string
+                  minLength: 1
+                enterpriseId:
+                  type: string
+                  minLength: 1
+                bitgoOrg:
+                  $ref: '#/components/schemas/TrustOrg2'
+                currency:
+                  $ref: '#/components/schemas/BackingFiatCoin'
+                type:
+                  $ref: '#/components/schemas/BankAccountType1'
+                name:
+                  type: string
+                  minLength: 1
+                ownerName:
+                  type: string
+                  minLength: 1
+                routingNumber:
+                  type: string
+                swiftCode:
+                  type: string
+                externalId:
+                  type: string
+                  minLength: 1
+                furtherCreditTo:
+                  type: string
+                  minLength: 1
+                intermediaryBankName:
+                  type: string
+                  minLength: 1
+                intermediaryBankId:
+                  type: string
+                  minLength: 1
+                description:
+                  type: string
+                accountType:
+                  type: string
+                  nullable: true
+                  enum:
+                    - checking
+                    - saving
+                    - unknown
+                ownerAddressLine1:
+                  type: string
+                  minLength: 1
+                ownerAddressLine2:
+                  type: string
+                  minLength: 1
+                ownerAddressCityLocality:
+                  type: string
+                  minLength: 1
+                ownerAddressStateProvince:
+                  type: string
+                  minLength: 1
+                ownerAddressPostalCode:
+                  type: string
+                  minLength: 1
+                ownerAddressCountryCode:
+                  type: string
+                  minLength: 1
+                bankAddressLine1:
+                  type: string
+                  minLength: 1
+                bankAddressLine2:
+                  type: string
+                  minLength: 1
+                bankAddressCityLocality:
+                  type: string
+                  minLength: 1
+                bankAddressStateProvince:
+                  type: string
+                  minLength: 1
+                bankAddressPostalCode:
+                  type: string
+                  minLength: 1
+                bankAddressCountryCode:
+                  type: string
+                  minLength: 1
+                virtualDepositOnly:
+                  type: boolean
+              required:
+                - shortCountryCode
+                - accountNumber
+                - enterpriseId
+                - bitgoOrg
+                - currency
+                - type
+                - name
+                - virtualDepositOnly
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetBankAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/accounts/v1/address:
+    get:
+      tags:
+        - Fiat
+      operationId: fiat.address.info
+      summary: Get address format information
+      description: |
+        This endpoint serves two purposes:
+        1. When called without a countryCode, it returns a list of all supported countries with their codes and full names
+        2. When called with a specific countryCode, it returns the required address fields and format for that country
+
+        This information is used to dynamically build address collection forms with the appropriate fields for each country.
+      parameters:
+        - name: countryCode
+          in: query
+          schema:
+            type: string
+            description: Optional ISO 3166-1 alpha-2 country code. If not provided, all supported countries will be returned.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/CountryListResponse'
+                  - $ref: '#/components/schemas/CountryAddressFormatResponse'
+              examples:
+                countryListResponse:
+                  summary: Response when no countryCode is provided
+                  value:
+                    countries:
+                      US: United States of America
+                      CA: Canada
+                      GB: United Kingdom
+                      DE: Germany
+                countryAddressFormatResponse:
+                  summary: Response when a countryCode is provided
+                  value:
+                    rules:
+                      country: US
+                      address_line_1:
+                        label: Street Address
+                        required: true
+                        type: text
+                        maxLength: 100
+                      city_locality:
+                        label: City
+                        required: true
+                        type: text
+                        maxLength: 50
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/v2/bankaccounts:
+    get:
+      tags:
+        - Fiat
+      summary: Get Bank Accounts
+      description: Endpoint to get bank accounts
+      operationId: v2.bankaccount.list
+      x-unknown-tags:
+        tags: Fiat Accounts
+      parameters:
+        - name: bankAccountId
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: bankAccountIdHash
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: enterpriseId
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: idHash
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: verificationState
+          in: query
+          schema:
+            type: string
+            enum:
+              - approved
+              - rejected
+              - pending
+              - removed
+              - revise
+        - name: trustOrg
+          in: query
+          schema:
+            type: string
+            enum:
+              - BitGo Trust
+              - BitGo New York
+              - BitGo Germany
+              - BitGo Switzerland
+              - BitGo Europe ApS
+              - Frankfurt DE Trust
+              - BitGo Singapore
+              - BitGo Korea
+              - BitGo Custody MENA FZE
+              - BitGo Sister Trust 1
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum:
+              - wire
+              - cbit
+              - ach
+              - blinc
+              - swift
+              - sepa
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetBankAccountsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+    post:
+      tags:
+        - Fiat
+      summary: Create Bank Account
+      description: Endpoint to create a bank account
+      operationId: v2.bankaccount.create
+      x-unknown-tags:
+        tags: Fiat Accounts
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBankAccountRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1CreateBankAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/v2/bankaccounts/{bankAccountId}:
+    delete:
+      tags:
+        - Fiat
+      summary: Delete Bank Account
+      description: Endpoint to delete bank account
+      operationId: v2.bankaccount.delete
+      x-unknown-tags:
+        tags: Fiat Accounts
+      parameters:
+        - name: bankAccountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1DeleteBankAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+    get:
+      tags:
+        - Fiat
+      summary: Get Bank Account
+      description: Endpoint to get single bank account by id
+      operationId: v2.bankaccount.get
+      x-unknown-tags:
+        tags: Fiat Accounts
+      parameters:
+        - name: bankAccountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetBankAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+    put:
+      tags:
+        - Fiat
+      summary: Update Bank Account
+      description: Endpoint to update a single bank account
+      operationId: v2.bankaccount.update
+      x-unknown-tags:
+        tags: Fiat Accounts
+      parameters:
+        - name: bankAccountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  minLength: 1
+                address:
+                  type: string
+                  minLength: 1
+                ownerAddress:
+                  type: string
+                  minLength: 1
+                shortCountryCode:
+                  type: string
+                  minLength: 1
+                ownerName:
+                  type: string
+                  minLength: 1
+                furtherCreditTo:
+                  type: string
+                  minLength: 1
+                intermediaryBankName:
+                  type: string
+                  minLength: 1
+                intermediaryBankId:
+                  type: string
+                  minLength: 1
+                description:
+                  type: string
+                accountType:
+                  type: string
+                  enum:
+                    - checking
+                    - saving
+                    - unknown
+                address1:
+                  type: string
+                  minLength: 1
+                address2:
+                  type: string
+                  minLength: 1
+                address3:
+                  type: string
+                  minLength: 1
+                owner:
+                  type: object
+                  properties:
+                    address1:
+                      $ref: '#/components/schemas/NullableString'
+                    address2:
+                      $ref: '#/components/schemas/NullableString'
+                    address3:
+                      $ref: '#/components/schemas/NullableString'
+                    name:
+                      type: string
+                      minLength: 1
+                ownerAddressLine1:
+                  type: string
+                  minLength: 1
+                ownerAddressLine2:
+                  type: string
+                  minLength: 1
+                ownerAddressCityLocality:
+                  type: string
+                  minLength: 1
+                ownerAddressStateProvince:
+                  type: string
+                  minLength: 1
+                ownerAddressPostalCode:
+                  type: string
+                  minLength: 1
+                ownerAddressCountryCode:
+                  type: string
+                  minLength: 1
+                bankAddressLine1:
+                  type: string
+                  minLength: 1
+                bankAddressLine2:
+                  type: string
+                  minLength: 1
+                bankAddressCityLocality:
+                  type: string
+                  minLength: 1
+                bankAddressStateProvince:
+                  type: string
+                  minLength: 1
+                bankAddressPostalCode:
+                  type: string
+                  minLength: 1
+                bankAddressCountryCode:
+                  type: string
+                  minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1UpdateBankAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/v2/bankaccounts/deposit/info:
+    get:
+      tags:
+        - Fiat
+      summary: Get deposit info
+      description: Returns the bank accounts available for deposits on the specific enterprise
+      operationId: fiat.get.deposit.info
+      x-unknown-tags:
+        tags: Fiat Accounts
+      parameters:
+        - name: currency
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/BackingFiatCoin'
+        - name: goAccountId
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetDepositBankAccountsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/stablecoin/v1/{token}/constants:
     get:
       summary: Get Token Constants
@@ -35848,6 +36792,47 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Account'
+    AchAccountResponseProps:
+      title: AchAccountResponseProps
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - ach
+        routingNumber:
+          $ref: '#/components/schemas/RoutingNumberString'
+        accountType:
+          $ref: '#/components/schemas/OptionalAccountType'
+      required:
+        - type
+        - routingNumber
+        - accountType
+    AchBankAccountRequest:
+      title: AchBankAccountRequest
+      description: Request schema for creating an ACH bank account
+      allOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - ach
+              description: Must be 'ach' for ACH accounts
+            routingNumber:
+              type: string
+              description: Routing number for the ACH account
+          required:
+            - type
+            - routingNumber
+        - $ref: '#/components/schemas/BankAccountRequest1'
+    AchBankAccountResponse:
+      title: AchBankAccountResponse
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/AchAccountResponseProps'
+        - $ref: '#/components/schemas/BankAccountResponseProps'
     ActionType:
       title: ActionType
       type: string
@@ -36284,6 +37269,29 @@ components:
           additionalProperties:
             type: object
             additionalProperties: {}
+    AddressOptions:
+      title: AddressOptions
+      allOf:
+        - type: object
+          properties:
+            label:
+              type: string
+              minLength: 1
+            required:
+              type: boolean
+            type:
+              type: string
+              enum:
+                - text
+                - dropdown
+            placeholder:
+              type: string
+              minLength: 1
+          required:
+            - label
+            - required
+            - type
+        - $ref: '#/components/schemas/AddressType1'
     AddressProofResult:
       title: AddressProofResult
       type: object
@@ -36420,6 +37428,33 @@ components:
         - p2wsh
         - p2tr
         - p2trMusig2
+    AddressType1:
+      title: AddressType
+      oneOf:
+        - type: object
+          properties:
+            maxLength:
+              type: number
+            type:
+              type: string
+              enum:
+                - text
+          required:
+            - maxLength
+            - type
+        - type: object
+          properties:
+            options:
+              type: object
+              additionalProperties:
+                type: string
+            type:
+              type: string
+              enum:
+                - dropdown
+          required:
+            - options
+            - type
     AddressWithBalanceQueryResult:
       title: AddressWithBalanceQueryResult
       type: object
@@ -37455,6 +38490,21 @@ components:
             - intentType
             - type
         - $ref: '#/components/schemas/BaseStakeIntent'
+    BackingFiatCoin:
+      title: BackingFiatCoin
+      allOf:
+        - $ref: '#/components/schemas/BackingFiatCoinEnum'
+    BackingFiatCoinEnum:
+      type: string
+      enum:
+        - fiatusd
+        - fiateur
+        - fiatsgd
+        - fiataed
+        - tfiatusd
+        - tfiateur
+        - tfiatsgd
+        - tfiataed
     BackingValue:
       title: Backing hot wallet
       type: object
@@ -37528,6 +38578,24 @@ components:
         - fiateur
         - null
       example: fiatusd
+    BankAccountFeeInfo:
+      title: BankAccountFeeInfo
+      allOf:
+        - $ref: '#/components/schemas/BankAccountFeeInfoObject'
+    BankAccountFeeInfoObject:
+      type: object
+      properties:
+        amount:
+          type: string
+          minLength: 1
+        individualFees:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/StaticFee'
+              - $ref: '#/components/schemas/VariableFee'
+      required:
+        - individualFees
     BankAccountJson:
       title: BankAccountJson
       type: object
@@ -37584,6 +38652,280 @@ components:
         - $ref: '#/components/schemas/DomesticWireBankAccount'
         - $ref: '#/components/schemas/InternationalWireBankAccount'
         - $ref: '#/components/schemas/CBITBankAccount'
+    BankAccountRequest1:
+      title: BankAccountRequest
+      description: |
+        Base schema for bank account creation requests.
+
+        NOTE: Address fields required depend on the country format.
+        Use the /api/accounts/v1/address endpoint with the appropriate country code
+        to determine which address fields are required for a specific country.
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Name of the bank account
+        shortCountryCode:
+          type: string
+          minLength: 1
+          description: Two-letter ISO country code
+        accountNumber:
+          type: string
+          minLength: 1
+          description: Bank account number
+        enterpriseId:
+          type: string
+          minLength: 1
+          description: ID of the enterprise the account belongs to
+        currency:
+          allOf:
+            - $ref: '#/components/schemas/BackingFiatCoin'
+          description: The currency of the bank account
+        ownerName:
+          type: string
+          minLength: 1
+          description: Name of the account owner
+        accountType:
+          type: string
+          enum:
+            - checking
+            - saving
+            - unknown
+          description: Type of bank account (checking, saving, etc.)
+        description:
+          type: string
+          description: User-provided description of the account
+        furtherCreditTo:
+          type: string
+          description: Further credit recipient information
+        intermediaryBankName:
+          type: string
+          description: Name of intermediary bank if applicable
+        intermediaryBankId:
+          type: string
+          description: Identifier of the intermediary bank
+        ownerAddressLine1:
+          type: string
+          description: First line of owner's address (street number and name)
+        ownerAddressLine2:
+          type: string
+          description: Second line of owner's address (apartment/suite number, etc.)
+        ownerAddressCityLocality:
+          type: string
+          description: City or locality of owner's address
+        ownerAddressStateProvince:
+          type: string
+          description: State or province of owner's address
+        ownerAddressPostalCode:
+          type: string
+          description: Postal code of owner's address
+        ownerAddressCountryCode:
+          type: string
+          description: Two-letter ISO country code of owner's address
+        bankAddressLine1:
+          type: string
+          description: First line of bank's address (street number and name)
+        bankAddressLine2:
+          type: string
+          description: Second line of bank's address (branch information, etc.)
+        bankAddressCityLocality:
+          type: string
+          description: City or locality of bank's address
+        bankAddressStateProvince:
+          type: string
+          description: State or province of bank's address
+        bankAddressPostalCode:
+          type: string
+          description: Postal code of bank's address
+        bankAddressCountryCode:
+          type: string
+          description: Two-letter ISO country code of bank's address
+      required:
+        - name
+        - shortCountryCode
+        - accountNumber
+        - currency
+        - ownerName
+    BankAccountResponse1:
+      title: BankAccountResponse
+      oneOf:
+        - $ref: '#/components/schemas/DomesticWireBankAccountResponse'
+        - $ref: '#/components/schemas/InternationalWireBankAccountResponse'
+        - $ref: '#/components/schemas/CbitBankAccountResponse'
+        - $ref: '#/components/schemas/AchBankAccountResponse'
+        - $ref: '#/components/schemas/SepaBankAccountResponse'
+        - $ref: '#/components/schemas/BlincBankAccountResponse'
+    BankAccountResponseProps:
+      title: BankAccountResponseProps
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+          description: Unique identifier for the bank account
+        idHash:
+          type: string
+          minLength: 1
+          description: Hashed identifier for the bank account
+        currency:
+          allOf:
+            - $ref: '#/components/schemas/BackingFiatCoin'
+          description: The currency of the bank account
+        token:
+          type: string
+          minLength: 1
+          description: Authentication token for bank account operations
+        name:
+          type: string
+          minLength: 1
+          description: Name of the bank account
+        shortCountryCode:
+          type: string
+          minLength: 1
+          description: Two-letter ISO country code
+        accountNumber:
+          type: string
+          minLength: 1
+          description: Bank account number (may be masked)
+        enterpriseId:
+          type: string
+          description: ID of the enterprise the account belongs to
+        trustOrg:
+          allOf:
+            - $ref: '#/components/schemas/TrustOrg2'
+          description: Trust organization associated with this account
+        ownerName:
+          type: string
+          minLength: 1
+          description: Name of the account owner
+        verificationState:
+          allOf:
+            - $ref: '#/components/schemas/VerificationState'
+          description: Current verification status of the account
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+          description: Timestamp when the account was created
+        pendingActivity:
+          allOf:
+            - $ref: '#/components/schemas/PendingActivityState'
+          description: Any pending activity on the account
+        fee:
+          allOf:
+            - $ref: '#/components/schemas/BankAccountFeeInfo'
+          description: Fee information for the account
+        feeInfo:
+          allOf:
+            - $ref: '#/components/schemas/Fee'
+          description: Detailed fee configuration for the account
+        furtherCreditTo:
+          type: string
+          description: Further credit recipient information
+        intermediaryBankName:
+          type: string
+          description: Name of intermediary bank if applicable
+        intermediaryBankId:
+          type: string
+          description: Identifier of the intermediary bank
+        metadata:
+          type: string
+          description: Additional metadata for the account
+        description:
+          type: string
+          description: User-provided description of the account
+        virtualDepositOnly:
+          type: boolean
+          description: Whether this account is for virtual deposits only
+        ownerAddressLine1:
+          type: string
+          nullable: true
+          description: First line of owner's address (street number and name)
+        ownerAddressLine2:
+          type: string
+          nullable: true
+          description: Second line of owner's address (apartment/suite number, etc.)
+        ownerAddressCityLocality:
+          type: string
+          nullable: true
+          description: City or locality of owner's address
+        ownerAddressStateProvince:
+          type: string
+          nullable: true
+          description: State or province of owner's address
+        ownerAddressPostalCode:
+          type: string
+          nullable: true
+          description: Postal code of owner's address
+        ownerAddressCountryCode:
+          type: string
+          nullable: true
+          description: Two-letter ISO country code of owner's address
+        bankAddressLine1:
+          type: string
+          nullable: true
+          description: First line of bank's address (street number and name)
+        bankAddressLine2:
+          type: string
+          nullable: true
+          description: Second line of bank's address (branch information, etc.)
+        bankAddressCityLocality:
+          type: string
+          nullable: true
+          description: City or locality of bank's address
+        bankAddressStateProvince:
+          type: string
+          nullable: true
+          description: State or province of bank's address
+        bankAddressPostalCode:
+          type: string
+          nullable: true
+          description: Postal code of bank's address
+        bankAddressCountryCode:
+          type: string
+          nullable: true
+          description: Two-letter ISO country code of bank's address, should equal shortCountryCode
+        owner:
+          allOf:
+            - $ref: '#/components/schemas/OldOwner'
+            - deprecated: true
+              description: DEPRECATED - Use normalized address fields instead
+        address:
+          type: string
+          minLength: 1
+          deprecated: true
+          description: DEPRECATED - Use normalized bank address fields instead
+        ownerAddress:
+          type: string
+          minLength: 1
+          deprecated: true
+          description: DEPRECATED - Use normalized owner address fields instead
+        address1:
+          type: string
+          deprecated: true
+          description: DEPRECATED - Use ownerAddressLine1 instead
+        address2:
+          type: string
+          deprecated: true
+          description: DEPRECATED - Use ownerAddressLine2 instead
+        address3:
+          type: string
+          deprecated: true
+          description: DEPRECATED - Use additional normalized address fields instead
+      required:
+        - id
+        - idHash
+        - currency
+        - token
+        - name
+        - shortCountryCode
+        - accountNumber
+        - enterpriseId
+        - trustOrg
+        - ownerName
+        - verificationState
+        - createdAt
     BankAccountType:
       title: BankAccountType
       description: |
@@ -37595,6 +38937,37 @@ components:
         - cbit
         - null
       example: wire
+    BankAccountType1:
+      title: BankAccountType
+      type: string
+      enum:
+        - wire
+        - cbit
+        - ach
+        - blinc
+        - swift
+        - sepa
+    BankAccountsArrayResponse:
+      title: BankAccountsArrayResponse
+      description: Unified schema for an array of bank accounts
+      type: array
+      items:
+        $ref: '#/components/schemas/BankAccountResponse1'
+    BankId:
+      title: BankId
+      type: string
+      enum:
+        - silvergate
+        - silvergate_prime
+        - silvergate_v3
+        - silvergate_prime_v3
+        - bcbgroup
+        - signature
+        - generic
+        - customers_api
+        - customers_cubix_api
+        - customers_sftp
+        - lead
     BaseGoStakeIntent:
       title: BaseGoStakeIntent
       allOf:
@@ -37961,6 +39334,48 @@ components:
           description: BitGo MPCv2 public key
       required:
         - name
+    BlincAccountResponseProps:
+      title: BlincAccountResponseProps
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - blinc
+        accountType:
+          $ref: '#/components/schemas/OptionalAccountType'
+        externalId:
+          type: string
+          minLength: 1
+      required:
+        - type
+        - accountType
+        - externalId
+    BlincBankAccountRequest:
+      title: BlincBankAccountRequest
+      description: Request schema for creating a Blinc bank account
+      allOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - blinc
+              description: Must be 'blinc' for Blinc accounts
+            externalId:
+              type: string
+              description: External identifier for the Blinc account
+          required:
+            - type
+            - externalId
+        - $ref: '#/components/schemas/BankAccountRequest1'
+    BlincBankAccountResponse:
+      title: BlincBankAccountResponse
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/BlincAccountResponseProps'
+        - $ref: '#/components/schemas/BankAccountResponseProps'
     BlockHash:
       type: string
       example: 0000000000000296ed56abee6cb78e40b00c47a03d92e71dd92c4862ca636b95
@@ -38586,6 +40001,45 @@ components:
         - lastTransferId
         - pendingChainInitialization
         - rootAddress
+    CbitAccountResponseProps:
+      title: CbitAccountResponseProps
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - cbit
+        accountType:
+          $ref: '#/components/schemas/OptionalAccountType'
+        externalId:
+          $ref: '#/components/schemas/NullableString'
+      required:
+        - type
+        - accountType
+    CbitBankAccountRequest:
+      title: CbitBankAccountRequest
+      description: Request schema for creating a CBIT bank account
+      allOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - cbit
+              description: Must be 'cbit' for CBIT accounts
+            externalId:
+              type: string
+              description: External identifier for the CBIT account
+          required:
+            - type
+        - $ref: '#/components/schemas/BankAccountRequest1'
+    CbitBankAccountResponse:
+      title: CbitBankAccountResponse
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/CbitAccountResponseProps'
+        - $ref: '#/components/schemas/BankAccountResponseProps'
     Chain:
       type: integer
       example: 1
@@ -38903,6 +40357,18 @@ components:
               - $ref: '#/components/schemas/TransferAmountCondition'
               - $ref: '#/components/schemas/TransferInitiatorsCondition'
               - $ref: '#/components/schemas/TransferWebhookCondition'
+    ConfigFeeInformation:
+      title: ConfigFeeInformation
+      allOf:
+        - type: object
+          properties:
+            bank:
+              $ref: '#/components/schemas/BankId'
+          required:
+            - bank
+        - oneOf:
+            - $ref: '#/components/schemas/StaticFee'
+            - $ref: '#/components/schemas/VariableFee'
     ConnectionKey:
       title: ConnectionKey
       oneOf:
@@ -39298,6 +40764,64 @@ components:
           description: For mapped settlement amounts where the amount will always be a bigint. This ensures consistent handling of large monetary values in settlements.
         description: Maps destination connection IDs to currency amounts for settlement. Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>> Used for exchange-style settlements, where the exchange is always the source and client owned connections are the destination. Each entry maps a destination connection ID to the currency amounts being settled to that connection.
       description: Maps source connection IDs to destination connections and their currency amounts. Record<Counterparty (source) connectionId, Record<Party (dest) connectionId, Record<Currency, Amount (bigint)>>> Used for broker-style settlements, where the source and destination are both client-owned connections. This structure allows specifying multiple source connections, each with multiple destination connections, and the currency amounts being settled between them.
+    CountryAddress:
+      title: CountryAddress
+      type: object
+      properties:
+        country:
+          type: string
+          minLength: 1
+        address_line_1:
+          $ref: '#/components/schemas/AddressOptions'
+        address_line_2:
+          $ref: '#/components/schemas/AddressOptions'
+        city_locality:
+          $ref: '#/components/schemas/AddressOptions'
+        state_province:
+          $ref: '#/components/schemas/AddressOptions'
+        postal_code:
+          $ref: '#/components/schemas/AddressOptions'
+      required:
+        - country
+        - address_line_1
+        - address_line_2
+    CountryAddressFormatResponse:
+      title: CountryAddressFormatResponse
+      description: Response when requesting address format for a specific country
+      type: object
+      properties:
+        rules:
+          $ref: '#/components/schemas/CountryAddress'
+      required:
+        - rules
+    CountryListResponse:
+      title: CountryListResponse
+      description: Response when requesting all available countries
+      type: object
+      properties:
+        countries:
+          type: object
+          description: Dictionary mapping ISO 3166-1 alpha-2 country codes to their full country names
+          example:
+            US: United States of America
+            CA: Canada
+            GB: United Kingdom
+            DE: Germany
+          additionalProperties:
+            type: string
+            description: Full country name
+      required:
+        - countries
+    CreateBankAccountRequest:
+      title: CreateBankAccountRequest
+      description: Schema for creating any type of bank account
+      oneOf:
+        - $ref: '#/components/schemas/DomesticWireBankAccountRequest'
+        - $ref: '#/components/schemas/InternationalWireBankAccountRequest'
+        - $ref: '#/components/schemas/AchBankAccountRequest'
+        - $ref: '#/components/schemas/SepaBankAccountRequest'
+        - $ref: '#/components/schemas/CbitBankAccountRequest'
+        - $ref: '#/components/schemas/BlincBankAccountRequest'
     CreateBitgoChallengeResponse:
       title: CreateBitgoChallengeResponse
       type: object
@@ -40222,6 +41746,22 @@ components:
           type: string
           description: BitGo Organization related to this entity. Allowed values are BitGo Inc, BitGo Trust, BitGo New York, BitGo Germany, BitGo Switzerland, Frankfurt DE Trust, BitGo Sister Trust 1, BitGo Korea, BitGo Singapore, null
           nullable: true
+    DomesticWireAccountResponseProps:
+      title: DomesticWireAccountResponseProps
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - wire
+        routingNumber:
+          $ref: '#/components/schemas/RoutingNumberString'
+        accountType:
+          $ref: '#/components/schemas/OptionalAccountType'
+      required:
+        - type
+        - routingNumber
+        - accountType
     DomesticWireBankAccount:
       title: Domestic Wire Bank Account
       type: object
@@ -40307,6 +41847,31 @@ components:
         - owner
         - enterpriseId
         - routingNumber
+    DomesticWireBankAccountRequest:
+      title: DomesticWireBankAccountRequest
+      description: Request schema for creating a domestic wire bank account
+      allOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - wire
+              description: Must be 'wire' for domestic wire accounts
+            routingNumber:
+              type: string
+              description: Routing number for the domestic wire account
+          required:
+            - type
+            - routingNumber
+        - $ref: '#/components/schemas/BankAccountRequest1'
+    DomesticWireBankAccountResponse:
+      title: DomesticWireBankAccountResponse
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/DomesticWireAccountResponseProps'
+        - $ref: '#/components/schemas/BankAccountResponseProps'
     DotAccountBaseBuildOptions:
       title: DotAccountBaseBuildOptions
       allOf:
@@ -43571,6 +45136,10 @@ components:
         - error
         - name
         - requestId
+    Fee:
+      title: Fee
+      allOf:
+        - $ref: '#/components/schemas/FeeObject'
     FeeAddressBalanceResponse:
       type: object
       properties:
@@ -43605,6 +45174,15 @@ components:
             - intentType
             - recipients
         - $ref: '#/components/schemas/BaseIntent'
+    FeeObject:
+      allOf:
+        - type: object
+          properties:
+            coin:
+              $ref: '#/components/schemas/BackingFiatCoin'
+          required:
+            - coin
+        - $ref: '#/components/schemas/ConfigFeeInformation'
     FeeOption:
       title: FeeOption
       type: object
@@ -45588,6 +47166,22 @@ components:
         - tenantId
         - oauthProvider
         - clientSecret
+    InternationalWireAccountResponseProps:
+      title: InternationalWireAccountResponseProps
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - wire
+        swiftCode:
+          $ref: '#/components/schemas/SwiftCodeType'
+        accountType:
+          $ref: '#/components/schemas/OptionalAccountType'
+      required:
+        - type
+        - swiftCode
+        - accountType
     InternationalWireBankAccount:
       title: International Wire Bank Account
       type: object
@@ -45673,6 +47267,31 @@ components:
         - owner
         - enterpriseId
         - swiftCode
+    InternationalWireBankAccountRequest:
+      title: InternationalWireBankAccountRequest
+      description: Request schema for creating an international wire bank account
+      allOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - wire
+              description: Must be 'wire' for international wire accounts
+            swiftCode:
+              type: string
+              description: SWIFT/BIC code for the international wire account
+          required:
+            - type
+            - swiftCode
+        - $ref: '#/components/schemas/BankAccountRequest1'
+    InternationalWireBankAccountResponse:
+      title: InternationalWireBankAccountResponse
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/InternationalWireAccountResponseProps'
+        - $ref: '#/components/schemas/BankAccountResponseProps'
     InvalidAddress:
       title: Invalid Address
       allOf:
@@ -48487,6 +50106,13 @@ components:
       required:
         - h1WrtH2
         - h2WrtH1
+    NullableString:
+      title: NullableString
+      allOf:
+        - $ref: '#/components/schemas/NullableStringType'
+    NullableStringType:
+      type: string
+      nullable: true
     NumKeychains:
       description: |
         Number of keys provided.  This value must be 3 for hot wallets,
@@ -48667,6 +50293,38 @@ components:
       title: Offchain Address
       type: object
       additionalProperties: {}
+    OldOwner:
+      title: OldOwner
+      allOf:
+        - $ref: '#/components/schemas/OldOwnerObject'
+    OldOwnerObject:
+      type: object
+      deprecated: true
+      description: DEPRECATED - Use ownerName and normalized address fields instead
+      properties:
+        name:
+          type: string
+          minLength: 1
+          deprecated: true
+          description: DEPRECATED - Use ownerName instead
+        address1:
+          items:
+            allOf:
+              - $ref: '#/components/schemas/NullableString'
+          deprecated: true
+          description: DEPRECATED - Use ownerAddressLine1 instead
+        address2:
+          items:
+            allOf:
+              - $ref: '#/components/schemas/NullableString'
+          deprecated: true
+          description: DEPRECATED - Use ownerAddressLine2 instead
+        address3:
+          items:
+            allOf:
+              - $ref: '#/components/schemas/NullableString'
+          deprecated: true
+          description: DEPRECATED - Use additional normalized address fields instead
     OnboardingAgreement:
       title: OnboardingAgreement
       type: object
@@ -48740,6 +50398,14 @@ components:
         - AND
         - OR
       example: AND
+    OptionalAccountType:
+      title: OptionalAccountType
+      type: string
+      nullable: true
+      enum:
+        - checking
+        - saving
+        - unknown
     Order:
       required:
         - id
@@ -49654,6 +51320,31 @@ components:
         - in_flight
         - settled
         - failed
+    PendingActivityAutoProcessing:
+      title: PendingActivityAutoProcessing
+      type: string
+      enum:
+        - requiresScreening
+        - preapprovedRoutingNumber
+        - screeningFailed
+        - screeningApproved
+    PendingActivityState:
+      title: PendingActivityState
+      allOf:
+        - $ref: '#/components/schemas/PendingActivityStateObject'
+    PendingActivityStateObject:
+      oneOf:
+        - $ref: '#/components/schemas/PendingActivityTrust'
+        - $ref: '#/components/schemas/PendingActivityAutoProcessing'
+    PendingActivityTrust:
+      title: PendingActivityTrust
+      type: string
+      enum:
+        - flaggedBrokerage
+        - trustVerification
+        - trustVerificationUpdated
+        - trustNameVerification
+        - ownerNameMismatch
     PendingApproval:
       title: PendingApproval
       type: object
@@ -53096,6 +54787,9 @@ components:
         - walletId
         - expireTime
         - userId
+    RoutingNumberString:
+      title: RoutingNumberString
+      type: string
     RuleAllFilteringCondition:
       title: All rules
       type: object
@@ -53325,6 +55019,47 @@ components:
           description: Your own unique ID
         videoApprovers:
           $ref: '#/components/schemas/VideoApprovers'
+    SepaAccountResponseProps:
+      title: SepaAccountResponseProps
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - sepa
+        swiftCode:
+          $ref: '#/components/schemas/SwiftCodeType'
+        accountType:
+          $ref: '#/components/schemas/OptionalAccountType'
+      required:
+        - type
+        - swiftCode
+        - accountType
+    SepaBankAccountRequest:
+      title: SepaBankAccountRequest
+      description: Request schema for creating a SEPA bank account
+      allOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - sepa
+              description: Must be 'sepa' for SEPA accounts
+            swiftCode:
+              type: string
+              description: SWIFT/BIC code for the SEPA account
+          required:
+            - type
+            - swiftCode
+        - $ref: '#/components/schemas/BankAccountRequest1'
+    SepaBankAccountResponse:
+      title: SepaBankAccountResponse
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/SepaAccountResponseProps'
+        - $ref: '#/components/schemas/BankAccountResponseProps'
     Session:
       type: object
       properties:
@@ -54072,6 +55807,11 @@ components:
               description: Boolean to indicate that the simulated webhook should use generated placeholder data.
           required:
             - usePlaceholderData
+    SingleBankAccountResponse:
+      title: SingleBankAccountResponse
+      description: Unified schema for a single bank account response
+      allOf:
+        - $ref: '#/components/schemas/BankAccountResponse1'
     SnowflakeReportType:
       title: SnowflakeReportType
       type: string
@@ -55327,6 +57067,20 @@ components:
         - page
         - totalPages
         - totalElements
+    StaticFee:
+      title: StaticFee
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - static
+        amount:
+          type: string
+          minLength: 1
+      required:
+        - type
+        - amount
     SteadyPaceOrderParameters:
       type: object
       required:
@@ -55676,6 +57430,9 @@ components:
           type: string
       required:
         - tokenName
+    SwiftCodeType:
+      title: SwiftCodeType
+      type: string
     TWAPOrderParameters:
       type: object
       properties:
@@ -56406,6 +58163,30 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/PrimeTrade'
+    TradfyCurrency:
+      title: TradfyCurrency
+      type: string
+      enum:
+        - usd
+      description: Supported tradfy currencies (extensible)
+    TradfyTransferDirection:
+      title: TradfyTransferDirection
+      allOf:
+        - $ref: '#/components/schemas/TradfyTransferDirectionEnum'
+      description: Supported transfer directions (extensible)
+    TradfyTransferDirectionEnum:
+      type: string
+      enum:
+        - in
+    TradfyTransferType:
+      title: TradfyTransferType
+      allOf:
+        - $ref: '#/components/schemas/TradfyTransferTypeEnum'
+      description: Supported transfer types (extensible)
+    TradfyTransferTypeEnum:
+      type: string
+      enum:
+        - ach-us
     TradingValue:
       title: Go Account
       type: object
@@ -58590,6 +60371,23 @@ components:
         - BitGo Custody MENA FZE
         - BitGo India
         - BitGo Sister Trust 1
+    TrustOrg2:
+      title: TrustOrg
+      allOf:
+        - $ref: '#/components/schemas/TrustOrgEnum'
+    TrustOrgEnum:
+      type: string
+      enum:
+        - BitGo Trust
+        - BitGo New York
+        - BitGo Germany
+        - BitGo Switzerland
+        - BitGo Europe ApS
+        - Frankfurt DE Trust
+        - BitGo Singapore
+        - BitGo Korea
+        - BitGo Custody MENA FZE
+        - BitGo Sister Trust 1
     TrustedTokenState:
       title: TrustedTokenState
       type: string
@@ -60421,6 +62219,11 @@ components:
               - initialized
       required:
         - connections
+    V1CreateBankAccountResponse:
+      title: V1CreateBankAccountResponse
+      allOf:
+        - $ref: '#/components/schemas/SingleBankAccountResponse'
+      description: codec for create bank account http response
     V1DeallocationClearedPostPayload:
       title: V1DeallocationClearedPostPayload
       type: object
@@ -60448,6 +62251,11 @@ components:
           properties: {}
         - $ref: '#/components/schemas/V1DeallocationReleasedPayload'
         - $ref: '#/components/schemas/V1ErrorPayload'
+    V1DeleteBankAccountResponse:
+      title: V1DeleteBankAccountResponse
+      allOf:
+        - $ref: '#/components/schemas/SingleBankAccountResponse'
+      description: codec for delete bank account http response
     V1DirectoryListingEntryWithConnectionsListResponse:
       title: V1DirectoryListingEntryWithConnectionsListResponse
       type: object
@@ -60666,6 +62474,33 @@ components:
         - updatedAt
         - lossSLAAlertSent
         - gainSLAAlertSent
+    V1GetBankAccountResponse:
+      title: V1GetBankAccountResponse
+      allOf:
+        - $ref: '#/components/schemas/SingleBankAccountResponse'
+      description: codec for get bank account http response
+    V1GetBankAccountsResponse:
+      title: V1GetBankAccountsResponse
+      type: object
+      description: codec for get bank accounts http response
+      properties:
+        bankAccounts:
+          $ref: '#/components/schemas/BankAccountsArrayResponse'
+      required:
+        - bankAccounts
+    V1GetDepositBankAccountsResponse:
+      title: V1GetDepositBankAccountsResponse
+      type: object
+      description: codec for get deposit bank accounts http response
+      properties:
+        memoId:
+          type: string
+          minLength: 1
+        bankAccounts:
+          $ref: '#/components/schemas/BankAccountsArrayResponse'
+      required:
+        - memoId
+        - bankAccounts
     V1GetSettlementOkPayload:
       title: V1GetSettlementOkPayload
       type: object
@@ -61882,6 +63717,11 @@ components:
             - type: object
               properties: {}
             - $ref: '#/components/schemas/BNMetadata'
+    V1UpdateBankAccountResponse:
+      title: V1UpdateBankAccountResponse
+      allOf:
+        - $ref: '#/components/schemas/SingleBankAccountResponse'
+      description: codec for update bank account http response
     V2PartnerSettlementOkPayload:
       title: V2PartnerSettlementOkPayload
       type: object
@@ -61926,6 +63766,24 @@ components:
           properties:
             failedValidations:
               type: object
+    VariableFee:
+      title: VariableFee
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - variable
+        percent:
+          type: string
+          minLength: 1
+        minimum:
+          type: string
+          minLength: 1
+      required:
+        - type
+        - percent
+        - minimum
     VelocityAmountConditionParameter:
       title: Amount
       type: object
@@ -62010,6 +63868,18 @@ components:
           type: boolean
           description: true, if multiple values can be provided, i.e. as a list of values. When false only one value can be provided, i.e. a list with more than one element will be rejected.
           example: 'false'
+    VerificationState:
+      title: VerificationState
+      allOf:
+        - $ref: '#/components/schemas/VerificationStateEnum'
+    VerificationStateEnum:
+      type: string
+      enum:
+        - approved
+        - rejected
+        - pending
+        - removed
+        - revise
     VerifiedKycState:
       type: string
       enum:
@@ -64883,6 +66753,7 @@ x-tagGroups:
       - Entity Validation
       - Express
       - Federation
+      - Fiat
       - Key
       - Liabilities
       - Lightning
