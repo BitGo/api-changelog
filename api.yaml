@@ -24358,7 +24358,7 @@ paths:
   /api/fiat/v1/transaction/ach-debit:
     post:
       summary: Initiate ACH deposit
-      description: Initiates an ACH deposit transaction from a linked bank account
+      description: Initiate an ACH deposit transaction from a linked bank account.
       operationId: fiat.ach.deposit
       tags:
         - Fiat
@@ -24427,8 +24427,8 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
   /api/tradfi/v1/enterprise-transfer-limits/{enterpriseId}/{currency}/{transferType}/{transferDirection}:
     get:
-      summary: Get enterprise transfer limits
-      description: Retrieves transfer limits for an enterprise based on currency, transfer type, and direction
+      summary: List enterprise transfer limits
+      description: List the transfer limits for an enterprise based on currency, transfer type, and direction.
       operationId: tradfi.v1.enterprise.transfer.limits
       tags:
         - Fiat
@@ -24520,6 +24520,7 @@ paths:
   /api/fiat/v1/transaction/ach-debit/agreement:
     get:
       summary: Get ACH agreement
+      description: Get the ACH agreement for a specific bank account.
       operationId: fiat.ach.agreement
       tags:
         - Fiat
@@ -24588,142 +24589,6 @@ paths:
                         description: Legal acknowledgment text for the ACH transaction
                 required:
                   - achAuthorizationLanguage
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
-  /api/accounts/internal/v1/bankaccounts:
-    post:
-      tags:
-        - Fiat
-      operationId: V1PostBankAccountsInternalRoute
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                shortCountryCode:
-                  type: string
-                  minLength: 1
-                accountNumber:
-                  type: string
-                  minLength: 1
-                enterpriseId:
-                  type: string
-                  minLength: 1
-                bitgoOrg:
-                  $ref: '#/components/schemas/TrustOrg2'
-                currency:
-                  $ref: '#/components/schemas/BackingFiatCoin'
-                type:
-                  $ref: '#/components/schemas/BankAccountType1'
-                name:
-                  type: string
-                  minLength: 1
-                ownerName:
-                  type: string
-                  minLength: 1
-                routingNumber:
-                  type: string
-                swiftCode:
-                  type: string
-                externalId:
-                  type: string
-                  minLength: 1
-                furtherCreditTo:
-                  type: string
-                  minLength: 1
-                intermediaryBankName:
-                  type: string
-                  minLength: 1
-                intermediaryBankId:
-                  type: string
-                  minLength: 1
-                description:
-                  type: string
-                accountType:
-                  type: string
-                  nullable: true
-                  enum:
-                    - checking
-                    - saving
-                    - unknown
-                ownerAddressLine1:
-                  type: string
-                  minLength: 1
-                ownerAddressLine2:
-                  type: string
-                  minLength: 1
-                ownerAddressCityLocality:
-                  type: string
-                  minLength: 1
-                ownerAddressStateProvince:
-                  type: string
-                  minLength: 1
-                ownerAddressPostalCode:
-                  type: string
-                  minLength: 1
-                ownerAddressCountryCode:
-                  type: string
-                  minLength: 1
-                bankAddressLine1:
-                  type: string
-                  minLength: 1
-                bankAddressLine2:
-                  type: string
-                  minLength: 1
-                bankAddressCityLocality:
-                  type: string
-                  minLength: 1
-                bankAddressStateProvince:
-                  type: string
-                  minLength: 1
-                bankAddressPostalCode:
-                  type: string
-                  minLength: 1
-                bankAddressCountryCode:
-                  type: string
-                  minLength: 1
-                virtualDepositOnly:
-                  type: boolean
-              required:
-                - shortCountryCode
-                - accountNumber
-                - enterpriseId
-                - bitgoOrg
-                - currency
-                - type
-                - name
-                - virtualDepositOnly
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1GetBankAccountResponse'
         '400':
           description: Bad Request
           content:
@@ -24833,8 +24698,8 @@ paths:
     get:
       tags:
         - Fiat
-      summary: Get Bank Accounts
-      description: Endpoint to get bank accounts
+      summary: List bank accounts
+      description: List all bank accounts associated with a BitGo enterprise.
       operationId: v2.bankaccount.list
       x-unknown-tags:
         tags: Fiat Accounts
@@ -24941,9 +24806,9 @@ paths:
     post:
       tags:
         - Fiat
-      summary: Create Bank Account
-      description: Endpoint to create a bank account
-      operationId: v2.bankaccount.create
+      summary: Add bank account
+      description: Add a bank account to a BitGo enterprise so you can deposit and withdraw fiat.
+      operationId: v2.bankaccount.add
       x-unknown-tags:
         tags: Fiat Accounts
       parameters: []
@@ -24993,8 +24858,8 @@ paths:
     delete:
       tags:
         - Fiat
-      summary: Delete Bank Account
-      description: Endpoint to delete bank account
+      summary: Delete bank account
+      description: Delete a bank account associated with a BitGo enterprise.
       operationId: v2.bankaccount.delete
       x-unknown-tags:
         tags: Fiat Accounts
@@ -25051,8 +24916,8 @@ paths:
     get:
       tags:
         - Fiat
-      summary: Get Bank Account
-      description: Endpoint to get single bank account by id
+      summary: Get bank account
+      description: Get a bank account associated with a BitGo enterprise by its ID.
       operationId: v2.bankaccount.get
       x-unknown-tags:
         tags: Fiat Accounts
@@ -25097,8 +24962,8 @@ paths:
     put:
       tags:
         - Fiat
-      summary: Update Bank Account
-      description: Endpoint to update a single bank account
+      summary: Update bank account
+      description: Update a bank account associated with a BitGo enterprise.
       operationId: v2.bankaccount.update
       x-unknown-tags:
         tags: Fiat Accounts
@@ -25252,7 +25117,7 @@ paths:
       tags:
         - Fiat
       summary: Get deposit info
-      description: Returns the bank accounts available for deposits on the specific enterprise
+      description: Get BitGo's bank account information so you can deposit fiat into a Go Account.
       operationId: fiat.get.deposit.info
       x-unknown-tags:
         tags: Fiat Accounts
@@ -38944,16 +38809,6 @@ components:
         - cbit
         - null
       example: wire
-    BankAccountType1:
-      title: BankAccountType
-      type: string
-      enum:
-        - wire
-        - cbit
-        - ach
-        - blinc
-        - swift
-        - sepa
     BankAccountsArrayResponse:
       title: BankAccountsArrayResponse
       description: Unified schema for an array of bank accounts
