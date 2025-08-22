@@ -28285,6 +28285,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/organization/{organizationId}/enterprise/{enterpriseId}/user:
+    post:
+      summary: Add a user to an enterprise within an organization
+      description: Add an existing user to an enterprise under the specified organization.
+      operationId: v2.organization.enterprise.user.add
+      tags:
+        - Enterprise Management
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrganizationIdString'
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EnterpriseIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  minLength: 1
+                permissions:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - admin
+                      - auditor
+                    description: 'This type represents the permissions that can be assigned to a user when adding them to an enterprise 1. ''admin'': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets 2. ''auditor'': View audit logs across the enterprise, Receive invitations to wallets'
+              required:
+                - email
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddUserToOrganizationEnterpriseResponseC'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/reports:
     get:
       summary: List org-level reports
@@ -36980,6 +37054,15 @@ components:
         - addressCount
         - pendingChainInitialization
         - rewardAddress
+    AddUserToOrganizationEnterpriseResponseC:
+      title: AddUserToOrganizationEnterpriseResponseC
+      type: object
+      properties:
+        userId:
+          type: string
+          minLength: 1
+      required:
+        - userId
     AdditionalEnterpriseInfo:
       title: AdditionalEnterpriseInfo
       type: object
@@ -43686,6 +43769,7 @@ components:
         - COMPLETE
         - CANCELLED
         - FAILED
+        - AUTO_CANCELLED
     ExchangeEddsaCommitmentsResponse:
       title: ExchangeEddsaCommitmentsResponse
       type: object
