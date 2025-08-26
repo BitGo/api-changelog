@@ -20313,7 +20313,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ShareWalletResponse'
-  /api/v2/{coin}/walletshare/{walletId}/acceptshare:
+  /api/v2/{coin}/walletshare/{walletShareId}/acceptshare:
     post:
       tags:
         - Express
@@ -20321,7 +20321,7 @@ paths:
       operationId: express.wallet.acceptshare
       parameters:
         - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
+        - $ref: '#/components/parameters/pathWalletShareId'
       description: Accept a wallet share, adding the wallet to the user's list
       requestBody:
         content:
@@ -36233,6 +36233,12 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/WalletId'
+    pathWalletShareId:
+      name: walletShareId
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Id'
     pathWebhookId:
       name: webhookId
       required: true
@@ -44490,12 +44496,24 @@ components:
               type: string
               description: Token name, defined in the BitGoJS Statics package.
     ExpressSendCoinsResponse:
+      anyOf:
+        - $ref: '#/components/schemas/ExpressSendCoinsResponseMultisig'
+        - $ref: '#/components/schemas/ExpressSendCoinsResponseMultisigWithPendingApproval'
+        - $ref: '#/components/schemas/ExpressSendCoinsResponseTxRequest'
+        - $ref: '#/components/schemas/ExpressSendCoinsResponseTxRequestWithPendingApproval'
+    ExpressSendCoinsResponseMultisig:
+      description: Multisig wallet send coins response when no pending approval is required.
+      allOf:
+        - $ref: '#/components/schemas/ExpressSendCoinsResponseTransfer'
+    ExpressSendCoinsResponseMultisigWithPendingApproval:
+      description: Multisig wallet send coins response when pending approval is required.
+      allOf:
+        - $ref: '#/components/schemas/PendingApproval1'
+    ExpressSendCoinsResponseTransfer:
       type: object
       properties:
         transfer:
-          allOf:
-            - $ref: '#/components/schemas/Transfer'
-          description: New transfer
+          $ref: '#/components/schemas/Transfer'
         txid:
           type: string
           description: Unique transaction identifier
@@ -44511,6 +44529,22 @@ components:
             - signed
             - signed (suppressed)
             - pendingApproval
+    ExpressSendCoinsResponseTxRequest:
+      description: Wallet send coins response when no pending approval is required for MPC wallets and lightning wallets.
+      allOf:
+        - type: object
+          properties:
+            txRequest:
+              $ref: '#/components/schemas/TransactionRequestFull1'
+        - $ref: '#/components/schemas/ExpressSendCoinsResponseTransfer'
+    ExpressSendCoinsResponseTxRequestWithPendingApproval:
+      description: Wallet send coins response when pending approval is required for MPC wallets and lightning wallets.
+      type: object
+      properties:
+        txRequest:
+          $ref: '#/components/schemas/TransactionRequestFull1'
+        pendingApproval:
+          $ref: '#/components/schemas/PendingApproval1'
     ExpressSendConsolidationResponse:
       type: object
       properties:
@@ -66716,7 +66750,6 @@ x-tagGroups:
       - Address
       - Approval Requests
       - Audit log
-      - Bank account
       - Counterparties
       - Client Activation
       - Client Allocations & Deallocations
