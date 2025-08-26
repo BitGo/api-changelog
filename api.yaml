@@ -4897,6 +4897,13 @@ paths:
         clients to connect to.
 
 
+        Before calling this endpoint, a configuration for the partner must exist.
+
+        If a config is not present for the partner, the request will fail with a 422 error.
+
+        To initiate the creation of a partner config, please reach out to the
+        Go Network Engineering team at: go-network-eng@bitgo.com.
+
         Error scenarios:
         - 400: Invalid Request Error
         - Occurs when the request parameters are invalid or incomplete.
@@ -4909,6 +4916,10 @@ paths:
         - 403: Permission Denied Error
         - Occurs when the authenticated partner doesn't have access to create a partner.
         - Examples: Enterprise does not have OES license.
+
+        - 422: Unprocessable Entity Error
+        - Returned when a required partner configuration is missing.
+        - Examples: Partner configuration is missing.
 
         - 500: Internal Server Error
         - Occurs when there's an unexpected error processing the request
@@ -4981,6 +4992,12 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
           content:
             application/json:
               schema:
