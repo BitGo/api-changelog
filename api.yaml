@@ -28304,6 +28304,72 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/organization/{organizationId}/enterprise/{enterpriseId}/contract:
+    post:
+      summary: Sign a contract for an enterprise within an organization
+      description: Sign a contract (MPA, CSA, etc.) for an enterprise under the specified organization.
+      operationId: v2.organization.enterprise.contract.sign
+      tags:
+        - Enterprise Management
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrganizationIdString'
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EnterpriseIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                contractType:
+                  type: string
+                  enum:
+                    - trade-mpa
+                    - custody-sa
+                    - staking-sa
+                    - master-agreement
+                signedDate:
+                  type: string
+              required:
+                - contractType
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignOrganizationEnterpriseContractResponseC'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/enterprise/{enterpriseId}/user:
     post:
       summary: Add a user to an enterprise within an organization
@@ -55570,6 +55636,36 @@ components:
             - messageEncoded
             - messageStandardType
         - $ref: '#/components/schemas/BaseIntent'
+    SignOrganizationEnterpriseContractResponseC:
+      title: SignOrganizationEnterpriseContractResponseC
+      type: object
+      properties:
+        success:
+          type: boolean
+        contractsSigned:
+          type: array
+          items:
+            type: object
+            properties:
+              contractType:
+                type: string
+              signedBy:
+                type: string
+              signedDate:
+                type: string
+              ip:
+                type: string
+            required:
+              - contractType
+              - signedBy
+              - signedDate
+              - ip
+        message:
+          type: string
+      required:
+        - success
+        - contractsSigned
+        - message
     SignatureShare:
       type: object
       properties:
