@@ -31823,6 +31823,80 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/txrequests/{txRequestId}/coinSpecific:
+    put:
+      summary: Update CoinSpecific field for Transaction Request For Wallet
+      description: Route to update transaction request coinSpecific for wallet
+      operationId: v2.wallet.txrequest.coinSpecific.update
+      tags:
+        - Transaction request
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+        - name: txRequestId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/TransactionRequestId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                unsignedCoinSpecific:
+                  type: object
+                  description: Can be expanded later to include more coins
+                  properties:
+                    coin:
+                      type: string
+                      enum:
+                        - lnbtc
+                        - tlnbtc
+                      description: lightning coin
+                    data:
+                      allOf:
+                        - $ref: '#/components/schemas/LightningCoinSpecificUpdateData'
+                      description: Storing signature for lightning withdraw
+                  required:
+                    - coin
+                    - data
+              required:
+                - unsignedCoinSpecific
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionRequest1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/txrequests/{txRequestId}/commit:
     post:
       summary: Exchange commitments for EdDSA transactions (lite)
@@ -48490,6 +48564,14 @@ components:
       description: A lightning coin name.
       type: string
       example: lnbtc
+    LightningCoinSpecificUpdateData:
+      title: LightningCoinSpecificUpdateData
+      type: object
+      properties:
+        signature:
+          type: string
+      required:
+        - signature
     LightningCoinWallet:
       title: Lightning Coin Wallet
       type: object
@@ -59426,6 +59508,8 @@ components:
                             type: string
                           stakingAddress:
                             type: string
+                          signature:
+                            type: string
                       - type: object
                         additionalProperties: {}
                     description: Coin specific information.
@@ -61103,6 +61187,8 @@ components:
                 nonceAddress:
                   type: string
                 stakingAddress:
+                  type: string
+                signature:
                   type: string
             - type: object
               additionalProperties: {}
