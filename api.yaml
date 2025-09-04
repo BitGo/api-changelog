@@ -26151,7 +26151,9 @@ paths:
                   description: (ETH only) Specify forwarder version to use in address creation. To reduce the cost of creating ETH forwarders, BitGo uses a set  of forwarder contracts that deploy as a simple proxy to a single  implementation (https://eips.ethereum.org/EIPS/eip-1167).  Additionally, forwarders deploy using opcode, CREATE2, enabling  them to deploy only when needed (https://eips.ethereum.org/EIPS/eip-1014).  These forwarders otherwise operate identically to prior ETH forwarders. Use this flag to specify the forwarder contract version when  deploying a forwarder contract. Use 0 for the older forwarder  (https://github.com/BitGo/eth-multisig-v2). Use 1 for the new fee-improved  forwarder (https://github.com/BitGo/eth-multisig-v4). Use 2 for  NFT-supported forwarders and version 2 wallets. Use 3 for MPC wallets.  Use 4 for forwarders with the same functionality as v2 but with some changes. v4 is applicable for Arbitrum, Optimism, ZkSync, and other EVM-compatible chains that we will onboard in the future. Use 5 for new MPC based wallets with wallet-version 6
                   minimum: 0
                   maximum: 5
-                referenceAddressId:
+                referenceAddress:
+                  type: string
+                referenceCoin:
                   type: string
                 onToken:
                   type: string
@@ -64557,6 +64559,7 @@ components:
         disableTransactionNotifications:
           type: boolean
         hasLargeNumberOfAddresses:
+          nullable: true
           type: boolean
         id:
           type: string
@@ -65415,6 +65418,7 @@ components:
               disableTransactionNotifications:
                 type: boolean
               hasLargeNumberOfAddresses:
+                nullable: true
                 type: boolean
               id:
                 type: string
