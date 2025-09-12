@@ -21172,6 +21172,36 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/{coin}/wallet/{walletId}/lightning/withdraw:
+    post:
+      tags:
+        - Express
+      summary: Lightning - Withdraw to an onchain address
+      operationId: express.lightning.withdrawOnchain
+      description: Withdraw onchain balance from a lightning wallet to a regular onchain address.
+      parameters:
+        - $ref: '#/components/parameters/pathLightningCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpressOnchainWithdrawRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressOnchainWithdrawResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/wallet/{walletId}/lightning/backup:
     get:
       tags:
@@ -47422,6 +47452,65 @@ components:
         amtPaidMsat:
           type: string
           description: Amount actually paid in millisatoshis (may be greater than valueMsat)
+    ExpressOnchainWithdrawRequest:
+      type: object
+      properties:
+        passphrase:
+          type: string
+          description: The wallet passphrase.
+        recipients:
+          type: array
+          description: A list of on-chain recipients with their withdrawal amounts.
+          items:
+            type: object
+            properties:
+              amountSat:
+                type: string
+                description: The amount to send in satoshis.
+              address:
+                type: string
+                description: The on-chain Bitcoin address of the recipient.
+        satsPerVbyte:
+          type: string
+          description: The fee rate for the transaction in satoshis per virtual byte.
+        sequenceId:
+          type: string
+          description: Optional sequence ID for the withdrawal transfer.
+        comment:
+          type: string
+          description: Optional comment for the withdrawal transfer.
+      required:
+        - passphrase
+        - recipients
+        - satsPerVbyte
+    ExpressOnchainWithdrawResponse:
+      type: object
+      properties:
+        txRequestId:
+          type: string
+          description: Transaction request identifier.
+        txRequestState:
+          $ref: '#/components/schemas/TransactionRequestState1'
+        pendingApproval:
+          $ref: '#/components/schemas/PendingApproval1'
+        withdrawStatus:
+          type: object
+          description: The status of the on-chain withdrawal transaction.
+          properties:
+            status:
+              type: string
+              enum:
+                - delivered
+                - failed
+              description: State of the withdrawal.
+            txid:
+              type: string
+              description: The transaction ID on the blockchain.
+            failureReason:
+              type: string
+              description: The reason for failure, if any.
+        transfer:
+          $ref: '#/components/schemas/AnnotatedTransferWithInputsOutputs'
     ExpressPayInvoiceRequest:
       type: object
       properties:
