@@ -22928,6 +22928,7 @@ paths:
                 - $ref: '#/components/schemas/SeiUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/SomiStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/StxStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/StxUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SuiStakingRequestPOSTBody'
@@ -23055,6 +23056,8 @@ paths:
                 $ref: '#/components/examples/SolStakingRequestPOSTBodyExample'
               SolUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SolUnStakingRequestPOSTBodyExample'
+              SomiStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/SomiStakingRequestPOSTBodyExample'
               StxStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/StxStakingRequestPOSTBodyExample'
               StxUnStakingRequestPOSTBodyExample:
@@ -23134,6 +23137,7 @@ paths:
                   - $ref: '#/components/schemas/RethRocketStakingRequest'
                   - $ref: '#/components/schemas/SeiStakingRequest'
                   - $ref: '#/components/schemas/SolStakingRequest'
+                  - $ref: '#/components/schemas/SomiStakingRequest'
                   - $ref: '#/components/schemas/StxStakingRequest'
                   - $ref: '#/components/schemas/SuiStakingRequest'
                   - $ref: '#/components/schemas/SuiWalStakingRequest'
@@ -23607,6 +23611,7 @@ paths:
                   - $ref: '#/components/schemas/MaticStakingRequest'
                   - $ref: '#/components/schemas/NearStakingRequest'
                   - $ref: '#/components/schemas/SolStakingRequest'
+                  - $ref: '#/components/schemas/SomiStakingRequest'
                   - $ref: '#/components/schemas/StxStakingRequest'
                   - $ref: '#/components/schemas/TaoStakingRequest'
                   - $ref: '#/components/schemas/TonStakingRequest'
@@ -37051,6 +37056,13 @@ components:
             max: '0'
             min: '0'
             multipleDelegations: false
+    SomiStakingRequestPOSTBodyExample:
+      summary: Somi Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '5000000000000000000'
+        type: STAKE
+        validator: '0x1234567890123456789012345678901234567890'
     StakeableCoinsResultExample:
       summary: Stakeable Coins Result Example
       value:
@@ -42852,6 +42864,7 @@ components:
         - POLYX
         - RETH-ROCKET
         - SEI
+        - SOMI
         - SOL
         - STX
         - SUI
@@ -59839,6 +59852,37 @@ components:
         - liabilities
         - reserves
         - ratios
+    SomiStakingRequest:
+      title: SOMI
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+        amount:
+          description: Amount to stake in base units.
+          type: string
+        validatorAddress:
+          description: The validator address to delegate to.
+          type: string
+      required:
+        - validatorAddress
+    SomiStakingRequestPOSTBody:
+      title: SOMI stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
     SpendingLimits:
       type: object
       additionalProperties:
@@ -60314,6 +60358,7 @@ components:
               - $ref: '#/components/schemas/CosmosLikeStakingRequest'
               - $ref: '#/components/schemas/AtomStakingRequest'
               - $ref: '#/components/schemas/SolStakingRequest'
+              - $ref: '#/components/schemas/SomiStakingRequest'
               - $ref: '#/components/schemas/DotStakingRequest'
               - $ref: '#/components/schemas/WflrStakingRequest'
     StakingRequestsResponse:
