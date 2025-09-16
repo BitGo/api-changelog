@@ -44217,8 +44217,17 @@ components:
           required:
             - maxPriorityFeePerGas
             - maxFeePerGas
-      required:
-        - label
+        evmKeyRingReferenceWalletId:
+          type: string
+          description: Optional reference wallet ID for EVM keyring child wallets. When provided, child wallets inherit properties from the parent wallet.
+      anyOf:
+        - not:
+            required:
+              - evmKeyRingReferenceWalletId
+          required:
+            - label
+        - required:
+            - evmKeyRingReferenceWalletId
     CreateWebhookSecretResponse:
       title: CreateWebhookSecretResponse
       type: object
