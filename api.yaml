@@ -33882,6 +33882,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v1/admin/events/reprocess:
+    put:
+      summary: Reprocess Dead Letter Queue Event
+      description: Reprocesses a dead letter queue event back to the event queue
+      operationId: wd.v1.admin.event.reprocess
+      tags:
+        - WD
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                eventType:
+                  type: string
+                dlqId:
+                  type: number
+              required:
+                - eventType
+                - dlqId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminReprocessEventResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
 components:
   callbacks: {}
   examples:
@@ -39895,6 +39945,17 @@ components:
           description: Count of the addresses in the current response
       required:
         - coin
+    AdminReprocessEventResponse:
+      title: AdminReprocessEventResponse
+      type: object
+      properties:
+        eventQueueId:
+          type: number
+        eventType:
+          type: string
+      required:
+        - eventQueueId
+        - eventType
     AdvancedListCondition:
       title: AdvancedListCondition
       type: object
