@@ -22899,7 +22899,7 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                $ref: '#/components/schemas/StakingRequestSchemas'
         '400':
           description: Bad Request
           content:
@@ -23210,47 +23210,7 @@ paths:
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/AdaStakingRequest'
-                  - $ref: '#/components/schemas/AsiStakingRequest'
-                  - $ref: '#/components/schemas/AtomStakingRequest'
-                  - $ref: '#/components/schemas/AvaxCStakingRequest'
-                  - $ref: '#/components/schemas/AvaxPStakingRequest'
-                  - $ref: '#/components/schemas/BabyStakingRequest'
-                  - $ref: '#/components/schemas/BeraStakingRequest'
-                  - $ref: '#/components/schemas/BldStakingRequest'
-                  - $ref: '#/components/schemas/BscStakingRequest'
-                  - $ref: '#/components/schemas/BtcStakingRequest'
-                  - $ref: '#/components/schemas/CoredaoStakingRequest'
-                  - $ref: '#/components/schemas/CoreumStakingRequest'
-                  - $ref: '#/components/schemas/CosmosLikeStakingRequest'
-                  - $ref: '#/components/schemas/CronosStakingRequest'
-                  - $ref: '#/components/schemas/CsprStakingRequest'
-                  - $ref: '#/components/schemas/DotStakingRequest'
-                  - $ref: '#/components/schemas/EigenStakingRequest'
-                  - $ref: '#/components/schemas/EthStakingRequest'
-                  - $ref: '#/components/schemas/HashStakingRequest'
-                  - $ref: '#/components/schemas/InjectiveStakingRequest'
-                  - $ref: '#/components/schemas/MaticStakingRequest'
-                  - $ref: '#/components/schemas/NearStakingRequest'
-                  - $ref: '#/components/schemas/OsmoStakingRequest'
-                  - $ref: '#/components/schemas/PolStakingRequest'
-                  - $ref: '#/components/schemas/PolyxStakingRequest'
-                  - $ref: '#/components/schemas/RethRocketStakingRequest'
-                  - $ref: '#/components/schemas/SeiStakingRequest'
-                  - $ref: '#/components/schemas/SolStakingRequest'
-                  - $ref: '#/components/schemas/SomiStakingRequest'
-                  - $ref: '#/components/schemas/StxStakingRequest'
-                  - $ref: '#/components/schemas/SuiStakingRequest'
-                  - $ref: '#/components/schemas/SuiWalStakingRequest'
-                  - $ref: '#/components/schemas/TaoStakingRequest'
-                  - $ref: '#/components/schemas/TiaStakingRequest'
-                  - $ref: '#/components/schemas/TonStakingRequest'
-                  - $ref: '#/components/schemas/TrxStakingRequest'
-                  - $ref: '#/components/schemas/WctStakingRequest'
-                  - $ref: '#/components/schemas/WethStakingRequest'
-                  - $ref: '#/components/schemas/ZetaStakingRequest'
-                  - $ref: '#/components/schemas/WflrStakingRequest'
+                $ref: '#/components/schemas/StakingRequestSchemas'
               examples:
                 AdaStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/AdaStakingRequestWithoutDelegationsExample'
@@ -23560,14 +23520,7 @@ paths:
       operationId: v1.staking.request.list
       parameters:
         - $ref: '#/components/parameters/pathWalletId1'
-        - name: coin
-          in: query
-          description: The staking asset.
-          required: false
-          schema:
-            type: array
-            items:
-              type: string
+        - $ref: '#/components/parameters/queryCoins'
         - name: requestType
           in: query
           description: Filter by Staking Request Type
@@ -23598,7 +23551,7 @@ paths:
           schema:
             type: string
             format: date-time
-        - name: ID
+        - name: id
           in: query
           description: Filter by staking request ID
           required: false
@@ -23607,6 +23560,12 @@ paths:
             items:
               type: string
               format: uuid
+        - name: searchString
+          in: query
+          description: Search by string match across request attributes
+          required: false
+          schema:
+            type: string
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize'
         - $ref: '#/components/parameters/querySortByCreatedDate'
@@ -23695,30 +23654,20 @@ paths:
           required: true
           schema:
             type: string
+        - name: expandBuildParams
+          in: query
+          description: Whether to expand and include full build parameters in the response.
+          required: false
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: Successful Retrieving a Staking Request
           content:
             application/json:
               schema:
-                oneOf:
-                  - $ref: '#/components/schemas/AdaStakingRequest'
-                  - $ref: '#/components/schemas/AtomStakingRequest'
-                  - $ref: '#/components/schemas/AvaxPStakingRequest'
-                  - $ref: '#/components/schemas/BeraStakingRequest'
-                  - $ref: '#/components/schemas/BtcStakingRequest'
-                  - $ref: '#/components/schemas/CosmosLikeStakingRequest'
-                  - $ref: '#/components/schemas/DotStakingRequest'
-                  - $ref: '#/components/schemas/EthStakingRequest'
-                  - $ref: '#/components/schemas/MaticStakingRequest'
-                  - $ref: '#/components/schemas/NearStakingRequest'
-                  - $ref: '#/components/schemas/SolStakingRequest'
-                  - $ref: '#/components/schemas/SomiStakingRequest'
-                  - $ref: '#/components/schemas/StxStakingRequest'
-                  - $ref: '#/components/schemas/TaoStakingRequest'
-                  - $ref: '#/components/schemas/TonStakingRequest'
-                  - $ref: '#/components/schemas/WctStakingRequest'
-                  - $ref: '#/components/schemas/WflrStakingRequest'
+                $ref: '#/components/schemas/StakingRequestSchemas'
               examples:
                 AvaxPStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/AvaxPStakingRequestWithTransactionsExample'
@@ -23955,18 +23904,25 @@ paths:
             schema:
               oneOf:
                 - $ref: '#/components/schemas/EthStakingTransactionSendRequest'
+                - $ref: '#/components/schemas/StakingTransactionSendRequest'
       responses:
         '200':
           description: Successful Acting on a Transaction
           content:
             application/json:
               schema:
-                type: array
-                minItems: 1
-                maxItems: 500
-                items:
-                  oneOf:
-                    - $ref: '#/components/schemas/EthStakingTransaction'
+                oneOf:
+                  - $ref: '#/components/schemas/AvaxcStakingTransaction'
+                  - $ref: '#/components/schemas/AvaxPStakingTransaction'
+                  - $ref: '#/components/schemas/CsprStakingTransaction'
+                  - $ref: '#/components/schemas/EigenStakingTransaction'
+                  - $ref: '#/components/schemas/EthStakingTransaction'
+                  - $ref: '#/components/schemas/MaticStakingTransaction'
+                  - $ref: '#/components/schemas/PolStakingTransaction'
+                  - $ref: '#/components/schemas/RethRocketStakingTransaction'
+                  - $ref: '#/components/schemas/StakingTransaction'
+                  - $ref: '#/components/schemas/TrxStakingTransaction'
+                  - $ref: '#/components/schemas/WethStakingTransaction'
               example:
                 - stakingRequestId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
                   createdDate: 2022-01-10T14:32:28.000Z
@@ -24073,9 +24029,11 @@ paths:
               example:
                 enterpriseId: 1032e75c451052000436831deb797af1
                 walletId: 2032e75g451052000636831abd797bd3
+                stakingWalletId: 8f14e45f-e8f5-4c2c-bb7c-123456789abc
                 walletType: custodial
                 label: My Staking Wallet
                 coin: eth
+                parentCoin: eth
                 delegated: '6400000000000000000'
                 pendingUnstake: '0'
                 pendingStake: '0'
@@ -24084,10 +24042,50 @@ paths:
                   max: '0'
                   fee: '0'
                   isStakingDurationNeeded: false
+                permissionAttributes:
+                  staking:
+                    enabled: true
+                    disabledReason: null
+                    allowClientToUseOwnValidator: false
+                    allowClientToUseOwnDRep: null
+                    allowVoteDelegation: null
+                    requireVoteDelegation: null
+                  unstaking:
+                    enabled: true
+                    disabledReason: null
+                  claimRewards:
+                    enabled: true
+                    disabledReason: null
+                  switchValidator:
+                    enabled: false
+                    disabledReason: Validator switch not supported for this asset
+                  wallet:
+                    hasEnoughAdmins: true
+                    numberOfRequiredAdmins: 2
+                    useValidatorList: true
+                    skipAddressValidation: false
+                    allowPartialUnstake: true
+                    restakingEnabled: true
+                    validatorNotNeededForStake: false
+                    validatorCoin: eth
+                users:
+                  - user: 4032e75i451052000836831add797de5
+                    permissions:
+                      - view
+                  - user: 5032e75j451052000936831aee797ef6
+                    permissions:
+                      - admin
                 rewards: '1000000000000000'
+                pendingClaimRewards: '500000000000000'
+                lockedRewards: '200000000000000'
+                reserved: '100000000000000'
+                pendingReserved: '50000000000000'
                 apy: '8.2'
                 createdDate: 2022-01-10T14:32:28.000Z
                 modifiedDate: 2022-01-10T14:32:28.000Z
+                properties:
+                  type: ETH
+                  walletMultisigType: TSS
         '400':
           description: Bad Request
           content:
@@ -24164,13 +24162,15 @@ paths:
           description: The delegation IDs.
           required: false
           schema:
-            type: string
+            type: array
+            items:
+              type: string
         - name: delegationStatus
           in: query
           description: The status of the delegation.
           required: false
           schema:
-            type: string
+            $ref: '#/components/schemas/DelegationStatus'
         - name: unstakeable
           in: query
           description: Unsupported for staking
@@ -24582,18 +24582,12 @@ paths:
           required: true
           schema:
             $ref: '#/components/schemas/WalletId'
-        - name: delegationIds
-          in: query
-          description: Delegation IDs
-          required: false
-          schema:
-            type: string
         - name: range
           in: query
-          description: The time range for the data, either hourly or daily.
+          description: The time range for the data.
           required: false
           schema:
-            type: string
+            $ref: '#/components/schemas/TimeRange'
         - name: startDate
           in: query
           description: The start date to search from.
@@ -24859,6 +24853,12 @@ paths:
       parameters:
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize'
+        - name: comingSoon
+          in: query
+          description: If true, include coins that are coming soon but not yet available for staking.
+          required: false
+          schema:
+            type: boolean
       responses:
         '200':
           description: Successful Retrieving a List of Stakeable Coins
@@ -24903,6 +24903,14 @@ paths:
         - $ref: '#/components/parameters/pathWalletId1'
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize'
+        - name: status
+          in: query
+          description: Comma-separated list of delegation statuses to filter by. Defaults to `ACTIVE,PENDING`.
+          required: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/DelegationStatus'
       responses:
         '200':
           description: Successful Retrieving Staking Validators For A Wallet
@@ -40712,17 +40720,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/StakingRequestPOSTBody'
       type: object
-    AtomStakingRequestWithTransactions:
-      title: ATOM
-      allOf:
-        - $ref: '#/components/schemas/AtomStakingRequest'
-        - type: object
-          properties:
-            transactions:
-              type: array
-              items:
-                oneOf:
-                  - $ref: '#/components/schemas/AtomStakingTransaction'
     AtomStakingTransaction:
       allOf:
         - $ref: '#/components/schemas/StakingTransaction'
@@ -41667,6 +41664,21 @@ components:
         - from
         - to
         - share
+    BaseSpendableAttributes:
+      type: object
+      properties:
+        max:
+          description: The maximum spendable amount.
+          type: string
+        min:
+          description: The minimum spendable amount.
+          type: string
+        multiplier:
+          description: The multiplier amount to be staked. Default to 1, but for coins like where the amount to stake is a multiple of 32 ETH, this is 32 in base unit, to allow validation.
+          type: string
+        fee:
+          description: The blockchain fee to submit the transactions.
+          type: string
     BaseStakeIntent:
       title: BaseStakeIntent
       allOf:
@@ -43663,17 +43675,6 @@ components:
           example: 017234b285929170324e1051ccd887dc08adf049650ecf5d383985b0b0048ab39b
       required:
         - validator
-    CosmosLikeStakingRequestWithTransactions:
-      title: ATOM like
-      allOf:
-        - $ref: '#/components/schemas/CosmosLikeStakingRequest'
-        - type: object
-          properties:
-            transactions:
-              type: array
-              items:
-                oneOf:
-                  - $ref: '#/components/schemas/CosmosLikeStakingTransaction'
     CosmosLikeStakingTransaction:
       allOf:
         - $ref: '#/components/schemas/StakingTransaction'
@@ -44474,46 +44475,41 @@ components:
     DelegationAccrual:
       type: object
       properties:
-        rewardsReceived:
-          description: The total rewards received over the lifetime of the wallet.
+        delegationId:
+          description: The delegation ID.
+          type: string
+        coin:
+          $ref: '#/components/schemas/Coin1'
+        enterpriseId:
+          description: The enterprise ID.
+          type: string
+        withdrawalAddress:
+          description: The withdrawal address.
+          type: string
+        delegationAddress:
+          description: The delegation address.
           type: string
         delegated:
-          description: The total rewards delegated (staked).
+          description: The total amount delegated (staked).
           type: string
         pendingDelegated:
           description: The total amount pending to be delegated (staked).
           type: string
         pendingUndelegated:
-          description: Total amount pending to be undelegated (unstaked).
+          description: The total amount pending to be undelegated (unstaked).
           type: string
-        spendable:
-          description: Total spendable (withdrawable) amount in the wallet.
+        rewardsReceived:
+          description: The total rewards received over the lifetime of the delegation.
           type: string
         locked:
-          description: The total amount locked but not delegated (staked).  Example is staking rewards that are not re-staked and compounding.
-          type: string
-        delegationId:
-          description: The delegation ID.
-          type: string
-        delegationAddress:
-          description: The delegation address.
-          type: string
-        withdrawalAddress:
-          description: The withdrawal address.
-          type: string
-        walletId:
-          description: The wallet ID.
-          type: string
-        enterpriseId:
-          description: The enterprise ID.
-          type: string
-        coin:
-          description: The staking asset.
+          description: The total amount locked but not delegated (staked). Example is staking rewards not re-staked/compounding.
           type: string
         date:
           description: The date and time of the accrual record.
           type: string
           format: date-time
+        wallet:
+          $ref: '#/components/schemas/WalletAccrual'
     DelegationAccruals:
       type: object
       properties:
@@ -44540,19 +44536,45 @@ components:
           maxItems: 500
           items:
             oneOf:
+              - $ref: '#/components/schemas/AdaStakingDelegation'
+              - $ref: '#/components/schemas/AsiStakingDelegation'
+              - $ref: '#/components/schemas/AtomStakingDelegation'
+              - $ref: '#/components/schemas/AvaxcStakingDelegation'
+              - $ref: '#/components/schemas/AvaxPStakingDelegation'
+              - $ref: '#/components/schemas/BabyStakingDelegation'
               - $ref: '#/components/schemas/BeraStakingDelegation'
+              - $ref: '#/components/schemas/BldStakingDelegation'
+              - $ref: '#/components/schemas/BscStakingDelegation'
               - $ref: '#/components/schemas/BtcStakingDelegation'
+              - $ref: '#/components/schemas/CoredaoStakingDelegation'
+              - $ref: '#/components/schemas/CoreumStakingDelegation'
+              - $ref: '#/components/schemas/CronosStakingDelegation'
+              - $ref: '#/components/schemas/CsprStakingDelegation'
               - $ref: '#/components/schemas/CosmosLikeStakingDelegation'
               - $ref: '#/components/schemas/DotStakingDelegation'
+              - $ref: '#/components/schemas/EigenStakingDelegation'
               - $ref: '#/components/schemas/EthStakingDelegation'
+              - $ref: '#/components/schemas/HashStakingDelegation'
+              - $ref: '#/components/schemas/InjectiveStakingDelegation'
               - $ref: '#/components/schemas/MaticStakingDelegation'
               - $ref: '#/components/schemas/NearStakingDelegation'
+              - $ref: '#/components/schemas/OsmoStakingDelegation'
+              - $ref: '#/components/schemas/PolStakingDelegation'
+              - $ref: '#/components/schemas/PolyxStakingDelegation'
+              - $ref: '#/components/schemas/RethRocketStakingDelegation'
+              - $ref: '#/components/schemas/SeiStakingDelegation'
               - $ref: '#/components/schemas/SolStakingDelegation'
               - $ref: '#/components/schemas/StxStakingDelegation'
               - $ref: '#/components/schemas/SuiStakingDelegation'
+              - $ref: '#/components/schemas/SuiWalStakingDelegation'
+              - $ref: '#/components/schemas/TaoStakingDelegation'
+              - $ref: '#/components/schemas/TiaStakingDelegation'
               - $ref: '#/components/schemas/TonStakingDelegation'
+              - $ref: '#/components/schemas/TrxStakingDelegation'
+              - $ref: '#/components/schemas/WethStakingDelegation'
               - $ref: '#/components/schemas/WctStakingDelegation'
               - $ref: '#/components/schemas/WflrStakingDelegation'
+              - $ref: '#/components/schemas/ZetaStakingDelegation'
         page:
           type: integer
           description: The page number for paging purposes.
@@ -44562,6 +44584,15 @@ components:
         totalElements:
           type: integer
           description: The number of elements per page used for paging purposes.
+    DelegationStatus:
+      description: The status of the delegation.
+      type: string
+      enum:
+        - PENDING
+        - FAILED
+        - REJECTED
+        - ACTIVE
+        - COMPLETE
     DeleteDeviceTokenResponse:
       type: object
       properties:
@@ -45223,17 +45254,6 @@ components:
           description: Amount to stake in base units.
           type: string
           example: '10000000000'
-    DotStakingRequestWithTransactions:
-      title: DOT
-      allOf:
-        - $ref: '#/components/schemas/DotStakingRequest'
-        - type: object
-          properties:
-            transactions:
-              type: array
-              items:
-                oneOf:
-                  - $ref: '#/components/schemas/DotStakingTransaction'
     DotStakingTransaction:
       allOf:
         - $ref: '#/components/schemas/StakingTransaction'
@@ -45447,6 +45467,18 @@ components:
         gasPrice:
           type: string
           description: User overridden gas price to apply for the generated transactions for this request. GasPrice is in base units.
+    Eip1559Params:
+      type: object
+      required:
+        - maxPriorityFeePerGas
+        - maxFeePerGas
+      properties:
+        maxPriorityFeePerGas:
+          type: string
+          description: Maximum priority fee per gas (in wei).
+        maxFeePerGas:
+          type: string
+          description: Maximum fee per gas (in wei).
     Email:
       type: string
       format: email
@@ -46834,17 +46866,6 @@ components:
             - STAKE
             - ETH_STAKE_PECTRA
           example: STAKE
-    EthStakingRequestWithTransactions:
-      title: ETH
-      allOf:
-        - $ref: '#/components/schemas/EthStakingRequest'
-        - type: object
-          properties:
-            transactions:
-              type: array
-              items:
-                oneOf:
-                  - $ref: '#/components/schemas/EthStakingTransaction'
     EthStakingTransaction:
       allOf:
         - $ref: '#/components/schemas/StakingTransaction'
@@ -46863,13 +46884,7 @@ components:
               description: The contract sequence ID of the transaction.
               type: string
             eip1559:
-              description: Eip1559 Params
-              type: object
-              properties:
-                maxPriorityFeePerGas:
-                  type: string
-                maxFeePerGas:
-                  type: string
+              $ref: '#/components/schemas/Eip1559Params'
             operationHash:
               type: string
             expireTime:
@@ -46878,6 +46893,9 @@ components:
               type: string
         comment:
           type: string
+        txHex:
+          type: string
+          description: Raw transaction hex.
     EthTransferTokenIntent:
       title: ETH Transfer Token Intent
       allOf:
@@ -53103,17 +53121,6 @@ components:
           description: Amount to stake in base units.
           type: string
           example: '12000000000000000000'
-    NearStakingRequestWithTransactions:
-      title: NEAR
-      allOf:
-        - $ref: '#/components/schemas/NearStakingRequest'
-        - type: object
-          properties:
-            transactions:
-              type: array
-              items:
-                oneOf:
-                  - $ref: '#/components/schemas/NearStakingTransaction'
     NearStakingTransaction:
       allOf:
         - $ref: '#/components/schemas/StakingTransaction'
@@ -59927,17 +59934,6 @@ components:
           example: HimWQUK61d9wxhw7EYu9jUje7xQiDs4jKexaTSvuCmXE
       required:
         - validator
-    SolStakingRequestWithTransactions:
-      title: SOL
-      allOf:
-        - $ref: '#/components/schemas/SolStakingRequest'
-        - type: object
-          properties:
-            transactions:
-              type: array
-              items:
-                oneOf:
-                  - $ref: '#/components/schemas/SolStakingTransaction'
     SolStakingTransaction:
       allOf:
         - $ref: '#/components/schemas/StakingTransaction'
@@ -60253,6 +60249,8 @@ components:
           type: boolean
         l1Chain:
           type: string
+        comingSoon:
+          type: boolean
         disclaimer:
           $ref: '#/components/schemas/DisclaimerAttributes'
     StakeableCoinsResult:
@@ -60284,6 +60282,12 @@ components:
         delegationAddress:
           description: The delegation address.
           type: string
+        validatorAddress:
+          description: The validator address of the delegation.
+          type: string
+        provider:
+          description: The staking provider backing the delegation.
+          type: string
         withdrawalAddress:
           description: The withdrawal address.
           type: string
@@ -60291,8 +60295,7 @@ components:
           description: The delegation amount.
           type: string
         status:
-          description: The status of the delegation.
-          type: string
+          $ref: '#/components/schemas/DelegationStatus'
         rewards:
           description: The amount of rewards received over the lifetime.
           type: string
@@ -60305,44 +60308,18 @@ components:
         pendingStake:
           description: The amount that is pending stake.
           type: string
+        reserved:
+          description: The amount that is reserved for this delegation.
+          type: string
+        pendingReserved:
+          description: The amount that is pending reservation for this delegation.
+          type: string
         apy:
           description: The estimated reward APY or APR if rewards are not compounding.
           type: string
-        unstakingFee:
-          description: The total fees needed in the wallet to unstake an amount from the delegation.
-          type: string
-        unstakingMin:
-          description: The minimum amount needed to unstake from the delegation.
-          type: string
-        properties:
-          allOf:
-            - $ref: '#/components/schemas/StakingDelegationProperties'
-          type: object
-        rewardCoin:
-          description: The coin in which rewards will be received.
-          type: string
-        endTime:
-          description: The timestamp when the staking position expires, at which point it will either be unstaked automatically or become available for manual unstaking.
-          type: string
-    StakingDelegationProperties:
-      type: object
-      properties:
-        delegationCycle:
-          allOf:
-            - $ref: '#/components/schemas/IntegerString'
-          description: The number of cycles this delegation will be active.
-        endBurnBlockHeight:
-          allOf:
-            - $ref: '#/components/schemas/IntegerString'
-          description: The end burn block height for this delegation.
-        expireAt:
-          description: The staking expiration date.
-          type: string
-          format: date-time
-          example: '2025-01-31T00:00:00.000Z'
-        rewardWalletId:
-          description: The ID of the wallet where rewards will be received.
-          type: string
+        unstakeable:
+          description: Indicates whether the delegation can currently be unstaked.
+          type: boolean
     StakingDisclaimerAttributes:
       type: object
       properties:
@@ -60551,6 +60528,48 @@ components:
       required:
         - amount
         - type
+    StakingRequestSchemas:
+      oneOf:
+        - $ref: '#/components/schemas/AdaStakingRequest'
+        - $ref: '#/components/schemas/AsiStakingRequest'
+        - $ref: '#/components/schemas/AtomStakingRequest'
+        - $ref: '#/components/schemas/AvaxCStakingRequest'
+        - $ref: '#/components/schemas/AvaxPStakingRequest'
+        - $ref: '#/components/schemas/BabyStakingRequest'
+        - $ref: '#/components/schemas/BeraStakingRequest'
+        - $ref: '#/components/schemas/BldStakingRequest'
+        - $ref: '#/components/schemas/BscStakingRequest'
+        - $ref: '#/components/schemas/BtcStakingRequest'
+        - $ref: '#/components/schemas/CoredaoStakingRequest'
+        - $ref: '#/components/schemas/CoreumStakingRequest'
+        - $ref: '#/components/schemas/CosmosLikeStakingRequest'
+        - $ref: '#/components/schemas/CronosStakingRequest'
+        - $ref: '#/components/schemas/CsprStakingRequest'
+        - $ref: '#/components/schemas/DotStakingRequest'
+        - $ref: '#/components/schemas/EigenStakingRequest'
+        - $ref: '#/components/schemas/EthStakingRequest'
+        - $ref: '#/components/schemas/HashStakingRequest'
+        - $ref: '#/components/schemas/InjectiveStakingRequest'
+        - $ref: '#/components/schemas/MaticStakingRequest'
+        - $ref: '#/components/schemas/NearStakingRequest'
+        - $ref: '#/components/schemas/OsmoStakingRequest'
+        - $ref: '#/components/schemas/PolStakingRequest'
+        - $ref: '#/components/schemas/PolyxStakingRequest'
+        - $ref: '#/components/schemas/RethRocketStakingRequest'
+        - $ref: '#/components/schemas/SeiStakingRequest'
+        - $ref: '#/components/schemas/SolStakingRequest'
+        - $ref: '#/components/schemas/SomiStakingRequest'
+        - $ref: '#/components/schemas/StxStakingRequest'
+        - $ref: '#/components/schemas/SuiStakingRequest'
+        - $ref: '#/components/schemas/SuiWalStakingRequest'
+        - $ref: '#/components/schemas/TaoStakingRequest'
+        - $ref: '#/components/schemas/TiaStakingRequest'
+        - $ref: '#/components/schemas/TonStakingRequest'
+        - $ref: '#/components/schemas/TrxStakingRequest'
+        - $ref: '#/components/schemas/WctStakingRequest'
+        - $ref: '#/components/schemas/WethStakingRequest'
+        - $ref: '#/components/schemas/ZetaStakingRequest'
+        - $ref: '#/components/schemas/WflrStakingRequest'
     StakingRequestStatus:
       title: Staking Request Status
       description: The status of the staking request. For ETH the status will change from NEW to READY when a validator has been assigned to the wallet's address.
@@ -60592,16 +60611,7 @@ components:
           minItems: 1
           maxItems: 500
           items:
-            oneOf:
-              - $ref: '#/components/schemas/EthStakingRequest'
-              - $ref: '#/components/schemas/MaticStakingRequest'
-              - $ref: '#/components/schemas/NearStakingRequest'
-              - $ref: '#/components/schemas/CosmosLikeStakingRequest'
-              - $ref: '#/components/schemas/AtomStakingRequest'
-              - $ref: '#/components/schemas/SolStakingRequest'
-              - $ref: '#/components/schemas/SomiStakingRequest'
-              - $ref: '#/components/schemas/DotStakingRequest'
-              - $ref: '#/components/schemas/WflrStakingRequest'
+            $ref: '#/components/schemas/StakingRequestSchemas'
     StakingRequestsResponse:
       type: object
       properties:
@@ -60610,15 +60620,7 @@ components:
           minItems: 1
           maxItems: 500
           items:
-            oneOf:
-              - $ref: '#/components/schemas/EthStakingRequestWithTransactions'
-              - $ref: '#/components/schemas/NearStakingRequestWithTransactions'
-              - $ref: '#/components/schemas/CosmosLikeStakingRequestWithTransactions'
-              - $ref: '#/components/schemas/AtomStakingRequestWithTransactions'
-              - $ref: '#/components/schemas/WflrStakingRequest'
-              - $ref: '#/components/schemas/SolStakingRequestWithTransactions'
-              - $ref: '#/components/schemas/DotStakingRequestWithTransactions'
-              - $ref: '#/components/schemas/MaticStakingRequest'
+            $ref: '#/components/schemas/StakingRequestSchemas'
         page:
           type: integer
           description: The page number for paging purposes.
@@ -60668,20 +60670,10 @@ components:
           type: integer
           description: The number of elements per page used for paging purposes.
     StakingSpendableAttributes:
+      allOf:
+        - $ref: '#/components/schemas/BaseSpendableAttributes'
       type: object
       properties:
-        max:
-          description: The maximum spendable amount.
-          type: string
-        min:
-          description: The minimum spendable amount.
-          type: string
-        multiplier:
-          description: The multiplier amount to be staked. Default to 1, but for coins like where the amount to stake is multipler of 32 ETH, this is 32 in base unit, to allow validation.
-          type: string
-        fee:
-          description: The blockchain fee to submit the transactions needed to stake.
-          type: string
         netMax:
           description: The maximum spendable amount minus fees.
           type: string
@@ -60821,6 +60813,26 @@ components:
         - statusModifiedDate
         - delegationId
         - amount
+    StakingTransactionSendRequest:
+      type: object
+      properties:
+        halfSigned:
+          type: object
+          properties:
+            contractSequenceId:
+              type: string
+              nullable: true
+              description: Optional contract sequence ID of the transaction.
+            eip1559:
+              $ref: '#/components/schemas/Eip1559Params'
+            txHex:
+              type: string
+              description: Raw transaction hex for the multisig transaction.
+        comment:
+          type: string
+        txHex:
+          type: string
+          description: Raw transaction hex.
     StakingTransactionStatus:
       title: Staking Transaction Status
       description: The status of the transaction, either NEW, READY, INITIATED, CONFIRMED, or REJECTED.
@@ -60860,11 +60872,26 @@ components:
         delegated:
           description: The total delegated amount in base units.
           type: string
+        totalStaked:
+          description: The total staked amount in base units.
+          type: string
         rewards:
           description: The reward accrual amount in base units.
           type: string
+        activeRewards:
+          description: The amount of active rewards in base units.
+          type: string
+        pendingClaimRewards:
+          description: The amount of rewards pending claim in base units.
+          type: string
         apy:
           description: The annual percentage yield.
+          type: string
+        historicRatePerformance:
+          description: The historical APY/return performance of the validator.
+          type: string
+        commission:
+          description: The validator commission rate.
           type: string
         type:
           description: The validator provider used for staking.
@@ -60874,6 +60901,47 @@ components:
           type: string
         endTime:
           description: The timestamp when the staking position expires, at which point it will either be unstaked automatically or become available for manual unstaking.
+          type: string
+        pendingStake:
+          description: The amount currently pending stake.
+          type: string
+        pendingUnstake:
+          description: The amount currently pending unstake.
+          type: string
+        enterpriseId:
+          description: The enterprise ID of the wallet.
+          type: string
+        walletId:
+          description: The wallet ID.
+          type: string
+        lastRedelegationTimestamp:
+          description: The timestamp of the last redelegation.
+          type: string
+        permissionAttributes:
+          $ref: '#/components/schemas/WalletStakingPermissionAttributes'
+        spendableAttributes:
+          $ref: '#/components/schemas/WalletStakingSpendableAttributes'
+        count:
+          description: The number of delegations for this validator.
+          type: string
+        avses:
+          description: List of AVSEs associated with the validator.
+          type: array
+          items:
+            type: string
+        preferred:
+          description: Whether this validator is preferred.
+          type: boolean
+        restaking:
+          description: Whether restaking is enabled.
+          type: boolean
+        rewardPairs:
+          description: List of reward pairs.
+          type: array
+          items:
+            type: object
+        stakingType:
+          description: The staking type, e.g., STAKE.
           type: string
     StakingValidatorsResponse:
       type: object
@@ -60899,10 +60967,13 @@ components:
       type: object
       properties:
         enterpriseId:
-          description: The ID of the enterprise where the the staking request was created.
+          description: The ID of the enterprise where the staking request was created.
           type: string
         walletId:
           description: The ID of the wallet where the staking request was created.
+          type: string
+        stakingWalletId:
+          description: The unique identifier of the staking wallet entity.
           type: string
         walletType:
           description: The type of wallet the staking request was created from, either cold, custodial, or hot.
@@ -60912,6 +60983,9 @@ components:
           type: string
         coin:
           description: The staking asset.
+          type: string
+        parentCoin:
+          description: The parent asset of the staking coin.
           type: string
         delegated:
           description: The delegated staked amount in base units.
@@ -60923,13 +60997,28 @@ components:
           description: The amount that is actively being staked.
           type: string
         spendableAttributes:
-          description: Spendable attributes
-          type: object
+          $ref: '#/components/schemas/WalletStakingSpendableAttributes'
+        permissionAttributes:
+          $ref: '#/components/schemas/WalletStakingPermissionAttributes'
+        users:
+          description: The users associated with the staking wallet.
+          type: array
+          items:
+            type: object
         rewards:
           description: The amount of rewards received in base units.
           type: string
+        pendingClaimRewards:
+          description: The amount of rewards that are pending claim in base units.
+          type: string
         lockedRewards:
-          description: The amout of locked rewards in base units.
+          description: The amount of locked rewards in base units.
+          type: string
+        reserved:
+          description: The amount reserved in base units.
+          type: string
+        pendingReserved:
+          description: The amount pending reservation in base units.
           type: string
         apy:
           description: The reward accrual annual percentage rate. The rate is estimated yearly based on the last 7 days using the same methodology as leading beacon chain validator aggregators (e.g. https://beaconcha.in/validators).
@@ -60940,6 +61029,9 @@ components:
         modifiedDate:
           description: The last date the staking wallet was modified.
           type: string
+        properties:
+          description: Additional properties of the staking wallet.
+          type: object
       required:
         - enterpriseId
         - walletId
@@ -61491,6 +61583,10 @@ components:
             - netuid
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
+    TaoStakingDelegation:
+      allOf:
+        - $ref: '#/components/schemas/StakingDelegation'
+      type: object
     TaoStakingRequest:
       title: TAO
       allOf:
@@ -61502,13 +61598,13 @@ components:
           minItems: 1
           maxItems: 1
           items:
-            $ref: '#/components/schemas/SolStakingDelegation'
+            $ref: '#/components/schemas/TaoStakingDelegation'
         transactions:
           type: array
           minItems: 1
           maxItems: 500
           items:
-            $ref: '#/components/schemas/SolStakingTransaction'
+            $ref: '#/components/schemas/TaoStakingTransaction'
         amount:
           description: Amount to stake in base units.
           type: string
@@ -61522,6 +61618,10 @@ components:
           description: The validator to delegate to
           type: string
           example: 5FCPTnjevGqAuTttetBy4a24Ej3pH9fiQ8fmvP1ZkrVsLUoT
+    TaoStakingTransaction:
+      allOf:
+        - $ref: '#/components/schemas/StakingTransaction'
+      type: object
     TaoUnStakingRequestPOSTBody:
       title: TAO unstake
       allOf:
@@ -61667,6 +61767,12 @@ components:
           example: '10000000000'
       required:
         - amount
+    TimeRange:
+      type: string
+      description: The time range for the data, either hourly or daily.
+      enum:
+        - HOURLY
+        - DAILY
     TimeWindowConditionParameter:
       title: Time window
       type: object
@@ -64652,20 +64758,10 @@ components:
       required:
         - type
     UnStakingSpendableAttributes:
+      allOf:
+        - $ref: '#/components/schemas/BaseSpendableAttributes'
       type: object
       properties:
-        max:
-          description: The maximum spendable amount.
-          type: string
-        min:
-          description: The minimum spendable amount.
-          type: string
-        multiplier:
-          description: The multiplier amount to be staked. Default to 1, but for coins like where the amount to stake is multipler of 32 ETH, this is 32 in base unit, to allow validation.
-          type: string
-        fee:
-          description: The blockchain fee to submit the transactions needed to unstake.
-          type: string
         multipleDelegations:
           description: True, if more than one active staking delegation exists for a wallet.
           type: boolean
@@ -68504,6 +68600,15 @@ components:
         - disableTransactionNotifications
         - id
         - label
+    WalletAccrual:
+      type: object
+      properties:
+        walletId:
+          description: The wallet ID.
+          type: string
+        spendable:
+          description: The total spendable (withdrawable) amount in the wallet.
+          type: string
     WalletAddress:
       title: WalletAddress
       allOf:
@@ -69570,6 +69675,7 @@ components:
         unstakingDisclaimerAttributes:
           $ref: '#/components/schemas/UnstakingDisclaimerAttributes'
     WalletStakingPermissionAttributes:
+      description: Permission attributes for the staking wallet.
       type: object
       properties:
         walletPermissionAttributes:
@@ -69578,11 +69684,19 @@ components:
           $ref: '#/components/schemas/StakingPermissionAttributes'
         unstakingPermissionAttributes:
           $ref: '#/components/schemas/UnstakingPermissionAttributes'
+    WalletStakingSpendableAttributes:
+      description: Spendable attributes for the staking wallet.
+      type: object
+      properties:
+        stakingSpendableAttributes:
+          $ref: '#/components/schemas/StakingSpendableAttributes'
+        unstakingSpendableAttributes:
+          $ref: '#/components/schemas/UnStakingSpendableAttributes'
     WalletStakingStateAttributes:
       type: object
       properties:
         spendableAttributes:
-          $ref: '#/components/schemas/DotWalletStakingSpendableAttributes'
+          $ref: '#/components/schemas/WalletStakingSpendableAttributes'
         permissionAttributes:
           $ref: '#/components/schemas/WalletStakingPermissionAttributes'
         disclaimerAttributes:
