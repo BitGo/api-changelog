@@ -23649,13 +23649,19 @@ paths:
           required: true
           schema:
             type: string
-        - $ref: '#/components/parameters/coin1'
+        - $ref: '#/components/parameters/queryCoins'
         - name: walletType
           in: query
           description: Filter by Wallet Type (e.g. custodial, hot)
           required: false
           schema:
             type: string
+            enum:
+              - cold
+              - custodial
+              - custodialPaired
+              - hot
+              - trading
         - name: walletIds
           in: query
           description: Wallet Ids
@@ -23664,6 +23670,12 @@ paths:
             type: array
             items:
               type: string
+        - name: permissions
+          in: query
+          description: Filter by user permissions
+          required: false
+          schema:
+            type: string
         - name: requestType
           in: query
           description: Filter by Staking Request Type
@@ -23757,6 +23769,153 @@ paths:
                 errorName: Internal_Server_Error
                 reqId: some-id
   /api/staking/v1/{coin}/wallets/{walletId}/requests/{stakingRequestId}/transactions/{stakingTransactionId}:
+    get:
+      tags:
+        - Staking Request
+      summary: Get a staking transaction
+      description: Retrieve details of a staking transaction for a given wallet and staking request.
+      operationId: v1.staking.transaction.get
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathWalletId1'
+        - name: stakingRequestId
+          in: path
+          description: The ID for the staking request.
+          required: true
+          schema:
+            type: string
+        - name: stakingTransactionId
+          in: path
+          description: The ID for the staking request transaction.
+          required: true
+          schema:
+            type: string
+        - name: expandBuildParams
+          in: query
+          description: Whether to expand transaction build parameters in the response.
+          required: false
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Successful get on a Transaction
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/AsiStakingTransaction'
+                  - $ref: '#/components/schemas/AtomStakingTransaction'
+                  - $ref: '#/components/schemas/AvaxcStakingTransaction'
+                  - $ref: '#/components/schemas/AvaxPStakingTransaction'
+                  - $ref: '#/components/schemas/BabyStakingTransaction'
+                  - $ref: '#/components/schemas/BldStakingTransaction'
+                  - $ref: '#/components/schemas/BscStakingTransaction'
+                  - $ref: '#/components/schemas/CoredaoStakingTransaction'
+                  - $ref: '#/components/schemas/CoreumStakingTransaction'
+                  - $ref: '#/components/schemas/CronosStakingTransaction'
+                  - $ref: '#/components/schemas/CsprStakingTransaction'
+                  - $ref: '#/components/schemas/DotStakingTransaction'
+                  - $ref: '#/components/schemas/EigenStakingTransaction'
+                  - $ref: '#/components/schemas/EthStakingTransaction'
+                  - $ref: '#/components/schemas/HashStakingTransaction'
+                  - $ref: '#/components/schemas/InjectiveStakingTransaction'
+                  - $ref: '#/components/schemas/MaticStakingTransaction'
+                  - $ref: '#/components/schemas/NearStakingTransaction'
+                  - $ref: '#/components/schemas/OsmoStakingTransaction'
+                  - $ref: '#/components/schemas/PolStakingTransaction'
+                  - $ref: '#/components/schemas/PolyxStakingTransaction'
+                  - $ref: '#/components/schemas/RethRocketStakingTransaction'
+                  - $ref: '#/components/schemas/SeiStakingTransaction'
+                  - $ref: '#/components/schemas/SolStakingTransaction'
+                  - $ref: '#/components/schemas/SuiStakingTransaction'
+                  - $ref: '#/components/schemas/SuiWalStakingTransaction'
+                  - $ref: '#/components/schemas/TaoStakingTransaction'
+                  - $ref: '#/components/schemas/TiaStakingTransaction'
+                  - $ref: '#/components/schemas/TrxStakingTransaction'
+                  - $ref: '#/components/schemas/WethStakingTransaction'
+                  - $ref: '#/components/schemas/ZetaStakingTransaction'
+                  - $ref: '#/components/schemas/StakingTransaction'
+              example:
+                - stakingRequestId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+                  createdDate: 2022-01-10T14:32:28.000Z
+                  statusModifiedDate: 2022-01-10T14:32:28.000Z
+                  status: NEW
+                  amount: '3200000000000000000'
+                  transactionType: delegate
+                  buildParams:
+                    recipients:
+                      amount: '3200000000000000000'
+                      address: '0xff50ed3d0ec03aC01D4C79aAd74928BFF48a7b2b'
+                      data: fds0934rnnio390nw
+                    stakingParams:
+                      requestId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+                      amount: '3200000000000000000'
+                      validator: '0x5a6406c9710f588ca733360bfa8033d0ef9ecd7c'
+                      actionType: delegate
+                    gasPrice: '1000000000000000'
+                    gasLimit: '3000000000000000'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/StakingError'
+              example:
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
+        '404':
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
+        '500':
+          description: Server Error - Transient error please try again
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
     post:
       tags:
         - Staking Request
@@ -24169,6 +24328,110 @@ paths:
                 error: Database is down
                 errorName: Internal_Server_Error
                 reqId: some-id
+  /api/staking/v1/enterprises/{enterpriseId}:
+    get:
+      tags:
+        - Staking State Information
+      summary: Get staking totals at the enterprise level
+      description: Retrieve staking totals across all coins for a given enterprise, including delegated balances, rewards, and staking metadata.
+      operationId: v1.staking.enterprise.allCoins
+      parameters:
+        - name: enterpriseId
+          in: path
+          description: The enterprise ID representing the enterprise a user staked from.
+          required: true
+          schema:
+            type: string
+        - name: pageSize
+          in: query
+          description: Number of results to return per page. Default is 20.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 20
+        - name: page
+          in: query
+          description: Page number of results to return. Default is 1.
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: staked
+          in: query
+          description: Filter results to only include staked assets if true, or unstaked if false.
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successful response containing staking totals for the enterprise across all coins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseStakingTotals'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/StakingError'
+              example:
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
+        '404':
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
+        '500':
+          description: Server Error - Transient error please try again
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/enterprises/{enterpriseId}:
     get:
       tags:
@@ -24197,6 +24460,67 @@ paths:
                 delegated: '6400000000000000000'
                 rewards: '1000000000000000'
                 apy: '8.2'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/StakingError'
+              example:
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
+        '404':
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Conflicting clientID
+                errorName: Conflict
+                reqId: some-id
+        '500':
+          description: Server Error - Transient error please try again
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
   /api/staking/v1/{coin}/enterprises/{enterpriseId}/tokens:
     get:
       tags:
@@ -24324,7 +24648,7 @@ paths:
           description: The time range for the data, either hourly or daily.
           required: false
           schema:
-            type: string
+            $ref: '#/components/schemas/TimeRange'
         - name: startDate
           in: query
           description: The start date to search from.
@@ -24870,12 +25194,7 @@ paths:
       description: Returns a list of staking partnered validators.
       operationId: v1.partneredValidators.list
       parameters:
-        - name: coin
-          in: query
-          description: The staking asset.
-          required: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/coin1'
         - name: enterpriseId
           in: query
           description: The enterprise ID.
@@ -24884,22 +25203,17 @@ paths:
             type: string
         - name: walletId
           in: query
-          description: The wallet ID.
+          description: The wallet ID
           required: false
           schema:
-            type: string
-        - name: delegationStatus
-          in: query
-          description: The delegation status.
-          required: false
-          schema:
-            type: string
+            $ref: '#/components/schemas/WalletId'
         - name: onlyActive
           in: query
           description: True only if validators with active delegations are requested
           required: false
           schema:
             type: boolean
+            default: true
         - name: defaultValidator
           in: query
           description: True only if the default validator is requested
@@ -24918,6 +25232,7 @@ paths:
           required: false
           schema:
             type: string
+            default: STAKE
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize'
       responses:
@@ -25072,6 +25387,20 @@ paths:
             type: string
         - $ref: '#/components/parameters/queryCoins'
         - $ref: '#/components/parameters/queryLabel'
+        - name: walletType
+          in: query
+          description: Filter by Wallet Type (cold, custodial, custodialPaired, hot, trading)
+          required: false
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - cold
+                - custodial
+                - custodialPaired
+                - hot
+                - trading
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize'
       responses:
@@ -25120,6 +25449,96 @@ paths:
               example:
                 error: License not found
                 errorName: NotFound
+                reqId: some-id
+        '500':
+          description: Server Error - Transient error please try again
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Database is down
+                errorName: Internal_Server_Error
+                reqId: some-id
+  /api/staking/v1/enterprises/{enterpriseId}/coins:
+    get:
+      tags:
+        - Staking State Information
+      summary: Get list of stake-able coins
+      description: Returns a paginated list of stake-able coins for the given enterprise with basic attributes.
+      operationId: v1.enterprise.stakingCoins.list
+      parameters:
+        - name: enterpriseId
+          in: path
+          description: The enterprise ID.
+          required: true
+          schema:
+            type: string
+        - $ref: '#/components/parameters/queryPage'
+        - $ref: '#/components/parameters/queryPageSize'
+        - name: staked
+          in: query
+          description: Filter by whether the coin is currently staked.
+          required: false
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: Successful response containing staking totals for the enterprise across all coins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseStakingTotals'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/StakingError'
+              example:
+                error: Bad Request
+                errorName: BadRequest
+                reqId: some-id
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Unauthorized
+                errorName: Unauthorized
+                reqId: some-id
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Staking license not added for enterprise
+                errorName: AccessDenied
+                reqId: some-id
+        '404':
+          description: The specified resource was not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Wallet not found
+                errorName: NotFound
+                reqId: some-id
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingError'
+              example:
+                error: Conflicting clientID
+                errorName: Conflict
                 reqId: some-id
         '500':
           description: Server Error - Transient error please try again
@@ -45963,6 +46382,23 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/AuditableItem'
+    EnterpriseStakingTotals:
+      type: object
+      properties:
+        enterpriseStakingInfo:
+          type: array
+          description: A paginated list of staking information for the enterprise, grouped by coin.
+          items:
+            $ref: '#/components/schemas/StakingEnterprise'
+        page:
+          type: integer
+          description: The page number for paging purposes.
+        totalPages:
+          type: integer
+          description: The total number of pages for paging purposes.
+        totalElements:
+          type: integer
+          description: The number of elements per page used for paging purposes.
     EnterpriseStub:
       title: Enterprise Stub
       type: object
@@ -58255,6 +58691,26 @@ components:
         gasPrice:
           type: string
           description: User overridden gas price to apply for the generated transactions for this request. GasPrice is in base units.
+    RewardPairs:
+      type: object
+      properties:
+        tokenAddress:
+          description: The optional token address.
+          type: string
+          nullable: true
+        amount:
+          description: The total amount of the reward pair in base units.
+          type: string
+        activeAmount:
+          description: The currently active amount in base units.
+          type: string
+        coin:
+          description: The optional coin for this reward pair.
+          type: string
+          nullable: true
+      required:
+        - amount
+        - activeAmount
     RoutingNumberString:
       title: RoutingNumberString
       type: string
@@ -60084,7 +60540,7 @@ components:
       type: object
       properties:
         enterpriseId:
-          description: The ID of the enterprise where the the staking request was created from.
+          description: The ID of the enterprise where the staking request was created from.
           type: string
         coin:
           description: The staking asset.
@@ -60096,8 +60552,50 @@ components:
           description: The reward accrual amount in base units.
           type: string
         apy:
-          description: Reward accrual annual percentage rate.  Estimated yearly based on the last 7 days.  Same methodology as leading beacon chain validator aggregators (e.g. https://beaconcha.in/validators)
+          description: Reward accrual annual percentage rate. Estimated yearly based on the last 7 days. Same methodology as leading beacon chain validator aggregators (e.g. https://beaconcha.in/validators).
           type: string
+        pendingStake:
+          description: The pending stake amount in base units.
+          type: string
+        pendingUnstake:
+          description: The pending unstake amount in base units.
+          type: string
+        pendingClaimRewards:
+          description: The pending claimable rewards in base units.
+          type: string
+        baseUnit:
+          description: The coin base unit (e.g., wei for ETH).
+          type: string
+        isToken:
+          description: True if the staking asset is a token.
+          type: boolean
+        isTss:
+          description: True if the staking wallet uses threshold signatures (TSS).
+          type: boolean
+        isMultiSig:
+          description: True if the staking wallet uses multisig.
+          type: boolean
+        l1Chain:
+          description: The underlying L1 chain if the staking asset is on a different chain (e.g., ETH for L2 assets).
+          type: string
+          nullable: true
+        comingSoon:
+          description: True if the staking feature for this asset is marked as coming soon.
+          type: boolean
+        disclaimer:
+          $ref: '#/components/schemas/DisclaimerAttributes'
+        walletCount:
+          description: The number of wallets with delegations in this enterprise for the given coin.
+          type: integer
+        rewardCoin:
+          description: The coin used for rewards (if different from the staked asset).
+          type: string
+          nullable: true
+        rewardPairs:
+          description: Reward pairs associated with the staking asset.
+          type: array
+          items:
+            $ref: '#/components/schemas/RewardPairs'
     StakingError:
       title: Staking Error
       type: object
@@ -60110,14 +60608,14 @@ components:
           type: string
         context:
           type: object
-    StakingLicense:
+    StakingLicenseFee:
       type: object
       properties:
         coin:
           description: The name of the coin.
           type: string
         fee:
-          description: The corresponding fee for coin in current license.
+          description: The corresponding fee for the coin in the current license.
           type: string
     StakingLicenseResponse:
       type: object
@@ -60130,12 +60628,9 @@ components:
           description: The default fee for the asset.
         fees:
           type: array
-          minItems: 1
-          maxItems: 500
+          description: The list of per-coin fees for this license.
           items:
-            allOf:
-              - $ref: '#/components/schemas/StakingLicense'
-              - type: object
+            $ref: '#/components/schemas/StakingLicenseFee'
     StakingPartneredValidator:
       type: object
       properties:
@@ -60147,6 +60642,9 @@ components:
           type: string
         totalStaked:
           description: The total staked amount in base units.
+          type: string
+        delegated:
+          description: The delegated amount in base units.
           type: string
         rewards:
           description: The reward accrual amount in base units.
@@ -60160,6 +60658,9 @@ components:
         coin:
           description: The staked coin.
           type: string
+        rewardCoin:
+          description: The coin used for rewards.
+          type: string
         avses:
           description: The validator's actively validated services (AVS) for restaking.
           type: array
@@ -60167,6 +60668,52 @@ components:
             type: string
         historicRatePerformance:
           description: The validator's historical reward rate for the last 30 days.
+          type: string
+        pendingStake:
+          description: The amount pending staking.
+          type: string
+        pendingUnstake:
+          description: The amount pending unstaking.
+          type: string
+        enterpriseId:
+          description: The enterprise ID associated with the validator.
+          type: string
+        walletId:
+          description: The wallet ID associated with the validator.
+          type: string
+        lastRedelegationTimestamp:
+          description: The last redelegation timestamp.
+          type: string
+        permissionAttributes:
+          $ref: '#/components/schemas/WalletStakingPermissionAttributes'
+        spendableAttributes:
+          $ref: '#/components/schemas/WalletStakingSpendableAttributes'
+        pendingClaimRewards:
+          description: Pending claimable rewards in base units.
+          type: string
+        activeRewards:
+          description: Active rewards in base units.
+          type: string
+        count:
+          description: The validator’s delegation count.
+          type: string
+        preferred:
+          description: Whether this validator is marked as preferred.
+          type: boolean
+          default: false
+        restaking:
+          description: Whether this validator supports restaking.
+          type: boolean
+        rewardPairs:
+          type: array
+          items:
+            $ref: '#/components/schemas/RewardPairs'
+        stakingType:
+          description: The staking type.
+          type: string
+          default: STAKE
+        endTime:
+          description: The end time for validator participation (if applicable).
           type: string
     StakingPartneredValidatorsResponse:
       type: object
@@ -60387,6 +60934,9 @@ components:
         reward:
           description: The reward in base units.
           type: string
+        coin:
+          description: The coin associated with the reward.
+          type: string
         walletId:
           description: The wallet ID.
           type: string
@@ -60402,6 +60952,7 @@ components:
           format: date-time
       required:
         - reward
+        - coin
         - date
     StakingRewards:
       type: object
@@ -60690,7 +61241,7 @@ components:
           description: List of reward pairs.
           type: array
           items:
-            type: object
+            $ref: '#/components/schemas/RewardPairs'
         stakingType:
           description: The staking type, e.g., STAKE.
           type: string
@@ -60727,16 +61278,27 @@ components:
           description: The unique identifier of the staking wallet entity.
           type: string
         walletType:
-          description: The type of wallet the staking request was created from, either cold, custodial, or hot.
+          description: The type of wallet the staking request was created from.
           type: string
+          enum:
+            - cold
+            - custodial
+            - custodialPaired
+            - hot
+            - trading
         label:
           description: The label of the wallet the staking request was created from.
           type: string
+          nullable: true
         coin:
           description: The staking asset.
           type: string
         parentCoin:
           description: The parent asset of the staking coin.
+          type: string
+          nullable: true
+        assetBalance:
+          description: The total asset balance in base units.
           type: string
         delegated:
           description: The delegated staked amount in base units.
@@ -60777,9 +61339,13 @@ components:
         createdDate:
           description: The date the staking request was created.
           type: string
+          format: date-time
+          nullable: true
         modifiedDate:
           description: The last date the staking wallet was modified.
           type: string
+          format: date-time
+          nullable: true
         properties:
           description: Additional properties of the staking wallet.
           type: object
@@ -60787,16 +61353,16 @@ components:
         - enterpriseId
         - walletId
         - walletType
-        - label
         - coin
         - delegated
         - pendingUnstake
         - pendingStake
         - rewards
+        - pendingClaimRewards
         - lockedRewards
+        - reserved
+        - pendingReserved
         - apy
-        - createdDate
-        - modifiedDate
     StakingWalletsResponse:
       type: object
       properties:
