@@ -9689,6 +9689,11 @@ paths:
           required: false
           schema:
             type: string
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: List of user subscriptions
@@ -9702,6 +9707,12 @@ paths:
       summary: Set user subscriptions
       description: Updates the notification subscriptions for the authenticated user. Accepts a list of subscription changes and applies them, replacing the user's current subscriptions with the provided set.
       operationId: setUserSubscriptions
+      parameters:
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -9715,73 +9726,6 @@ paths:
             application/json:
               schema:
                 type: object
-  //api/notifications/v1/admin/user/{bitgoUserId}/subscriptions:
-    get:
-      tags:
-        - Admin
-      summary: Get user notification subscriptions (admin)
-      description: Retrieves the notification subscriptions for a specified user. Admins can optionally filter by communication channel, category name, or notification name to narrow the results. Useful for auditing or managing user notification preferences.
-      operationId: getUserSubscriptions_1
-      parameters:
-        - name: bitgoUserId
-          in: path
-          required: true
-          schema:
-            type: string
-        - name: channel
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: categoryName
-          in: query
-          required: false
-          schema:
-            type: string
-        - name: notificationName
-          in: query
-          required: false
-          schema:
-            type: string
-      responses:
-        '200':
-          description: List of user subscriptions
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserSubscriptionsResponse'
-      x-internal: 'true'
-    put:
-      tags:
-        - Admin
-      summary: Set user notification subscriptions (admin)
-      description: Allows an admin to update or create notification subscriptions for a user. Accepts a batch of subscriptions and replaces the user's current subscriptions with the provided set. Useful for bulk management of user notification preferences.
-      operationId: setUserSubscriptions_1
-      parameters:
-        - name: user-id
-          in: header
-          required: true
-          schema:
-            type: string
-        - name: bitgoUserId
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/NotificationSubscriptionListRequest'
-        required: true
-      responses:
-        '200':
-          description: User subscriptions updated
-          content:
-            application/json:
-              schema:
-                type: string
-      x-internal: 'true'
   //api/notifications/v1/tokens:
     post:
       tags:
@@ -9789,6 +9733,12 @@ paths:
       summary: Add device token for user
       description: Registers a new device token for the authenticated user. If the token already exists, updates its association or last set time as appropriate. Used for enabling push notifications to the user's device.
       operationId: addUserDeviceToken
+      parameters:
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
@@ -9802,101 +9752,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddDeviceTokenResponse'
-  //api/notifications/v1/admin/resend:
-    post:
-      tags:
-        - Admin
-      summary: Admin resend notification
-      description: Allows an admin with the appropriate permission to resend a notification email to a user. This endpoint is restricted to users with 'updateIndexerNotification' authority and is used to re-fire transaction webhook notifications or similar events.
-      operationId: resendNotification
-      parameters:
-        - name: user-id
-          in: header
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ResendNotificationRequest'
-        required: true
-      responses:
-        '200':
-          description: Notification resent
-          content:
-            application/json:
-              schema:
-                type: string
-      x-internal: 'true'
-  //api/notifications/v1/admin/email/unblock:
-    post:
-      tags:
-        - Admin
-      summary: Unblock user email (admin)
-      description: Enables an admin to unblock a user's email address, allowing notifications to be sent again. Requires a reason for unblocking and is restricted to users with 'updateUser' authority.
-      operationId: unblockEmail
-      parameters:
-        - name: user-id
-          in: header
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UnblockEmailRequest'
-        required: true
-      responses:
-        '200':
-          description: Email unblocked
-          content:
-            application/json:
-              schema:
-                type: string
-      x-internal: 'true'
-  //api/notifications/v1/admin/example:
+  //api/notifications/v1/categories:
     get:
       tags:
-        - Admin
-      summary: Admin example endpoint
-      description: Returns a simple OK response for testing or demonstration purposes. Useful for verifying admin API connectivity.
-      operationId: getAdminExample
-      responses:
-        '200':
-          description: OK response
-          content:
-            application/json:
-              schema:
-                type: string
-      x-internal: 'true'
-  //api/notifications/v1/admin/audit-logs:
-    get:
-      tags:
-        - Admin
-      summary: Get audit logs (admin)
-      description: Retrieves audit logs based on the provided filters. Allows admins to review actions and changes made within the notification command center for compliance and troubleshooting.
-      operationId: getAuditLogs
+        - User Management Notification
+      summary: Get notification categories
+      description: Retrieves all available notification categories in the system. This is a public endpoint that does not require authentication.
+      operationId: getCategories
       parameters:
-        - name: user-id
+        - name: request-id
           in: header
-          required: true
+          required: false
           schema:
             type: string
-        - name: request
-          in: query
-          required: true
-          schema:
-            $ref: '#/components/schemas/GetAuditLogsRequest'
       responses:
         '200':
-          description: Audit logs
+          description: List of notification categories
           content:
             application/json:
               schema:
-                type: string
-      x-internal: 'true'
+                $ref: '#/components/schemas/CategoriesResponse'
   //api/notifications/v1/tokens/{deviceToken}:
     delete:
       tags:
@@ -9908,6 +9783,11 @@ paths:
         - name: deviceToken
           in: path
           required: true
+          schema:
+            type: string
+        - name: request-id
+          in: header
+          required: false
           schema:
             type: string
       responses:
@@ -39450,11 +39330,16 @@ components:
         - pendingChainInitialization
         - rewardAddress
     AddDeviceTokenRequest:
+      required:
+        - appId
+        - deviceToken
+        - platform
+        - provider
       type: object
       properties:
         deviceToken:
-          type: string
           minLength: 1
+          type: string
         provider:
           type: string
           enum:
@@ -39465,14 +39350,16 @@ components:
             - ANDROID
             - IOS
         appId:
-          type: string
           minLength: 1
+          type: string
+    AddDeviceTokenResponse:
       required:
         - appId
+        - bitgoUserId
         - deviceToken
+        - message
         - platform
         - provider
-    AddDeviceTokenResponse:
       type: object
       properties:
         deviceToken:
@@ -39492,13 +39379,6 @@ components:
           type: string
         message:
           type: string
-      required:
-        - appId
-        - bitgoUserId
-        - deviceToken
-        - message
-        - platform
-        - provider
     AddUserToOrganizationEnterpriseResponseC:
       title: AddUserToOrganizationEnterpriseResponseC
       type: object
@@ -42646,6 +42526,15 @@ components:
         - lastTransferId
         - pendingChainInitialization
         - rootAddress
+    CategoriesResponse:
+      required:
+        - categories
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            type: string
     CbitAccountResponseProps:
       title: CbitAccountResponseProps
       type: object
@@ -44533,6 +44422,10 @@ components:
         - ACTIVE
         - COMPLETE
     DeleteDeviceTokenResponse:
+      required:
+        - bitgoUserId
+        - deviceToken
+        - message
       type: object
       properties:
         deviceToken:
@@ -44541,10 +44434,6 @@ components:
           type: string
         message:
           type: string
-      required:
-        - bitgoUserId
-        - deviceToken
-        - message
     DeleteEnterpriseUser:
       type: object
       properties:
@@ -48844,60 +48733,6 @@ components:
         country:
           type: string
           description: ISO 3166-1 Alpha-3 country code
-    GetAuditLogsRequest:
-      type: object
-      properties:
-        userId:
-          type: string
-        email:
-          type: string
-        username:
-          type: string
-        eventType:
-          type: string
-          enum:
-            - NOTIFICATION_SENT
-            - NOTIFICATION_FAILED
-            - NOTIFICATION_RETRIED
-            - NOTIFICATION_DELIVERED
-            - NOTIFICATION_READ
-            - NOTIFICATION_CLICKED
-            - NOTIFICATION_UNSUBSCRIBED
-            - USER_CREATED
-            - USER_UPDATED
-            - USER_DELETED
-            - ADMIN_RESEND_NOTIFICATION
-            - ADMIN_UNBLOCK_EMAIL
-            - ADMIN_PATCH_CATEGORY_SUBSCRIPTION
-            - ADMIN_GET_AUDIT_LOGS
-            - ADMIN_POST_CATEGORY_SUBSCRIPTION
-            - ADMIN_POST_NOTIFICATION_SUBSCRIPTION
-            - EMAIL_BLOCKED_BOUNCE
-            - EMAIL_UNSUBSCRIBED_COMPLAINT
-        startDate:
-          type: string
-          format: date-time
-        endDate:
-          type: string
-          format: date-time
-        page:
-          type: integer
-          format: int32
-        size:
-          type: integer
-          format: int32
-          maximum: 100
-        sortBy:
-          type: string
-          pattern: ^(timestamp|id)$
-        sortDirection:
-          type: string
-          pattern: ^(ASC|DESC)$
-      required:
-        - page
-        - size
-        - sortBy
-        - sortDirection
     GetEnterpriseResponse:
       title: GetEnterpriseResponse
       allOf:
@@ -53471,17 +53306,20 @@ components:
         operator:
           $ref: '#/components/schemas/OperatorType'
     NotificationSubscriptionListRequest:
+      required:
+        - notificationSubscriptions
       type: object
       properties:
         notificationSubscriptions:
+          maxItems: 100
+          minItems: 0
           type: array
           items:
             $ref: '#/components/schemas/NotificationSubscriptionRequest'
-          maxItems: 100
-          minItems: 0
-      required:
-        - notificationSubscriptions
     NotificationSubscriptionRequest:
+      required:
+        - channel
+        - isSubscribed
       type: object
       properties:
         notificationName:
@@ -53489,14 +53327,11 @@ components:
         categoryName:
           type: string
         channel:
-          type: string
           maxLength: 50
           minLength: 0
+          type: string
         isSubscribed:
           type: boolean
-      required:
-        - channel
-        - isSubscribed
     NtildeProof:
       title: NtildeProof
       type: object
@@ -58341,29 +58176,6 @@ components:
         - processing
         - completed
         - failed
-    ResendNotificationRequest:
-      type: object
-      properties:
-        userId:
-          type: string
-          minLength: 1
-        email:
-          type: string
-        notificationType:
-          type: string
-          enum:
-            - EMAIL
-            - SMS
-            - PUSH
-            - WEBHOOK
-        workflowName:
-          type: string
-          minLength: 1
-      required:
-        - email
-        - notificationType
-        - userId
-        - workflowName
     ResendShareEmailResponse:
       type: object
       properties:
@@ -64704,16 +64516,6 @@ components:
         multipleDelegations:
           description: True, if more than one active staking delegation exists for a wallet.
           type: boolean
-    UnblockEmailRequest:
-      type: object
-      properties:
-        email:
-          type: string
-        reasonForUnblocking:
-          type: string
-      required:
-        - email
-        - reasonForUnblocking
     Unlock:
       title: Unlock
       type: object
@@ -65336,6 +65138,15 @@ components:
             - timezone
         - $ref: '#/components/schemas/UserRequiredFields'
     UserEntity:
+      required:
+        - bitgoUserId
+        - createdAt
+        - email
+        - firstName
+        - lastName
+        - status
+        - updatedAt
+        - username
       type: object
       properties:
         id:
@@ -65371,15 +65182,6 @@ components:
           type: object
           additionalProperties:
             type: boolean
-      required:
-        - bitgoUserId
-        - createdAt
-        - email
-        - firstName
-        - lastName
-        - status
-        - updatedAt
-        - username
     UserKycState:
       type: string
       enum:
@@ -65403,6 +65205,14 @@ components:
         - flagged
         - flagged_retry_allowed
     UserNotificationSubscriptionEntity:
+      required:
+        - categoryName
+        - channel
+        - createdAt
+        - isSubscribed
+        - notificationName
+        - updatedAt
+        - user
       type: object
       properties:
         id:
@@ -65427,14 +65237,6 @@ components:
         subscribed:
           type: boolean
           writeOnly: true
-      required:
-        - categoryName
-        - channel
-        - createdAt
-        - isSubscribed
-        - notificationName
-        - updatedAt
-        - user
     UserRequiredFields:
       title: UserRequiredFields
       type: object
@@ -65500,14 +65302,14 @@ components:
         email:
           $ref: '#/components/schemas/Email'
     UserSubscriptionsResponse:
+      required:
+        - notificationSubscriptions
       type: object
       properties:
         notificationSubscriptions:
           type: array
           items:
             $ref: '#/components/schemas/UserNotificationSubscriptionEntity'
-      required:
-        - notificationSubscriptions
     UserVerificationElements:
       title: UserVerificationElements
       type: object
