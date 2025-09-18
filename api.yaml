@@ -44853,8 +44853,17 @@ components:
           required:
             - maxPriorityFeePerGas
             - maxFeePerGas
-      required:
-        - label
+        evmKeyRingReferenceWalletId:
+          type: string
+          description: Optional reference wallet ID for EVM keyring child wallets. When provided, child wallets inherit properties from the parent wallet.
+      anyOf:
+        - not:
+            required:
+              - evmKeyRingReferenceWalletId
+          required:
+            - label
+        - required:
+            - evmKeyRingReferenceWalletId
     CreateWebhookSecretResponse:
       title: CreateWebhookSecretResponse
       type: object
@@ -72642,6 +72651,7 @@ x-tagGroups:
       - Address
       - Approval Requests
       - Audit log
+      - BitGo Products
       - Counterparties
       - Client Activation
       - Client Allocations & Deallocations
@@ -72654,6 +72664,8 @@ x-tagGroups:
       - Federation
       - Fiat
       - Key
+      - Know Your Business (KYB)
+      - Know Your Customer (KYC)
       - Liabilities
       - Lightning
       - Margin
@@ -72679,7 +72691,6 @@ x-tagGroups:
       - User Management
       - Reports
       - Send label
-      - Solvency
       - Stablecoin
       - Staking Request
       - Staking State Information
@@ -72692,6 +72703,7 @@ x-tagGroups:
       - Transaction request
       - Transfer
       - User
+      - User Management Notification
       - Roles & Permissions
       - Wallet
       - Wallet Policy
