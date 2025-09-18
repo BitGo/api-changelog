@@ -30416,8 +30416,8 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/webhook:
     get:
-      summary: List webhooks for an organization
-      description: List all webhooks for the specified organization.
+      summary: List organization webhooks
+      description: List all webhooks for a specified organization.
       operationId: v2.organization.webhook.list
       tags:
         - Organization Webhooks
@@ -30491,12 +30491,13 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
     post:
-      summary: Create a webhook for multiple assets
+      summary: Create organization webhook
       description: |-
-        Create a webhook that will fire for any transfer across the organization. Must be
-        an organization manager to perform this action. To call this endpoint, you must
-        have the user_manage scope on a short-lived access token created either in the
-        web app or programmatically using the [Login](/api/user.login) endpoint.
+        Create a webhook that sends an HTTP callback from BitGo to a specified URL when
+        specific conditions occur within an organization. Must be an organization
+        manager to perform this action. To call this endpoint, you must have the
+        `user_manage` scope on a short-lived access token created either in the web app
+        or programmatically using the [Login](/api/user.login) endpoint.
       operationId: v2.organization.webhook.add
       tags:
         - Organization Webhooks
@@ -30516,7 +30517,7 @@ paths:
             schema:
               oneOf:
                 - type: object
-                  title: AddOrgnizationTransferWebhookBody
+                  title: Transfer
                   properties:
                     allToken:
                       type: boolean
@@ -30541,7 +30542,7 @@ paths:
                     - type
                     - url
                 - type: object
-                  title: AddOrganizationTxRequestWebhookBody
+                  title: Transaction Request
                   properties:
                     label:
                       type: string
@@ -30575,7 +30576,7 @@ paths:
                     - type
                     - url
                 - type: object
-                  title: AddOrganizationTxRequestTransactionWebhookBody
+                  title: Transaction Request Transaction
                   properties:
                     label:
                       type: string
@@ -30610,7 +30611,7 @@ paths:
                     - type
                     - url
                 - type: object
-                  title: AddOrganizationPendingApprovalWebhookBody
+                  title: Pending Approval
                   properties:
                     allToken:
                       type: boolean
@@ -30629,7 +30630,7 @@ paths:
                     - type
                     - url
                 - type: object
-                  title: AddOrganizationBankAccountWebhookBody
+                  title: Bank Account
                   properties:
                     label:
                       type: string
@@ -30644,7 +30645,7 @@ paths:
                     - type
                     - url
                 - type: object
-                  title: AddOrganizationIdentityStatusWebhookBody
+                  title: Identity Status
                   properties:
                     label:
                       type: string
@@ -30683,7 +30684,7 @@ paths:
                     - type
                     - url
                 - type: object
-                  title: AddOrganizationUserKycStateWebhookBody
+                  title: User KYC State
                   properties:
                     kycState:
                       type: array
@@ -30706,7 +30707,7 @@ paths:
                     - type
                     - url
                 - type: object
-                  title: AddOrganizationEnterpriseKycStateWebhookBody
+                  title: Enterprise KYC State
                   properties:
                     kycState:
                       type: array
@@ -30755,10 +30756,10 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/webhook/{webhookId}:
     delete:
-      summary: Delete an organization webhook by id
+      summary: Delete organization webhook
       description: |-
-        Remove a webhook from the organization. This will permanently delete the webhook.
-        To call this endpoint, you must have the user_manage scope on a short-lived access
+        Remove a webhook from the organization. This permanently deletes the webhook.
+        To call this endpoint, you must have the `user_manage` scope on a short-lived access
         token created either in the web app or programmatically using the
         [Login](/api/user.login) endpoint.
       operationId: v2.organization.webhook.delete
@@ -30801,8 +30802,8 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
     get:
-      summary: Get webhook by id
-      description: Get an organization webhook by its id.
+      summary: Get organization webhook
+      description: Get an organization webhook by its ID.
       operationId: v2.organization.webhook.get
       tags:
         - Organization Webhooks
@@ -30846,11 +30847,12 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/webhook/{webhookId}/simulate:
     post:
-      summary: Simulate a webhook
+      summary: Simulate organization webhook
       description: |-
-        Simulate a webhook for testing purposes. To call this endpoint, you must have
-        the user_manage scope on a short-lived access token created either in the web
-        app or programmatically using the [Login](/api/user.login) endpoint.
+        Simulate an organization webhook for testing purposes. To call this endpoint,
+        you must have the `user_manage` scope on a short-lived access token created
+        either in the web app or programmatically using the [Login](/api/user.login)
+        endpoint.
       operationId: v2.organization.webhook.simulate
       tags:
         - Organization Webhooks
@@ -32010,40 +32012,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-  /api/v2/wallet/{walletId}/liability-proofs:
-    get:
-      summary: Get liability proofs
-      description: Get liability proofs for a Go Account. Liability proofs are zero-knowledge proofs (ZKPs) that you can use with BitGo's open-source verification tool to verify that assets held in a specific Go Account are part of the total liabilities published by BitGo. To learn more about the verification tool, see https://github.com/BitGo/proof-of-solvency.
-      operationId: v2.wallet.proofs.liability.get
-      tags:
-        - Liabilities
-      parameters:
-        - name: walletId
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/WalletIdString'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/UserVerificationElements'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
         '500':
           description: Internal Server Error
           content:
@@ -33782,27 +33750,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-  /api/v2/wallet/solvency-data:
-    get:
-      summary: Get proof of solvency data
-      description: Get proof of solvency data for Go Accounts. This data consists of the list of supported assets (for proof of solvency), the total liabilities for those assets, BitGo's total reserves for those assets, and the ratio of reserves to liabilities for each asset.
-      operationId: v2.wallet.solvency.data.get
-      tags:
-        - Solvency
-      parameters: []
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SolvencyData'
         '500':
           description: Internal Server Error
           content:
@@ -41702,19 +41649,6 @@ components:
           type: integer
           description: the height of the block that provides the base values
           example: 11228504
-    BalancesCodec:
-      title: BalancesCodec
-      type: array
-      items:
-        type: object
-        properties:
-          Asset:
-            type: string
-          Amount:
-            type: string
-        required:
-          - Asset
-          - Amount
     BankAccountCurrency:
       title: BankAccountCurrency
       description: |
@@ -46646,6 +46580,7 @@ components:
               - Escrow
               - Distributed Custody
               - Advanced Wallets
+              - Stablecoins
             description: Requested BitGo Products
       required:
         - id
@@ -53302,31 +53237,6 @@ components:
         - token_type
         - grant_type
         - user
-    LowerProof:
-      title: LowerProof
-      type: object
-      properties:
-        Proof:
-          type: string
-        VerificationKey:
-          type: string
-        MerkleRoot:
-          type: string
-        MerkleRootWithAssetSumHash:
-          type: string
-        MerklePath:
-          type: array
-          items:
-            type: string
-        MerklePosition:
-          type: number
-      required:
-        - Proof
-        - VerificationKey
-        - MerkleRoot
-        - MerkleRootWithAssetSumHash
-        - MerklePath
-        - MerklePosition
     MarginNetOpenPosition:
       type: object
       required:
@@ -60980,23 +60890,6 @@ components:
         - pendingChainInitialization
         - minimumFunding
         - trustedTokens
-    SolvencyData:
-      title: SolvencyData
-      type: object
-      description: 'Solvency data schema consists of: - assets: array of supported asset symbols - liabilities: array of total liabilities for each asset - reserves: array of total reserves for each asset - ratios: ratio of reserves to liabilities for each asset'
-      properties:
-        liabilities:
-          $ref: '#/components/schemas/BalancesCodec'
-        reserves:
-          $ref: '#/components/schemas/BalancesCodec'
-        ratios:
-          type: array
-          items:
-            type: number
-      required:
-        - liabilities
-        - reserves
-        - ratios
     SomiClaimRewardsRequestPOSTBody:
       title: Somi Claim Rewards Request
       type: object
@@ -63432,26 +63325,6 @@ components:
         - memoId
         - lastMemoId
         - seqno
-    TopProof:
-      title: TopProof
-      type: object
-      properties:
-        Proof:
-          type: string
-        VerificationKey:
-          type: string
-        MerkleRoot:
-          type: string
-        MerkleRootWithAssetSumHash:
-          type: string
-        AssetSum:
-          $ref: '#/components/schemas/BalancesCodec'
-      required:
-        - Proof
-        - VerificationKey
-        - MerkleRoot
-        - MerkleRootWithAssetSumHash
-        - AssetSum
     Touchpoint:
       type: object
       description: A Touchpoint. For example the Transfer from a Wallet Touchpoint.
@@ -67010,44 +66883,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/UserNotificationSubscriptionEntity'
-    UserVerificationElements:
-      title: UserVerificationElements
-      type: object
-      properties:
-        AccountInfo:
-          type: object
-          properties:
-            UserId:
-              type: string
-            Balance:
-              $ref: '#/components/schemas/BalancesCodec'
-          required:
-            - UserId
-            - Balance
-        ProofInfo:
-          type: object
-          properties:
-            UserMerklePath:
-              type: array
-              items:
-                type: string
-            UserMerklePosition:
-              type: number
-            BottomProof:
-              $ref: '#/components/schemas/LowerProof'
-            MiddleProof:
-              $ref: '#/components/schemas/LowerProof'
-            TopProof:
-              $ref: '#/components/schemas/TopProof'
-          required:
-            - UserMerklePath
-            - UserMerklePosition
-            - BottomProof
-            - MiddleProof
-            - TopProof
-      required:
-        - AccountInfo
-        - ProofInfo
     UtxoAddress:
       title: Utxo Address
       type: object
@@ -69810,6 +69645,23 @@ components:
           type: string
           example: 59cd72485007a239fb00282ed480da1f
           pattern: ^[0-9a-f]{32}$
+        evmKeyRingReferenceWalletId:
+          type: string
+          description: Reference wallet ID for EVM keyring wallets (child wallets only)
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        isParent:
+          type: boolean
+          description: Indicates if this wallet is a parent wallet in an EVM keyring setup
+          example: true
+        enabledChildChains:
+          type: array
+          example:
+            - tbsc
+            - tpolygon
+          items:
+            type: string
+            description: Array of enabled child chain names for parent EVM keyring wallets
         organization:
           type: string
         bitgoOrg:
@@ -70429,6 +70281,7 @@ components:
       enum:
         - isStaking
         - lightning
+        - ambossLightning
         - musigKp
         - trackingInscriptions
         - rbf
@@ -70678,6 +70531,23 @@ components:
                 type: string
                 example: 59cd72485007a239fb00282ed480da1f
                 pattern: ^[0-9a-f]{32}$
+              evmKeyRingReferenceWalletId:
+                type: string
+                description: Reference wallet ID for EVM keyring wallets (child wallets only)
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              isParent:
+                type: boolean
+                description: Indicates if this wallet is a parent wallet in an EVM keyring setup
+                example: true
+              enabledChildChains:
+                type: array
+                example:
+                  - tbsc
+                  - tpolygon
+                items:
+                  type: string
+                  description: Array of enabled child chain names for parent EVM keyring wallets
               organization:
                 type: string
               bitgoOrg:
