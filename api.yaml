@@ -8827,6 +8827,219 @@ paths:
                 $ref: '#/components/schemas/MarketDataError'
       x-licenses:
         - cryptoCompare
+  /api/document-service/v1/documents:
+    post:
+      summary: Create a new document
+      description: Creates a new document and returns presigned URLs for file uploads
+      operationId: documents.post.v1.documents
+      tags:
+        - Know Your Business (KYB)
+      parameters: []
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateDocumentRequest'
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateDocumentResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+  /api/document-service/v1/documents/{documentId}:
+    get:
+      summary: Retrieve document information
+      description: Get details about a specific document including file information. Users can only access documents they created.
+      operationId: documents.get.v1.documents.id
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique identifier for the document
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDocumentResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+  /api/document-service/v1/documents/{documentId}/files/{fileId}:
+    patch:
+      summary: Update file upload status
+      description: Update the status of a file after it has been uploaded to the presigned URL. This endpoint is called by the client after successful upload.
+      operationId: documents.patch.v1.documents.id.files.id
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique identifier for the document
+        - name: fileId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Unique identifier for the file
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFileStatusRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateFileStatusResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+  /api/document-service/v1/documents/{documentId}/verify:
+    post:
+      summary: Verify document upload status
+      description: Verify the upload status of all files in a document by checking with the storage provider. Updates file and document statuses based on actual verification results.
+      operationId: documents.post.v1.documents.id.verify
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Unique identifier for the document
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyDocumentRequest'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VerifyDocumentResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
   /api/evs/v1/identity:
     get:
       summary: Get KYC Identity
@@ -44541,6 +44754,49 @@ components:
       required:
         - type
         - url
+    CreateDocumentRequest:
+      type: object
+      properties:
+        documentType:
+          $ref: '#/components/schemas/DocumentType'
+        subType:
+          $ref: '#/components/schemas/DocumentSubType'
+        metadata:
+          $ref: '#/components/schemas/Metadata'
+      required:
+        - documentType
+      title: CreateDocumentRequest
+      description: Request body for creating a new document
+    CreateDocumentResponse:
+      type: object
+      properties:
+        documentId:
+          type: string
+          description: Unique identifier for the created document
+        documentType:
+          type: string
+          description: Type of the document
+        documentTypeLabel:
+          type: string
+          description: Human-readable label for the document type
+        subType:
+          type: string
+          description: Subtype of the document
+        status:
+          $ref: '#/components/schemas/DocumentStatus'
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentFileDetail'
+          description: List of files to be uploaded
+      required:
+        - documentId
+        - documentType
+        - documentTypeLabel
+        - status
+        - files
+      title: CreateDocumentResponse
+      description: Response after creating a new document
     CreateKey:
       type: object
       properties:
@@ -45600,6 +45856,157 @@ components:
           type: string
           description: BitGo Organization related to this entity. Allowed values are BitGo Inc, BitGo Trust, BitGo New York, BitGo Germany, BitGo Switzerland, Frankfurt DE Trust, BitGo Sister Trust 1, BitGo Korea, BitGo Singapore, null
           nullable: true
+    DocumentFileDetail:
+      type: object
+      properties:
+        fileId:
+          type: string
+          description: Unique identifier for the file
+        fileView:
+          type: string
+          description: View or side of the document file
+        label:
+          type: string
+          description: Human-readable label for the file
+        required:
+          type: boolean
+          description: Whether this file is required for the document
+        uploadUrl:
+          type: string
+          format: uri
+          description: Presigned URL for file upload
+        expiresAt:
+          type: string
+          format: date-time
+          description: When the upload URL expires
+      required:
+        - fileId
+        - fileView
+        - label
+        - required
+        - uploadUrl
+        - expiresAt
+      title: DocumentFileDetail
+      description: Detailed file information for document creation response
+    DocumentFileInfo:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the file
+        view:
+          $ref: '#/components/schemas/FileView'
+        status:
+          $ref: '#/components/schemas/FileStatus'
+        fileName:
+          type: string
+          description: Original filename of the uploaded file
+        fileType:
+          type: string
+          description: MIME type of the file
+        fileSize:
+          type: number
+          description: Size of the file in bytes
+        uploadUrl:
+          type: string
+          format: uri
+          description: Presigned URL for file upload
+        downloadUrl:
+          type: string
+          format: uri
+          description: Presigned URL for file download
+        uploadUrlExpiresAt:
+          type: string
+          format: date-time
+          description: When the upload URL expires
+        createdAt:
+          type: string
+          format: date-time
+          description: When the file was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the file was last updated
+      required:
+        - id
+        - status
+        - createdAt
+        - updatedAt
+      title: DocumentFileInfo
+      description: File information for document retrieval
+    DocumentStatus:
+      type: string
+      enum:
+        - awaitingUpload
+        - uploaded
+      title: DocumentStatus
+      description: Current status of the document
+    DocumentSubType:
+      type: string
+      enum:
+        - cct
+        - cid
+        - dl
+        - foid
+        - hic
+        - id
+        - ipp
+        - keyp
+        - ltpass
+        - munid
+        - myn
+        - nbi
+        - nric
+        - ofw
+        - rp
+        - pan
+        - pid
+        - pp
+        - ppc
+        - pr
+        - sss
+        - td
+        - tribalid
+        - umid
+        - vid
+        - visa
+        - wp
+      title: DocumentSubType
+      description: Subtype of document (used for government ID documents)
+    DocumentType:
+      type: string
+      enum:
+        - governmentId
+        - commercialRegister
+        - articlesOfAssociation
+        - certificateOfIncorporation
+        - certificateOfTrust
+        - certificateOfIncumbency
+        - certificateOfIncumbencyOrShareRegister
+        - proofOfPrincipalPlaceOfBusiness
+        - activeTradeLicense
+        - resolutionToOpenBitgoUaeAccount
+        - resolutionToOpenBitgoSingaporeAccount
+        - proofOfAuthorizedSignatories
+        - memorandumOfAssociation
+        - memorandumAndArticlesOfAssociation
+        - bylawsOrOperatingAgreement
+        - operatingAgreement
+        - w8
+        - w9
+        - evidenceOfLegalStatus
+        - evidenceOfActiveStatus
+        - proofOfJfsaLicense
+        - proofOfGamingLicense
+        - organizationDocument
+        - partnershipAgreement
+        - articlesOfOrganization
+        - businessLicenseOrRegistration
+        - evidenceOfGovernmentOrStateOwnership
+        - secFilingsAsEvidenceOfPublicTradingStatus
+        - foundingTreatyOrEquivalent
+      title: DocumentType
+      description: Type of document being uploaded
     DomesticWireAccountResponseProps:
       title: DomesticWireAccountResponseProps
       type: object
@@ -49276,6 +49683,21 @@ components:
         - backingBankAccountId
         - backingSENBankAccountId
         - lastUsedNonce
+    FileStatus:
+      type: string
+      enum:
+        - awaitingUpload
+        - uploaded
+      title: FileStatus
+      description: Current status of the file upload
+    FileView:
+      type: string
+      enum:
+        - front
+        - back
+        - full
+      title: FileView
+      description: View or side of the document file
     FillNonceIntent:
       title: FillNonceIntent
       allOf:
@@ -49630,6 +50052,51 @@ components:
         country:
           type: string
           description: ISO 3166-1 Alpha-3 country code
+    GetDocumentResponse:
+      type: object
+      properties:
+        documentId:
+          type: string
+          description: Unique identifier for the document
+        documentType:
+          type: string
+          description: Type of the document
+        documentTypeLabel:
+          type: string
+          description: Human-readable label for the document type
+        subType:
+          type: string
+          description: Subtype of the document
+        status:
+          $ref: '#/components/schemas/DocumentStatus'
+        metadata:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Optional metadata for the document
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentFileInfo'
+          description: List of files associated with the document
+        createdAt:
+          type: string
+          format: date-time
+          description: When the document was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the document was last updated
+      required:
+        - documentId
+        - documentType
+        - documentTypeLabel
+        - status
+        - files
+        - createdAt
+        - updatedAt
+      title: GetDocumentResponse
+      description: Response containing document information
     GetEnterpriseResponse:
       title: GetEnterpriseResponse
       allOf:
@@ -49686,6 +50153,25 @@ components:
         - userId
         - userEmail
         - derivedPubkey
+    GetInternalDocumentsInternalError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetInternalDocumentsInternalError
+      description: Generic error response
     GetInvoicesResponse:
       title: GetInvoicesResponse
       type: object
@@ -53617,6 +54103,12 @@ components:
       required:
         - messageRaw
         - intentType
+    Metadata:
+      type: object
+      additionalProperties:
+        nullable: true
+      title: Metadata
+      description: Optional metadata for the document (max 100KB)
     MinRequireActionParameter:
       title: Minimum number of approvals required
       type: object
@@ -66395,6 +66887,41 @@ components:
         - h1
         - h2
         - verifiers
+    UpdateFileStatusRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - uploaded
+          description: File upload status
+      required:
+        - status
+      title: UpdateFileStatusRequest
+      description: Request body for updating file status
+    UpdateFileStatusResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the file
+        view:
+          $ref: '#/components/schemas/FileView'
+        uploadUrl:
+          type: string
+          format: uri
+          description: Presigned URL for file upload
+        status:
+          $ref: '#/components/schemas/FileStatus'
+        fileName:
+          type: string
+          description: Original filename of the uploaded file
+      required:
+        - id
+        - uploadUrl
+        - status
+      title: UpdateFileStatusResponse
+      description: Response after updating file status
     UpdatePinnedWalletsResponse:
       title: UpdatePinnedWalletsResponse
       type: object
@@ -69506,6 +70033,68 @@ components:
         - approved
         - rejected
         - pending
+    VerifyDocumentFile:
+      type: object
+      properties:
+        fileId:
+          type: string
+          description: Unique identifier for the file
+        fileView:
+          type: string
+          description: View or side of the document file
+        required:
+          type: boolean
+          description: Whether this file is required for the document
+        status:
+          type: string
+          description: Current status of the file
+        downloadUrl:
+          type: string
+          format: uri
+          description: Presigned URL for file download
+      required:
+        - fileId
+        - fileView
+        - required
+        - status
+      title: VerifyDocumentFile
+      description: File information after verification
+    VerifyDocumentRequest:
+      type: object
+      properties: {}
+      title: VerifyDocumentRequest
+      description: Request body for document verification
+    VerifyDocumentResponse:
+      type: object
+      properties:
+        documentId:
+          type: string
+          description: Unique identifier for the document
+        documentType:
+          type: string
+          description: Type of the document
+        documentTypeLabel:
+          type: string
+          description: Human-readable label for the document type
+        subType:
+          type: string
+          description: Subtype of the document
+        status:
+          type: string
+          description: Current status of the document
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/VerifyDocumentFile'
+          description: List of files with verification status
+      required:
+        - documentId
+        - documentType
+        - documentTypeLabel
+        - status
+        - files
+      title: VerifyDocumentResponse
+      description: Response after verifying document upload status
     VerifyWebhookNotificationResponse:
       title: VerifyWebhookNotificationResponse
       type: object
