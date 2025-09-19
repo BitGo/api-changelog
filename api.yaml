@@ -9879,6 +9879,1468 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError2'
+  /api/identity-service/v1/products:
+    get:
+      summary: List BitGo Products
+      operationId: identities.get.v1.products
+      tags:
+        - BitGo Products
+      parameters: []
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      format: uuid
+                    product:
+                      $ref: '#/components/schemas/WPBitGoProduct'
+                  required:
+                    - id
+                    - product
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/identity-service/v1/identities:
+    get:
+      summary: List KYB Identities
+      description: Retrieve a list of identities created by the authenticated user. Requires User-Id header.
+      operationId: identities.get.v1.identities
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: enterpriseId
+          in: query
+          schema:
+            type: string
+        - name: organizationId
+          in: query
+          schema:
+            type: string
+        - name: userId
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  discriminator:
+                    propertyName: type
+                  oneOf:
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - individual
+                          description: Type of identity
+                        userId:
+                          type: string
+                          description: The ID of the user
+                        individual:
+                          $ref: '#/components/schemas/Individual'
+                        id:
+                          type: string
+                          description: The unique ID of the created identity
+                        ignoredFields:
+                          type: array
+                          items:
+                            type: string
+                          description: Ignored fields
+                        requestedProducts:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/RequestedProductResponse'
+                          description: List of products requested for this identity
+                        requirements:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/Requirement'
+                          description: List of requirements related to the identity
+                        documents:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/Document'
+                          description: List of documents associated with the identity
+                        finalizeSubmission:
+                          type: boolean
+                          description: Whether identity is ready for final submission and requirements validation
+                      required:
+                        - type
+                        - userId
+                        - individual
+                        - id
+                        - requestedProducts
+                        - requirements
+                        - finalizeSubmission
+                    - type: object
+                      properties:
+                        type:
+                          type: string
+                          enum:
+                            - business
+                          description: Type of identity
+                        organizationId:
+                          type: string
+                          description: The ID of the organization
+                        enterpriseId:
+                          type: string
+                          description: The ID of the enterprise
+                        business:
+                          $ref: '#/components/schemas/Business'
+                        associatedPeople:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/AssociatedPersonResponse'
+                          description: List of associated people linked to this identity
+                        id:
+                          type: string
+                          description: The unique ID of the created identity
+                        ignoredFields:
+                          type: array
+                          items:
+                            type: string
+                          description: Ignored fields
+                        requestedProducts:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/RequestedProductResponse'
+                          description: List of products requested for this identity
+                        requirements:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/Requirement'
+                          description: List of requirements related to the identity
+                        documents:
+                          type: array
+                          items:
+                            $ref: '#/components/schemas/Document'
+                          description: List of documents associated with the identity
+                        finalizeSubmission:
+                          type: boolean
+                          description: Whether identity is ready for final submission and requirements validation
+                      required:
+                        - type
+                        - organizationId
+                        - enterpriseId
+                        - business
+                        - associatedPeople
+                        - id
+                        - requestedProducts
+                        - requirements
+                        - finalizeSubmission
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+    post:
+      summary: Create KYB Identity
+      description: Create an identity with requested products. Requires User-Id header to associate the identity with the creating user.
+      operationId: identities.post.v1.identities
+      tags:
+        - Know Your Business (KYB)
+      parameters: []
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateIdentityBody'
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              schema:
+                discriminator:
+                  propertyName: type
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - individual
+                        description: Type of identity
+                      userId:
+                        type: string
+                        description: The ID of the user
+                      individual:
+                        $ref: '#/components/schemas/Individual'
+                      id:
+                        type: string
+                        description: The unique ID of the created identity
+                      ignoredFields:
+                        type: array
+                        items:
+                          type: string
+                        description: Ignored fields
+                      requestedProducts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RequestedProductResponse'
+                        description: List of products requested for this identity
+                      requirements:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Requirement'
+                        description: List of requirements related to the identity
+                      documents:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Document'
+                        description: List of documents associated with the identity
+                      finalizeSubmission:
+                        type: boolean
+                        description: Whether identity is ready for final submission and requirements validation
+                    required:
+                      - type
+                      - userId
+                      - individual
+                      - id
+                      - requestedProducts
+                      - requirements
+                      - finalizeSubmission
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - business
+                        description: Type of identity
+                      organizationId:
+                        type: string
+                        description: The ID of the organization
+                      enterpriseId:
+                        type: string
+                        description: The ID of the enterprise
+                      business:
+                        $ref: '#/components/schemas/Business'
+                      associatedPeople:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AssociatedPersonResponse'
+                        description: List of associated people linked to this identity
+                      id:
+                        type: string
+                        description: The unique ID of the created identity
+                      ignoredFields:
+                        type: array
+                        items:
+                          type: string
+                        description: Ignored fields
+                      requestedProducts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RequestedProductResponse'
+                        description: List of products requested for this identity
+                      requirements:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Requirement'
+                        description: List of requirements related to the identity
+                      documents:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Document'
+                        description: List of documents associated with the identity
+                      finalizeSubmission:
+                        type: boolean
+                        description: Whether identity is ready for final submission and requirements validation
+                    required:
+                      - type
+                      - organizationId
+                      - enterpriseId
+                      - business
+                      - associatedPeople
+                      - id
+                      - requestedProducts
+                      - requirements
+                      - finalizeSubmission
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/identity-service/v1/identities/{identityId}:
+    patch:
+      summary: Update KYB Identity
+      description: Update an existing identity with new information. Requires User-Id header and user can only update identities they created. Only the fields provided in the request body will be updated.
+      operationId: identities.patch.v1.identities.id
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the identity to update
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateIdentityBody'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                discriminator:
+                  propertyName: type
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - individual
+                        description: Type of identity
+                      userId:
+                        type: string
+                        description: The ID of the user
+                      individual:
+                        $ref: '#/components/schemas/Individual'
+                      id:
+                        type: string
+                        description: The unique ID of the created identity
+                      ignoredFields:
+                        type: array
+                        items:
+                          type: string
+                        description: Ignored fields
+                      requestedProducts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RequestedProductResponse'
+                        description: List of products requested for this identity
+                      requirements:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Requirement'
+                        description: List of requirements related to the identity
+                      documents:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Document'
+                        description: List of documents associated with the identity
+                      finalizeSubmission:
+                        type: boolean
+                        description: Whether identity is ready for final submission and requirements validation
+                    required:
+                      - type
+                      - userId
+                      - individual
+                      - id
+                      - requestedProducts
+                      - requirements
+                      - finalizeSubmission
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - business
+                        description: Type of identity
+                      organizationId:
+                        type: string
+                        description: The ID of the organization
+                      enterpriseId:
+                        type: string
+                        description: The ID of the enterprise
+                      business:
+                        $ref: '#/components/schemas/Business'
+                      associatedPeople:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AssociatedPersonResponse'
+                        description: List of associated people linked to this identity
+                      id:
+                        type: string
+                        description: The unique ID of the created identity
+                      ignoredFields:
+                        type: array
+                        items:
+                          type: string
+                        description: Ignored fields
+                      requestedProducts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RequestedProductResponse'
+                        description: List of products requested for this identity
+                      requirements:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Requirement'
+                        description: List of requirements related to the identity
+                      documents:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Document'
+                        description: List of documents associated with the identity
+                      finalizeSubmission:
+                        type: boolean
+                        description: Whether identity is ready for final submission and requirements validation
+                    required:
+                      - type
+                      - organizationId
+                      - enterpriseId
+                      - business
+                      - associatedPeople
+                      - id
+                      - requestedProducts
+                      - requirements
+                      - finalizeSubmission
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+    get:
+      summary: Get KYB Identity
+      description: Retrieve an identity by its ID, including all related information. Requires User-Id header and user can only access identities they created.
+      operationId: identities.get.v1.identities.id
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the identity to retrieve
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                discriminator:
+                  propertyName: type
+                oneOf:
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - individual
+                        description: Type of identity
+                      userId:
+                        type: string
+                        description: The ID of the user
+                      individual:
+                        $ref: '#/components/schemas/Individual'
+                      id:
+                        type: string
+                        description: The unique ID of the created identity
+                      ignoredFields:
+                        type: array
+                        items:
+                          type: string
+                        description: Ignored fields
+                      requestedProducts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RequestedProductResponse'
+                        description: List of products requested for this identity
+                      requirements:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Requirement'
+                        description: List of requirements related to the identity
+                      documents:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Document'
+                        description: List of documents associated with the identity
+                      finalizeSubmission:
+                        type: boolean
+                        description: Whether identity is ready for final submission and requirements validation
+                    required:
+                      - type
+                      - userId
+                      - individual
+                      - id
+                      - requestedProducts
+                      - requirements
+                      - finalizeSubmission
+                  - type: object
+                    properties:
+                      type:
+                        type: string
+                        enum:
+                          - business
+                        description: Type of identity
+                      organizationId:
+                        type: string
+                        description: The ID of the organization
+                      enterpriseId:
+                        type: string
+                        description: The ID of the enterprise
+                      business:
+                        $ref: '#/components/schemas/Business'
+                      associatedPeople:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AssociatedPersonResponse'
+                        description: List of associated people linked to this identity
+                      id:
+                        type: string
+                        description: The unique ID of the created identity
+                      ignoredFields:
+                        type: array
+                        items:
+                          type: string
+                        description: Ignored fields
+                      requestedProducts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/RequestedProductResponse'
+                        description: List of products requested for this identity
+                      requirements:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Requirement'
+                        description: List of requirements related to the identity
+                      documents:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Document'
+                        description: List of documents associated with the identity
+                      finalizeSubmission:
+                        type: boolean
+                        description: Whether identity is ready for final submission and requirements validation
+                    required:
+                      - type
+                      - organizationId
+                      - enterpriseId
+                      - business
+                      - associatedPeople
+                      - id
+                      - requestedProducts
+                      - requirements
+                      - finalizeSubmission
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/identity-service/v1/identities/{identityId}/documents:
+    post:
+      summary: Add KYB Documents
+      description: Add and validate documents for an existing identity. Documents are verified with the document service before being associated with the identity.
+      operationId: identities.post.v1.identities.id.documents
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique ID of the identity
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                documents:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      documentId:
+                        type: string
+                        format: uuid
+                        description: External document service ID (must be a valid UUID)
+                      documentType:
+                        type: string
+                        enum:
+                          - governmentId
+                          - commercialRegister
+                          - articlesOfAssociation
+                          - certificateOfIncorporation
+                          - certificateOfTrust
+                          - certificateOfIncumbency
+                          - certificateOfIncumbencyOrShareRegister
+                          - proofOfPrincipalPlaceOfBusiness
+                          - activeTradeLicense
+                          - resolutionToOpenBitgoUaeAccount
+                          - resolutionToOpenBitgoSingaporeAccount
+                          - proofOfAuthorizedSignatories
+                          - memorandumOfAssociation
+                          - memorandumAndArticlesOfAssociation
+                          - bylawsOrOperatingAgreement
+                          - operatingAgreement
+                          - w8
+                          - w9
+                          - evidenceOfLegalStatus
+                          - evidenceOfActiveStatus
+                          - proofOfJfsaLicense
+                          - proofOfGamingLicense
+                          - organizationDocument
+                          - partnershipAgreement
+                          - articlesOfOrganization
+                          - businessLicenseOrRegistration
+                          - evidenceOfGovernmentOrStateOwnership
+                          - secFilingsAsEvidenceOfPublicTradingStatus
+                          - foundingTreatyOrEquivalent
+                        description: Type of document
+                    required:
+                      - documentId
+                      - documentType
+                  minItems: 1
+                  description: List of documents to accept
+              required:
+                - documents
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  identityId:
+                    type: string
+                    description: The identity ID
+                  acceptedDocuments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Internal ID for the document association
+                        documentId:
+                          type: string
+                          description: External document service ID
+                        documentType:
+                          type: string
+                          enum:
+                            - governmentId
+                            - commercialRegister
+                            - articlesOfAssociation
+                            - certificateOfIncorporation
+                            - certificateOfTrust
+                            - certificateOfIncumbency
+                            - certificateOfIncumbencyOrShareRegister
+                            - proofOfPrincipalPlaceOfBusiness
+                            - activeTradeLicense
+                            - resolutionToOpenBitgoUaeAccount
+                            - resolutionToOpenBitgoSingaporeAccount
+                            - proofOfAuthorizedSignatories
+                            - memorandumOfAssociation
+                            - memorandumAndArticlesOfAssociation
+                            - bylawsOrOperatingAgreement
+                            - operatingAgreement
+                            - w8
+                            - w9
+                            - evidenceOfLegalStatus
+                            - evidenceOfActiveStatus
+                            - proofOfJfsaLicense
+                            - proofOfGamingLicense
+                            - organizationDocument
+                            - partnershipAgreement
+                            - articlesOfOrganization
+                            - businessLicenseOrRegistration
+                            - evidenceOfGovernmentOrStateOwnership
+                            - secFilingsAsEvidenceOfPublicTradingStatus
+                            - foundingTreatyOrEquivalent
+                          description: Type of document
+                        status:
+                          type: string
+                          enum:
+                            - missing
+                            - countExceeded
+                            - submitted
+                            - inReview
+                            - verified
+                          description: Verification status
+                        createdAt:
+                          type: string
+                          description: ISO timestamp when document was associated
+                        updatedAt:
+                          type: string
+                          description: ISO timestamp when association was last updated
+                      required:
+                        - id
+                        - documentId
+                        - documentType
+                        - status
+                        - createdAt
+                        - updatedAt
+                    description: Successfully accepted documents
+                  rejectedDocuments:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        documentId:
+                          type: string
+                          description: External document service ID
+                        documentType:
+                          type: string
+                          enum:
+                            - governmentId
+                            - commercialRegister
+                            - articlesOfAssociation
+                            - certificateOfIncorporation
+                            - certificateOfTrust
+                            - certificateOfIncumbency
+                            - certificateOfIncumbencyOrShareRegister
+                            - proofOfPrincipalPlaceOfBusiness
+                            - activeTradeLicense
+                            - resolutionToOpenBitgoUaeAccount
+                            - resolutionToOpenBitgoSingaporeAccount
+                            - proofOfAuthorizedSignatories
+                            - memorandumOfAssociation
+                            - memorandumAndArticlesOfAssociation
+                            - bylawsOrOperatingAgreement
+                            - operatingAgreement
+                            - w8
+                            - w9
+                            - evidenceOfLegalStatus
+                            - evidenceOfActiveStatus
+                            - proofOfJfsaLicense
+                            - proofOfGamingLicense
+                            - organizationDocument
+                            - partnershipAgreement
+                            - articlesOfOrganization
+                            - businessLicenseOrRegistration
+                            - evidenceOfGovernmentOrStateOwnership
+                            - secFilingsAsEvidenceOfPublicTradingStatus
+                            - foundingTreatyOrEquivalent
+                          description: Type of document
+                        reason:
+                          type: string
+                          description: Reason for rejection
+                      required:
+                        - documentId
+                        - documentType
+                        - reason
+                    description: Documents that failed validation
+                required:
+                  - identityId
+                  - acceptedDocuments
+                  - rejectedDocuments
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '422':
+          description: '422'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+    get:
+      summary: List KYB Documents
+      description: Retrieve all documents associated with an identity.
+      operationId: identities.get.v1.identities.id.documents
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique ID of the identity
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  identityId:
+                    type: string
+                    description: The identity ID
+                  documents:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Internal ID for the document association
+                        documentId:
+                          type: string
+                          description: External document service ID
+                        documentType:
+                          type: string
+                          enum:
+                            - governmentId
+                            - commercialRegister
+                            - articlesOfAssociation
+                            - certificateOfIncorporation
+                            - certificateOfTrust
+                            - certificateOfIncumbency
+                            - certificateOfIncumbencyOrShareRegister
+                            - proofOfPrincipalPlaceOfBusiness
+                            - activeTradeLicense
+                            - resolutionToOpenBitgoUaeAccount
+                            - resolutionToOpenBitgoSingaporeAccount
+                            - proofOfAuthorizedSignatories
+                            - memorandumOfAssociation
+                            - memorandumAndArticlesOfAssociation
+                            - bylawsOrOperatingAgreement
+                            - operatingAgreement
+                            - w8
+                            - w9
+                            - evidenceOfLegalStatus
+                            - evidenceOfActiveStatus
+                            - proofOfJfsaLicense
+                            - proofOfGamingLicense
+                            - organizationDocument
+                            - partnershipAgreement
+                            - articlesOfOrganization
+                            - businessLicenseOrRegistration
+                            - evidenceOfGovernmentOrStateOwnership
+                            - secFilingsAsEvidenceOfPublicTradingStatus
+                            - foundingTreatyOrEquivalent
+                          description: Type of document
+                        status:
+                          type: string
+                          enum:
+                            - missing
+                            - countExceeded
+                            - submitted
+                            - inReview
+                            - verified
+                          description: Verification status
+                        createdAt:
+                          type: string
+                          description: ISO timestamp when document was associated
+                        updatedAt:
+                          type: string
+                          description: ISO timestamp when association was last updated
+                      required:
+                        - id
+                        - documentId
+                        - documentType
+                        - status
+                        - createdAt
+                        - updatedAt
+                    description: List of documents associated with the identity
+                required:
+                  - identityId
+                  - documents
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+  /api/identity-service/v1/identities/{identityId}/documents/{identityDocumentId}:
+    put:
+      summary: Update KYB Document
+      description: Update a specific document association (document ID, type, or status).
+      operationId: identities.put.v1.identities.id.documents.id
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique ID of the identity
+        - name: identityDocumentId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique ID of the document association
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                documentId:
+                  type: string
+                  format: uuid
+                  description: New external document service ID (must be a valid UUID)
+                documentType:
+                  type: string
+                  enum:
+                    - governmentId
+                    - commercialRegister
+                    - articlesOfAssociation
+                    - certificateOfIncorporation
+                    - certificateOfTrust
+                    - certificateOfIncumbency
+                    - certificateOfIncumbencyOrShareRegister
+                    - proofOfPrincipalPlaceOfBusiness
+                    - activeTradeLicense
+                    - resolutionToOpenBitgoUaeAccount
+                    - resolutionToOpenBitgoSingaporeAccount
+                    - proofOfAuthorizedSignatories
+                    - memorandumOfAssociation
+                    - memorandumAndArticlesOfAssociation
+                    - bylawsOrOperatingAgreement
+                    - operatingAgreement
+                    - w8
+                    - w9
+                    - evidenceOfLegalStatus
+                    - evidenceOfActiveStatus
+                    - proofOfJfsaLicense
+                    - proofOfGamingLicense
+                    - organizationDocument
+                    - partnershipAgreement
+                    - articlesOfOrganization
+                    - businessLicenseOrRegistration
+                    - evidenceOfGovernmentOrStateOwnership
+                    - secFilingsAsEvidenceOfPublicTradingStatus
+                    - foundingTreatyOrEquivalent
+                  description: New document type
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: Internal ID for the document association
+                  documentId:
+                    type: string
+                    description: External document service ID
+                  documentType:
+                    type: string
+                    enum:
+                      - governmentId
+                      - commercialRegister
+                      - articlesOfAssociation
+                      - certificateOfIncorporation
+                      - certificateOfTrust
+                      - certificateOfIncumbency
+                      - certificateOfIncumbencyOrShareRegister
+                      - proofOfPrincipalPlaceOfBusiness
+                      - activeTradeLicense
+                      - resolutionToOpenBitgoUaeAccount
+                      - resolutionToOpenBitgoSingaporeAccount
+                      - proofOfAuthorizedSignatories
+                      - memorandumOfAssociation
+                      - memorandumAndArticlesOfAssociation
+                      - bylawsOrOperatingAgreement
+                      - operatingAgreement
+                      - w8
+                      - w9
+                      - evidenceOfLegalStatus
+                      - evidenceOfActiveStatus
+                      - proofOfJfsaLicense
+                      - proofOfGamingLicense
+                      - organizationDocument
+                      - partnershipAgreement
+                      - articlesOfOrganization
+                      - businessLicenseOrRegistration
+                      - evidenceOfGovernmentOrStateOwnership
+                      - secFilingsAsEvidenceOfPublicTradingStatus
+                      - foundingTreatyOrEquivalent
+                    description: Type of document
+                  status:
+                    type: string
+                    enum:
+                      - missing
+                      - countExceeded
+                      - submitted
+                      - inReview
+                      - verified
+                    description: Verification status
+                  createdAt:
+                    type: string
+                    description: ISO timestamp when document was associated
+                  updatedAt:
+                    type: string
+                    description: ISO timestamp when association was last updated
+                required:
+                  - id
+                  - documentId
+                  - documentType
+                  - status
+                  - createdAt
+                  - updatedAt
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '422':
+          description: '422'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+    delete:
+      summary: Delete KYB Document
+      description: Remove a specific document association from an identity.
+      operationId: identities.delete.v1.identities.id.documents.id
+      tags:
+        - Know Your Business (KYB)
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the identity
+        - name: identityDocumentId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the document association
+      responses:
+        '204':
+          description: '204'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/identity-service/v1/products-configs:
+    get:
+      summary: Get BitGo Products Configuration
+      operationId: identities.get.v1.products-configs
+      tags:
+        - BitGo Products
+      parameters:
+        - name: bitgoOrg
+          in: query
+          description: BitGo organization types
+          required: true
+          schema:
+            type: string
+            enum:
+              - BitGo Trust
+              - BitGo New York
+              - BitGo Germany
+              - BitGo Switzerland
+              - BitGo Europe ApS
+              - Frankfurt DE Trust
+              - BitGo Singapore
+              - BitGo Korea
+              - BitGo Mena Fze
+              - BitGo Custody MENA FZE
+              - BitGo Sister Trust 1
+              - BitGo Inc
+            title: WPBitgoOrg
+        - name: accountType
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - individual
+              - entity
+        - name: country
+          in: query
+          description: Country (formatted as ISO 3166-1 alpha-3)
+          required: true
+          schema: {}
+        - name: subdivision
+          in: query
+          description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 3
+        - name: source
+          in: query
+          schema:
+            type: string
+            enum:
+              - ftx
+              - ftx-retail
+              - ftx-bahamas
+              - ftx-bahamas-retail
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      bitgoOrg:
+                        $ref: '#/components/schemas/WPBitgoOrg'
+                      accountType:
+                        type: string
+                        enum:
+                          - individual
+                          - entity
+                      country:
+                        description: Country (formatted as ISO 3166-1 alpha-3)
+                      subdivision:
+                        type: string
+                        minLength: 1
+                        maxLength: 3
+                        description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+                      bitgoProducts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WPBitGoProduct'
+                      id:
+                        type: string
+                        format: uuid
+                    required:
+                      - bitgoOrg
+                      - accountType
+                      - country
+                      - bitgoProducts
+                      - id
+                  - type: object
+                    properties:
+                      bitgoOrg:
+                        $ref: '#/components/schemas/WPBitgoOrg'
+                      accountType:
+                        type: string
+                        enum:
+                          - individual
+                          - entity
+                      country:
+                        description: Country (formatted as ISO 3166-1 alpha-3)
+                      subdivision:
+                        type: string
+                        minLength: 1
+                        maxLength: 3
+                        description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+                      source:
+                        type: string
+                        enum:
+                          - ftx
+                          - ftx-retail
+                          - ftx-bahamas
+                          - ftx-bahamas-retail
+                      bitgoProducts:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/WPBitGoProduct'
+                      id:
+                        type: string
+                        format: uuid
+                    required:
+                      - bitgoOrg
+                      - accountType
+                      - country
+                      - source
+                      - bitgoProducts
+                      - id
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   //api/notifications/v1/user/subscriptions:
     get:
       tags:
@@ -41299,6 +42761,148 @@ components:
           - name
           - decimals
           - isIssuedByBitgo
+    AssociatedPersonInput:
+      type: object
+      properties:
+        role:
+          type: string
+          enum:
+            - beneficialOwner
+            - controlPerson
+            - platformAdmin
+          description: Role of the associated person
+        percentageOwnership:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Percentage of ownership (only for beneficialOwner)
+        identityId:
+          type: string
+          description: Identity ID of the person
+      required:
+        - role
+        - identityId
+      title: AssociatedPersonInput
+    AssociatedPersonResponse:
+      type: object
+      properties:
+        identityId:
+          type: string
+          description: The individual identity ID of the associated person
+        role:
+          type: string
+          enum:
+            - beneficialOwner
+            - controlPerson
+            - platformAdmin
+          description: Role of the associated person
+        percentageOwnership:
+          type: number
+          minimum: 0
+          maximum: 100
+          description: Percentage of ownership (only applicable to beneficial owners)
+          nullable: true
+        status:
+          type: string
+          enum:
+            - missingRequirements
+            - readyForSubmission
+            - inReview
+            - verified
+            - rejected
+          description: Verification status of the associated person
+        individual:
+          type: object
+          properties:
+            nameFirst:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              description: First name of the individual
+            nameLast:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              description: Last name of the individual
+            birthdate:
+              $ref: '#/components/schemas/Birthdate'
+            phoneNumber:
+              type: object
+              properties:
+                countryCode:
+                  type: string
+                  pattern: ^[0-9]+$
+                  description: Country code of the phone number
+                phoneNumber:
+                  type: string
+                  pattern: ^[0-9]+$
+                  description: Phone number (without country code)
+              required:
+                - countryCode
+                - phoneNumber
+            occupation:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+              description: Occupation of the individual
+            countryOfCitizenship:
+              description: Country of citizenship (ISO 3166-1 alpha-3)
+            countryOfResidence:
+              description: Country of residence (ISO 3166-1 alpha-3)
+            govIdCountryOfIssuance:
+              description: Country where government ID was issued (ISO 3166-1 alpha-3)
+            address:
+              type: object
+              properties:
+                street1:
+                  type: string
+                  pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+                  description: Street address line 1
+                street2:
+                  type: string
+                  pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+                  description: Street address line 2
+                city:
+                  type: string
+                  pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+                  description: City name
+                subdivision:
+                  type: string
+                  minLength: 1
+                  maxLength: 3
+                  description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+                zip:
+                  type: string
+                  description: ZIP or postal code
+                country:
+                  description: Country (formatted as ISO 3166-1 alpha-3)
+              required:
+                - street1
+                - city
+                - subdivision
+                - zip
+                - country
+            identificationNumber:
+              type: string
+              description: National identification number (e.g., SSN, passport number)
+            politicallyExposedPerson:
+              type: boolean
+              description: Whether the individual is a politically exposed person
+          description: Individual data for the associated person
+        userId:
+          type: string
+          description: User ID of the associated person
+        missingRequirements:
+          type: array
+          items:
+            $ref: '#/components/schemas/MissingRequirement'
+          description: List of missing requirements for the associated person
+      required:
+        - identityId
+        - role
+        - percentageOwnership
+        - status
+        - individual
+        - userId
+        - missingRequirements
+      title: AssociatedPersonResponse
     AtomAddress:
       title: Atom Address
       type: object
@@ -42611,6 +44215,24 @@ components:
       required:
         - type
         - delegationId
+    Birthdate:
+      type: object
+      properties:
+        month:
+          type: string
+          description: birthdate month
+        day:
+          type: string
+          description: birthdate day
+        year:
+          type: string
+          description: birthdate year
+      required:
+        - month
+        - day
+        - year
+      title: Birthdate
+      description: Birthdate
     Bitcoin:
       type: string
       enum:
@@ -43295,6 +44917,265 @@ components:
             description: Individual approval result item
       required:
         - results
+    Business:
+      type: object
+      properties:
+        businessName:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+          description: Legal name of the business
+        incorporationCountryCode:
+          description: Country of incorporation (ISO 3166-1 alpha-3)
+        primaryOperationsCountryCode:
+          description: Primary country of operations (ISO 3166-1 alpha-3)
+        einTinIdentificationNumber:
+          type: string
+          description: EIN/TIN of the business
+        otherEntityId:
+          type: string
+          description: Any additional entity identifier
+        physicalBusinessAddress:
+          type: object
+          properties:
+            street1:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: Street address line 1
+            street2:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: Street address line 2
+            city:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: City name
+            subdivision:
+              type: string
+              minLength: 1
+              maxLength: 3
+              description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+            zip:
+              type: string
+              description: ZIP or postal code
+            country:
+              description: Country (formatted as ISO 3166-1 alpha-3)
+          required:
+            - street1
+            - city
+            - subdivision
+            - zip
+            - country
+        mailingAddress:
+          type: object
+          properties:
+            street1:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: Street address line 1
+            street2:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: Street address line 2
+            city:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: City name
+            subdivision:
+              type: string
+              minLength: 1
+              maxLength: 3
+              description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+            zip:
+              type: string
+              description: ZIP or postal code
+            country:
+              description: Country (formatted as ISO 3166-1 alpha-3)
+          required:
+            - street1
+            - city
+            - subdivision
+            - zip
+            - country
+        billingAddress:
+          type: object
+          properties:
+            street1:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: Street address line 1
+            street2:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: Street address line 2
+            city:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: City name
+            subdivision:
+              type: string
+              minLength: 1
+              maxLength: 3
+              description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+            zip:
+              type: string
+              description: ZIP or postal code
+            country:
+              description: Country (formatted as ISO 3166-1 alpha-3)
+          required:
+            - street1
+            - city
+            - subdivision
+            - zip
+            - country
+        legalEntityStructure:
+          type: string
+          enum:
+            - llc
+            - corporationCAndS
+            - partnershipLimitedAndLLP
+            - generalPartnership
+            - trusts
+            - privateInvestmentOrFoundation
+            - unincorporatedBusiness
+            - soleProprietorship
+            - governmentOwned
+            - publiclyTraded
+            - supranationalBodies
+            - specialPurposeVehicle
+            - segregatedPortfolioCompany
+          description: Business entity legal structure used to filter requirements (enum).
+        formationDate:
+          type: string
+          description: Business formation date (YYYY-MM-DD)
+        dbaName:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+          description: DBA (Doing Business As) name
+        companyWebsiteAddress:
+          type: string
+          format: uri
+          description: Official company website
+        primaryBusinessType:
+          $ref: '#/components/schemas/PrimaryBusinessType'
+        primaryBusinessTypeInstitutional:
+          type: boolean
+          description: Whether the business is institutional
+        descriptionBusinessActivities:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: Short description of the business
+        billingContact:
+          type: object
+          properties:
+            nameFirst:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              description: First name
+            nameLast:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              description: Last name
+            emailAddress:
+              type: string
+              format: email
+              description: Email address
+            phoneNumber:
+              type: object
+              properties:
+                countryCode:
+                  type: string
+                  pattern: ^[0-9]+$
+                  description: Country code of the phone number
+                phoneNumber:
+                  type: string
+                  pattern: ^[0-9]+$
+                  description: Phone number (without country code)
+              required:
+                - countryCode
+                - phoneNumber
+          required:
+            - nameFirst
+            - nameLast
+            - emailAddress
+            - phoneNumber
+        authorizedSigner:
+          type: object
+          properties:
+            nameFirst:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              description: First name
+            nameLast:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              description: Last name
+            emailAddress:
+              type: string
+              format: email
+              description: Email address
+            phoneNumber:
+              type: object
+              properties:
+                countryCode:
+                  type: string
+                  pattern: ^[0-9]+$
+                  description: Country code of the phone number
+                phoneNumber:
+                  type: string
+                  pattern: ^[0-9]+$
+                  description: Phone number (without country code)
+              required:
+                - countryCode
+                - phoneNumber
+          required:
+            - nameFirst
+            - nameLast
+            - emailAddress
+            - phoneNumber
+        tradeStrategy:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: Trading strategy of the business
+        activeCoinTokens:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: Active cryptocurrencies traded
+        tradeVolumeUsd:
+          type: string
+          description: Estimated trade volume in USD
+        activeExchanges:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: List of active exchanges
+        diligenceRetailInstitutional:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: Diligence level required (retail or institutional)
+        customerBaseLocations:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: Locations of customer base
+        sanctionAffiliates:
+          type: boolean
+          description: Whether the business has sanctioned affiliates
+        hasAuditor:
+          type: boolean
+          description: Whether the business has an auditor
+        firmAuditor:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: Name of audit firm (if applicable)
+        hasLegalCounsel:
+          type: boolean
+          description: Whether the business has legal counsel
+        diligenceCounselName:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: Name of legal counsel (if applicable)
+        walletAddress:
+          type: string
+          description: Business wallet address
+      title: Business
     BusinessModel:
       title: BusinessModel
       type: string
@@ -44797,6 +46678,91 @@ components:
         - files
       title: CreateDocumentResponse
       description: Response after creating a new document
+    CreateIdentityBody:
+      discriminator:
+        propertyName: type
+      oneOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - individual
+              description: Identity type
+            userId:
+              type: string
+              description: The ID of the user
+            individual:
+              $ref: '#/components/schemas/Individual'
+            requestedProducts:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Name of the permission
+                  bitgoOrg:
+                    type: string
+                    description: The entity granting the permission
+                required:
+                  - name
+                  - bitgoOrg
+              description: List of requested bitgo products (can be empty for associated people)
+            finalizeSubmission:
+              default: false
+              type: boolean
+              description: Whether identity is ready for final submission and requirements validation
+          required:
+            - type
+            - userId
+            - requestedProducts
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - business
+              description: Identity type
+            organizationId:
+              type: string
+              description: The ID of the organization
+            enterpriseId:
+              type: string
+              description: The ID of the enterprise
+            business:
+              $ref: '#/components/schemas/Business'
+            associatedPeople:
+              type: array
+              items:
+                $ref: '#/components/schemas/AssociatedPersonInput'
+              description: List of associated people
+            requestedProducts:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    description: Name of the permission
+                  bitgoOrg:
+                    type: string
+                    description: The entity granting the permission
+                required:
+                  - name
+                  - bitgoOrg
+              minItems: 1
+              description: List of requested bitgo products (business entities require at least one product)
+            finalizeSubmission:
+              default: false
+              type: boolean
+              description: Whether identity is ready for final submission and requirements validation
+          required:
+            - type
+            - organizationId
+            - enterpriseId
+            - requestedProducts
+      title: CreateIdentityBody
     CreateKey:
       type: object
       properties:
@@ -45856,6 +47822,63 @@ components:
           type: string
           description: BitGo Organization related to this entity. Allowed values are BitGo Inc, BitGo Trust, BitGo New York, BitGo Germany, BitGo Switzerland, Frankfurt DE Trust, BitGo Sister Trust 1, BitGo Korea, BitGo Singapore, null
           nullable: true
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Internal ID for the document association
+        documentId:
+          type: string
+          description: External document service ID
+        documentType:
+          type: string
+          enum:
+            - governmentId
+            - commercialRegister
+            - articlesOfAssociation
+            - certificateOfIncorporation
+            - certificateOfTrust
+            - certificateOfIncumbency
+            - certificateOfIncumbencyOrShareRegister
+            - proofOfPrincipalPlaceOfBusiness
+            - activeTradeLicense
+            - resolutionToOpenBitgoUaeAccount
+            - resolutionToOpenBitgoSingaporeAccount
+            - proofOfAuthorizedSignatories
+            - memorandumOfAssociation
+            - memorandumAndArticlesOfAssociation
+            - bylawsOrOperatingAgreement
+            - operatingAgreement
+            - w8
+            - w9
+            - evidenceOfLegalStatus
+            - evidenceOfActiveStatus
+            - proofOfJfsaLicense
+            - proofOfGamingLicense
+            - organizationDocument
+            - partnershipAgreement
+            - articlesOfOrganization
+            - businessLicenseOrRegistration
+            - evidenceOfGovernmentOrStateOwnership
+            - secFilingsAsEvidenceOfPublicTradingStatus
+            - foundingTreatyOrEquivalent
+          description: Type of document
+        status:
+          type: string
+          enum:
+            - missing
+            - countExceeded
+            - submitted
+            - inReview
+            - verified
+          description: Verification status
+      required:
+        - id
+        - documentId
+        - documentType
+        - status
+      title: Document
     DocumentFileDetail:
       type: object
       properties:
@@ -51549,6 +53572,81 @@ components:
               title: uuid
         - $ref: '#/components/schemas/TradeBaseReq'
         - $ref: '#/components/schemas/TradeBaseQuoteInbound'
+    Individual:
+      type: object
+      properties:
+        nameFirst:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+          description: First name of the individual
+        nameLast:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+          description: Last name of the individual
+        birthdate:
+          $ref: '#/components/schemas/Birthdate'
+        phoneNumber:
+          type: object
+          properties:
+            countryCode:
+              type: string
+              pattern: ^[0-9]+$
+              description: Country code of the phone number
+            phoneNumber:
+              type: string
+              pattern: ^[0-9]+$
+              description: Phone number (without country code)
+          required:
+            - countryCode
+            - phoneNumber
+        occupation:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          description: Occupation of the individual
+        countryOfCitizenship:
+          description: Country of citizenship (ISO 3166-1 alpha-3)
+        countryOfResidence:
+          description: Country of residence (ISO 3166-1 alpha-3)
+        govIdCountryOfIssuance:
+          description: Country where government ID was issued (ISO 3166-1 alpha-3)
+        address:
+          type: object
+          properties:
+            street1:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: Street address line 1
+            street2:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: Street address line 2
+            city:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
+              description: City name
+            subdivision:
+              type: string
+              minLength: 1
+              maxLength: 3
+              description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+            zip:
+              type: string
+              description: ZIP or postal code
+            country:
+              description: Country (formatted as ISO 3166-1 alpha-3)
+          required:
+            - street1
+            - city
+            - subdivision
+            - zip
+            - country
+        identificationNumber:
+          type: string
+          description: National identification number (e.g., SSN, passport number)
+        politicallyExposedPerson:
+          type: boolean
+          description: Whether the individual is a politically exposed person
+      title: Individual
     InitiateTrustlineParams:
       type: object
       properties:
@@ -54151,6 +56249,38 @@ components:
           type: boolean
           description: true, if multiple values can be provided, i.e. as a list of values. When false only one value can be provided, i.e. a list with more than one element will be rejected.
           example: false
+    MissingRequirement:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the missing requirement
+        kind:
+          type: string
+          enum:
+            - businessInformation
+            - data
+            - document
+            - associatedPerson
+          description: Type of missing requirement
+        name:
+          type: string
+          description: Name of the missing requirement
+        status:
+          type: string
+          enum:
+            - missing
+            - countExceeded
+            - submitted
+            - inReview
+            - verified
+          description: Current status of the missing requirement
+      required:
+        - id
+        - kind
+        - name
+        - status
+      title: MissingRequirement
     MmiSignMessageIntent:
       title: MMI Sign Message Intent
       allOf:
@@ -58963,6 +61093,49 @@ components:
         - employee
         - FTX Retail
         - FTX Institutional
+    PrimaryBusinessType:
+      type: string
+      enum:
+        - Crypto Services (Exchange, ATM, Borrow/Lend)
+        - Crypto Solutions (DAO, Staking, CaaS, hot wallet provider, miner/mining pool, coins/tokens (developer, issuer, foundation))
+        - Custodian
+        - Agriculture
+        - Arts, Media, Entertainment
+        - Asset Management (i.e. revocable/irrevocable trust, IRA, pension fund)
+        - Bank
+        - Broker/Dealer
+        - Casinos and Gambling Establishments
+        - Charity/NGO/Non-profit/Foundation/Endowment
+        - Commodities/Futures Commission Merchant
+        - Corporate Holding Company
+        - Education
+        - Energy companies
+        - Family Office
+        - Food, hospitality, and tourism
+        - Government/State owned/Political Org. (i.e. Sovereign Wealth Fund)
+        - Import/Export Companies
+        - Industrial (construction, manufacturing, textiles, chemicals, etc.)
+        - Insurance Company
+        - Law Enforcement / Military / Protective Services
+        - Marijuana-related Business
+        - Money Services Business (MSB)
+        - Mutual Funds
+        - NBFI (Venture Capital Fund, Hedge Fund, Private Equity Fund, Pooled Investment Fund, Index Fund, ETF Issuer, Registered Investment Advisor, Prime Brokerage)
+        - OTC
+        - Other
+        - Payment Platforms
+        - Personal Holding Company
+        - Private Equity / Venture Capital
+        - Private Investment Companies / International Business Corporations
+        - Professional Service Providers (lawyers, accountants, etc.)
+        - Real estate brokers, developers, and appraisers
+        - Retail Lender
+        - Software or Technology Company
+        - Traders / Trading (High Frequency, Proprietary, Market Maker)
+        - Transportation & Shipping
+        - Weapons Dealers
+      title: PrimaryBusinessType
+      description: Primary type of business
     PrimeTrade:
       required:
         - id
@@ -59631,6 +61804,80 @@ components:
         - processing
         - completed
         - failed
+    RequestedProductResponse:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the requested permission
+        name:
+          type: string
+          description: Name of the permission
+        bitgoOrg:
+          type: string
+          description: The entity granting the permission
+        country:
+          description: The country where the permission is being requested
+        subdivision:
+          type: string
+          minLength: 1
+          maxLength: 3
+          description: The subdivision where the permission is being requested
+        status:
+          type: string
+          enum:
+            - missingLocation
+            - missingEntityStructure
+            - missingRequirements
+            - readyForSubmission
+            - inReview
+            - approved
+            - rejected
+          description: Status of the requested permission
+      required:
+        - id
+        - name
+        - bitgoOrg
+        - status
+      title: RequestedProductResponse
+    Requirement:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the requirement
+        kind:
+          type: string
+          enum:
+            - businessInformation
+            - data
+            - document
+            - associatedPerson
+          description: Type of requirement
+        name:
+          type: string
+          description: Name of the requirement
+        status:
+          type: string
+          enum:
+            - missing
+            - countExceeded
+            - submitted
+            - inReview
+            - verified
+          description: Current status of the requirement
+        minRequired:
+          type: number
+          description: Minimum number required (for associated persons)
+        maxAllowed:
+          type: number
+          description: Maximum number allowed (for associated persons)
+      required:
+        - id
+        - kind
+        - name
+        - status
+      title: Requirement
     ResendShareEmailResponse:
       type: object
       properties:
@@ -66922,6 +69169,47 @@ components:
         - status
       title: UpdateFileStatusResponse
       description: Response after updating file status
+    UpdateIdentityBody:
+      type: object
+      properties:
+        finalizeSubmission:
+          type: boolean
+          description: Whether identity is ready for final submission and requirements validation
+        requestedProducts:
+          type: array
+          items:
+            type: object
+            properties:
+              name:
+                type: string
+              bitgoOrg:
+                type: string
+              country:
+                description: Country (formatted as ISO 3166-1 alpha-3)
+              subdivision:
+                type: string
+                minLength: 1
+                maxLength: 3
+                description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+            required:
+              - name
+              - bitgoOrg
+          description: List of products to update
+        individual:
+          $ref: '#/components/schemas/Individual'
+        business:
+          $ref: '#/components/schemas/Business'
+        associatedPeople:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssociatedPersonInput'
+          description: List of associated people to update
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+          description: List of documents to update
+      title: UpdateIdentityBody
     UpdatePinnedWalletsResponse:
       title: UpdatePinnedWalletsResponse
       type: object
@@ -70161,6 +72449,48 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
+    WPBitGoProduct:
+      type: string
+      enum:
+        - Instant Fee Wallets
+        - Go Account
+        - Settlement
+        - Tax
+        - Trade API
+        - Margin Trading
+        - Elliptic
+        - CryptoCompare
+        - MetaMask
+        - Custody
+        - Borrowing
+        - Lending
+        - DeFi
+        - Cold Self-Custody
+        - Go Network
+        - Staking
+        - Trade
+        - Hot Self-Custody
+        - Escrow
+        - Distributed Custody
+      title: WPBitGoProduct
+      description: BitGo product types
+    WPBitgoOrg:
+      type: string
+      enum:
+        - BitGo Trust
+        - BitGo New York
+        - BitGo Germany
+        - BitGo Switzerland
+        - BitGo Europe ApS
+        - Frankfurt DE Trust
+        - BitGo Singapore
+        - BitGo Korea
+        - BitGo Mena Fze
+        - BitGo Custody MENA FZE
+        - BitGo Sister Trust 1
+        - BitGo Inc
+      title: WPBitgoOrg
+      description: BitGo organization types
     Wallet:
       title: Wallet
       type: object
