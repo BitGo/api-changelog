@@ -24600,6 +24600,7 @@ paths:
                 - $ref: '#/components/schemas/SolUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/SomiStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/SomiUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SomiClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/SomiSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/StxStakingRequestPOSTBody'
@@ -24761,6 +24762,8 @@ paths:
                 $ref: '#/components/examples/SolUnStakingRequestPOSTBodyExample'
               SomiStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SomiStakingRequestPOSTBodyExample'
+              SomiUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/SomiUnStakingRequestPOSTBodyExample'
               SomiClaimRewardsRequestPOSTBodyExample:
                 $ref: '#/components/examples/SomiClaimRewardsRequestPOSTBodyExample'
               SomiSwitchValidatorRequestPOSTBodyExample:
@@ -39340,6 +39343,13 @@ components:
         type: SWITCH_VALIDATOR
         delegationId: somi-delegation-1
         validator: somivaloper1abcxyz
+    SomiUnStakingRequestPOSTBodyExample:
+      summary: Somi UnStaking Request POST Body Example
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
+        amount: '2000000000000000000'
     StakeableCoinsResultExample:
       summary: Stakeable Coins Result Example
       value:
@@ -50026,6 +50036,9 @@ components:
             - STAKE
             - ETH_STAKE_PECTRA
           example: STAKE
+        delegationId:
+          description: Optional delegation id to be used for topup, only active delegations are allowed, that do not have a pending stake or pending unstake.
+          type: string
     EthStakingTransaction:
       allOf:
         - $ref: '#/components/schemas/StakingTransaction'
@@ -63693,6 +63706,23 @@ components:
       allOf:
         - $ref: '#/components/schemas/StakingRequestPOSTBody'
       type: object
+      properties:
+        amount:
+          description: Amount to stake in base units (wei for SOMI).
+          type: string
+          example: '5000000000000000000'
+        type:
+          description: Staking Request type = 'STAKE'.
+          type: string
+          example: STAKE
+        validator:
+          description: The SOMI validator address to delegate to.
+          type: string
+          example: '0x1234567890123456789012345678901234567890'
+      required:
+        - amount
+        - type
+        - validator
     SomiSwitchValidatorsRequestPOSTBody:
       title: Somi Switch Validators Request
       type: object
@@ -63716,6 +63746,27 @@ components:
         validator:
           type: string
           description: Address of the new validator to delegate to.
+    SomiUnStakingRequestPOSTBody:
+      title: SOMI unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
+      properties:
+        type:
+          description: Staking Request type = 'UNSTAKE'.
+          type: string
+          example: UNSTAKE
+        delegationId:
+          description: The delegation ID representing the delegation to unstake.
+          type: string
+        amount:
+          description: Amount to unstake in base units (wei for SOMI). Supports partial unstaking.
+          type: string
+          example: '2000000000000000000'
+      required:
+        - type
+        - delegationId
+        - amount
     SpendingLimits:
       type: object
       additionalProperties:
