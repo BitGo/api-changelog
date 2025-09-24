@@ -30582,6 +30582,7 @@ paths:
                 - custodial
                 - custodialPaired
                 - hot
+                - advanced
                 - trading
               description: If present, filters transaction requests by the specified wallet types
         - name: states
@@ -35396,6 +35397,7 @@ paths:
                     - custodial
                     - custodialPaired
                     - hot
+                    - advanced
                     - trading
       responses:
         '200':
@@ -35667,6 +35669,7 @@ paths:
                 - custodial
                 - custodialPaired
                 - hot
+                - advanced
                 - trading
               description: Filter by wallet type.
         - name: deleted
@@ -48746,6 +48749,35 @@ components:
           $ref: '#/components/schemas/OnboardingAgreement'
         custodyServicesAgreement:
           $ref: '#/components/schemas/OnboardingAgreement'
+        stablecoinAgreement:
+          type: array
+          items:
+            type: object
+            description: Stablecoin agreement schema for enterprise users.
+            properties:
+              user:
+                type: string
+                description: User who accepted the agreement
+              date:
+                oneOf:
+                  - type: string
+                  - type: string
+                    format: date-time
+                    title: ISO Date String
+                  - type: string
+                    format: date
+                    title: Date String
+                description: Date when the agreement was accepted
+              ip:
+                type: string
+                description: IP address of the user
+              version:
+                type: number
+                description: Version number of the agreement
+            required:
+              - user
+              - date
+              - version
         accountType:
           allOf:
             - $ref: '#/components/schemas/AccountType'
@@ -48769,7 +48801,6 @@ components:
           type: string
           description: The Id of the User who is the primary contact
           example: 59cd72485007a239fb00282ed480da1f
-          minLength: 1
           pattern: ^[0-9a-f]{32}$
         organizationId:
           $ref: '#/components/schemas/OrganizationIdString'
@@ -52160,6 +52191,8 @@ components:
                 required:
                   - name
                   - id
+            stablecoinAgreementLatestVersion:
+              type: number
           required:
             - wallets
             - tags
@@ -52622,6 +52655,7 @@ components:
                 - custodial
                 - custodialPaired
                 - hot
+                - advanced
                 - trading
               description: Wallet type
           required:
@@ -66700,6 +66734,7 @@ components:
             - custodial
             - custodialPaired
             - hot
+            - advanced
             - trading
           description: The type describes who owns the keys to the wallet associated to the TxRequest.
         version:
@@ -67812,6 +67847,7 @@ components:
             - custodial
             - custodialPaired
             - hot
+            - advanced
             - trading
           description: Wallet type
         replaces:
@@ -73276,6 +73312,7 @@ components:
         - suiOfcStaking
         - enableWalletConnect
         - enableSolCustomTx
+        - enableAptCustomTx
     WalletId:
       type: string
       example: 59cd72485007a239fb00282ed480da1f
@@ -74072,6 +74109,7 @@ components:
         - custodial
         - custodialPaired
         - hot
+        - advanced
         - trading
     WalletTypeCondition:
       title: Wallet type
@@ -75104,6 +75142,7 @@ components:
                   - custodial
                   - custodialPaired
                   - hot
+                  - advanced
                   - trading
                 description: Type of wallet
                 example: trading
