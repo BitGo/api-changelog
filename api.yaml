@@ -28730,6 +28730,50 @@ paths:
               schema:
                 type: object
                 properties: {}
+  /api/stablecoin/v1/tokens/{token}/details:
+    get:
+      summary: Get cross-chain total supply for a token
+      description: Returns the aggregated total supply for a token across all supported chains.
+      operationId: stablecoin.v1.tokens.totalSupply.get
+      tags:
+        - Stablecoin
+      parameters:
+        - name: token
+          description: Token symbol or identifier for the stablecoin to get total supply for.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: usd1
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTokenDetailsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /api/v1/user/login:
     post:
       summary: Login Request
@@ -52754,6 +52798,61 @@ components:
           example: fake_trust_go_account_id
       required:
         - trustAccountWalletId
+    GetTokenDetailsResponse:
+      title: GetTokenDetailsResponse
+      type: object
+      properties:
+        token:
+          type: string
+          description: Token symbol or identifier
+          example: usd1
+          minLength: 1
+        totalSupplyAggregated:
+          type: string
+          description: Total supply across all chains in the smallest unit
+          example: '5000000000000000000'
+          minLength: 1
+        supplyByChain:
+          type: array
+          items:
+            type: object
+            properties:
+              chain:
+                type: string
+                description: Blockchain network identifier
+                example: eth
+                minLength: 1
+              supply:
+                type: string
+                description: Total supply for this chain in the smallest unit (wei, satoshi, etc.)
+                example: '1000000000000000000'
+                minLength: 1
+              success:
+                type: boolean
+                description: Whether the supply fetch was successful
+                example: true
+              error:
+                type: string
+                description: Error message if supply fetch failed
+                example: Network timeout
+              cached:
+                type: boolean
+                description: Whether this supply data was retrieved from cache
+                example: true
+            required:
+              - chain
+              - supply
+              - success
+            description: Breakdown of supply by chain
+        totalReserves:
+          type: string
+          description: Total reserves
+          minLength: 1
+      required:
+        - token
+        - totalSupplyAggregated
+        - supplyByChain
+        - totalReserves
     GetTransactionRequestsResponse:
       title: GetTransactionRequestsResponse
       type: object
