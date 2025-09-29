@@ -44085,6 +44085,428 @@ components:
         transactionsNeeded:
           description: Number of transactions required.
           type: integer
+    BaseEnterprise:
+      title: Base Enterprise
+      type: object
+      properties:
+        id:
+          $ref: '#/components/schemas/EnterpriseIdString'
+        name:
+          type: string
+          example: Small Company
+        additionalEnterpriseInfo:
+          $ref: '#/components/schemas/AdditionalEnterpriseInfo'
+        bitgoOrg:
+          allOf:
+            - $ref: '#/components/schemas/BitgoOrg'
+          description: BitGo Organization related to this entity
+        kycState:
+          $ref: '#/components/schemas/KycState'
+        legalIdentifiers:
+          $ref: '#/components/schemas/LegalIdentifiers'
+        type:
+          type: string
+        latestSAVersionSigned:
+          type: number
+          example: 0
+        travelRule:
+          type: boolean
+        productLicenses:
+          type: array
+          items:
+            type: string
+        canAccessBorrowing:
+          type: boolean
+          description: whether the enterprise has the licence for BitGo Prime Borrowing
+        canAccessLending:
+          type: boolean
+          description: whether the enterprise has the licence for BitGo Prime Lending
+        canAccessSettlement:
+          type: boolean
+          description: whether the enterprise has the licence to utilize settlement functionality
+        canAccessTrading:
+          type: boolean
+          description: whether the enterprise has the licence to access BitGo Trading
+        canCreateColdWallet:
+          type: boolean
+          description: whether the enterprise has the license to create cold wallets
+        canCreateHotWallet:
+          type: boolean
+          description: whether the enterprise has the license to create hot wallets
+        canCreateCustodialWallet:
+          type: boolean
+          description: whether the enterprise has the license to create custodial wallets
+        canCreateOffchainWallet:
+          type: boolean
+          description: whether the enterprise has the license to create trading accounts
+        oneTimeFees:
+          type: array
+          items:
+            type: string
+        upfrontPaymentStatus:
+          type: string
+        ethAlwaysUseHop:
+          type: boolean
+          description: Always use hop address for ETH transactions
+        usersViewAllWallets:
+          type: boolean
+          description: All users on the enterprise can view all enterprise wallets, even if they are not viewers on the wallet itself
+          example: true
+        videoIdWaived:
+          type: boolean
+          description: Whether the customer has waived the need for Video ID on low risk withdrawals.
+          example: false
+        tradeOnboardingAgreement:
+          allOf:
+            - $ref: '#/components/schemas/OnboardingAgreement'
+          description: Who & when the MPA license was ack'd
+        stakingServicesAgreement:
+          $ref: '#/components/schemas/OnboardingAgreement'
+        custodyServicesAgreement:
+          $ref: '#/components/schemas/OnboardingAgreement'
+        stablecoinAgreement:
+          type: array
+          items:
+            type: object
+            description: Stablecoin agreement schema for enterprise users.
+            properties:
+              user:
+                type: string
+                description: User who accepted the agreement
+              date:
+                oneOf:
+                  - type: string
+                  - type: string
+                    format: date-time
+                    title: ISO Date String
+                  - type: string
+                    format: date
+                    title: Date String
+                description: Date when the agreement was accepted
+              ip:
+                type: string
+                description: IP address of the user
+              version:
+                type: number
+                description: Version number of the agreement
+            required:
+              - user
+              - date
+              - version
+        accountType:
+          allOf:
+            - $ref: '#/components/schemas/AccountType'
+          description: Indicates which type of KYC process the enterprise has to complete
+        businessModel:
+          $ref: '#/components/schemas/BusinessModel'
+        salesforceAccountId:
+          type: string
+          description: Opportunity ID from Salesforce
+        salesforceOpportunityId:
+          type: string
+        opportunityName:
+          type: string
+          description: Opportunity Name from Salesforce
+        salesEmail:
+          type: string
+        cheetahAccountId:
+          type: string
+          description: CheetahAccountID is the unique ID for a BitGo Trust enterprise in Cheetah, which is the accounting system used by Trust.
+        primaryContact:
+          type: string
+          description: The Id of the User who is the primary contact
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        emergencyPhone:
+          type: string
+          description: Phone number for emergencies
+          example: '+11234567890'
+        pricingPlan:
+          type: string
+          description: The pricing plan of the enterprise
+        approvalsRequired:
+          type: number
+          description: How many Enterprise Admins are required for action to fire
+          example: 1
+        mutablePolicyWindow:
+          type: number
+          description: Time in seconds after which policies on this Enterprise cannot be updated
+          example: 172800
+        freeze:
+          $ref: '#/components/schemas/Freeze'
+        bitgoEthKey:
+          type: string
+          description: The public portion of the ethererum key generated for the enterprise fee address
+        ethFeeAddress:
+          type: string
+          description: The eth fee address used to pay for network transaction fees of this enterprise
+        walletLimit:
+          type: object
+          additionalProperties:
+            type: number
+        preferredUi:
+          allOf:
+            - $ref: '#/components/schemas/AvailableUI'
+          description: The UI that this enterprise prefers to use
+        custodialWalletLimit:
+          nullable: true
+          type: object
+          additionalProperties:
+            type: number
+        featureFlags:
+          type: array
+          items:
+            type: string
+        labels:
+          type: array
+          items:
+            type: string
+        publicLabels:
+          type: array
+          items:
+            type: string
+            description: Subset of labels that are OK to return back to client in GetEnterpriseResponse
+        licenses:
+          type: array
+          items:
+            type: string
+            description: New licences that are not stored as flags. Tax requires Portfolio Professional or Institutional
+        ellipticId:
+          type: string
+          description: Identifier for environment variables for a customer's Elliptic API credentials
+        ellipticHotWallets:
+          type: boolean
+          description: Hot wallet transactions on this enterprise are monitored in Elliptic
+        vaspId:
+          type: string
+        bitgoVaspId:
+          type: string
+        coinSpecific:
+          type: object
+          additionalProperties: {}
+        walletCounts:
+          type: object
+          description: Number of wallets per coin
+          properties:
+            enterpriseWallets:
+              type: object
+              additionalProperties:
+                type: number
+          required:
+            - enterpriseWallets
+        activePricingType:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/FlattenedPricingType'
+        source:
+          $ref: '#/components/schemas/AggregatorSourceType'
+        totalWalletsCount:
+          type: number
+          description: The total number of wallets in the enterprise
+          example: 1
+        internal:
+          $ref: '#/components/schemas/EnterpriseInternal'
+        distributedCustody:
+          $ref: '#/components/schemas/DistributedCustody'
+        migratedToNewPolicyService:
+          type: boolean
+          description: Whether the enterprise has been migrated to the new policy service
+        videoIdUsers:
+          type: array
+          items:
+            type: object
+            properties:
+              email:
+                type: string
+                description: The email of the user
+                minLength: 1
+              userId:
+                type: string
+                description: The user ID
+                minLength: 1
+              inviter:
+                type: string
+                description: The inviter of the user
+                minLength: 1
+              state:
+                allOf:
+                  - $ref: '#/components/schemas/VideoIdUserState'
+                description: The state of the user
+              videoCallId:
+                type: string
+                description: The user's video call ID
+              approvalDate:
+                type: string
+                description: The date the user was approved
+              archivedDate:
+                type: string
+                description: The date the user was archived
+              pendingApprovalId:
+                type: string
+                description: The ID if the user is pending approval
+              videoLink:
+                type: string
+                description: The user's video link
+              enterpriseId:
+                type: string
+                description: EnterpriseId of enterprise this video users belongs to
+              enterpriseName:
+                type: string
+                description: EnterpriseName of enterprise this video users belongs to
+            required:
+              - email
+              - userId
+              - inviter
+              - state
+            description: IDs of users on the enterprise that are approved for custodial video ID
+        sourceConfig:
+          type: array
+          items:
+            type: object
+            properties:
+              source:
+                $ref: '#/components/schemas/AggregatorSourceType'
+              metadata:
+                type: object
+                description: 'The following fields: source, showBanner, readyForDistribution, showVideoIdBanner, ftxCreditorId were added for FTX insitutional distribution. Reference: https://bitgoinc.atlassian.net/browse/COPS-2695'
+                properties:
+                  showBanner:
+                    type: boolean
+                  readyForDistribution:
+                    type: boolean
+                  showVideoIdBanner:
+                    type: boolean
+                  ftxCreditorId:
+                    type: string
+                  ftxHost:
+                    $ref: '#/components/schemas/FtxHostType'
+                  creditorId:
+                    type: string
+            required:
+              - source
+            description: Array to store configs, upon which certain actions are taken, per source
+        videoIdRequired:
+          type: boolean
+          description: Check for video ID Users
+        contract:
+          allOf:
+            - $ref: '#/components/schemas/EnterpriseContract'
+          description: Contract information
+        referralCode:
+          allOf:
+            - $ref: '#/components/schemas/ReferralCodeString'
+          description: Referral code
+        oauthSetting:
+          allOf:
+            - $ref: '#/components/schemas/OAuthSetting'
+          description: oauth setting of the enterprise *
+        optOutOfPoints:
+          type: boolean
+          description: Opt Out of Points System Flag
+        requestedBitgoOrg:
+          allOf:
+            - $ref: '#/components/schemas/BitgoOrg'
+          description: Requested BitGo Org
+        requestedProducts:
+          type: array
+          items:
+            type: string
+            enum:
+              - BitGo MMI
+              - BitGo Qualified Custody
+              - BitGo Qualified Custody & Hot Wallet
+              - Borrowing
+              - Borrowing / Lending
+              - Lending
+              - NFTs
+              - Self Custody
+              - 'Go Network: Off Exchange Settlement'
+              - Staking
+              - Trade
+              - Transactional / Hot Wallet
+              - Wrapped Asset Services
+              - Escrow
+              - Distributed Custody Wallet
+              - Token Management (HZ)
+              - Platform Integration (B2B2C)
+              - BitGo Wealth Management (HZ)
+              - BitGo Concierge
+              - Coincover Referral
+              - 'Go Network: Fiat currency Settlement'
+              - Fiat Currency Custody
+              - Excess Insurance
+              - Setup
+              - Lightning
+              - Liquidity Provider
+              - Alliance Agreement
+              - BitGo Custody
+              - BitGo MMI (Inc)
+              - Coincover Referral (Inc)
+              - Custom Project
+              - NFTs (Inc)
+              - Other (Inc)
+              - Partial Signature
+              - Portfolio & Tax
+              - Professional Services
+              - Setup (Inc)
+              - Staking (Inc)
+              - Platform Integration (B2B2C) (Inc)
+            description: Requested Products
+        requestedBitgoProducts:
+          type: array
+          items:
+            type: string
+            enum:
+              - Instant Fee Wallets
+              - Go Account
+              - Settlement
+              - Tax
+              - Trade API
+              - Margin Trading
+              - Elliptic
+              - CryptoCompare
+              - MetaMask
+              - Custody
+              - Borrowing
+              - Lending
+              - DeFi
+              - Cold Self-Custody
+              - Go Network
+              - Staking
+              - Trade
+              - Hot Self-Custody
+              - Escrow
+              - Distributed Custody
+              - Advanced Wallets
+              - Stablecoins
+            description: Requested BitGo Products
+        isContractedClient:
+          type: boolean
+          description: True, if the enterprise has been onboarded by Salesforce
+      required:
+        - id
+        - name
+        - additionalEnterpriseInfo
+        - bitgoOrg
+        - kycState
+        - legalIdentifiers
+        - type
+        - latestSAVersionSigned
+        - travelRule
+        - productLicenses
+        - canAccessBorrowing
+        - canAccessLending
+        - canAccessSettlement
+        - canAccessTrading
+        - canCreateColdWallet
+        - canCreateHotWallet
+        - canCreateCustodialWallet
+        - canCreateOffchainWallet
+        - oneTimeFees
+        - upfrontPaymentStatus
+        - ethAlwaysUseHop
+        - usersViewAllWallets
+        - videoIdWaived
     BaseGoStakeIntent:
       title: BaseGoStakeIntent
       allOf:
@@ -45086,11 +45508,17 @@ components:
             - maxPriorityFeePerGas
         nextContractSequenceId:
           type: number
+        coin:
+          type: string
+        walletId:
+          type: string
       required:
         - txHex
         - txInfo
         - recipients
         - nextContractSequenceId
+        - coin
+        - walletId
     BulkUpdateResponse:
       title: BulkUpdateResponse
       type: object
@@ -48875,425 +49303,14 @@ components:
         - $ref: '#/components/schemas/BaseShare'
     Enterprise:
       title: Enterprise
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/EnterpriseIdString'
-        name:
-          type: string
-          example: Small Company
-        additionalEnterpriseInfo:
-          $ref: '#/components/schemas/AdditionalEnterpriseInfo'
-        bitgoOrg:
-          allOf:
-            - $ref: '#/components/schemas/BitgoOrg'
-          description: BitGo Organization related to this entity
-        kycState:
-          $ref: '#/components/schemas/KycState'
-        legalIdentifiers:
-          $ref: '#/components/schemas/LegalIdentifiers'
-        type:
-          type: string
-        latestSAVersionSigned:
-          type: number
-          example: 0
-        travelRule:
-          type: boolean
-        productLicenses:
-          type: array
-          items:
-            type: string
-        canAccessBorrowing:
-          type: boolean
-          description: whether the enterprise has the licence for BitGo Prime Borrowing
-        canAccessLending:
-          type: boolean
-          description: whether the enterprise has the licence for BitGo Prime Lending
-        canAccessSettlement:
-          type: boolean
-          description: whether the enterprise has the licence to utilize settlement functionality
-        canAccessTrading:
-          type: boolean
-          description: whether the enterprise has the licence to access BitGo Trading
-        canCreateColdWallet:
-          type: boolean
-          description: whether the enterprise has the license to create cold wallets
-        canCreateHotWallet:
-          type: boolean
-          description: whether the enterprise has the license to create hot wallets
-        canCreateCustodialWallet:
-          type: boolean
-          description: whether the enterprise has the license to create custodial wallets
-        canCreateOffchainWallet:
-          type: boolean
-          description: whether the enterprise has the license to create trading accounts
-        oneTimeFees:
-          type: array
-          items:
-            type: string
-        upfrontPaymentStatus:
-          type: string
-        ethAlwaysUseHop:
-          type: boolean
-          description: Always use hop address for ETH transactions
-        usersViewAllWallets:
-          type: boolean
-          description: All users on the enterprise can view all enterprise wallets, even if they are not viewers on the wallet itself
-          example: true
-        videoIdWaived:
-          type: boolean
-          description: Whether the customer has waived the need for Video ID on low risk withdrawals.
-          example: false
-        tradeOnboardingAgreement:
-          allOf:
-            - $ref: '#/components/schemas/OnboardingAgreement'
-          description: Who & when the MPA license was ack'd
-        stakingServicesAgreement:
-          $ref: '#/components/schemas/OnboardingAgreement'
-        custodyServicesAgreement:
-          $ref: '#/components/schemas/OnboardingAgreement'
-        stablecoinAgreement:
-          type: array
-          items:
-            type: object
-            description: Stablecoin agreement schema for enterprise users.
-            properties:
-              user:
-                type: string
-                description: User who accepted the agreement
-              date:
-                oneOf:
-                  - type: string
-                  - type: string
-                    format: date-time
-                    title: ISO Date String
-                  - type: string
-                    format: date
-                    title: Date String
-                description: Date when the agreement was accepted
-              ip:
-                type: string
-                description: IP address of the user
-              version:
-                type: number
-                description: Version number of the agreement
-            required:
-              - user
-              - date
-              - version
-        accountType:
-          allOf:
-            - $ref: '#/components/schemas/AccountType'
-          description: Indicates which type of KYC process the enterprise has to complete
-        businessModel:
-          $ref: '#/components/schemas/BusinessModel'
-        salesforceAccountId:
-          type: string
-          description: Opportunity ID from Salesforce
-        salesforceOpportunityId:
-          type: string
-        opportunityName:
-          type: string
-          description: Opportunity Name from Salesforce
-        salesEmail:
-          type: string
-        cheetahAccountId:
-          type: string
-          description: CheetahAccountID is the unique ID for a BitGo Trust enterprise in Cheetah, which is the accounting system used by Trust.
-        primaryContact:
-          type: string
-          description: The Id of the User who is the primary contact
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
-        organizationId:
-          $ref: '#/components/schemas/OrganizationIdString'
-        emergencyPhone:
-          type: string
-          description: Phone number for emergencies
-          example: '+11234567890'
-        pricingPlan:
-          type: string
-          description: The pricing plan of the enterprise
-        approvalsRequired:
-          type: number
-          description: How many Enterprise Admins are required for action to fire
-          example: 1
-        mutablePolicyWindow:
-          type: number
-          description: Time in seconds after which policies on this Enterprise cannot be updated
-          example: 172800
-        freeze:
-          $ref: '#/components/schemas/Freeze'
-        bitgoEthKey:
-          type: string
-          description: The public portion of the ethererum key generated for the enterprise fee address
-        ethFeeAddress:
-          type: string
-          description: The eth fee address used to pay for network transaction fees of this enterprise
-        walletLimit:
-          type: object
-          additionalProperties:
-            type: number
-        preferredUi:
-          allOf:
-            - $ref: '#/components/schemas/AvailableUI'
-          description: The UI that this enterprise prefers to use
-        custodialWalletLimit:
-          nullable: true
-          type: object
-          additionalProperties:
-            type: number
-        featureFlags:
-          type: array
-          items:
-            type: string
-        labels:
-          type: array
-          items:
-            type: string
-        publicLabels:
-          type: array
-          items:
-            type: string
-            description: Subset of labels that are OK to return back to client in GetEnterpriseResponse
-        licenses:
-          type: array
-          items:
-            type: string
-            description: New licences that are not stored as flags. Tax requires Portfolio Professional or Institutional
-        ellipticId:
-          type: string
-          description: Identifier for environment variables for a customer's Elliptic API credentials
-        ellipticHotWallets:
-          type: boolean
-          description: Hot wallet transactions on this enterprise are monitored in Elliptic
-        vaspId:
-          type: string
-        bitgoVaspId:
-          type: string
-        coinSpecific:
-          type: object
-          additionalProperties: {}
-        walletCounts:
-          type: object
-          description: Number of wallets per coin
+      allOf:
+        - type: object
           properties:
-            enterpriseWallets:
-              type: object
-              additionalProperties:
-                type: number
-          required:
-            - enterpriseWallets
-        activePricingType:
-          nullable: true
-          allOf:
-            - $ref: '#/components/schemas/FlattenedPricingType'
-        source:
-          $ref: '#/components/schemas/AggregatorSourceType'
-        totalWalletsCount:
-          type: number
-          description: The total number of wallets in the enterprise
-          example: 1
-        internal:
-          $ref: '#/components/schemas/EnterpriseInternal'
-        distributedCustody:
-          $ref: '#/components/schemas/DistributedCustody'
-        migratedToNewPolicyService:
-          type: boolean
-          description: Whether the enterprise has been migrated to the new policy service
-        videoIdUsers:
-          type: array
-          items:
-            type: object
-            properties:
-              email:
-                type: string
-                description: The email of the user
-                minLength: 1
-              userId:
-                type: string
-                description: The user ID
-                minLength: 1
-              inviter:
-                type: string
-                description: The inviter of the user
-                minLength: 1
-              state:
-                allOf:
-                  - $ref: '#/components/schemas/VideoIdUserState'
-                description: The state of the user
-              videoCallId:
-                type: string
-                description: The user's video call ID
-              approvalDate:
-                type: string
-                description: The date the user was approved
-              archivedDate:
-                type: string
-                description: The date the user was archived
-              pendingApprovalId:
-                type: string
-                description: The ID if the user is pending approval
-              videoLink:
-                type: string
-                description: The user's video link
-              enterpriseId:
-                type: string
-                description: EnterpriseId of enterprise this video users belongs to
-              enterpriseName:
-                type: string
-                description: EnterpriseName of enterprise this video users belongs to
-            required:
-              - email
-              - userId
-              - inviter
-              - state
-            description: IDs of users on the enterprise that are approved for custodial video ID
-        sourceConfig:
-          type: array
-          items:
-            type: object
-            properties:
-              source:
-                $ref: '#/components/schemas/AggregatorSourceType'
-              metadata:
-                type: object
-                description: 'The following fields: source, showBanner, readyForDistribution, showVideoIdBanner, ftxCreditorId were added for FTX insitutional distribution. Reference: https://bitgoinc.atlassian.net/browse/COPS-2695'
-                properties:
-                  showBanner:
-                    type: boolean
-                  readyForDistribution:
-                    type: boolean
-                  showVideoIdBanner:
-                    type: boolean
-                  ftxCreditorId:
-                    type: string
-                  ftxHost:
-                    $ref: '#/components/schemas/FtxHostType'
-                  creditorId:
-                    type: string
-            required:
-              - source
-            description: Array to store configs, upon which certain actions are taken, per source
-        videoIdRequired:
-          type: boolean
-          description: Check for video ID Users
-        contract:
-          allOf:
-            - $ref: '#/components/schemas/EnterpriseContract'
-          description: Contract information
-        referralCode:
-          allOf:
-            - $ref: '#/components/schemas/ReferralCodeString'
-          description: Referral code
-        oauthSetting:
-          allOf:
-            - $ref: '#/components/schemas/OAuthSetting'
-          description: oauth setting of the enterprise *
-        optOutOfPoints:
-          type: boolean
-          description: Opt Out of Points System Flag
-        requestedBitgoOrg:
-          allOf:
-            - $ref: '#/components/schemas/BitgoOrg'
-          description: Requested BitGo Org
-        requestedProducts:
-          type: array
-          items:
-            type: string
-            enum:
-              - BitGo MMI
-              - BitGo Qualified Custody
-              - BitGo Qualified Custody & Hot Wallet
-              - Borrowing
-              - Borrowing / Lending
-              - Lending
-              - NFTs
-              - Self Custody
-              - 'Go Network: Off Exchange Settlement'
-              - Staking
-              - Trade
-              - Transactional / Hot Wallet
-              - Wrapped Asset Services
-              - Escrow
-              - Distributed Custody Wallet
-              - Token Management (HZ)
-              - Platform Integration (B2B2C)
-              - BitGo Wealth Management (HZ)
-              - BitGo Concierge
-              - Coincover Referral
-              - 'Go Network: Fiat currency Settlement'
-              - Fiat Currency Custody
-              - Excess Insurance
-              - Setup
-              - Lightning
-              - Liquidity Provider
-              - Alliance Agreement
-              - BitGo Custody
-              - BitGo MMI (Inc)
-              - Coincover Referral (Inc)
-              - Custom Project
-              - NFTs (Inc)
-              - Other (Inc)
-              - Partial Signature
-              - Portfolio & Tax
-              - Professional Services
-              - Setup (Inc)
-              - Staking (Inc)
-              - Platform Integration (B2B2C) (Inc)
-            description: Requested Products
-        requestedBitgoProducts:
-          type: array
-          items:
-            type: string
-            enum:
-              - Instant Fee Wallets
-              - Go Account
-              - Settlement
-              - Tax
-              - Trade API
-              - Margin Trading
-              - Elliptic
-              - CryptoCompare
-              - MetaMask
-              - Custody
-              - Borrowing
-              - Lending
-              - DeFi
-              - Cold Self-Custody
-              - Go Network
-              - Staking
-              - Trade
-              - Hot Self-Custody
-              - Escrow
-              - Distributed Custody
-              - Advanced Wallets
-              - Stablecoins
-            description: Requested BitGo Products
-      required:
-        - id
-        - name
-        - additionalEnterpriseInfo
-        - bitgoOrg
-        - kycState
-        - legalIdentifiers
-        - type
-        - latestSAVersionSigned
-        - travelRule
-        - productLicenses
-        - canAccessBorrowing
-        - canAccessLending
-        - canAccessSettlement
-        - canAccessTrading
-        - canCreateColdWallet
-        - canCreateHotWallet
-        - canCreateCustodialWallet
-        - canCreateOffchainWallet
-        - oneTimeFees
-        - upfrontPaymentStatus
-        - ethAlwaysUseHop
-        - usersViewAllWallets
-        - videoIdWaived
+            organization:
+              allOf:
+                - $ref: '#/components/schemas/OrganizationIdString'
+              description: Organization ID reference
+        - $ref: '#/components/schemas/BaseEnterprise'
     EnterpriseAccountType:
       type: string
       description: Indicates which type of KYC process the enterprise has to complete
@@ -52426,6 +52443,9 @@ components:
                   - id
             stablecoinAgreementLatestVersion:
               type: number
+            organizationId:
+              type: string
+              deprecated: true
           required:
             - wallets
             - tags
