@@ -6152,10 +6152,10 @@ paths:
         Partner route to perform a settlement. This endpoint allows partners without disputes enabled to create
         new settlements between client accounts, transferring funds according to the specified amounts.
 
-        Please note that this endpoint cannot be used by partners with disputes enabled, instead use the 
-        V2 Settlement endpoint. This is because dispute enabled partners must have an asyncronous settlement 
-        process to allow clients time to review the settlement and reconcile liabilities agains their trading 
-        activity on your platform. In the event that you cal this endpoint and you have disputes enabled, you 
+        Please note that this endpoint cannot be used by partners with disputes enabled, instead use the
+        V2 Settlement endpoint. This is because dispute enabled partners must have an asyncronous settlement
+        process to allow clients time to review the settlement and reconcile liabilities agains their trading
+        activity on your platform. In the event that you cal this endpoint and you have disputes enabled, you
         will recieve a 403 response.
 
         Error scenarios:
@@ -6170,7 +6170,7 @@ paths:
 
         - 403: Permission Denied Error
         - Occurs when the authenticated partner doesn't have necessary permissions.
-        - Examples: Enterprise does not have OES license, partner is enabled for disputes.
+        - Examples: Enterprise does not have OES license, partner is enabled for disputes, partner is inactive.
 
         - 409: Conflict Error
         - Occurs when the request conflicts with current state.
@@ -6693,7 +6693,7 @@ paths:
       description: |-
         Partner route for providing external deposit information tied to an on-chain settlement.
         This endpoint allows partners to submit information about on-chain deposits that are
-        associated with a specific settlement. The deposits will be tracked and reconciled 
+        associated with a specific settlement. The deposits will be tracked and reconciled
         with the settlement transaction.
 
 
@@ -6710,9 +6710,9 @@ paths:
         - Occurs when the authenticated partner doesn't have access to the specified settlement.
         - Examples: Enterprise does not have OES license.
 
-        - 404: Not Found Error 
+        - 404: Not Found Error
         - Occurs when the referenced settlement was not found.
-        - Examples: Settlement ID doesn't exist, settlement exists but for different partner.
+        - Examples: Settlement ID doesn't exist, settlement exists but for different partner, partner is inactive.
 
         - 409: Conflict Error
         - Occurs when Deposit information is in conflict.
@@ -7041,7 +7041,7 @@ paths:
     post:
       summary: Initiate partner settlement
       description: |-
-        Used by dispute enabled exchange partners to stage a settlement for connected clients. 
+        Used by dispute enabled exchange partners to stage a settlement for connected clients.
 
         This endpoint will:
         1. Authenticate the request by verifying the payload and signature provided.
@@ -7049,19 +7049,19 @@ paths:
         a. Create the settlement entity
         b. Map provided settlement amounts to settlement transfer records for execution.
         3. Assign closed, unassigned disputes from prior settlements to this settlement
-        a. Pull in any adjustedSettlementTransfers from said disputes. 
+        a. Pull in any adjustedSettlementTransfers from said disputes.
         b. Update the settledInSettlementId on said disputes.
-        4. Verify the relevant connection balances against liabilities based on provided settlementAmounts 
+        4. Verify the relevant connection balances against liabilities based on provided settlementAmounts
         and assigned settlement transfers from disputes being assigned.
-        5. Notify connection owners of a new settlement. 
+        5. Notify connection owners of a new settlement.
         6. Queue an event to finalize the settlement once the dispute window ends.
 
         This endpoint is idempotent and can safely be called again with the same exact request body
         without worrying about creating multiple settlements.
 
-        Please note that provided settlement amounts should be based solely on new trading activity 
+        Please note that provided settlement amounts should be based solely on new trading activity
         that was not included in the last settlement. Instructions from closed, unsettled disputes should
-        not be included in the calculation of settlement instructions on the 
+        not be included in the calculation of settlement instructions on the
         Settlement will be processed asynchronously once initiated, after dispute / top up window have elapsed.
 
         * Error scenarios:
@@ -7076,7 +7076,7 @@ paths:
 
         - 403: Permission Denied Error
         - Occurs when the authenticated partner doesn't have necessary permissions.
-        - Examples: Enterprise does not have OES license
+        - Examples: Enterprise does not have OES license, partner is inactive
 
         - 409: Conflict Error
         - Occurs when the request conflicts with current state.
@@ -7652,6 +7652,9 @@ paths:
                         type: string
                 notation:
                   type: string
+                checkForDuplicates:
+                  title: Boolean
+                  type: boolean
         required: true
   /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/settlement/{settlementId}:
     get:
@@ -35618,6 +35621,12 @@ paths:
             type: boolean
         - name: includeStakingBalances
           description: Include `stakingBalanceString` and `rewardBalanceString` properties for each staking wallet. Requires `expandBalance` to be set to true.
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: excludeEvmKeyringChildWallets
+          description: excludeEvmKeyringChildWallets - Supports filtering out EVM keyring child wallets via excludeEvmKeyringChildWallets parameter
           in: query
           schema:
             type: boolean
