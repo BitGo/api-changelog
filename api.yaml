@@ -30069,6 +30069,14 @@ paths:
             example: 59cd72485007a239fb00282ed480da1f
             minLength: 1
             pattern: ^[0-9a-f]{32}$
+        - name: search
+          description: Filter by enterprise name or by enterprise id. Cannot be combined with `idempotencyKey` or `prevId`.
+          in: query
+          schema:
+            type: string
+            example: abc@email.com
+            minLength: 1
+            pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
         - name: organizationId
           in: path
           required: true
@@ -32656,6 +32664,233 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/derivedwallets:
+    get:
+      summary: List derived wallets for an EVM keyring
+      description: |-
+        Lists all child wallets derived from an EVM keyring parent wallet. This endpoint accepts
+        either a parent wallet ID or a child wallet ID:
+        - If given a parent wallet ID (wallet with `isParent=true`), returns all child wallets
+        - If given a child wallet ID (wallet with `evmKeyRingReferenceWalletId`), returns all sibling
+        child wallets that share the same parent
+
+        Child wallets are identified by having the `evmKeyRingReferenceWalletId` field set to the
+        parent wallet's ID. Child wallets can be on different chains (e.g., BSC, Polygon, Arbitrum)
+        but share the same key material from the parent wallet.
+
+        Returns wallets with the same structure as the normal list wallet API, including:
+        - Balance information (balance, confirmedBalance, spendableBalance)
+        - Token balances for all tokens on each chain
+        - Staking balances (if includeStakingBalances is set)
+        - Receive addresses (unless skipReceiveAddress is set)
+        - Policy information (if expandPolicy is set)
+        - All other wallet properties
+      operationId: v2.wallet.listderivedwallets
+      tags:
+        - Wallet
+      parameters:
+        - name: id
+          description: Filter by ID
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              description: Filter by ID
+              pattern: ^[0-9a-f]{32}$
+              example: '"59cd72485007a239fb00282ed480da1f"'
+        - name: coin
+          description: Filter by coin
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: Filter by coin
+              example: '"btc"'
+        - name: enterprise
+          description: Filter by enterprise.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: Filter by enterprise.
+              pattern: ^[0-9a-f]{32}$
+              example: '"59cd72485007a239fb00282ed480da1f"'
+        - name: type
+          description: Filter by wallet type
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: Filter by wallet type
+        - name: subType
+          description: Filter by wallet sub-type
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: Filter by wallet sub-type
+        - name: deleted
+          description: Filter by deleted state
+          in: query
+          schema:
+            type: boolean
+        - name: prevId
+          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
+          in: query
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+        - name: labelContains
+          description: Filter by label substring.
+          in: query
+          schema:
+            type: string
+        - name: expandBalance
+          description: Add "balanceString", "confirmedBalanceString" and "spendableBalanceString" to each wallet
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: excludeSpendableBalance
+          in: query
+          schema:
+            type: boolean
+        - name: expandPolicy
+          in: query
+          schema:
+            type: boolean
+        - name: expandCustodialWallet
+          description: Whether linked custodial wallets should be expanded inline
+          in: query
+          schema:
+            type: boolean
+        - name: ignoreErrors
+          in: query
+          schema:
+            type: boolean
+        - name: includeStakingBalances
+          description: Include `stakingBalanceString` and `rewardBalanceString` properties for each staking wallet. Requires `expandBalance` to be set to true.
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: limit
+          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
+          in: query
+          schema:
+            type: string
+            default: '25'
+            format: number
+        - name: offset
+          description: Number of documents to skip for offset-based pagination.
+          in: query
+          schema:
+            type: string
+            default: '0'
+            format: number
+        - name: skipReceiveAddress
+          description: Do not add "receiveAddress" to each wallet
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: permission
+          description: Return only wallets for which the user has the given permission
+          in: query
+          schema:
+            type: string
+            enum:
+              - admin
+              - view
+              - spend
+        - name: pinnedWallets
+          description: Return only pinned wallets ("pinnedOnly") or only unpinned wallets ("pinnedExcluded"), exclude to return both
+          in: query
+          schema:
+            type: string
+            enum:
+              - pinnedOnly
+              - pinnedExcluded
+        - name: bitgoOrg
+          description: Return only wallets belong to the BitGo trust org
+          in: query
+          schema:
+            type: string
+            enum:
+              - BitGo Trust
+              - BitGo New York
+              - BitGo Germany
+              - BitGo Switzerland
+              - BitGo Europe ApS
+              - Frankfurt DE Trust
+              - BitGo Singapore
+              - BitGo Korea
+              - BitGo Custody MENA FZE
+              - BitGo India
+              - BitGo Sister Trust 1
+        - name: walletId
+          description: The wallet ID - can be either a parent wallet ID or a child wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/feeAddressBalances:
+    get:
+      summary: Get wallet fee address balances
+      description: |-
+        Fetches gas tank balances of different chains available on the wallet.
+        Uses the primary wallet coin's fee address to check balances across all available chains.
+      operationId: v2.wallet.feeAddressBalances
+      tags:
+        - Wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletFeeAddressBalances'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/lightning/invoice:
     get:
       summary: Fetch lightning invoices
@@ -32990,6 +33225,10 @@ paths:
             type: string
             format: date-time
             title: ISO Date String
+        - name: prevId
+          in: query
+          schema:
+            type: string
         - name: walletId
           in: path
           required: true
@@ -33001,55 +33240,7 @@ paths:
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: object
-                  description: Transaction details
-                  properties:
-                    id:
-                      type: string
-                    normalizedTxHash:
-                      type: string
-                    blockHeight:
-                      type: number
-                    inputIds: {}
-                    entries: {}
-                    inputs: {}
-                    outputs: {}
-                    size:
-                      type: number
-                    date:
-                      type: string
-                      format: date-time
-                      title: ISO Date String
-                    fee:
-                      type: number
-                    feeString:
-                      type: string
-                    hex:
-                      type: string
-                    confirmations:
-                      type: number
-                    blockHash:
-                      type: string
-                    blockPosition:
-                      type: number
-                    label:
-                      type: string
-                  required:
-                    - id
-                    - normalizedTxHash
-                    - blockHeight
-                    - inputIds
-                    - entries
-                    - inputs
-                    - outputs
-                    - size
-                    - date
-                    - fee
-                    - feeString
-                    - hex
-                    - confirmations
+                $ref: '#/components/schemas/GetTransactionsResponse'
         '400':
           description: Bad Request
           content:
@@ -34497,12 +34688,6 @@ paths:
             type: boolean
         - name: includeStakingBalances
           description: Include `stakingBalanceString` and `rewardBalanceString` properties for each staking wallet. Requires `expandBalance` to be set to true.
-          in: query
-          schema:
-            type: boolean
-            default: false
-        - name: excludeEvmKeyringChildWallets
-          description: excludeEvmKeyringChildWallets - Supports filtering out EVM keyring child wallets via excludeEvmKeyringChildWallets parameter
           in: query
           schema:
             type: boolean
@@ -52785,6 +52970,65 @@ components:
               - $ref: '#/components/schemas/TransactionRequestBase'
       required:
         - txRequests
+    GetTransactionsResponse:
+      title: GetTransactionsResponse
+      type: object
+      properties:
+        transactions:
+          type: array
+          items:
+            type: object
+            description: Transaction details
+            properties:
+              id:
+                type: string
+              normalizedTxHash:
+                type: string
+              blockHeight:
+                type: number
+              inputIds: {}
+              entries: {}
+              inputs: {}
+              outputs: {}
+              size:
+                type: number
+              date:
+                type: string
+                format: date-time
+                title: ISO Date String
+              fee:
+                type: number
+              feeString:
+                type: string
+              hex:
+                type: string
+              confirmations:
+                type: number
+              blockHash:
+                type: string
+              blockPosition:
+                type: number
+              label:
+                type: string
+            required:
+              - id
+              - normalizedTxHash
+              - blockHeight
+              - inputIds
+              - entries
+              - inputs
+              - outputs
+              - size
+              - date
+              - fee
+              - feeString
+              - hex
+              - confirmations
+        nextBatchPrevId:
+          type: string
+          description: This is the transaction ID from the last item in the current batch. Providing this value as the prevId in the next request will return the next batch of transactions.
+      required:
+        - transactions
     GetWalletBalanceResponse:
       title: GetWalletBalanceResponse
       type: object
@@ -72918,6 +73162,7 @@ components:
                     - view
                     - freeze
                     - trade
+                    - dapp
                   description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets'
               recoverable:
                 type: boolean
@@ -73428,6 +73673,19 @@ components:
       type: string
       example: ivxzn3bdn4uo
       description: A custom address can be provided for EOS wallets. It must be exactly 12 alphanumeric characters.
+    WalletFeeAddressBalances:
+      title: WalletFeeAddressBalances
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          balance:
+            type: string
+            description: String representation of the balance
+            example: '500000'
+        required:
+          - balance
+      description: Balances of different coins for a given wallet fee address
     WalletFlag:
       title: WalletFlag
       type: string
@@ -73805,6 +74063,7 @@ components:
                           - view
                           - freeze
                           - trade
+                          - dapp
                         description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets'
                     recoverable:
                       type: boolean
