@@ -4200,7 +4200,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ListSettlementsOkPayload'
+                $ref: '#/components/schemas/V1ClientListSettlementsOkPayload'
         '400':
           description: Bad Request
           content:
@@ -4867,6 +4867,11 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: allocationPoliciesEnabled
+          description: Filter by allocation policies enabled. When true, only partners with allocation policies enabled will be returned. When false, only partners with allocation policies disabled will be returned. When not provided, partners with any allocation policies status will be returned.
+          in: query
+          schema:
+            type: boolean
         - name: enterpriseId
           description: The enterprise ID of the client making the request.
           in: path
@@ -4982,6 +4987,9 @@ paths:
                 topUpWindowMinutes:
                   type: number
                   description: Optional window (in minutes) for topping up settlements. Defines the period during which a settlement can be topped up. Null means no top-up window is configured.
+                allocationPoliciesEnabled:
+                  type: boolean
+                  description: Optional flag to enable or disable allocation policies for the partner. When true, policy evaluation features (allocation/deallocation) are enabled. When false or not provided, defaults to false for backward compatibility.
               required:
                 - name
                 - broker
@@ -32210,7 +32218,6 @@ paths:
               - accessToken
               - accountCreated
               - contractSigned
-              - fundsDeposited
               - kycResult
               - policyBalanceChange
               - transaction_finality_on_l1
@@ -48370,6 +48377,18 @@ components:
           type: string
         signature:
           type: string
+        status:
+          type: string
+          enum:
+            - pending_review
+            - approved
+            - rejected
+        reviewedBy:
+          type: string
+        reviewNotes:
+          type: string
+        adjustedTransfers:
+          $ref: '#/components/schemas/ExpectedTransfers'
       required:
         - id
         - createdAt
@@ -48377,6 +48396,8 @@ components:
         - closedBy
         - userId
         - notes
+        - status
+        - adjustedTransfers
     DisputeClosureOutput:
       title: DisputeClosureOutput
       type: object
@@ -50540,6 +50561,11 @@ components:
           description: The commitment share.
       required:
         - commitmentShare
+    ExpectedTransfers:
+      title: ExpectedTransfers
+      type: object
+      additionalProperties:
+        type: string
     ExpectedTransfersOutput:
       title: ExpectedTransfersOutput
       type: object
@@ -68383,6 +68409,13 @@ components:
           $ref: '#/components/schemas/TransferDestinationTypeConditionParameters'
         operator:
           $ref: '#/components/schemas/OperatorType'
+    TransferDirection:
+      title: TransferDirection
+      type: string
+      enum:
+        - send
+        - receive
+        - send-and-receive
     TransferInitiatorsCondition:
       title: Initiator
       type: object
@@ -70605,6 +70638,25 @@ components:
           $ref: '#/components/schemas/MaskedV1SettlementTransfersOutput'
       required:
         - settlementTransfers
+    V1ClientListSettlementsOkPayload:
+      title: V1ClientListSettlementsOkPayload
+      type: object
+      properties:
+        settlements:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  transferDirection:
+                    allOf:
+                      - $ref: '#/components/schemas/TransferDirection'
+                    description: Whether the settlement is a send, receive, or both, from the client's perspective
+                required:
+                  - transferDirection
+              - $ref: '#/components/schemas/V1SettlementOutput'
+      required:
+        - settlements
     V1ClientsOutput:
       title: V1ClientsOutput
       type: object
@@ -71996,6 +72048,8 @@ components:
           type: number
         topUpWindowMinutes:
           type: number
+        allocationPoliciesEnabled:
+          type: boolean
         publicKey:
           type: string
           description: Optional RSA public key associated with the partner. This key is used for secure communication and encrypting connection keys. If not supplied, encryption is not required for the partner.
@@ -72010,6 +72064,7 @@ components:
         - clientId
         - broker
         - active
+        - allocationPoliciesEnabled
     V1PartnersPostOkPayload:
       title: V1PartnersPostOkPayload
       type: object
@@ -74689,7 +74744,6 @@ components:
         - circuitBreaker
         - lowFeeAddressBalance
         - transaction_finality_on_l1
-        - fundsDeposited
     WalletsResponse:
       type: object
       properties:
@@ -75152,7 +75206,6 @@ components:
         - accessToken
         - accountCreated
         - contractSigned
-        - fundsDeposited
         - kycResult
         - policyBalanceChange
         - transaction_finality_on_l1
