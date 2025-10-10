@@ -32569,6 +32569,111 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/address/{address}/crosschainbalances:
+    get:
+      summary: Get cross-chain address balances
+      description: |-
+        Gets balance information for a specific address across all enabled EVM keyring chains
+
+        For EVM keyring wallets, this endpoint returns the balance of a specific receive address
+        across all derived child wallets on different chains (e.g., ETH, Polygon, BSC).
+        The same address exists on multiple chains due to shared key material.
+      operationId: v2.wallet.address.crosschainbalances
+      tags:
+        - Address
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+        - name: address
+          description: The address to check across chains
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/AddressString'
+            example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  addresses:
+                    type: array
+                    items:
+                      type: object
+                      description: List of addresses across all chains in the EVM keyring with their balances
+                      properties:
+                        id:
+                          type: string
+                          description: Platform public ID for the address
+                          example: 59cd72485007a239fb00282ed480da1f
+                          pattern: ^[0-9a-f]{32}$
+                        coin:
+                          allOf:
+                            - $ref: '#/components/schemas/CoinString'
+                          description: The coin/chain for this address
+                          example: eth
+                        wallet:
+                          type: string
+                          description: Wallet ID containing this address
+                          example: 59cd72485007a239fb00282ed480da1f
+                          pattern: ^[0-9a-f]{32}$
+                        address:
+                          allOf:
+                            - $ref: '#/components/schemas/AddressString'
+                          description: The address string (same across chains in an EVM keyring)
+                          example: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb'
+                        chain:
+                          allOf:
+                            - $ref: '#/components/schemas/AddressChain'
+                          description: Chain index (0 for receive addresses)
+                        index:
+                          type: number
+                          description: Address index within the chain
+                        label:
+                          allOf:
+                            - $ref: '#/components/schemas/AddressLabelString'
+                          description: User-defined label for this address
+                          maxLength: 250
+                        token:
+                          type: string
+                          description: Token identifier if this is a token address
+                          example: usdc
+                        balance:
+                          allOf:
+                            - $ref: '#/components/schemas/TrimmedBalance'
+                          description: Balance information for this address
+                      required:
+                        - id
+                        - coin
+                        - wallet
+                        - address
+                        - chain
+                        - index
+                  count:
+                    type: number
+                    description: Total count of addresses returned
+                required:
+                  - addresses
+                  - count
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/derivedwallets:
     get:
       summary: List derived wallets for an EVM keyring
