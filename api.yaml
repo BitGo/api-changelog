@@ -64899,7 +64899,17 @@ components:
     SomiClaimRewardsRequestPOSTBody:
       title: Somi Claim Rewards Request
       type: object
-      description: Request to claim staking rewards for Somi.
+      description: |
+        Request to claim staking rewards for Somi.
+
+        **Key Features:**
+        - Requires explicit delegation ID to specify which delegation to claim rewards from
+        - Validates claim amount against actual claimable rewards on blockchain
+        - Auto-claim detection: Rewards may be automatically claimed during undelegate transactions
+        - Amount synchronization: The requested amount is adjusted to match actual claimable amount
+        - Follows standard claim rewards pattern consistent with other blockchain services
+
+        **Note:** The delegationId parameter is required to identify the specific delegation to claim rewards from.
       allOf:
         - $ref: '#/components/schemas/ClaimRewardsRequestPOSTBody'
     SomiDelegationProperties:
@@ -64963,6 +64973,12 @@ components:
         - $ref: '#/components/schemas/SwitchValidatorsRequestPOSTBody'
     SomiUnStakingRequestPOSTBody:
       title: SOMI unstake
+      description: |
+        Request to unstake SOMI tokens.
+
+        **Auto-Claim Feature:** During unstaking, any pending rewards may be automatically claimed 
+        and included in the final transaction. This auto-claim behavior is handled transparently 
+        and will be reflected in the transaction events and delegation reward tracking.
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
       type: object
