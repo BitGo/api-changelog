@@ -12,6 +12,8 @@ tags:
   - name: Fiat
   - name: Market data
     description: Market data is an internal REST API that you can use to compare the prices of cryptocurrency, tokens, and fiat.
+  - name: Internal
+    description: Internal APIs for service-to-service communication
   - name: Admin
     description: NCC Admin Internal APIs
   - name: User Management Notification
@@ -71568,51 +71570,6 @@ components:
             - phone
             - timezone
         - $ref: '#/components/schemas/UserRequiredFields'
-    UserEntity:
-      required:
-        - bitgoUserId
-        - createdAt
-        - email
-        - firstName
-        - lastName
-        - status
-        - updatedAt
-        - username
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        bitgoUserId:
-          type: string
-        status:
-          type: string
-          enum:
-            - ACTIVE
-            - INACTIVE
-            - DELETED
-        username:
-          type: string
-        usernameHash:
-          type: string
-        email:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        firstName:
-          type: string
-        lastName:
-          type: string
-        phoneNumber:
-          type: string
-        channelPreference:
-          type: object
-          additionalProperties:
-            type: boolean
     UserKycState:
       type: string
       enum:
@@ -71635,39 +71592,39 @@ components:
         - inreview
         - flagged
         - flagged_retry_allowed
-    UserNotificationSubscriptionEntity:
+    UserNotificationSubscriptionDTO:
       required:
         - categoryName
         - channel
         - createdAt
+        - isMandatory
         - isSubscribed
         - notificationName
         - updatedAt
-        - user
       type: object
       properties:
         id:
           type: string
           format: uuid
-        user:
-          $ref: '#/components/schemas/UserEntity'
+        userId:
+          type: string
+          format: uuid
         notificationName:
           type: string
         categoryName:
           type: string
         channel:
           type: string
+        isSubscribed:
+          type: boolean
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-        isSubscribed:
+        isMandatory:
           type: boolean
-        subscribed:
-          type: boolean
-          writeOnly: true
     UserRequiredFields:
       title: UserRequiredFields
       type: object
@@ -71740,7 +71697,7 @@ components:
         notificationSubscriptions:
           type: array
           items:
-            $ref: '#/components/schemas/UserNotificationSubscriptionEntity'
+            $ref: '#/components/schemas/UserNotificationSubscriptionDTO'
     UtxoAddress:
       title: Utxo Address
       type: object
