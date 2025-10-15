@@ -4867,6 +4867,11 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: allocationPoliciesEnabled
+          description: Filter by allocation policies enabled. When true, only partners with allocation policies enabled will be returned. When false, only partners with allocation policies disabled will be returned. When not provided, partners with any allocation policies status will be returned.
+          in: query
+          schema:
+            type: boolean
         - name: enterpriseId
           description: The enterprise ID of the client making the request.
           in: path
@@ -4982,6 +4987,9 @@ paths:
                 topUpWindowMinutes:
                   type: number
                   description: Optional window (in minutes) for topping up settlements. Defines the period during which a settlement can be topped up. Null means no top-up window is configured.
+                allocationPoliciesEnabled:
+                  type: boolean
+                  description: Optional flag to enable or disable allocation policies for the partner. When true, policy evaluation features (allocation/deallocation) are enabled. When false or not provided, defaults to false for backward compatibility.
               required:
                 - name
                 - broker
@@ -49059,6 +49067,14 @@ components:
           description: The date  and time when the dispute closure was created.
           format: date-time
           title: ISO Date String
+        status:
+          allOf:
+            - $ref: '#/components/schemas/DisputeClosureReviewStatus'
+          description: The status of the dispute closure review.
+        adjustedTransfers:
+          allOf:
+            - $ref: '#/components/schemas/ExpectedTransfers'
+          description: The adjusted transfers as a result of the dispute closure.
       required:
         - id
         - closedBy
@@ -49066,6 +49082,15 @@ components:
         - notes
         - adjustedSettlementTransfers
         - createdAt
+        - status
+        - adjustedTransfers
+    DisputeClosureReviewStatus:
+      title: DisputeClosureReviewStatus
+      type: string
+      enum:
+        - pending_review
+        - approved
+        - rejected
     DisputedSettlementTransfersOutput:
       title: DisputedSettlementTransfersOutput
       type: array
@@ -61766,6 +61791,12 @@ components:
           items:
             type: string
             minLength: 1
+    PolicyResult:
+      title: PolicyResult
+      type: string
+      enum:
+        - approved
+        - rejected
     PolicyRule:
       type: object
       properties:
@@ -72445,6 +72476,18 @@ components:
           type: string
           description: A nonce value used in the connection cryptographic operations. This provides additional security for connection operations.
           minLength: 1
+        evaluationId:
+          nullable: true
+          type: string
+          minLength: 1
+        pendingApprovalId:
+          nullable: true
+          type: string
+          minLength: 1
+        policyResult:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PolicyResult'
         partnersConnectionId:
           nullable: true
           type: string
@@ -72469,6 +72512,9 @@ components:
         - active
         - proof
         - nonce
+        - evaluationId
+        - pendingApprovalId
+        - policyResult
         - partnersConnectionId
         - partnersClientId
         - initialized
@@ -72628,6 +72674,18 @@ components:
                 type: string
                 description: A nonce value used in the connection cryptographic operations. This provides additional security for connection operations.
                 minLength: 1
+              evaluationId:
+                nullable: true
+                type: string
+                minLength: 1
+              pendingApprovalId:
+                nullable: true
+                type: string
+                minLength: 1
+              policyResult:
+                nullable: true
+                allOf:
+                  - $ref: '#/components/schemas/PolicyResult'
               partnersConnectionId:
                 nullable: true
                 type: string
@@ -72652,6 +72710,9 @@ components:
               - active
               - proof
               - nonce
+              - evaluationId
+              - pendingApprovalId
+              - policyResult
               - partnersConnectionId
               - partnersClientId
               - initialized
