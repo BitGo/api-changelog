@@ -31512,6 +31512,34 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/pendingapprovals/{approvalId}/transfer:
+    get:
+      summary: Get Transfer By Approval Id
+      description: Route to get transfer by approval id
+      operationId: v2.pendingapprovals.gettransfer
+      tags:
+        - Pending approval
+      parameters:
+        - name: approvalId
+          description: The approval ID
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTransferByApprovalIdResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/pendingapprovals/bulkupdate:
     put:
       summary: Bulk update non-withdrawal pending approvals
@@ -42228,6 +42256,12 @@ components:
                 enum:
                   - unverified
                   - verified
+              verifiedBy:
+                type: string
+                enum:
+                  - unverifiedRule
+                  - fastWithdrawal
+                description: the source that verified this entry (unverifiedRule or fastWithdrawal)
             required:
               - item
               - type
@@ -42254,6 +42288,12 @@ components:
           enum:
             - unverified
             - verified
+        verifiedBy:
+          type: string
+          enum:
+            - unverifiedRule
+            - fastWithdrawal
+          description: the source that verified this entry (unverifiedRule or fastWithdrawal)
       required:
         - item
         - type
@@ -54268,6 +54308,14 @@ components:
           description: This is the transaction ID from the last item in the current batch. Providing this value as the prevId in the next request will return the next batch of transactions.
       required:
         - transactions
+    GetTransferByApprovalIdResponse:
+      title: GetTransferByApprovalIdResponse
+      type: object
+      properties:
+        transfer:
+          $ref: '#/components/schemas/Transfer1'
+      required:
+        - transfer
     GetWalletBalanceResponse:
       title: GetWalletBalanceResponse
       type: object
