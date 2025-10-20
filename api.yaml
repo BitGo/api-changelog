@@ -12,6 +12,8 @@ tags:
   - name: Fiat
   - name: Market data
     description: Market data is an internal REST API that you can use to compare the prices of cryptocurrency, tokens, and fiat.
+  - name: Internal
+    description: Internal APIs for service-to-service communication
   - name: Admin
     description: NCC Admin Internal APIs
   - name: User Management Notification
@@ -1037,7 +1039,7 @@ paths:
                     - type: array
                       items:
                         type: string
-                  description: The permissions granted by this access token. - `all` - Access all actions in the test environment. - `crypto_compare` - Call CryptoCompare API. - `enterprise_manage_all` - Manage users and settings for any enterprise to which the user belongs. - `enterprise_view_all` - View any enterprise to which the user belongs. - `metamask_institutional` - Enables using BitGo wallets in the MetaMask Institutional extension. - `openid` - Verify your BitGo user ID using OpenID Connect. - `pending_approval_update` - Approve or reject pending actions that require approval to proceed. - `portfolio_view` - Call the Portfolio API (deprecated). - `profile` - View your BitGo Profile. - `settlement_network_read` - View your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners. - `settlement_network_write` - Update your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners. - `trade_trade` - Initiate trades. - `trade_view` - View trades. - `wallet_approve` - Approve policies and transactions for a wallet where the user is a wallet admin. - `wallet_approve_all` - Approve transactions for any wallet where the user is a wallet admin within any enterprise to which the user belongs. - `wallet_approve_enterprise` - Approve transactions for any wallet where the user is a wallet admin within a single enterprise. - `wallet_create` - Create wallets. - `wallet_edit` - Edit comments on a transfer. - `wallet_edit_all` - Edit comments on all transfers within multiple enterprises. - `wallet_edit_enterprise` - Edit comments on all transfers within a single enterprise (deprecated). - `wallet_freeze` - Freeze a wallet. - `wallet_freeze_all` - Freeze any wallet within any enterprises to which the user belongs. - `wallet_manage` - Manage settings for a wallet where the user is a wallet admin. - `wallet_manage_all` - Manage settings for any wallet where the user is a wallet admin within any enterprise to which the user belongs. - `wallet_manage_enterprise` - Manage settings for any wallet where the user is a wallet admin within a single enterprise. - `wallet_spend` - Initiate transactions from a wallet. - `wallet_spend_all` - Initiate transactions from any wallet within any enterprise to which the user belongs. - `wallet_spend_enterprise` - Initiate transactions from any wallet within a single enterprise. - `wallet_stake` - Initiate staking transactions from a wallet. - `wallet_stake_all` - Initiate staking transactions from any wallet within any enterprise to which the user belongs. - `wallet_view` - View a wallet. - `wallet_view_all` - View any wallet within any enterprise to which the user belongs. - `wallet_view_enterprise` - View any wallet within a single enterprise.
+                  description: The permissions granted by this access token. - `all` - Access all actions in the test environment. - `crypto_compare` - Call CryptoCompare API. - `enterprise_manage_all` - Manage users and settings for any enterprise to which the user belongs. - `enterprise_view_all` - View any enterprise to which the user belongs. - `metamask_institutional` - [DEPRECATED] Enables using BitGo wallets in the MetaMask Institutional extension. - `openid` - Verify your BitGo user ID using OpenID Connect. - `pending_approval_update` - Approve or reject pending actions that require approval to proceed. - `portfolio_view` - [DEPRECATED] Call the Portfolio API. - `profile` - View your BitGo Profile. - `settlement_network_read` - View your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners. - `settlement_network_write` - Update your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners. - `trade_trade` - Initiate trades. - `trade_view` - View trades. - `wallet_approve` - Approve policies and transactions for a wallet where the user is a wallet admin. - `wallet_approve_all` - Approve transactions for any wallet where the user is a wallet admin within any enterprise to which the user belongs. - `wallet_approve_enterprise` - Approve transactions for any wallet where the user is a wallet admin within a single enterprise. - `wallet_create` - Create wallets. - `wallet_edit` - Edit comments on a transfer. - `wallet_edit_all` - Edit comments on all transfers within multiple enterprises. - `wallet_edit_enterprise` - [DEPRECATED] Edit comments on all transfers within a single enterprise. - `wallet_freeze` - Freeze a wallet. - `wallet_freeze_all` - Freeze any wallet within any enterprises to which the user belongs. - `wallet_manage` - Manage settings for a wallet where the user is a wallet admin. - `wallet_manage_all` - Manage settings for any wallet where the user is a wallet admin within any enterprise to which the user belongs. - `wallet_manage_enterprise` - Manage settings for any wallet where the user is a wallet admin within a single enterprise. - `wallet_spend` - Initiate transactions from a wallet. - `wallet_spend_all` - Initiate transactions from any wallet within any enterprise to which the user belongs. - `wallet_spend_enterprise` - Initiate transactions from any wallet within a single enterprise. - `wallet_stake` - Initiate staking transactions from a wallet. - `wallet_stake_all` - Initiate staking transactions from any wallet within any enterprise to which the user belongs. - `wallet_view` - View a wallet. - `wallet_view_all` - View any wallet within any enterprise to which the user belongs. - `wallet_view_enterprise` - View any wallet within a single enterprise.
                 duration:
                   type: number
                   description: The duration of the access token in seconds.
@@ -4865,6 +4867,11 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: allocationPoliciesEnabled
+          description: Filter by allocation policies enabled. When true, only partners with allocation policies enabled will be returned. When false, only partners with allocation policies disabled will be returned. When not provided, partners with any allocation policies status will be returned.
+          in: query
+          schema:
+            type: boolean
         - name: enterpriseId
           description: The enterprise ID of the client making the request.
           in: path
@@ -4980,6 +4987,9 @@ paths:
                 topUpWindowMinutes:
                   type: number
                   description: Optional window (in minutes) for topping up settlements. Defines the period during which a settlement can be topped up. Null means no top-up window is configured.
+                allocationPoliciesEnabled:
+                  type: boolean
+                  description: Optional flag to enable or disable allocation policies for the partner. When true, policy evaluation features (allocation/deallocation) are enabled. When false or not provided, defaults to false for backward compatibility.
               required:
                 - name
                 - broker
@@ -9166,13 +9176,10 @@ paths:
                       minLength: 1
                     nameFirst:
                       type: string
-                      minLength: 1
                     nameLast:
                       type: string
-                      minLength: 1
                     nameMiddle:
                       type: string
-                      minLength: 1
                     notionalTradedEachMonth:
                       type: number
                     occupation:
@@ -9242,13 +9249,10 @@ paths:
                       type: boolean
                     nameFirst:
                       type: string
-                      minLength: 1
                     nameLast:
                       type: string
-                      minLength: 1
                     nameMiddle:
                       type: string
-                      minLength: 1
                     organizationId:
                       type: string
                     transactionType:
@@ -9288,13 +9292,10 @@ paths:
                       minLength: 1
                     nameFirst:
                       type: string
-                      minLength: 1
                     nameLast:
                       type: string
-                      minLength: 1
                     nameMiddle:
                       type: string
-                      minLength: 1
                     organizationId:
                       type: string
                     transactionType:
@@ -9347,13 +9348,10 @@ paths:
                       type: boolean
                     nameFirst:
                       type: string
-                      minLength: 1
                     nameLast:
                       type: string
-                      minLength: 1
                     nameMiddle:
                       type: string
-                      minLength: 1
                     organizationId:
                       type: string
                     transactionType:
@@ -9423,13 +9421,10 @@ paths:
                       minLength: 1
                     nameFirst:
                       type: string
-                      minLength: 1
                     nameLast:
                       type: string
-                      minLength: 1
                     nameMiddle:
                       type: string
-                      minLength: 1
                     notionalTradedEachMonth:
                       type: number
                     occupation:
@@ -22833,18 +22828,18 @@ paths:
       description: Lists all policy rules for an enterprise.
       operationId: v1.policy.rules.list
       parameters:
-        - $ref: '#/components/parameters/CreatedDateGte'
-        - $ref: '#/components/parameters/CreatedDateLte'
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/CreatedDateGte1'
+        - $ref: '#/components/parameters/CreatedDateLte1'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/EvaluationId'
         - $ref: '#/components/parameters/EvaluationStatus'
         - $ref: '#/components/parameters/PolicyRuleName'
-        - $ref: '#/components/parameters/PolicyRuleStatus'
-        - $ref: '#/components/parameters/ScopeName'
-        - $ref: '#/components/parameters/Touchpoints'
+        - $ref: '#/components/parameters/PolicyRuleStatus1'
+        - $ref: '#/components/parameters/ScopeName1'
+        - $ref: '#/components/parameters/Touchpoints1'
         - $ref: '#/components/parameters/PolicyRuleIdQuery'
-        - $ref: '#/components/parameters/Limit'
-        - $ref: '#/components/parameters/PrevId'
+        - $ref: '#/components/parameters/Limit1'
+        - $ref: '#/components/parameters/PrevId1'
         - $ref: '#/components/parameters/FilteringConditionParameterNameAndValue'
       responses:
         '200':
@@ -22872,7 +22867,7 @@ paths:
       description: Returns a policy rule by its ID. If version is passed, returns the most recent `INACTIVE` policy rule. If version isn't passed, returns the currently `ACTIVE` policy rule.
       operationId: v1.policy.rules.get
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/PolicyRuleId'
         - $ref: '#/components/parameters/PolicyRuleVersion'
       responses:
@@ -22900,7 +22895,7 @@ paths:
       description: Deactivates a policy rule.
       operationId: v1.policy.rules.delete
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/PolicyRuleId'
       responses:
         '200':
@@ -22928,7 +22923,7 @@ paths:
       description: List all versions of a policy rule.
       operationId: v1.policy.rule.versions.list
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/PolicyRuleId'
       responses:
         '200':
@@ -22953,7 +22948,7 @@ paths:
       description: Creates a new policy rule.
       operationId: v1.policy.rule.create
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/TouchpointName'
       requestBody:
         content:
@@ -22991,7 +22986,7 @@ paths:
       description: Updates a policy rule, resulting in a new version number that's equal to the highest existing version plus 1. The ID of the policy rule remains the unchanged.
       operationId: v1.policy.rule.update
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/TouchpointName'
         - $ref: '#/components/parameters/PolicyRuleId'
       requestBody:
@@ -23030,7 +23025,7 @@ paths:
       description: Lists all scopes for a given policy rule.
       operationId: v1.policy.scope.list
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
       responses:
         '200':
           description: All available scopes for your enterprise.
@@ -23057,7 +23052,7 @@ paths:
       description: Lists all conditions for a given scope.
       operationId: v1.policy.scope.condition.list
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/scope'
       responses:
         '200':
@@ -23085,7 +23080,7 @@ paths:
       description: Lists all touchpoints for a given scope.
       operationId: v1.policy.scope.touchpoint.list
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/scope'
       responses:
         '200':
@@ -23113,7 +23108,7 @@ paths:
       description: Lists all conditions available for a given touchpoint.
       operationId: v1.policy.touchpoint.condition.list
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/TouchpointId'
       responses:
         '200':
@@ -23141,7 +23136,7 @@ paths:
       description: Lists all available actions for a given touchpoint and scope.
       operationId: v1.policy.touchpoint.action.list
       parameters:
-        - $ref: '#/components/parameters/Enterprise'
+        - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/TouchpointId'
         - $ref: '#/components/parameters/FilteringConditionName'
       responses:
@@ -31513,6 +31508,34 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/pendingapprovals/{approvalId}/transfer:
+    get:
+      summary: Get Transfer By Approval Id
+      description: Route to get transfer by approval id
+      operationId: v2.pendingapprovals.gettransfer
+      tags:
+        - Pending approval
+      parameters:
+        - name: approvalId
+          description: The approval ID
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTransferByApprovalIdResponse'
+        '400':
+          description: Bad Request
           content:
             application/json:
               schema:
@@ -40317,7 +40340,7 @@ components:
       example: btc
       schema:
         type: string
-    CreatedDateGte:
+    CreatedDateGte1:
       name: createdDateGte
       in: query
       description: |
@@ -40326,7 +40349,7 @@ components:
         type: string
         format: date-time
       example: '2023-11-13T14:49:48.830522Z'
-    CreatedDateLte:
+    CreatedDateLte1:
       name: createdDateLte
       in: query
       description: |
@@ -40344,7 +40367,7 @@ components:
         type: string
         format: date-time
         example: '2019-05-02T15:27:35.773Z'
-    Enterprise:
+    Enterprise1:
       name: enterpriseId
       in: path
       description: Your Enterprise Id.
@@ -40418,7 +40441,7 @@ components:
           - minute
           - hour
           - day
-    Limit:
+    Limit1:
       name: limit
       in: query
       description: |
@@ -40452,7 +40475,7 @@ components:
       schema:
         type: string
       example: My policy rule
-    PolicyRuleStatus:
+    PolicyRuleStatus1:
       name: status
       in: query
       description: Statuses of the returned policy rules, one or more may be provided.
@@ -40472,7 +40495,7 @@ components:
       schema:
         type: number
       example: 3
-    PrevId:
+    PrevId1:
       name: prevId
       in: query
       description: The nextBatchPrevId returned by the last call to the same API. Used to retrieve the next page of results.
@@ -40488,7 +40511,7 @@ components:
       example: eth
       schema:
         type: string
-    ScopeName:
+    ScopeName1:
       name: scopes
       in: query
       description: |
@@ -40526,7 +40549,7 @@ components:
       schema:
         type: string
       example: wallet.segregated.transfer
-    Touchpoints:
+    Touchpoints1:
       name: touchpoints
       in: query
       description: The Touchpoints of the returned policy rules. One or more may be provided. For example, the Transfer from a Wallet Touchpoint. See also the List scope Touchpoints API.
@@ -41226,7 +41249,7 @@ components:
           type: array
           items:
             type: string
-            description: IP addresses of clients that are allowed to use this token
+            description: IP addresses or CIDR block of clients that are allowed to use this token
         label:
           type: string
         origin:
@@ -42233,6 +42256,12 @@ components:
                 enum:
                   - unverified
                   - verified
+              verifiedBy:
+                type: string
+                enum:
+                  - unverifiedRule
+                  - fastWithdrawal
+                description: the source that verified this entry (unverifiedRule or fastWithdrawal)
             required:
               - item
               - type
@@ -42259,6 +42288,12 @@ components:
           enum:
             - unverified
             - verified
+        verifiedBy:
+          type: string
+          enum:
+            - unverifiedRule
+            - fastWithdrawal
+          description: the source that verified this entry (unverifiedRule or fastWithdrawal)
       required:
         - item
         - type
@@ -42790,6 +42825,51 @@ components:
       type: integer
       minimum: 1
       example: 1
+    AptBuildOptions:
+      title: AptBuildOptions
+      allOf:
+        - type: object
+          properties:
+            maxGasAmount:
+              type: number
+            gasUnitPrice:
+              type: number
+            expirationTime:
+              type: number
+        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+    AptCustomTxIntent:
+      title: APT Custom Transaction Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - customTx
+            aptosCustomTransactionParams:
+              type: object
+              properties:
+                moduleName:
+                  type: string
+                functionName:
+                  type: string
+                typeArguments:
+                  type: array
+                  items:
+                    type: string
+                functionArguments:
+                  type: array
+                  items: {}
+                abi:
+                  $ref: '#/components/schemas/EntryFunctionABI'
+              required:
+                - moduleName
+                - functionName
+          required:
+            - intentType
+            - aptosCustomTransactionParams
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/AptBuildOptions'
     AsiStakingRequest:
       title: ASI
       allOf:
@@ -48438,7 +48518,7 @@ components:
           properties:
             validatorAddress:
               type: string
-    CsprStakingOptions:
+    CsprStakingOptions1:
       type: object
       description: CSPR staking options
       properties:
@@ -49057,6 +49137,14 @@ components:
           description: The date  and time when the dispute closure was created.
           format: date-time
           title: ISO Date String
+        status:
+          allOf:
+            - $ref: '#/components/schemas/DisputeClosureReviewStatus'
+          description: The status of the dispute closure review.
+        adjustedTransfers:
+          allOf:
+            - $ref: '#/components/schemas/ExpectedTransfers'
+          description: The adjusted transfers as a result of the dispute closure.
       required:
         - id
         - closedBy
@@ -49064,6 +49152,15 @@ components:
         - notes
         - adjustedSettlementTransfers
         - createdAt
+        - status
+        - adjustedTransfers
+    DisputeClosureReviewStatus:
+      title: DisputeClosureReviewStatus
+      type: string
+      enum:
+        - pending_review
+        - approved
+        - rejected
     DisputedSettlementTransfersOutput:
       title: DisputedSettlementTransfersOutput
       type: array
@@ -50569,6 +50666,19 @@ components:
               - $ref: '#/components/schemas/EnterpriseStub'
       required:
         - enterprises
+    EntryFunctionABI:
+      title: EntryFunctionABI
+      type: object
+      properties:
+        typeParameters:
+          type: array
+          items: {}
+        parameters:
+          type: array
+          items: {}
+      required:
+        - typeParameters
+        - parameters
     EntryType:
       title: EntryType
       type: string
@@ -52048,7 +52158,13 @@ components:
                 description: The on-chain Bitcoin address of the recipient.
         satsPerVbyte:
           type: string
-          description: The fee rate for the transaction in satoshis per virtual byte.
+          description: Optional fee rate for the transaction in satoshis per virtual byte. Cannot be used with `numBlocks`.
+        numBlocks:
+          type: integer
+          description: |
+            The number of blocks required to confirm a transaction. You can use `numBlocks` to estimate the fee rate by targeting confirmation within a given number of blocks. If both `satsPerVbyte` and `numBlocks` are absent, the transaction defaults to 2 blocks for confirmation.
+          minimum: 2
+          maximum: 1000
         sequenceId:
           type: string
           description: Optional sequence ID for the withdrawal transfer.
@@ -52058,7 +52174,6 @@ components:
       required:
         - passphrase
         - recipients
-        - satsPerVbyte
     ExpressOnchainWithdrawResponse:
       type: object
       properties:
@@ -54256,6 +54371,14 @@ components:
           description: This is the transaction ID from the last item in the current batch. Providing this value as the prevId in the next request will return the next batch of transactions.
       required:
         - transactions
+    GetTransferByApprovalIdResponse:
+      title: GetTransferByApprovalIdResponse
+      type: object
+      properties:
+        transfer:
+          $ref: '#/components/schemas/Transfer1'
+      required:
+        - transfer
     GetWalletBalanceResponse:
       title: GetWalletBalanceResponse
       type: object
@@ -56232,6 +56355,8 @@ components:
         satsPerVbyte:
           type: string
           format: number
+        numBlocks:
+          type: number
       required:
         - recipients
     LightningPaymentFailureReason:
@@ -57076,7 +57201,7 @@ components:
           items:
             type: string
             format: ipv4
-          description: IP addresses of clients that are allowed to use this token
+          description: IP addresses or CIDR blockof clients that are allowed to use this token
         origin:
           type: string
           example: test.bitgo.com
@@ -58307,7 +58432,7 @@ components:
           type: array
           items:
             type: string
-            description: IP addresses of clients that are allowed to use this token
+            description: IP addresses or CIDR block of clients that are allowed to use this token
         isExtensible:
           type: boolean
           description: Indicates if the access token is extensible
@@ -59437,29 +59562,58 @@ components:
       title: PaymentIntent
       allOf:
         - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - payment
-            recipients:
-              type: array
-              items:
-                type: object
-                properties:
-                  address:
-                    $ref: '#/components/schemas/Address'
-                  amount:
-                    $ref: '#/components/schemas/Amount'
-                  data:
-                    $ref: '#/components/schemas/optionalString'
-                required:
-                  - address
-                  - amount
-          required:
-            - intentType
-            - recipients
+          properties: {}
         - $ref: '#/components/schemas/BaseIntent'
+        - oneOf:
+            - type: object
+              properties:
+                intentType:
+                  type: string
+                  enum:
+                    - payment
+                recipients:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address:
+                        $ref: '#/components/schemas/Address'
+                      amount:
+                        $ref: '#/components/schemas/Amount'
+                      data:
+                        $ref: '#/components/schemas/optionalString'
+                    required:
+                      - address
+                      - amount
+              required:
+                - intentType
+                - recipients
+            - type: object
+              properties:
+                intentType:
+                  type: string
+                  enum:
+                    - payment
+                isTestTransaction:
+                  type: boolean
+                recipients:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address:
+                        $ref: '#/components/schemas/Address'
+                      amount:
+                        $ref: '#/components/schemas/Amount'
+                      data:
+                        $ref: '#/components/schemas/optionalString'
+                    required:
+                      - address
+                      - amount
+              required:
+                - intentType
+                - isTestTransaction
+                - recipients
     PaymentIntent1:
       title: PaymentIntent
       allOf:
@@ -61764,6 +61918,12 @@ components:
           items:
             type: string
             minLength: 1
+    PolicyResult:
+      title: PolicyResult
+      type: string
+      enum:
+        - approved
+        - rejected
     PolicyRule:
       type: object
       properties:
@@ -62169,6 +62329,33 @@ components:
       allOf:
         - $ref: '#/components/schemas/DelegationProperties'
         - type: object
+    PolyxPreApproveAssetIntent:
+      title: POLYX Pre-Approve Asset Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - enableToken
+            enableTokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  address:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - name
+            memo:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - intentType
+            - enableTokens
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     PolyxStakeIntent:
       title: POLYX Stake Intent
       allOf:
@@ -63615,7 +63802,7 @@ components:
           items:
             type: string
             format: ipv4
-          description: IP addresses of clients that are allowed to use this token
+          description: IP addresses or CIDR block of clients that are allowed to use this token
         origin:
           type: string
           example: test.bitgo.com
@@ -63657,7 +63844,7 @@ components:
           items:
             type: string
             format: ipv4
-          description: IP addresses of clients that are allowed to use this token
+          description: IP addresses or CIDR block of clients that are allowed to use this token
         origin:
           type: string
           example: test.bitgo.com
@@ -64090,11 +64277,16 @@ components:
                 - $ref: '#/components/schemas/optionalString'
               description: The type of message standard, e.g. 'EIP191', 'EIP712', 'CIP8' etc.
               example: 'for EVM: EIP191'
+            signerAddress:
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: The address of the signer, could be the root address or a receive address of the wallet
           required:
             - intentType
             - messageRaw
             - messageEncoded
             - messageStandardType
+            - signerAddress
         - $ref: '#/components/schemas/BaseIntent'
     SignOrganizationEnterpriseContractResponseC:
       title: SignOrganizationEnterpriseContractResponseC
@@ -64625,6 +64817,7 @@ components:
                 - SOL_STAKE
                 - MARINADE
                 - MARINADE_SELECT
+                - JITO
             bondingTimestamp:
               type: string
               format: bigInteger
@@ -64676,7 +64869,6 @@ components:
           required:
             - validatorAddress
             - amount
-            - stakingType
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolStakeIntent1:
@@ -64862,6 +65054,81 @@ components:
             - stakingAddress
         - $ref: '#/components/schemas/UnstakeIntent1'
         - $ref: '#/components/schemas/SolBuildOptions'
+    SolVersionedCustomTxIntent:
+      title: SOL Versioned Custom Transaction Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - customTx
+            solVersionedTransactionData:
+              type: object
+              properties:
+                versionedInstructions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      programIdIndex:
+                        type: number
+                      accountKeyIndexes:
+                        type: array
+                        items:
+                          type: number
+                      data:
+                        type: string
+                    required:
+                      - programIdIndex
+                      - accountKeyIndexes
+                      - data
+                addressLookupTables:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      accountKey:
+                        type: string
+                      writableIndexes:
+                        type: array
+                        items:
+                          type: number
+                      readonlyIndexes:
+                        type: array
+                        items:
+                          type: number
+                    required:
+                      - accountKey
+                      - writableIndexes
+                      - readonlyIndexes
+                staticAccountKeys:
+                  type: array
+                  items:
+                    type: string
+                messageHeader:
+                  type: object
+                  properties:
+                    numRequiredSignatures:
+                      type: number
+                    numReadonlySignedAccounts:
+                      type: number
+                    numReadonlyUnsignedAccounts:
+                      type: number
+                  required:
+                    - numRequiredSignatures
+                    - numReadonlySignedAccounts
+                    - numReadonlyUnsignedAccounts
+              required:
+                - versionedInstructions
+                - addressLookupTables
+                - staticAccountKeys
+                - messageHeader
+          required:
+            - intentType
+            - solVersionedTransactionData
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/SolBuildOptions'
     SolWallet:
       title: Sol Wallet
       type: object
@@ -64899,7 +65166,17 @@ components:
     SomiClaimRewardsRequestPOSTBody:
       title: Somi Claim Rewards Request
       type: object
-      description: Request to claim staking rewards for Somi.
+      description: |
+        Request to claim staking rewards for Somi.
+
+        **Key Features:**
+        - Requires explicit delegation ID to specify which delegation to claim rewards from
+        - Validates claim amount against actual claimable rewards on blockchain
+        - Auto-claim detection: Rewards may be automatically claimed during undelegate transactions
+        - Amount synchronization: The requested amount is adjusted to match actual claimable amount
+        - Follows standard claim rewards pattern consistent with other blockchain services
+
+        **Note:** The delegationId parameter is required to identify the specific delegation to claim rewards from.
       allOf:
         - $ref: '#/components/schemas/ClaimRewardsRequestPOSTBody'
     SomiDelegationProperties:
@@ -64963,6 +65240,12 @@ components:
         - $ref: '#/components/schemas/SwitchValidatorsRequestPOSTBody'
     SomiUnStakingRequestPOSTBody:
       title: SOMI unstake
+      description: |
+        Request to unstake SOMI tokens.
+
+        **Auto-Claim Feature:** During unstaking, any pending rewards may be automatically claimed 
+        and included in the final transaction. This auto-claim behavior is handled transparently 
+        and will be reflected in the transaction events and delegation reward tracking.
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
       type: object
@@ -65380,8 +65663,8 @@ components:
       oneOf:
         - $ref: '#/components/schemas/AvaxPStakingOptions'
         - $ref: '#/components/schemas/BtcStakingOptions'
-        - $ref: '#/components/schemas/CsprStakingOptions'
-        - $ref: '#/components/schemas/StxStakingOptions'
+        - $ref: '#/components/schemas/CsprStakingOptions1'
+        - $ref: '#/components/schemas/StxStakingOptions1'
     StakingParams:
       type: object
       properties:
@@ -66755,7 +67038,7 @@ components:
         btcRewardAddress:
           description: The BTC address where rewards will be sent.
           type: string
-    StxStakingOptions:
+    StxStakingOptions1:
       type: object
       description: STX staking options
       properties:
@@ -67447,6 +67730,34 @@ components:
               type: string
             validator:
               type: string
+    TaoSwitchValidatorIntent:
+      title: Tao Switch Validator Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - switchValidator
+            originHotkey:
+              type: string
+            destinationHotkey:
+              type: string
+            originNetuid:
+              type: string
+            destinationNetuid:
+              type: string
+            alphaAmount:
+              type: string
+          required:
+            - intentType
+            - originHotkey
+            - destinationHotkey
+            - originNetuid
+            - destinationNetuid
+            - alphaAmount
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     TaoSwitchValidatorRequestEntityProperties:
       title: TAO switch validator staking request entity properties
       allOf:
@@ -68419,6 +68730,7 @@ components:
         - $ref: '#/components/schemas/AdaStakeIntent'
         - $ref: '#/components/schemas/AdaUnstakeIntent'
         - $ref: '#/components/schemas/AdaVoteDelegationIntent'
+        - $ref: '#/components/schemas/AptCustomTxIntent'
         - $ref: '#/components/schemas/AtomPaymentIntent'
         - $ref: '#/components/schemas/AtomStakeIntent'
         - $ref: '#/components/schemas/AtomUnstakeIntent'
@@ -68455,6 +68767,7 @@ components:
         - $ref: '#/components/schemas/NearUnstakeIntent'
         - $ref: '#/components/schemas/NearWithdrawIntent'
         - $ref: '#/components/schemas/PolyxCreateAccountIntent'
+        - $ref: '#/components/schemas/PolyxPreApproveAssetIntent'
         - $ref: '#/components/schemas/PolyxStakeIntent'
         - $ref: '#/components/schemas/PolyxUnstakeIntent'
         - $ref: '#/components/schemas/PolyxWithdrawIntent'
@@ -68470,6 +68783,7 @@ components:
         - $ref: '#/components/schemas/SolPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
+        - $ref: '#/components/schemas/SolVersionedCustomTxIntent'
         - $ref: '#/components/schemas/SubstrateConsolidateIntent'
         - $ref: '#/components/schemas/SubstratePaymentIntent'
         - $ref: '#/components/schemas/SuiConsolidateIntent'
@@ -68479,6 +68793,7 @@ components:
         - $ref: '#/components/schemas/SuiStakingIntent'
         - $ref: '#/components/schemas/SuiUnstakingIntent'
         - $ref: '#/components/schemas/TaoStakeIntent'
+        - $ref: '#/components/schemas/TaoSwitchValidatorIntent'
         - $ref: '#/components/schemas/TaoUnstakeIntent'
         - $ref: '#/components/schemas/TokenApprovalIntent'
         - $ref: '#/components/schemas/TonConsolidateIntent'
@@ -68486,6 +68801,9 @@ components:
         - $ref: '#/components/schemas/TonPaymentIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/VetStakingIntent'
+        - $ref: '#/components/schemas/VetExitDelegationIntent'
+        - $ref: '#/components/schemas/VetBurnNFTIntent'
+        - $ref: '#/components/schemas/VetStakeClaimRewardsIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
@@ -71552,51 +71870,6 @@ components:
             - phone
             - timezone
         - $ref: '#/components/schemas/UserRequiredFields'
-    UserEntity:
-      required:
-        - bitgoUserId
-        - createdAt
-        - email
-        - firstName
-        - lastName
-        - status
-        - updatedAt
-        - username
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-        bitgoUserId:
-          type: string
-        status:
-          type: string
-          enum:
-            - ACTIVE
-            - INACTIVE
-            - DELETED
-        username:
-          type: string
-        usernameHash:
-          type: string
-        email:
-          type: string
-        createdAt:
-          type: string
-          format: date-time
-        updatedAt:
-          type: string
-          format: date-time
-        firstName:
-          type: string
-        lastName:
-          type: string
-        phoneNumber:
-          type: string
-        channelPreference:
-          type: object
-          additionalProperties:
-            type: boolean
     UserKycState:
       type: string
       enum:
@@ -71619,39 +71892,39 @@ components:
         - inreview
         - flagged
         - flagged_retry_allowed
-    UserNotificationSubscriptionEntity:
+    UserNotificationSubscriptionDTO:
       required:
         - categoryName
         - channel
         - createdAt
+        - isMandatory
         - isSubscribed
         - notificationName
         - updatedAt
-        - user
       type: object
       properties:
         id:
           type: string
           format: uuid
-        user:
-          $ref: '#/components/schemas/UserEntity'
+        userId:
+          type: string
+          format: uuid
         notificationName:
           type: string
         categoryName:
           type: string
         channel:
           type: string
+        isSubscribed:
+          type: boolean
         createdAt:
           type: string
           format: date-time
         updatedAt:
           type: string
           format: date-time
-        isSubscribed:
+        isMandatory:
           type: boolean
-        subscribed:
-          type: boolean
-          writeOnly: true
     UserRequiredFields:
       title: UserRequiredFields
       type: object
@@ -71724,7 +71997,7 @@ components:
         notificationSubscriptions:
           type: array
           items:
-            $ref: '#/components/schemas/UserNotificationSubscriptionEntity'
+            $ref: '#/components/schemas/UserNotificationSubscriptionDTO'
     UtxoAddress:
       title: Utxo Address
       type: object
@@ -72472,6 +72745,18 @@ components:
           type: string
           description: A nonce value used in the connection cryptographic operations. This provides additional security for connection operations.
           minLength: 1
+        evaluationId:
+          nullable: true
+          type: string
+          minLength: 1
+        pendingApprovalId:
+          nullable: true
+          type: string
+          minLength: 1
+        policyResult:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/PolicyResult'
         partnersConnectionId:
           nullable: true
           type: string
@@ -72496,6 +72781,9 @@ components:
         - active
         - proof
         - nonce
+        - evaluationId
+        - pendingApprovalId
+        - policyResult
         - partnersConnectionId
         - partnersClientId
         - initialized
@@ -72655,6 +72943,18 @@ components:
                 type: string
                 description: A nonce value used in the connection cryptographic operations. This provides additional security for connection operations.
                 minLength: 1
+              evaluationId:
+                nullable: true
+                type: string
+                minLength: 1
+              pendingApprovalId:
+                nullable: true
+                type: string
+                minLength: 1
+              policyResult:
+                nullable: true
+                allOf:
+                  - $ref: '#/components/schemas/PolicyResult'
               partnersConnectionId:
                 nullable: true
                 type: string
@@ -72679,6 +72979,9 @@ components:
               - active
               - proof
               - nonce
+              - evaluationId
+              - pendingApprovalId
+              - policyResult
               - partnersConnectionId
               - partnersClientId
               - initialized
@@ -74434,6 +74737,24 @@ components:
       required:
         - webhookId
         - isValid
+    VetBurnNFTIntent:
+      title: VET Burn NFT Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - unstake
+            tokenId:
+              type: string
+            nftContractAddress:
+              type: string
+          required:
+            - intentType
+            - tokenId
+            - nftContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     VetDelegationProperties:
       title: VET Delegation Properties
       allOf:
@@ -74466,6 +74787,44 @@ components:
               type: integer
               format: int32
               nullable: true
+    VetExitDelegationIntent:
+      title: VET Exit Delegation Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            tokenId:
+              type: string
+            delegationContractAddress:
+              type: string
+          required:
+            - intentType
+            - tokenId
+            - delegationContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    VetStakeClaimRewardsIntent:
+      title: VET Stake Claim Rewards Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+            tokenId:
+              type: string
+              minLength: 1
+            delegationContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - tokenId
+            - delegationContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     VetStakingIntent:
       title: VET Staking Intent
       allOf:
@@ -74808,7 +75167,7 @@ components:
                     - freeze
                     - trade
                     - dapp
-                  description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets'
+                  description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets 6. ''dapp'': connect to third-party dApps and provide them access to wallet operations'
               recoverable:
                 type: boolean
               user:
@@ -75709,7 +76068,7 @@ components:
                           - freeze
                           - trade
                           - dapp
-                        description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets'
+                        description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets 6. ''dapp'': connect to third-party dApps and provide them access to wallet operations'
                     recoverable:
                       type: boolean
                     user:
