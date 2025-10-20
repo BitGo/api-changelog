@@ -41249,7 +41249,7 @@ components:
           type: array
           items:
             type: string
-            description: IP addresses of clients that are allowed to use this token
+            description: IP addresses or CIDR block of clients that are allowed to use this token
         label:
           type: string
         origin:
@@ -42825,6 +42825,51 @@ components:
       type: integer
       minimum: 1
       example: 1
+    AptBuildOptions:
+      title: AptBuildOptions
+      allOf:
+        - type: object
+          properties:
+            maxGasAmount:
+              type: number
+            gasUnitPrice:
+              type: number
+            expirationTime:
+              type: number
+        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+    AptCustomTxIntent:
+      title: APT Custom Transaction Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - customTx
+            aptosCustomTransactionParams:
+              type: object
+              properties:
+                moduleName:
+                  type: string
+                functionName:
+                  type: string
+                typeArguments:
+                  type: array
+                  items:
+                    type: string
+                functionArguments:
+                  type: array
+                  items: {}
+                abi:
+                  $ref: '#/components/schemas/EntryFunctionABI'
+              required:
+                - moduleName
+                - functionName
+          required:
+            - intentType
+            - aptosCustomTransactionParams
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/AptBuildOptions'
     AsiStakingRequest:
       title: ASI
       allOf:
@@ -50621,6 +50666,19 @@ components:
               - $ref: '#/components/schemas/EnterpriseStub'
       required:
         - enterprises
+    EntryFunctionABI:
+      title: EntryFunctionABI
+      type: object
+      properties:
+        typeParameters:
+          type: array
+          items: {}
+        parameters:
+          type: array
+          items: {}
+      required:
+        - typeParameters
+        - parameters
     EntryType:
       title: EntryType
       type: string
@@ -56297,6 +56355,8 @@ components:
         satsPerVbyte:
           type: string
           format: number
+        numBlocks:
+          type: number
       required:
         - recipients
     LightningPaymentFailureReason:
@@ -58372,7 +58432,7 @@ components:
           type: array
           items:
             type: string
-            description: IP addresses of clients that are allowed to use this token
+            description: IP addresses or CIDR block of clients that are allowed to use this token
         isExtensible:
           type: boolean
           description: Indicates if the access token is extensible
@@ -59502,29 +59562,58 @@ components:
       title: PaymentIntent
       allOf:
         - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - payment
-            recipients:
-              type: array
-              items:
-                type: object
-                properties:
-                  address:
-                    $ref: '#/components/schemas/Address'
-                  amount:
-                    $ref: '#/components/schemas/Amount'
-                  data:
-                    $ref: '#/components/schemas/optionalString'
-                required:
-                  - address
-                  - amount
-          required:
-            - intentType
-            - recipients
+          properties: {}
         - $ref: '#/components/schemas/BaseIntent'
+        - oneOf:
+            - type: object
+              properties:
+                intentType:
+                  type: string
+                  enum:
+                    - payment
+                recipients:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address:
+                        $ref: '#/components/schemas/Address'
+                      amount:
+                        $ref: '#/components/schemas/Amount'
+                      data:
+                        $ref: '#/components/schemas/optionalString'
+                    required:
+                      - address
+                      - amount
+              required:
+                - intentType
+                - recipients
+            - type: object
+              properties:
+                intentType:
+                  type: string
+                  enum:
+                    - payment
+                isTestTransaction:
+                  type: boolean
+                recipients:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address:
+                        $ref: '#/components/schemas/Address'
+                      amount:
+                        $ref: '#/components/schemas/Amount'
+                      data:
+                        $ref: '#/components/schemas/optionalString'
+                    required:
+                      - address
+                      - amount
+              required:
+                - intentType
+                - isTestTransaction
+                - recipients
     PaymentIntent1:
       title: PaymentIntent
       allOf:
@@ -62240,6 +62329,33 @@ components:
       allOf:
         - $ref: '#/components/schemas/DelegationProperties'
         - type: object
+    PolyxPreApproveAssetIntent:
+      title: POLYX Pre-Approve Asset Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - enableToken
+            enableTokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  address:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - name
+            memo:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - intentType
+            - enableTokens
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     PolyxStakeIntent:
       title: POLYX Stake Intent
       allOf:
@@ -64161,11 +64277,16 @@ components:
                 - $ref: '#/components/schemas/optionalString'
               description: The type of message standard, e.g. 'EIP191', 'EIP712', 'CIP8' etc.
               example: 'for EVM: EIP191'
+            signerAddress:
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: The address of the signer, could be the root address or a receive address of the wallet
           required:
             - intentType
             - messageRaw
             - messageEncoded
             - messageStandardType
+            - signerAddress
         - $ref: '#/components/schemas/BaseIntent'
     SignOrganizationEnterpriseContractResponseC:
       title: SignOrganizationEnterpriseContractResponseC
@@ -64747,7 +64868,6 @@ components:
           required:
             - validatorAddress
             - amount
-            - stakingType
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolStakeIntent1:
@@ -64932,6 +65052,81 @@ components:
           required:
             - stakingAddress
         - $ref: '#/components/schemas/UnstakeIntent1'
+        - $ref: '#/components/schemas/SolBuildOptions'
+    SolVersionedCustomTxIntent:
+      title: SOL Versioned Custom Transaction Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - customTx
+            solVersionedTransactionData:
+              type: object
+              properties:
+                versionedInstructions:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      programIdIndex:
+                        type: number
+                      accountKeyIndexes:
+                        type: array
+                        items:
+                          type: number
+                      data:
+                        type: string
+                    required:
+                      - programIdIndex
+                      - accountKeyIndexes
+                      - data
+                addressLookupTables:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      accountKey:
+                        type: string
+                      writableIndexes:
+                        type: array
+                        items:
+                          type: number
+                      readonlyIndexes:
+                        type: array
+                        items:
+                          type: number
+                    required:
+                      - accountKey
+                      - writableIndexes
+                      - readonlyIndexes
+                staticAccountKeys:
+                  type: array
+                  items:
+                    type: string
+                messageHeader:
+                  type: object
+                  properties:
+                    numRequiredSignatures:
+                      type: number
+                    numReadonlySignedAccounts:
+                      type: number
+                    numReadonlyUnsignedAccounts:
+                      type: number
+                  required:
+                    - numRequiredSignatures
+                    - numReadonlySignedAccounts
+                    - numReadonlyUnsignedAccounts
+              required:
+                - versionedInstructions
+                - addressLookupTables
+                - staticAccountKeys
+                - messageHeader
+          required:
+            - intentType
+            - solVersionedTransactionData
+        - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolWallet:
       title: Sol Wallet
@@ -67534,6 +67729,34 @@ components:
               type: string
             validator:
               type: string
+    TaoSwitchValidatorIntent:
+      title: Tao Switch Validator Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - switchValidator
+            originHotkey:
+              type: string
+            destinationHotkey:
+              type: string
+            originNetuid:
+              type: string
+            destinationNetuid:
+              type: string
+            alphaAmount:
+              type: string
+          required:
+            - intentType
+            - originHotkey
+            - destinationHotkey
+            - originNetuid
+            - destinationNetuid
+            - alphaAmount
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     TaoSwitchValidatorRequestEntityProperties:
       title: TAO switch validator staking request entity properties
       allOf:
@@ -68506,6 +68729,7 @@ components:
         - $ref: '#/components/schemas/AdaStakeIntent'
         - $ref: '#/components/schemas/AdaUnstakeIntent'
         - $ref: '#/components/schemas/AdaVoteDelegationIntent'
+        - $ref: '#/components/schemas/AptCustomTxIntent'
         - $ref: '#/components/schemas/AtomPaymentIntent'
         - $ref: '#/components/schemas/AtomStakeIntent'
         - $ref: '#/components/schemas/AtomUnstakeIntent'
@@ -68542,6 +68766,7 @@ components:
         - $ref: '#/components/schemas/NearUnstakeIntent'
         - $ref: '#/components/schemas/NearWithdrawIntent'
         - $ref: '#/components/schemas/PolyxCreateAccountIntent'
+        - $ref: '#/components/schemas/PolyxPreApproveAssetIntent'
         - $ref: '#/components/schemas/PolyxStakeIntent'
         - $ref: '#/components/schemas/PolyxUnstakeIntent'
         - $ref: '#/components/schemas/PolyxWithdrawIntent'
@@ -68557,6 +68782,7 @@ components:
         - $ref: '#/components/schemas/SolPaymentIntent'
         - $ref: '#/components/schemas/SolStakeIntent'
         - $ref: '#/components/schemas/SolUnstakeIntent'
+        - $ref: '#/components/schemas/SolVersionedCustomTxIntent'
         - $ref: '#/components/schemas/SubstrateConsolidateIntent'
         - $ref: '#/components/schemas/SubstratePaymentIntent'
         - $ref: '#/components/schemas/SuiConsolidateIntent'
@@ -68566,6 +68792,7 @@ components:
         - $ref: '#/components/schemas/SuiStakingIntent'
         - $ref: '#/components/schemas/SuiUnstakingIntent'
         - $ref: '#/components/schemas/TaoStakeIntent'
+        - $ref: '#/components/schemas/TaoSwitchValidatorIntent'
         - $ref: '#/components/schemas/TaoUnstakeIntent'
         - $ref: '#/components/schemas/TokenApprovalIntent'
         - $ref: '#/components/schemas/TonConsolidateIntent'
@@ -68573,6 +68800,9 @@ components:
         - $ref: '#/components/schemas/TonPaymentIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/VetStakingIntent'
+        - $ref: '#/components/schemas/VetExitDelegationIntent'
+        - $ref: '#/components/schemas/VetBurnNFTIntent'
+        - $ref: '#/components/schemas/VetStakeClaimRewardsIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
@@ -74506,6 +74736,24 @@ components:
       required:
         - webhookId
         - isValid
+    VetBurnNFTIntent:
+      title: VET Burn NFT Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - unstake
+            tokenId:
+              type: string
+            nftContractAddress:
+              type: string
+          required:
+            - intentType
+            - tokenId
+            - nftContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     VetDelegationProperties:
       title: VET Delegation Properties
       allOf:
@@ -74538,6 +74786,44 @@ components:
               type: integer
               format: int32
               nullable: true
+    VetExitDelegationIntent:
+      title: VET Exit Delegation Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            tokenId:
+              type: string
+            delegationContractAddress:
+              type: string
+          required:
+            - intentType
+            - tokenId
+            - delegationContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    VetStakeClaimRewardsIntent:
+      title: VET Stake Claim Rewards Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+            tokenId:
+              type: string
+              minLength: 1
+            delegationContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - tokenId
+            - delegationContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     VetStakingIntent:
       title: VET Staking Intent
       allOf:
@@ -74880,7 +75166,7 @@ components:
                     - freeze
                     - trade
                     - dapp
-                  description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets'
+                  description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets 6. ''dapp'': connect to third-party dApps and provide them access to wallet operations'
               recoverable:
                 type: boolean
               user:
@@ -75781,7 +76067,7 @@ components:
                           - freeze
                           - trade
                           - dapp
-                        description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets'
+                        description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets 6. ''dapp'': connect to third-party dApps and provide them access to wallet operations'
                     recoverable:
                       type: boolean
                     user:
