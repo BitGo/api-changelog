@@ -27590,6 +27590,21 @@ paths:
               schema:
                 type: object
                 properties: {}
+  /api/v1/client/constants:
+    get:
+      summary: Get Client Constants
+      description: Returns the client constants including fee rates, network configurations, and BitGo organization settings
+      operationId: v1.client.constants
+      tags:
+        - Client
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConstantsWithTTL'
   /api/v1/user/login:
     post:
       summary: Login Request
@@ -44995,6 +45010,25 @@ components:
               type: string
             destValidatorAddress:
               type: string
+    BaseToken:
+      title: BaseToken
+      type: object
+      properties:
+        type:
+          type: string
+        coin:
+          type: string
+        decimalPlaces:
+          type: number
+        name:
+          type: string
+        network:
+          type: string
+      required:
+        - type
+        - coin
+        - decimalPlaces
+        - name
     BaseTradeCorrectionMetadata:
       title: BaseTradeCorrectionMetadata
       type: object
@@ -45289,6 +45323,91 @@ components:
         - year
       title: Birthdate
       description: Birthdate
+    BitGoOrgConfig:
+      title: BitGoOrgConfig
+      type: object
+      properties:
+        name:
+          type: string
+        isTrust:
+          type: boolean
+        kycRequired:
+          type: boolean
+        kycFullyRequired:
+          type: boolean
+        videoIdRequired:
+          type: boolean
+        videoIdWaivedDefault:
+          type: boolean
+        passportRequired:
+          type: boolean
+        custodialWallet:
+          type: boolean
+        pairedCustodialWallet:
+          type: boolean
+        settlement:
+          type: boolean
+        tradingAccount:
+          type: boolean
+        trading:
+          type: boolean
+        escrow:
+          type: boolean
+        distributedCustodyWallet:
+          type: boolean
+        finalCustodianApproval:
+          type: boolean
+        travelRuleTRUST:
+          $ref: '#/components/schemas/TravelRuleConfig'
+        userKycProperties:
+          type: array
+          items:
+            type: string
+        useEntityValidationLibrary:
+          type: boolean
+        selfCustodyLightningWallet:
+          type: boolean
+        custodyLightningWallet:
+          type: boolean
+        advancedWallets:
+          type: boolean
+        showTradingTab:
+          type: boolean
+        enableEnterpriseDeletion:
+          type: boolean
+        staking:
+          type: boolean
+        stakingApi:
+          type: boolean
+        showStakingTab:
+          type: boolean
+      required:
+        - name
+        - isTrust
+        - kycRequired
+        - kycFullyRequired
+        - videoIdRequired
+        - videoIdWaivedDefault
+        - passportRequired
+        - custodialWallet
+        - pairedCustodialWallet
+        - settlement
+        - tradingAccount
+        - trading
+        - escrow
+        - distributedCustodyWallet
+        - finalCustodianApproval
+        - travelRuleTRUST
+        - userKycProperties
+        - useEntityValidationLibrary
+        - selfCustodyLightningWallet
+        - custodyLightningWallet
+        - advancedWallets
+        - showTradingTab
+        - enableEnterpriseDeletion
+        - staking
+        - stakingApi
+        - showStakingTab
     Bitcoin:
       type: string
       enum:
@@ -47407,6 +47526,871 @@ components:
         - eth
         - hteth
       description: This route is only available for Algorand, Tezos, and Eth.
+    Constants:
+      title: Constants
+      type: object
+      properties:
+        maxFee:
+          type: number
+        maxFeeRate:
+          type: number
+        minFeeRate:
+          type: number
+        minInstantFeeRate:
+          type: number
+        fallbackFeeRate:
+          type: number
+        minOutputSize:
+          type: number
+        defaultGasPrice:
+          type: number
+        bitgoEthAddress:
+          type: string
+        enableSegwit:
+          type: boolean
+        enableP2shP2wsh:
+          type: boolean
+        enableP2wsh:
+          type: boolean
+        tcelo:
+          $ref: '#/components/schemas/NetworkConfig'
+        tbsc:
+          $ref: '#/components/schemas/NetworkConfigWithNFT'
+        teth:
+          $ref: '#/components/schemas/NetworkConfigWithSecurityAndNFT'
+        gteth:
+          $ref: '#/components/schemas/NetworkConfigWithNFT'
+        hteth:
+          $ref: '#/components/schemas/NetworkConfigWithNFT'
+        txlm:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      domain:
+                        type: string
+                    required:
+                      - domain
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        teos:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      tokenContractAddress:
+                        type: string
+                      symbol:
+                        type: string
+                    required:
+                      - tokenContractAddress
+                      - symbol
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        talgo:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  coin:
+                    type: string
+                  decimalPlaces:
+                    type: number
+                  name:
+                    type: string
+                  network:
+                    type: string
+                required:
+                  - type
+                  - coin
+                  - decimalPlaces
+                  - name
+          required:
+            - tokens
+        tavaxc:
+          $ref: '#/components/schemas/NetworkConfig'
+        tsol:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  coin:
+                    type: string
+                  decimalPlaces:
+                    type: number
+                  name:
+                    type: string
+                  network:
+                    type: string
+                required:
+                  - type
+                  - coin
+                  - decimalPlaces
+                  - name
+          required:
+            - tokens
+        thbar:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  coin:
+                    type: string
+                  decimalPlaces:
+                    type: number
+                  name:
+                    type: string
+                  network:
+                    type: string
+                required:
+                  - type
+                  - coin
+                  - decimalPlaces
+                  - name
+          required:
+            - tokens
+        tpolygon:
+          $ref: '#/components/schemas/NetworkConfigWithNFT'
+        tarbeth:
+          $ref: '#/components/schemas/NetworkConfig'
+        topeth:
+          $ref: '#/components/schemas/NetworkConfig'
+        ttrx:
+          $ref: '#/components/schemas/NetworkConfig'
+        tsui:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      contractAddress:
+                        type: string
+                    required:
+                      - contractAddress
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        ttao:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      subnetId:
+                        type: string
+                    required:
+                      - subnetId
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        tbera:
+          $ref: '#/components/schemas/NetworkConfig'
+        txrp:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      issuerAddress:
+                        type: string
+                      currencyCode:
+                        type: string
+                      domain:
+                        type: string
+                    required:
+                      - issuerAddress
+                      - currencyCode
+                      - domain
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        tapt:
+          $ref: '#/components/schemas/NetworkConfigWithAssetAndNFT'
+        tstx:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      assetId:
+                        type: string
+                    required:
+                      - assetId
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        tcoredao:
+          $ref: '#/components/schemas/NetworkConfig'
+        tsoneium:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      nftType:
+                        type: string
+                    required:
+                      - nftType
+                  - $ref: '#/components/schemas/TokenWithContractAddress'
+          required:
+            - tokens
+        tnear:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      storageDepositAmount:
+                        type: string
+                    required:
+                      - storageDepositAmount
+                  - $ref: '#/components/schemas/TokenWithContractAddressOnly'
+          required:
+            - tokens
+        tworld:
+          $ref: '#/components/schemas/NetworkConfig'
+        tvet:
+          $ref: '#/components/schemas/NetworkConfigWithNFTCollection'
+        thash:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      denom:
+                        type: string
+                    required:
+                      - denom
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        tpolyx:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      ticker:
+                        type: string
+                    required:
+                      - ticker
+                  - $ref: '#/components/schemas/TokenWithAssetId'
+          required:
+            - tokens
+        tada:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      assetName:
+                        type: string
+                      policyId:
+                        type: string
+                      contractAddress:
+                        type: string
+                    required:
+                      - assetName
+                      - policyId
+                      - contractAddress
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        tflr:
+          $ref: '#/components/schemas/NetworkConfig'
+        tbaseeth:
+          $ref: '#/components/schemas/NetworkConfig'
+        tflow:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items: {}
+          required:
+            - tokens
+        tseievm:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items: {}
+          required:
+            - tokens
+        tlineaeth:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items: {}
+          required:
+            - tokens
+        underMaintenance:
+          type: object
+          properties: {}
+        idfVersion:
+          type: number
+        enterpriseLicenses:
+          $ref: '#/components/schemas/ConstantsEnterpriseLicenses'
+        coins:
+          type: array
+          items:
+            type: string
+        gatekeep:
+          type: array
+          items:
+            type: string
+        bitgoOrg:
+          type: object
+          properties:
+            BitGo Inc:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo Trust:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo New York:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo Germany:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo Switzerland:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo Europe ApS:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            Frankfurt DE Trust:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo Sister Trust 1:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo Korea:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo Singapore:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo Custody MENA FZE:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+            BitGo India:
+              $ref: '#/components/schemas/BitGoOrgConfig'
+          required:
+            - BitGo Inc
+            - BitGo Trust
+            - BitGo New York
+            - BitGo Germany
+            - BitGo Switzerland
+            - BitGo Europe ApS
+            - Frankfurt DE Trust
+            - BitGo Sister Trust 1
+            - BitGo Korea
+            - BitGo Singapore
+            - BitGo Custody MENA FZE
+            - BitGo India
+        mpc:
+          $ref: '#/components/schemas/MPCConfig'
+        trustPubKey:
+          type: string
+        eth:
+          $ref: '#/components/schemas/NetworkConfigWithSecurityAndNFT'
+        xlm:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      domain:
+                        type: string
+                    required:
+                      - domain
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        ofc:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  backingCoin:
+                    type: string
+                  coin:
+                    type: string
+                  decimalPlaces:
+                    type: number
+                  isFiat:
+                    type: boolean
+                  name:
+                    type: string
+                  type:
+                    type: string
+                  addressCoin:
+                    type: string
+                required:
+                  - backingCoin
+                  - coin
+                  - decimalPlaces
+                  - isFiat
+                  - name
+                  - type
+          required:
+            - tokens
+        celo:
+          $ref: '#/components/schemas/NetworkConfig'
+        eos:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      tokenContractAddress:
+                        type: string
+                      symbol:
+                        type: string
+                    required:
+                      - tokenContractAddress
+                      - symbol
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        algo:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  coin:
+                    type: string
+                  decimalPlaces:
+                    type: number
+                  name:
+                    type: string
+                  network:
+                    type: string
+                required:
+                  - type
+                  - coin
+                  - decimalPlaces
+                  - name
+          required:
+            - tokens
+        avaxc:
+          $ref: '#/components/schemas/NetworkConfig'
+        hbar:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  coin:
+                    type: string
+                  decimalPlaces:
+                    type: number
+                  name:
+                    type: string
+                  network:
+                    type: string
+                required:
+                  - type
+                  - coin
+                  - decimalPlaces
+                  - name
+          required:
+            - tokens
+        sol:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  coin:
+                    type: string
+                  decimalPlaces:
+                    type: number
+                  name:
+                    type: string
+                  network:
+                    type: string
+                required:
+                  - type
+                  - coin
+                  - decimalPlaces
+                  - name
+          required:
+            - tokens
+        polygon:
+          $ref: '#/components/schemas/NetworkConfigWithNFT'
+        arbeth:
+          $ref: '#/components/schemas/NetworkConfig'
+        opeth:
+          $ref: '#/components/schemas/NetworkConfig'
+        bsc:
+          $ref: '#/components/schemas/NetworkConfigWithNFT'
+        trx:
+          $ref: '#/components/schemas/NetworkConfig'
+        sui:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      contractAddress:
+                        type: string
+                    required:
+                      - contractAddress
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        bera:
+          $ref: '#/components/schemas/NetworkConfig'
+        xrp:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      issuerAddress:
+                        type: string
+                      currencyCode:
+                        type: string
+                      domain:
+                        type: string
+                    required:
+                      - issuerAddress
+                      - currencyCode
+                      - domain
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        tao:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items: {}
+          required:
+            - tokens
+        apt:
+          $ref: '#/components/schemas/NetworkConfigWithAssetAndNFT'
+        stx:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      assetId:
+                        type: string
+                    required:
+                      - assetId
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        coredao:
+          $ref: '#/components/schemas/NetworkConfig'
+        soneium:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      nftType:
+                        type: string
+                    required:
+                      - nftType
+                  - $ref: '#/components/schemas/TokenWithContractAddress'
+          required:
+            - tokens
+        near:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      storageDepositAmount:
+                        type: string
+                    required:
+                      - storageDepositAmount
+                  - $ref: '#/components/schemas/TokenWithContractAddressOnly'
+          required:
+            - tokens
+        world:
+          $ref: '#/components/schemas/NetworkConfig'
+        vet:
+          $ref: '#/components/schemas/NetworkConfigWithNFTCollection'
+        hash:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items:
+                allOf:
+                  - type: object
+                    properties:
+                      denom:
+                        type: string
+                    required:
+                      - denom
+                  - $ref: '#/components/schemas/BaseToken'
+          required:
+            - tokens
+        polyx:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items: {}
+          required:
+            - tokens
+        ada:
+          type: object
+          properties:
+            tokens:
+              type: array
+              items: {}
+          required:
+            - tokens
+        flr:
+          $ref: '#/components/schemas/NetworkConfig'
+        baseeth:
+          $ref: '#/components/schemas/NetworkConfig'
+        seievm:
+          $ref: '#/components/schemas/NetworkConfig'
+        lineaeth:
+          $ref: '#/components/schemas/NetworkConfig'
+      required:
+        - maxFee
+        - maxFeeRate
+        - minFeeRate
+        - minInstantFeeRate
+        - fallbackFeeRate
+        - minOutputSize
+        - defaultGasPrice
+        - bitgoEthAddress
+        - enableSegwit
+        - enableP2shP2wsh
+        - enableP2wsh
+        - tcelo
+        - tbsc
+        - teth
+        - gteth
+        - hteth
+        - txlm
+        - teos
+        - talgo
+        - tavaxc
+        - tsol
+        - thbar
+        - tpolygon
+        - tarbeth
+        - topeth
+        - ttrx
+        - tsui
+        - ttao
+        - tbera
+        - txrp
+        - tapt
+        - tstx
+        - tcoredao
+        - tsoneium
+        - tnear
+        - tworld
+        - tvet
+        - thash
+        - tpolyx
+        - tada
+        - tflr
+        - tbaseeth
+        - tflow
+        - tseievm
+        - tlineaeth
+        - underMaintenance
+        - idfVersion
+        - enterpriseLicenses
+        - coins
+        - gatekeep
+        - bitgoOrg
+        - mpc
+        - trustPubKey
+    ConstantsEnterpriseLicenses:
+      title: ConstantsEnterpriseLicenses
+      type: object
+      properties:
+        canAccessSettlement:
+          type: array
+          items:
+            type: string
+        canAccessTrading:
+          type: array
+          items:
+            type: string
+        staking:
+          type: array
+          items:
+            type: string
+        stakingApi:
+          type: array
+          items:
+            type: string
+        bitgoTrustAsKrs:
+          type: array
+          items:
+            type: string
+        canCreateOffchainWallet:
+          type: array
+          items:
+            type: string
+        bitgoNetwork:
+          type: array
+          items:
+            type: string
+        marginTrading:
+          type: array
+          items:
+            type: string
+        mtGox:
+          type: array
+          items:
+            type: string
+        tradeAPI:
+          type: array
+          items:
+            type: string
+        videoIdWaived:
+          type: array
+          items:
+            type: string
+        cheetahAccountId:
+          type: array
+          items:
+            type: string
+        escrow:
+          type: array
+          items:
+            type: string
+        distributedCustodyWallet:
+          type: array
+          items:
+            type: string
+        selfCustodyLightningWallet:
+          type: array
+          items:
+            type: string
+        custodyLightningWallet:
+          type: array
+          items:
+            type: string
+        advancedWallets:
+          type: array
+          items:
+            type: string
+      required:
+        - canAccessSettlement
+        - canAccessTrading
+        - staking
+        - stakingApi
+        - bitgoTrustAsKrs
+        - canCreateOffchainWallet
+        - bitgoNetwork
+        - marginTrading
+        - mtGox
+        - tradeAPI
+        - videoIdWaived
+        - cheetahAccountId
+        - escrow
+        - distributedCustodyWallet
+        - selfCustodyLightningWallet
+        - custodyLightningWallet
+        - advancedWallets
+    ConstantsWithTTL:
+      title: ConstantsWithTTL
+      type: object
+      properties:
+        ttl:
+          type: number
+        constants:
+          $ref: '#/components/schemas/Constants'
+      required:
+        - ttl
+        - constants
     ContractType:
       title: ContractType
       type: string
@@ -49145,6 +50129,14 @@ components:
           allOf:
             - $ref: '#/components/schemas/ExpectedTransfers'
           description: The adjusted transfers as a result of the dispute closure.
+        reviewedBy:
+          type: string
+          description: The id of the admin who reviewed the dispute closure.
+          minLength: 1
+        reviewNotes:
+          type: string
+          description: Any comments entered by the admin when reviewing the dispute closure.
+          minLength: 1
       required:
         - id
         - closedBy
@@ -57272,6 +58264,20 @@ components:
         - token_type
         - grant_type
         - user
+    MPCConfig:
+      title: MPCConfig
+      type: object
+      properties:
+        bitgoPublicKey:
+          type: string
+        bitgoMPCv2PublicKey:
+          type: string
+        bitgoNitroPublicKey:
+          type: string
+      required:
+        - bitgoPublicKey
+        - bitgoMPCv2PublicKey
+        - bitgoNitroPublicKey
     MarginNetOpenPosition:
       type: object
       required:
@@ -58020,6 +59026,72 @@ components:
           - partnersConnectionId
           - name
           - balances
+    NetworkConfig:
+      title: NetworkConfig
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  tokenContractAddress:
+                    type: string
+                required:
+                  - tokenContractAddress
+              - $ref: '#/components/schemas/BaseToken'
+      required:
+        - tokens
+    NetworkConfigWithAssetAndNFT:
+      title: NetworkConfigWithAssetAndNFT
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TokenWithAssetId'
+              - $ref: '#/components/schemas/TokenWithNFTCollection'
+      required:
+        - tokens
+    NetworkConfigWithNFT:
+      title: NetworkConfigWithNFT
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TokenWithContractAddress'
+              - $ref: '#/components/schemas/TokenWithNFT'
+      required:
+        - tokens
+    NetworkConfigWithNFTCollection:
+      title: NetworkConfigWithNFTCollection
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TokenWithContractAddressOnly'
+              - $ref: '#/components/schemas/TokenWithNFTCollection'
+      required:
+        - tokens
+    NetworkConfigWithSecurityAndNFT:
+      title: NetworkConfigWithSecurityAndNFT
+      type: object
+      properties:
+        tokens:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TokenWithContractAddress'
+              - $ref: '#/components/schemas/TokenWithSecurityType'
+              - $ref: '#/components/schemas/TokenWithNFT'
+      required:
+        - tokens
     NewLimitOrderRequest:
       title: Limit
       required:
@@ -68074,6 +69146,69 @@ components:
       required:
         - tokenQuantity
         - tokenType
+    TokenWithAssetId:
+      title: TokenWithAssetId
+      allOf:
+        - type: object
+          properties:
+            assetId:
+              type: string
+          required:
+            - assetId
+        - $ref: '#/components/schemas/BaseToken'
+    TokenWithContractAddress:
+      title: TokenWithContractAddress
+      allOf:
+        - type: object
+          properties:
+            tokenContractAddress:
+              type: string
+          required:
+            - tokenContractAddress
+        - $ref: '#/components/schemas/BaseToken'
+    TokenWithContractAddressOnly:
+      title: TokenWithContractAddressOnly
+      allOf:
+        - type: object
+          properties:
+            contractAddress:
+              type: string
+          required:
+            - contractAddress
+        - $ref: '#/components/schemas/BaseToken'
+    TokenWithNFT:
+      title: TokenWithNFT
+      allOf:
+        - type: object
+          properties:
+            nftType:
+              type: string
+          required:
+            - nftType
+        - $ref: '#/components/schemas/TokenWithContractAddress'
+    TokenWithNFTCollection:
+      title: TokenWithNFTCollection
+      allOf:
+        - type: object
+          properties:
+            nftCollectionId:
+              type: string
+            nftType:
+              type: string
+          required:
+            - nftCollectionId
+            - nftType
+        - $ref: '#/components/schemas/BaseToken'
+    TokenWithSecurityType:
+      title: TokenWithSecurityType
+      allOf:
+        - type: object
+          properties:
+            securityTokenType:
+              type: string
+          required:
+            - securityTokenType
+        - $ref: '#/components/schemas/TokenWithContractAddress'
     TonAddress:
       title: Ton Address
       type: object
@@ -70626,6 +71761,22 @@ components:
       required:
         - transfers
         - coin
+    TravelRuleConfig:
+      title: TravelRuleConfig
+      type: object
+      properties:
+        include:
+          type: boolean
+        requireSenderInfoForReceives:
+          type: boolean
+        restrictWhitelist:
+          type: boolean
+        minimumTxAmount:
+          type: number
+      required:
+        - include
+        - requireSenderInfoForReceives
+        - restrictWhitelist
     TrimmedBalance:
       title: TrimmedBalance
       type: object
