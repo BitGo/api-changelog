@@ -42339,6 +42339,18 @@ components:
           additionalProperties: true
         type:
           $ref: '#/components/schemas/ListRuleEntryType'
+        verificationState:
+          type: string
+          enum:
+            - unverified
+            - verified
+          description: A state denoting whether entries have already been verified.
+        verifiedBy:
+          type: string
+          enum:
+            - unverifiedRule
+            - fastWithdrawal
+          description: The source that verified this entry (unverifiedRule or fastWithdrawal)
       required:
         - item
         - type
@@ -67789,7 +67801,10 @@ components:
           description: The validator commission rate.
           type: string
         type:
-          description: The validator provider used for staking.
+          description: The validator provider display used for staking.
+          type: string
+        provider:
+          description: The validator provider enum used for staking.
           type: string
         rewardCoin:
           description: The coin in which rewards will be received.
