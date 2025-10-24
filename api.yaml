@@ -34916,7 +34916,7 @@ paths:
       description: |-
         Lists all wallet share requests:
         - List of the wallets and the users for which wallet share request is present.
-      operationId: v2.walletsharerequests.list
+      operationId: v2.walletsharerequest.list
       tags:
         - Wallet
       responses:
@@ -57021,6 +57021,8 @@ components:
           $ref: '#/components/schemas/KycPassport'
         residency:
           $ref: '#/components/schemas/KycResidency'
+        ongoingScreening:
+          $ref: '#/components/schemas/KycOngoingScreening'
         isScreeningRequired:
           type: boolean
         documentsWaived:
@@ -57060,6 +57062,17 @@ components:
       properties:
         state:
           $ref: '#/components/schemas/UserKycState1'
+      required:
+        - state
+    KycOngoingScreening:
+      title: KycOngoingScreening
+      type: object
+      properties:
+        state:
+          type: string
+          enum:
+            - approved
+            - rejected
       required:
         - state
     KycPassport:
