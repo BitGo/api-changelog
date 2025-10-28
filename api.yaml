@@ -11410,6 +11410,58 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/notifications/v1/mute/wallet:
+    put:
+      tags:
+        - User Management Notification
+      summary: Mute wallet notifications
+      description: Mutes notifications from a specific wallet for the authenticated user. Uses PUT as this operation creates or updates existing mute settings.
+      operationId: muteWallet
+      parameters:
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MuteWalletRequest'
+        required: true
+      responses:
+        '200':
+          description: Wallet notifications muted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteResponse'
+  /api/notifications/v1/mute/enterprise:
+    put:
+      tags:
+        - User Management Notification
+      summary: Mute enterprise notifications
+      description: Mutes notifications from a specific enterprise for the authenticated user. Uses PUT as this operation creates or updates existing mute settings.
+      operationId: muteEnterprise
+      parameters:
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MuteEnterpriseRequest'
+        required: true
+      responses:
+        '200':
+          description: Enterprise notifications muted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteResponse'
   /api/notifications/v1/tokens:
     post:
       tags:
@@ -11436,6 +11488,26 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddDeviceTokenResponse'
+  /api/notifications/v1/mute:
+    get:
+      tags:
+        - User Management Notification
+      summary: Get notification mute settings
+      description: Retrieves the current notification mute settings for the authenticated user.
+      operationId: getMuteSettings
+      parameters:
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Mute settings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteResponse'
   /api/notifications/v1/categories:
     get:
       tags:
@@ -11481,6 +11553,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeleteDeviceTokenResponse'
+  /api/notifications/v1/mute/wallet/{walletId}:
+    delete:
+      tags:
+        - User Management Notification
+      summary: Unmute wallet notifications
+      description: Unmutes notifications from a specific wallet for the authenticated user.
+      operationId: unmuteWallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Wallet notifications unmuted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteResponse'
+  /api/notifications/v1/mute/enterprise/{enterpriseId}:
+    delete:
+      tags:
+        - User Management Notification
+      summary: Unmute enterprise notifications
+      description: Unmutes notifications from a specific enterprise for the authenticated user.
+      operationId: unmuteEnterprise
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '202':
+          description: Enterprise notifications unmuted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteResponse'
   /api/org/enterprise/{enterpriseId}:
     get:
       operationId: org.enterprise
@@ -58819,6 +58941,45 @@ components:
       enum:
         - managed
         - permanent
+    MuteEnterpriseRequest:
+      required:
+        - enterpriseId
+      type: object
+      properties:
+        enterpriseId:
+          maxLength: 100
+          minLength: 0
+          type: string
+    MuteResponse:
+      required:
+        - message
+        - success
+        - userId
+      type: object
+      properties:
+        userId:
+          type: string
+        success:
+          type: boolean
+        message:
+          type: string
+        mutedEnterpriseIds:
+          type: array
+          items:
+            type: string
+        mutedWalletIds:
+          type: array
+          items:
+            type: string
+    MuteWalletRequest:
+      required:
+        - walletId
+      type: object
+      properties:
+        walletId:
+          maxLength: 100
+          minLength: 0
+          type: string
     Name:
       type: object
       properties:
