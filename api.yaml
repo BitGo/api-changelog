@@ -27185,6 +27185,7 @@ paths:
                   type: string
                   description: Amount to be transferred from source asset, specified in its lowest denomination.
                   example: '100'
+                  pattern: ^[1-9][0-9]*$
                 toAssetId:
                   type: string
                   description: Destination asset identifier
@@ -27350,14 +27351,14 @@ paths:
           schema:
             type: string
             example: '10'
-            format: number
+            pattern: ^[1-9][0-9]*$
         - name: skip
           description: Results to skip
           in: query
           schema:
             type: string
             example: '0'
-            format: number
+            pattern: ^[0-9]+$
         - name: sortBy
           description: Field name for sorting
           in: query
@@ -55220,22 +55221,13 @@ components:
                 description: Total supply for this chain in the smallest unit (wei, satoshi, etc.)
                 example: '1000000000000000000'
                 minLength: 1
-              success:
-                type: boolean
-                description: Whether the supply fetch was successful
-                example: true
               error:
                 type: string
                 description: Error message if supply fetch failed
                 example: Network timeout
-              cached:
-                type: boolean
-                description: Whether this supply data was retrieved from cache
-                example: true
             required:
               - chain
               - supply
-              - success
             description: Breakdown of supply by chain
         totalReserves:
           type: string
