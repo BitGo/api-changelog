@@ -44519,8 +44519,6 @@ components:
         name:
           type: string
           example: Small Company
-        additionalEnterpriseInfo:
-          $ref: '#/components/schemas/AdditionalEnterpriseInfo'
         bitgoOrg:
           allOf:
             - $ref: '#/components/schemas/BitgoOrg'
@@ -44581,6 +44579,8 @@ components:
           type: boolean
           description: Whether the customer has waived the need for Video ID on low risk withdrawals.
           example: false
+        additionalEnterpriseInfo:
+          $ref: '#/components/schemas/AdditionalEnterpriseInfo'
         tradeOnboardingAgreement:
           allOf:
             - $ref: '#/components/schemas/OnboardingAgreement'
@@ -44912,7 +44912,6 @@ components:
       required:
         - id
         - name
-        - additionalEnterpriseInfo
         - bitgoOrg
         - kycState
         - legalIdentifiers
@@ -51012,8 +51011,6 @@ components:
     DotWithdrawStakeIntent:
       title: DOT Withdraw Stake Intent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/WithdrawIntent'
         - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
     DuplicateSequenceId:
@@ -52165,8 +52162,6 @@ components:
     EthConsolidateIntent:
       title: ETH Consolidate Intent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/AccountBaseConsolidateIntent'
         - $ref: '#/components/schemas/EthBuildOptions'
     EthConsolidateTokenIntent:
@@ -52211,6 +52206,11 @@ components:
         senderAddressIndex:
           $ref: '#/components/schemas/optionalNumber'
     EthFillNonceIntent:
+      title: ETH Fill Nonce Intent
+      allOf:
+        - $ref: '#/components/schemas/FillNonceIntent'
+        - $ref: '#/components/schemas/EthFillNonceBuildOptions'
+    EthFillNonceIntent1:
       title: ETH Fill Nonce Intent
       allOf:
         - type: object
@@ -52484,8 +52484,6 @@ components:
     EthTransferTokenIntent:
       title: ETH Transfer Token Intent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/TransferTokenIntent'
         - $ref: '#/components/schemas/EthBuildOptions'
     EthUnStakingRequestPOSTBody:
@@ -57936,8 +57934,6 @@ components:
           type: array
           items:
             allOf:
-              - type: object
-                properties: {}
               - $ref: '#/components/schemas/ReportParams'
               - $ref: '#/components/schemas/GenericReportParamsJSON'
         nextBatchPrevId:
@@ -60815,8 +60811,6 @@ components:
     PaymentIntent:
       title: PaymentIntent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/BaseIntent'
         - oneOf:
             - type: object
@@ -64167,8 +64161,6 @@ components:
     ReportJSON:
       title: ReportJSON
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/ReportParams'
         - $ref: '#/components/schemas/GenericReportParamsJSON'
     ReportParams:
@@ -65963,6 +65955,11 @@ components:
     SolCreateAssociatedTokenAccountIntent:
       title: SOL Create Associated Token Account Intent
       allOf:
+        - $ref: '#/components/schemas/EnableTokenIntent'
+        - $ref: '#/components/schemas/SolBuildOptions'
+    SolCreateAssociatedTokenAccountIntent1:
+      title: SOL Create Associated Token Account Intent
+      allOf:
         - type: object
           properties: {}
         - $ref: '#/components/schemas/EnableTokenIntent'
@@ -66083,8 +66080,6 @@ components:
     SolGoUnstakeIntent:
       title: SolGoUnstakeIntent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/GoUnstakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolJitoStakingTransactionProperties:
@@ -66098,8 +66093,6 @@ components:
     SolPaymentIntent:
       title: SolPaymentIntent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolStakeIntent:
@@ -68535,8 +68528,6 @@ components:
     SuiConsolidateIntent:
       title: SUI Consolidate Intent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/AccountBaseConsolidateIntent'
         - $ref: '#/components/schemas/SuiBuildOptions'
     SuiCustomTxIntent:
@@ -68581,8 +68572,6 @@ components:
     SuiGoUnstakeIntent:
       title: SuiGoUnstakeIntent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/GoUnstakeIntent'
         - $ref: '#/components/schemas/SuiBuildOptions'
     SuiLikeStakingRequestEntityProperties:
@@ -68601,8 +68590,6 @@ components:
     SuiPaymentIntent:
       title: SUI Payment Intent
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/SuiBuildOptions'
     SuiStakingDelegation:
@@ -69286,8 +69273,6 @@ components:
     TokenData:
       title: TokenData
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/TokenRecipientEntryItem'
         - $ref: '#/components/schemas/SupportedTokenRecipientEntryItem'
         - $ref: '#/components/schemas/UnsupportedTokenRecipientEntryItem'
@@ -70532,7 +70517,7 @@ components:
         - $ref: '#/components/schemas/DotStakingIntent'
         - $ref: '#/components/schemas/DotUnstakingIntent'
         - $ref: '#/components/schemas/EthAccelerationIntent'
-        - $ref: '#/components/schemas/EthFillNonceIntent'
+        - $ref: '#/components/schemas/EthFillNonceIntent1'
         - $ref: '#/components/schemas/EthPaymentIntent'
         - $ref: '#/components/schemas/ETHSignMessageIntent'
         - $ref: '#/components/schemas/EthStakingIntent'
@@ -70540,7 +70525,7 @@ components:
         - $ref: '#/components/schemas/NearUnstakeIntent1'
         - $ref: '#/components/schemas/NearWithdrawIntent1'
         - $ref: '#/components/schemas/SolClaimIntent'
-        - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent'
+        - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent1'
         - $ref: '#/components/schemas/SolStakeIntent1'
         - $ref: '#/components/schemas/SolUnstakeIntent1'
         - $ref: '#/components/schemas/TransferTokenIntent1'
