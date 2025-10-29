@@ -2738,6 +2738,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: sortField
           description: 'The field to sort results on. Possible values: - id: Sort by allocation ID. - updatedAt: Sort by the last updated timestamp. - quantity: Sort by the allocation amount quantity. - currency: Sort by the allocation currency code. Note: A finals sort is always applied on createdAt ascending and id ascending, regardless of the specified sortField. This ensures consistent ordering for items with the same primary sort value.'
           in: query
@@ -2928,6 +2929,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: connectionIds
           description: 'Optional array of connection IDs to filter by. If provided: - Only balances for connections with these specific IDs will be returned. - Useful for monitoring specific trading relationships or connections. - Can be used to focus on particular allocation targets. If omitted, results will include data for all your connections subject to other filters.'
           in: query
@@ -3034,6 +3036,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: active
           in: query
           schema:
@@ -4034,6 +4037,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: enterpriseId
           description: The enterprise identifier of the client. This identifies the client enterprise that owns the allocation.
           in: path
@@ -4133,6 +4137,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: settlementIds
           description: Filter by specific settlement IDs. When provided, only settlements matching these IDs will be returned.
           in: query
@@ -4283,6 +4288,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: enterpriseId
           description: The enterprise identifier of the client. This identifies the client enterprise making the API request.
           in: path
@@ -4664,6 +4670,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: currencies
           description: Optional array of currencies. If provided will only return settlement transfers with those currencies.
           in: query
@@ -4821,6 +4828,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: ids
           description: Filter by specific partner IDs. When provided, only partners with these IDs will be returned.
           in: query
@@ -5119,6 +5127,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: sortField
           description: 'The field to sort results on. Possible values: - id: Sort by allocation ID. - updatedAt: Sort by the last updated timestamp. - quantity: Sort by the allocation amount quantity. Note: A final sort is always applied on createdAt ascending and id ascending, regardless of the specified sortField. This ensures consistent ordering for items with the same primary sort value.'
           in: query
@@ -5415,6 +5424,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: partnerIds
           description: 'Optional array of partner IDs to filter by. If provided: - Only balances for partners with these IDs will be returned. - Only connections to these partners will be included. - Useful when a partner has multiple partner entities and wants to filter results. If omitted, results will include data for all partners the requester has access to.'
           in: query
@@ -5537,6 +5547,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: active
           in: query
           schema:
@@ -5910,6 +5921,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: settlementExternalIds
           description: Optional array of settlement externalIds. If provided will only return disputes with a disputedSettlementId of a settlement with an externalId matching one of the provided settlementExternalIds.
           in: query
@@ -6037,6 +6049,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: settlementIds
           description: Filter by specific settlement IDs. When provided, only settlements matching these IDs will be returned.
           in: query
@@ -6436,6 +6449,7 @@ paths:
           in: query
           schema:
             type: string
+            format: integer
         - name: enterpriseId
           description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
@@ -63166,12 +63180,6 @@ components:
           items:
             type: string
             minLength: 1
-    PolicyResult:
-      title: PolicyResult
-      type: string
-      enum:
-        - approved
-        - rejected
     PolicyRule:
       type: object
       properties:
@@ -73447,6 +73455,20 @@ components:
         retriable:
           type: boolean
           description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
+        evaluationId:
+          type: string
+          description: The unique identifier of the policy evaluation for this allocation/deallocation. Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: The unique identifier of the pending approval for this allocation/deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 'The result of the policy evaluation for this allocation/deallocation. - ''approved'': Policy evaluation passed and the operation was allowed - ''rejected'': Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
         reason:
           nullable: true
           type: string
@@ -73540,6 +73562,20 @@ components:
               retriable:
                 type: boolean
                 description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
+              evaluationId:
+                type: string
+                description: The unique identifier of the policy evaluation for this allocation/deallocation. Present when policy evaluation was performed as part of the allocation flow.
+                minLength: 1
+              pendingApprovalId:
+                type: string
+                description: The unique identifier of the pending approval for this allocation/deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+                minLength: 1
+              policyResult:
+                type: string
+                enum:
+                  - approved
+                  - rejected
+                description: 'The result of the policy evaluation for this allocation/deallocation. - ''approved'': Policy evaluation passed and the operation was allowed - ''rejected'': Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
               reason:
                 nullable: true
                 type: string
@@ -73581,8 +73617,6 @@ components:
     V1AllocationsReleasedWithErrorPostPayload:
       title: V1AllocationsReleasedWithErrorPostPayload
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/V1AllocationsReleasedPayload'
         - $ref: '#/components/schemas/V1ErrorPayload'
     V1AssignedDisputesWithClosureOutput:
@@ -73692,6 +73726,20 @@ components:
           enum:
             - false
           description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
+        evaluationId:
+          type: string
+          description: The unique identifier of the policy evaluation for this allocation/deallocation. Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: The unique identifier of the pending approval for this allocation/deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 'The result of the policy evaluation for this allocation/deallocation. - ''approved'': Policy evaluation passed and the operation was allowed - ''rejected'': Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
         status:
           type: string
           enum:
@@ -74067,17 +74115,19 @@ components:
           description: A nonce value used in the connection cryptographic operations. This provides additional security for connection operations.
           minLength: 1
         evaluationId:
-          nullable: true
           type: string
+          description: The unique identifier of the policy evaluation for this connection.
           minLength: 1
         pendingApprovalId:
-          nullable: true
           type: string
+          description: The unique identifier of the pending approval for this connection.
           minLength: 1
         policyResult:
-          nullable: true
-          allOf:
-            - $ref: '#/components/schemas/PolicyResult'
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 'The result of the policy evaluation for this connection. - ''approved'': Policy evaluation passed and the operation was allowed - ''rejected'': Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
         partnersConnectionId:
           nullable: true
           type: string
@@ -74102,9 +74152,6 @@ components:
         - active
         - proof
         - nonce
-        - evaluationId
-        - pendingApprovalId
-        - policyResult
         - partnersConnectionId
         - partnersClientId
         - initialized
@@ -74265,17 +74312,19 @@ components:
                 description: A nonce value used in the connection cryptographic operations. This provides additional security for connection operations.
                 minLength: 1
               evaluationId:
-                nullable: true
                 type: string
+                description: The unique identifier of the policy evaluation for this connection.
                 minLength: 1
               pendingApprovalId:
-                nullable: true
                 type: string
+                description: The unique identifier of the pending approval for this connection.
                 minLength: 1
               policyResult:
-                nullable: true
-                allOf:
-                  - $ref: '#/components/schemas/PolicyResult'
+                type: string
+                enum:
+                  - approved
+                  - rejected
+                description: 'The result of the policy evaluation for this connection. - ''approved'': Policy evaluation passed and the operation was allowed - ''rejected'': Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
               partnersConnectionId:
                 nullable: true
                 type: string
@@ -74300,9 +74349,6 @@ components:
               - active
               - proof
               - nonce
-              - evaluationId
-              - pendingApprovalId
-              - policyResult
               - partnersConnectionId
               - partnersClientId
               - initialized
@@ -74336,8 +74382,6 @@ components:
     V1DeallocationReleasedWithErrorPostPayload:
       title: V1DeallocationReleasedWithErrorPostPayload
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/V1DeallocationReleasedPayload'
         - $ref: '#/components/schemas/V1ErrorPayload'
     V1DeleteBankAccountResponse:
@@ -75573,6 +75617,20 @@ components:
           enum:
             - false
           description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
+        evaluationId:
+          type: string
+          description: The unique identifier of the policy evaluation for this allocation/deallocation. Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: The unique identifier of the pending approval for this allocation/deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 'The result of the policy evaluation for this allocation/deallocation. - ''approved'': Policy evaluation passed and the operation was allowed - ''rejected'': Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
         status:
           type: string
           enum:
@@ -75666,6 +75724,20 @@ components:
           enum:
             - false
           description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
+        evaluationId:
+          type: string
+          description: The unique identifier of the policy evaluation for this allocation/deallocation. Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: The unique identifier of the pending approval for this allocation/deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 'The result of the policy evaluation for this allocation/deallocation. - ''approved'': Policy evaluation passed and the operation was allowed - ''rejected'': Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
         reason:
           type: string
           description: The reason that the allocation/deallocation is not cleared. Provides a descriptive explanation for why the allocation is in the reserved state. Will not be defined if the allocation is cleared.
@@ -75744,6 +75816,20 @@ components:
           enum:
             - true
           description: Indicates whether or not the allocation/deallocation is retriable. When true, clients may retry the operation if it did not complete successfully. Retry can be performed by re-sending the same allocation request that was originally sent.
+        evaluationId:
+          type: string
+          description: The unique identifier of the policy evaluation for this allocation/deallocation. Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: The unique identifier of the pending approval for this allocation/deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 'The result of the policy evaluation for this allocation/deallocation. - ''approved'': Policy evaluation passed and the operation was allowed - ''rejected'': Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
         reason:
           type: string
           description: The reason that the allocation/deallocation is not cleared. Provides a descriptive explanation for why the allocation is in the reserved state. Will not be defined if the allocation is cleared.
@@ -75805,10 +75891,7 @@ components:
       additionalProperties:
         type: array
         items:
-          allOf:
-            - type: object
-              properties: {}
-            - $ref: '#/components/schemas/BNMetadata'
+          $ref: '#/components/schemas/BNMetadata'
     V1UpdateBankAccountResponse:
       title: V1UpdateBankAccountResponse
       allOf:
