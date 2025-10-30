@@ -49804,6 +49804,26 @@ components:
       enum:
         - custodialCold
         - custodialHot
+    CustodyServicesAgreement:
+      type: object
+      description: Information about the signed custody services agreement
+      properties:
+        user:
+          $ref: '#/components/schemas/Id'
+        date:
+          type: string
+          format: date-time
+          description: The date when the agreement was signed
+        ip:
+          type: string
+          description: The IP address from which the agreement was signed
+        bitgoOrg:
+          allOf:
+            - $ref: '#/components/schemas/PlatformBitgoOrg'
+            - description: The Trust entity for which the CSA was signed. Used to prevent switching custodians after signing. May be undefined for legacy agreements signed before this field was added.
+      required:
+        - user
+        - date
     CustomChangeKeySignatures:
       type: object
       properties:
@@ -62282,6 +62302,8 @@ components:
           description: whether the enterprise has the license to create hot wallets
         contract:
           $ref: '#/components/schemas/PlatformEnterpriseContract'
+        custodyServicesAgreement:
+          $ref: '#/components/schemas/CustodyServicesAgreement'
         emergencyPhone:
           $ref: '#/components/schemas/EmergencyPhone'
         ethFeeAddress:
