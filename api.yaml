@@ -29148,6 +29148,18 @@ paths:
           in: query
           schema:
             type: string
+        - name: coin
+          description: The coin(s) to filter by
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+              - type: array
+                items:
+                  type: string
+                  description: A cryptocurrency symbol or token ticker symbol
+                  example: btc
+                  minLength: 1
       responses:
         '200':
           description: OK
@@ -44602,7 +44614,7 @@ components:
         stakingServicesAgreement:
           $ref: '#/components/schemas/OnboardingAgreement'
         custodyServicesAgreement:
-          $ref: '#/components/schemas/OnboardingAgreement'
+          $ref: '#/components/schemas/CustodyServiceAgreement'
         stablecoinAgreement:
           type: array
           items:
@@ -49804,6 +49816,16 @@ components:
       enum:
         - custodialCold
         - custodialHot
+    CustodyServiceAgreement:
+      title: Custody Service Agreement
+      allOf:
+        - type: object
+          properties:
+            bitgoOrg:
+              allOf:
+                - $ref: '#/components/schemas/BitgoOrg'
+              description: BitGo Organization related to this custody service agreement
+        - $ref: '#/components/schemas/OnboardingAgreement'
     CustodyServicesAgreement:
       type: object
       description: Information about the signed custody services agreement
@@ -51319,6 +51341,18 @@ components:
               allOf:
                 - $ref: '#/components/schemas/OrganizationIdString'
               description: Organization ID reference
+            permissions:
+              type: array
+              items:
+                type: string
+                enum:
+                  - admin
+                  - auditor
+                description: Permissions of the User on the Enterprise
+            isBeneficialOwner:
+              type: boolean
+            acceptedInvite:
+              type: boolean
         - $ref: '#/components/schemas/BaseEnterprise'
     EnterpriseAccountType:
       type: string
