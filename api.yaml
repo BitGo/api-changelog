@@ -5241,6 +5241,20 @@ paths:
                   type: string
                   description: The unique identifier of the allocation in the partner system. This value uniquely identifies the allocation record within the partner's system.
                   minLength: 1
+                evaluationId:
+                  type: string
+                  description: The unique identifier of the policy evaluation for this deallocation. Present when policy evaluation was performed as part of the deallocation update flow.
+                  minLength: 1
+                pendingApprovalId:
+                  type: string
+                  description: The unique identifier of the pending approval for this deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+                  minLength: 1
+                policyResult:
+                  type: string
+                  enum:
+                    - approved
+                    - rejected
+                  description: 'The result of the policy evaluation for this deallocation. - APPROVED: Policy evaluation passed and the operation was allowed - REJECTED: Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
                 status:
                   allOf:
                     - $ref: '#/components/schemas/PartnerAllocationStatusUpdate'
@@ -5761,6 +5775,20 @@ paths:
                   type: string
                   description: The unique identifier of the deallocation in the partner system. This value uniquely identifies the deallocation record within the partner's system.
                   minLength: 1
+                evaluationId:
+                  type: string
+                  description: The unique identifier of the policy evaluation for this deallocation. Present when policy evaluation was performed as part of the deallocation update flow.
+                  minLength: 1
+                pendingApprovalId:
+                  type: string
+                  description: The unique identifier of the pending approval for this deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+                  minLength: 1
+                policyResult:
+                  type: string
+                  enum:
+                    - approved
+                    - rejected
+                  description: 'The result of the policy evaluation for this deallocation. - APPROVED: Policy evaluation passed and the operation was allowed - REJECTED: Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
                 status:
                   allOf:
                     - $ref: '#/components/schemas/PartnerAllocationStatusUpdate'
@@ -75183,6 +75211,20 @@ components:
           type: string
           description: The unique identifier of the allocation in the partner system. This value uniquely identifies the allocation record within the partner's system.
           minLength: 1
+        evaluationId:
+          type: string
+          description: The unique identifier of the policy evaluation for this deallocation. Present when policy evaluation was performed as part of the deallocation update flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: The unique identifier of the pending approval for this deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 'The result of the policy evaluation for this deallocation. - APPROVED: Policy evaluation passed and the operation was allowed - REJECTED: Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
       required:
         - allocationId
         - amount
@@ -75223,6 +75265,20 @@ components:
           type: string
           description: The unique identifier of the deallocation in the partner system. This value uniquely identifies the deallocation record within the partner's system.
           minLength: 1
+        evaluationId:
+          type: string
+          description: The unique identifier of the policy evaluation for this deallocation. Present when policy evaluation was performed as part of the deallocation update flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: The unique identifier of the pending approval for this deallocation. Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: 'The result of the policy evaluation for this deallocation. - APPROVED: Policy evaluation passed and the operation was allowed - REJECTED: Policy evaluation failed and the operation was denied Not present if no policy evaluation was performed or if evaluation is still pending.'
       required:
         - deallocationId
         - amount
