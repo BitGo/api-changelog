@@ -35571,6 +35571,7 @@ components:
             delegationAddress: NodeID-Gof5KiqjhevjgjRLDttdv3anJaf5FNE6v
             withdrawalAddress: P-fuji1vwdl7xr6kz794kewvjhj34n3gy5737uwacucur
             provider: BYOV
+            providerType: ''
             delegated: '0'
             coin: tavaxp
             walletId: 6397a6c908ffea000728623654de5e92
@@ -35596,6 +35597,7 @@ components:
             delegationAddress: NodeID-B6x4xVRXKHdU24pV7RZgLujb75aGCq7WF
             withdrawalAddress: P-fuji1vwdl7xr6kz794kewvjhj34n3gy5737uwacucur
             provider: Figment
+            providerType: FIGMENT
             delegated: '0'
             coin: tavaxp
             walletId: 6397a6c908ffea000728623654de5e92
@@ -35621,6 +35623,7 @@ components:
             delegationAddress: NodeID-LnNiEzk1mYHFrwY7v4nteBt59VZFZzJX9
             withdrawalAddress: P-fuji1vwdl7xr6kz794kewvjhj34n3gy5737uwacucur
             provider: Figment
+            providerType: FIGMENT
             delegated: '5000000000'
             coin: tavaxp
             walletId: 6397a6c908ffea000728623654de5e92
@@ -36705,6 +36708,7 @@ components:
           - id: 911517c3-7f6b-4a35-abbf-a0e59a0fb8ca
             delegationAddress: '0xa1675ba9254ec5d495b163aca0a8b88d6ee553eefe1f0fbc06ff3626f1d16ddcee506419f1a278353042aa97884cf575'
             provider: Figment
+            providerType: FIGMENT
             withdrawalAddress: '0x3fcd2c8c0ce0ec81ebf1a61dccd6915a7141b2e2'
             delegated: '0'
             coin: hteth
@@ -36756,6 +36760,7 @@ components:
           - id: 35e168f5-83f8-4ca6-ba7e-81f20b411dfc
             delegationAddress: '0x93688c58fc284c242791a9893d6c505ad9b96580dae993b8b17cadd36fd707756f69a6f03485871ce0d5f91b111ae265'
             provider: Figment
+            providerType: FIGMENT
             withdrawalAddress: '0x3fcd2c8c0ce0ec81ebf1a61dccd6915a7141b2e2'
             delegated: '0'
             coin: hteth
@@ -36815,6 +36820,7 @@ components:
           - id: 30045922-768f-4de5-bae8-b7e5553bfa2f
             delegationAddress: '0xa874e8e2593126551f272f0774788fda88d596b587ccdd0cba200e2d8360a73dd944082984db83494cdd3b64053aea5e'
             provider: Figment
+            providerType: FIGMENT
             withdrawalAddress: '0x3fcd2c8c0ce0ec81ebf1a61dccd6915a7141b2e2'
             delegated: '33061188715000000000'
             coin: hteth
@@ -36980,7 +36986,7 @@ components:
               - Each 32 ETH requires its own validator. Once staking transactions are confirmed, there is a dynamic activation period before your validator begins to earn rewards.
               - 'Currently the activation queue is: 3 days, 12 hours. Rewards will periodically be auto-claimed back to your wallet.'
             transactionsNeeded: 1
-            stakeWarmupPeriodDesc: There is an activation period after you have confirmed your ETH staking transaction. Currently it is 3 days, 12 hours until your staked ETH will start accruing rewards.
+            stakeWarmupPeriodDesc: There is a dynamic activation period of 3 days, 12 hours before you begin earning ETH staking rewards.
             rewardPercentageRate: '2.89839'
             rewardsCompounding: false
             period:
@@ -36995,7 +37001,7 @@ components:
               - There is no partial unstaking; once you have unstaked, the entire staked amount for your selected validator will unstake and exit
               - Currently the exit queue is between 36 days, 17 hours and 45 days, 15 hours
             transactionsNeeded: 1
-            unStakeCooldownPeriodDesc: There is an exit period after you have confirmed your ETH unstaking transaction. Currently it is between 36 days, 17 hours and 45 days, 15 hours until your staked ETH will start accruing rewards.
+            unStakeCooldownPeriodDesc: There is a dynamic exit period between between 36 days, 17 hours and 45 days, 15 hours before your total unstaked ETH becomes available.
             period:
               periodLow: '3171600'
               periodHigh: '3942000'
@@ -38905,6 +38911,7 @@ components:
             validatorAddress: ECuwzjAEg7kPVBmmW7xa6Wz9xkK5pbN8cTn4SCdp5PPp
             withdrawalAddress: NEtLszFgREjHcgwe1HkVRiRuTvcTv5JQqGPp235G3jV
             provider: Figment
+            providerType: FIGMENT
             delegated: '0'
             coin: tsol
             walletId: 63ea93986277750007c3f5500a17e610
@@ -39811,6 +39818,7 @@ components:
           - id: 129664d8-fac3-4b98-aed0-94ed5ef8a769
             delegationAddress: 5FCPTnjevGqAuTttetBy4a24Ej3pH9fiQ8fmvP1ZkrVsLUoT
             provider: BYOV
+            providerType: ''
             withdrawalAddress: 5HdFj7DAzWsdmJQSMTTW4bYwxVQvhvL4gdkA4RpJtTzCD1vB
             delegated: '1008463576'
             coin: ttao
@@ -51526,6 +51534,15 @@ components:
         delegationId:
           description: Optional delegation id to be used for topup, only active delegations are allowed, that do not have a pending stake or pending unstake.
           type: string
+        region:
+          description: The region to use for validator provisioning. If not provided, the provider's default provisioning behaviour will be used.
+          type: string
+          enum:
+            - CA
+            - US
+            - EU
+            - DEFAULT
+          example: CA
     EthStakingTransaction:
       title: ETH Staking Transaction
       allOf:
@@ -65723,6 +65740,9 @@ components:
           type: string
         provider:
           description: The staking provider backing the delegation.
+          type: string
+        providerType:
+          description: The staking provider backing the delegation. This field is used in bitgo UI to map provider with icon
           type: string
         withdrawalAddress:
           description: The withdrawal address.
