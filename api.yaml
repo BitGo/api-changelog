@@ -30516,6 +30516,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/organization/{organizationId}/enterprise/search:
+    get:
+      summary: List enterprises for an organization
+      description: List all enterprises in the specified organization for the authenticated user.
+      operationId: v2.organization.enterprise.search
+      tags:
+        - Enterprise Management
+      parameters:
+        - name: limit
+          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
+          in: query
+          schema:
+            type: string
+            default: '25'
+            minimum: 1
+            maximum: 500
+            format: number
+        - name: prevId
+          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
+          in: query
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: q
+          description: Filter by enterprise name or by enterprise id. Cannot be combined with `prevId`.
+          in: query
+          schema:
+            type: string
+            example: abc@email.com
+            minLength: 1
+            pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrganizationIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisesPaginatedResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/reports:
     get:
       summary: List org-level reports
