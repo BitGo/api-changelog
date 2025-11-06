@@ -11295,6 +11295,16 @@ paths:
               - ftx-retail
               - ftx-bahamas
               - ftx-bahamas-retail
+        - name: organizationId
+          in: query
+          description: The ID of the organization
+          schema:
+            type: string
+        - name: fallbackOrganizationId
+          in: query
+          description: Falback organization id
+          schema:
+            type: string
       responses:
         '200':
           description: '200'
@@ -11318,6 +11328,9 @@ paths:
                         minLength: 1
                         maxLength: 3
                         description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+                      organizationId:
+                        type: string
+                        description: The ID of the organization
                       bitgoProducts:
                         type: array
                         items:
@@ -11354,6 +11367,9 @@ paths:
                           - ftx-retail
                           - ftx-bahamas
                           - ftx-bahamas-retail
+                      organizationId:
+                        type: string
+                        description: The ID of the organization
                       bitgoProducts:
                         type: array
                         items:
@@ -43419,9 +43435,7 @@ components:
                 - countryCode
                 - phoneNumber
             occupation:
-              type: string
-              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
-              description: Occupation of the individual
+              $ref: '#/components/schemas/Occupation'
             countryOfCitizenship:
               description: Country of citizenship (ISO 3166-1 alpha-3)
             countryOfResidence:
@@ -55567,9 +55581,7 @@ components:
             - countryCode
             - phoneNumber
         occupation:
-          type: string
-          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
-          description: Occupation of the individual
+          $ref: '#/components/schemas/Occupation'
         countryOfCitizenship:
           description: Country of citizenship (ISO 3166-1 alpha-3)
         countryOfResidence:
@@ -59031,6 +59043,35 @@ components:
           required:
             - clientSecret
         - $ref: '#/components/schemas/InternalUserOAuthSetting'
+    Occupation:
+      type: string
+      enum:
+        - Agriculture
+        - Art Dealer / Auctioneer / Import / Export Company
+        - Financial Services (Asset Mgmt., Bank, Broker Dealer, Commodities, Mutual Fund, Ins. Co)
+        - Casinos and Gambling Establishments
+        - Charity/NGO/Non-Profit/Foundation/Endowment
+        - Computer Programmer / Administrator / Software Engineer / IT or Software / Technology Company
+        - Crypto Services (ATM, Exchange, Lender, Coins/Token)
+        - Education / Teacher
+        - Extractive Industry (Oil, Gas, etc.) / Jewels / Gemstones / Precious Metals
+        - Family Office
+        - Film / TV / Entertainment (not adult)
+        - Government/State owned/Political Org. (i.e. Sovereign Wealth Fund)
+        - Healthcare
+        - Law Enforcement / Military / Protective Services
+        - Miner / Mining Pool
+        - Money Service Business
+        - Other
+        - Private Equity / Venture Capital
+        - Professional Service Providers (lawyers accountants etc.)
+        - Real estate brokers developers and appraisers
+        - Recreation / Hospitality
+        - Student / Unemployed / Retired
+        - Traders / Trading (High Frequency, Proprietary, Market Maker)
+        - Weapons Dealers
+      title: Occupation
+      description: Occupation category of the individual
     OffChainWalletBalance:
       title: OffChainWalletBalance
       type: object
