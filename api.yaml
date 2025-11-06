@@ -11295,6 +11295,16 @@ paths:
               - ftx-retail
               - ftx-bahamas
               - ftx-bahamas-retail
+        - name: organizationId
+          in: query
+          description: The ID of the organization
+          schema:
+            type: string
+        - name: fallbackOrganizationId
+          in: query
+          description: Falback organization id
+          schema:
+            type: string
       responses:
         '200':
           description: '200'
@@ -11318,6 +11328,9 @@ paths:
                         minLength: 1
                         maxLength: 3
                         description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
+                      organizationId:
+                        type: string
+                        description: The ID of the organization
                       bitgoProducts:
                         type: array
                         items:
@@ -11354,6 +11367,9 @@ paths:
                           - ftx-retail
                           - ftx-bahamas
                           - ftx-bahamas-retail
+                      organizationId:
+                        type: string
+                        description: The ID of the organization
                       bitgoProducts:
                         type: array
                         items:
@@ -25352,7 +25368,29 @@ paths:
           description: Filter by Staking Request status
           required: false
           schema:
-            $ref: '#/components/schemas/StakingRequestStatus'
+            type: array
+            items:
+              $ref: '#/components/schemas/StakingRequestStatus'
+        - name: createdDateGte
+          in: query
+          description: Filter by created date greater than or equal to
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: createdDateLt
+          in: query
+          description: Filter by created date less than
+          required: false
+          schema:
+            type: string
+            format: date-time
+        - name: searchString
+          in: query
+          description: Search by string match across request attributes
+          required: false
+          schema:
+            type: string
         - $ref: '#/components/parameters/queryExpandBuildParams'
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize'
@@ -26317,6 +26355,9 @@ paths:
                   type: string
                   description: ID of the destination account
                   minLength: 1
+                idempotencyKey:
+                  type: string
+                  description: Optional idempotency key to ensure idempotent requests
               required:
                 - amount
                 - checkboxAgreement
@@ -27644,6 +27685,92 @@ paths:
                     - $ref: '#/components/schemas/OrderResponseBase'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/stablecoin/v1/enterprise/{enterpriseId}/orders-summary:
+    get:
+      summary: Get orders summary for enterprise
+      description: |-
+        Returns aggregated order amounts and counts by asset.
+        Amounts are returned as strings in lowest denomination (no decimal formatting).
+        By default, includes all non-failed orders (created, pending, and fulfilled).
+        Use the optional status parameter to filter by specific order statuses.
+      operationId: stablecoin.v1.enterprise.orders.summary.get
+      tags:
+        - Stablecoin
+      parameters:
+        - name: stablecoin
+          description: Stablecoin name(s) to filter across all chains
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BaseStablecoin'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - usd1
+                    - gousd
+            example: usd1
+        - name: chain
+          description: Blockchain network identifier to filter summary
+          in: query
+          schema:
+            type: string
+            example: hteth
+            minLength: 1
+        - name: status
+          description: Order processing status(es) to filter summary - accepts only user-facing statuses
+          in: query
+          schema:
+            oneOf:
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - created
+                    - pending
+                    - fulfilled
+              - type: string
+                enum:
+                  - created
+                  - pending
+                  - fulfilled
+            example: created
+        - name: enterpriseId
+          description: Enterprise id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 67bc4ae090e8af8f9b412d3d67e85252
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOrdersSummaryResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -30397,6 +30524,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddUserToOrganizationEnterpriseResponseC'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/organization/{organizationId}/enterprise/search:
+    get:
+      summary: List enterprises for an organization
+      description: List all enterprises in the specified organization for the authenticated user.
+      operationId: v2.organization.enterprise.search
+      tags:
+        - Enterprise Management
+      parameters:
+        - name: limit
+          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
+          in: query
+          schema:
+            type: string
+            default: '25'
+            minimum: 1
+            maximum: 500
+            format: number
+        - name: prevId
+          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
+          in: query
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: q
+          description: Filter by enterprise name or by enterprise id. Cannot be combined with `prevId`.
+          in: query
+          schema:
+            type: string
+            example: abc@email.com
+            minLength: 1
+            pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+        - name: organizationId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/OrganizationIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisesPaginatedResponse'
         '400':
           description: Bad Request
           content:
@@ -43233,9 +43435,7 @@ components:
                 - countryCode
                 - phoneNumber
             occupation:
-              type: string
-              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
-              description: Occupation of the individual
+              $ref: '#/components/schemas/Occupation'
             countryOfCitizenship:
               description: Country of citizenship (ISO 3166-1 alpha-3)
             countryOfResidence:
@@ -45108,6 +45308,12 @@ components:
         fee:
           description: The blockchain fee to submit the transactions.
           type: string
+    BaseStablecoin:
+      title: BaseStablecoin
+      type: string
+      enum:
+        - usd1
+        - gousd
     BaseStakeIntent:
       title: BaseStakeIntent
       allOf:
@@ -53891,6 +54097,39 @@ components:
           type: string
       required:
         - invoices
+    GetOrdersSummaryResponse:
+      title: GetOrdersSummaryResponse
+      type: object
+      properties:
+        byAsset:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              chain:
+                type: string
+                description: Chain identifier
+                example: hteth
+              decimals:
+                type: number
+                description: Token decimals
+                example: 18
+              mint:
+                allOf:
+                  - $ref: '#/components/schemas/OrderTypeSummary'
+                description: Mint order summary
+              burn:
+                allOf:
+                  - $ref: '#/components/schemas/OrderTypeSummary'
+                description: Burn order summary
+            required:
+              - chain
+              - decimals
+              - mint
+              - burn
+          description: Breakdown by individual asset keyed by token identifier
+      required:
+        - byAsset
     GetPaymentsResponse:
       title: GetPaymentsResponse
       type: object
@@ -55342,9 +55581,7 @@ components:
             - countryCode
             - phoneNumber
         occupation:
-          type: string
-          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
-          description: Occupation of the individual
+          $ref: '#/components/schemas/Occupation'
         countryOfCitizenship:
           description: Country of citizenship (ISO 3166-1 alpha-3)
         countryOfResidence:
@@ -58806,6 +59043,35 @@ components:
           required:
             - clientSecret
         - $ref: '#/components/schemas/InternalUserOAuthSetting'
+    Occupation:
+      type: string
+      enum:
+        - Agriculture
+        - Art Dealer / Auctioneer / Import / Export Company
+        - Financial Services (Asset Mgmt., Bank, Broker Dealer, Commodities, Mutual Fund, Ins. Co)
+        - Casinos and Gambling Establishments
+        - Charity/NGO/Non-Profit/Foundation/Endowment
+        - Computer Programmer / Administrator / Software Engineer / IT or Software / Technology Company
+        - Crypto Services (ATM, Exchange, Lender, Coins/Token)
+        - Education / Teacher
+        - Extractive Industry (Oil, Gas, etc.) / Jewels / Gemstones / Precious Metals
+        - Family Office
+        - Film / TV / Entertainment (not adult)
+        - Government/State owned/Political Org. (i.e. Sovereign Wealth Fund)
+        - Healthcare
+        - Law Enforcement / Military / Protective Services
+        - Miner / Mining Pool
+        - Money Service Business
+        - Other
+        - Private Equity / Venture Capital
+        - Professional Service Providers (lawyers accountants etc.)
+        - Real estate brokers developers and appraisers
+        - Recreation / Hospitality
+        - Student / Unemployed / Retired
+        - Traders / Trading (High Frequency, Proprietary, Market Maker)
+        - Weapons Dealers
+      title: Occupation
+      description: Occupation category of the individual
     OffChainWalletBalance:
       title: OffChainWalletBalance
       type: object
@@ -59565,6 +59831,51 @@ components:
         - canceled
         - error
         - scheduled
+    OrderStatusBreakdown:
+      title: OrderStatusBreakdown
+      type: object
+      properties:
+        count:
+          type: number
+          description: Number of orders in this status
+          example: 5
+        amount:
+          type: string
+          description: Total amount in lowest denomination
+          example: '45000000000000000000000000'
+      required:
+        - count
+        - amount
+    OrderTypeSummary:
+      title: OrderTypeSummary
+      type: object
+      properties:
+        amount:
+          type: string
+          description: Total amount in lowest denomination
+          example: '110002428000000000000000000'
+        count:
+          type: number
+          description: Total number of orders
+          example: 12
+        byStatus:
+          type: object
+          description: Breakdown by order status (only includes statuses with data)
+          example:
+            created:
+              count: 5
+              amount: '45000000000000000000000000'
+          properties:
+            created:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+            pending:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+            fulfilled:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+      required:
+        - amount
+        - count
+        - byStatus
     Orders:
       type: array
       items:
@@ -75045,9 +75356,6 @@ components:
           example: 'false'
     VerificationState:
       title: VerificationState
-      allOf:
-        - $ref: '#/components/schemas/VerificationStateEnum'
-    VerificationStateEnum:
       type: string
       enum:
         - approved
