@@ -19859,7 +19859,7 @@ paths:
       tags:
         - Enterprise
       summary: Get gas tank balance
-      description: Returns gas tank balance for an asset.
+      description: Returns gas tank balance and address for an asset.
       operationId: v2.enterprise.feeAddressBalance
       parameters:
         - $ref: '#/components/parameters/pathEnterpriseId'
@@ -41496,6 +41496,9 @@ components:
               type: string
               format: date-time
               title: ISO Date String
+        isMobileAccessToken:
+          type: boolean
+          description: Flag indicating if this token was created via mobile session endpoint
       required:
         - id
         - isExtensible
@@ -44923,6 +44926,7 @@ components:
               - Setup (Inc)
               - Staking (Inc)
               - Platform Integration (B2B2C) (Inc)
+              - OTC Trading
             description: Requested Products
         requestedBitgoProducts:
           type: array
@@ -53231,6 +53235,10 @@ components:
           type: string
           description: |
             Total balance in enterprise gas tank.
+        address:
+          type: string
+          description: |
+            The gas tank (fee) address associated with the enterprise.
     FeeAddressTransferIntent:
       title: FeeAddressTransferIntent
       allOf:
