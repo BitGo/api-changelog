@@ -27656,6 +27656,92 @@ paths:
               schema:
                 type: object
                 properties: {}
+  /api/stablecoin/v1/enterprise/{enterpriseId}/orders-summary:
+    get:
+      summary: Get orders summary for enterprise
+      description: |-
+        Returns aggregated order amounts and counts by asset.
+        Amounts are returned as strings in lowest denomination (no decimal formatting).
+        By default, includes all non-failed orders (created, pending, and fulfilled).
+        Use the optional status parameter to filter by specific order statuses.
+      operationId: stablecoin.v1.enterprise.orders.summary.get
+      tags:
+        - Stablecoin
+      parameters:
+        - name: stablecoin
+          description: Stablecoin name(s) to filter across all chains
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/BaseStablecoin'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - usd1
+                    - gousd
+            example: usd1
+        - name: chain
+          description: Blockchain network identifier to filter summary
+          in: query
+          schema:
+            type: string
+            example: hteth
+            minLength: 1
+        - name: status
+          description: Order processing status(es) to filter summary - accepts only user-facing statuses
+          in: query
+          schema:
+            oneOf:
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - created
+                    - pending
+                    - fulfilled
+              - type: string
+                enum:
+                  - created
+                  - pending
+                  - fulfilled
+            example: created
+        - name: enterpriseId
+          description: Enterprise id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 67bc4ae090e8af8f9b412d3d67e85252
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetOrdersSummaryResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /api/stablecoin/v1/enterprise/{enterpriseId}/orders/{orderId}:
     get:
       summary: Get stablecoin order by ID
@@ -45108,6 +45194,12 @@ components:
         fee:
           description: The blockchain fee to submit the transactions.
           type: string
+    BaseStablecoin:
+      title: BaseStablecoin
+      type: string
+      enum:
+        - usd1
+        - gousd
     BaseStakeIntent:
       title: BaseStakeIntent
       allOf:
@@ -53891,6 +53983,39 @@ components:
           type: string
       required:
         - invoices
+    GetOrdersSummaryResponse:
+      title: GetOrdersSummaryResponse
+      type: object
+      properties:
+        byAsset:
+          type: object
+          additionalProperties:
+            type: object
+            properties:
+              chain:
+                type: string
+                description: Chain identifier
+                example: hteth
+              decimals:
+                type: number
+                description: Token decimals
+                example: 18
+              mint:
+                allOf:
+                  - $ref: '#/components/schemas/OrderTypeSummary'
+                description: Mint order summary
+              burn:
+                allOf:
+                  - $ref: '#/components/schemas/OrderTypeSummary'
+                description: Burn order summary
+            required:
+              - chain
+              - decimals
+              - mint
+              - burn
+          description: Breakdown by individual asset keyed by token identifier
+      required:
+        - byAsset
     GetPaymentsResponse:
       title: GetPaymentsResponse
       type: object
@@ -59565,6 +59690,51 @@ components:
         - canceled
         - error
         - scheduled
+    OrderStatusBreakdown:
+      title: OrderStatusBreakdown
+      type: object
+      properties:
+        count:
+          type: number
+          description: Number of orders in this status
+          example: 5
+        amount:
+          type: string
+          description: Total amount in lowest denomination
+          example: '45000000000000000000000000'
+      required:
+        - count
+        - amount
+    OrderTypeSummary:
+      title: OrderTypeSummary
+      type: object
+      properties:
+        amount:
+          type: string
+          description: Total amount in lowest denomination
+          example: '110002428000000000000000000'
+        count:
+          type: number
+          description: Total number of orders
+          example: 12
+        byStatus:
+          type: object
+          description: Breakdown by order status (only includes statuses with data)
+          example:
+            created:
+              count: 5
+              amount: '45000000000000000000000000'
+          properties:
+            created:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+            pending:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+            fulfilled:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+      required:
+        - amount
+        - count
+        - byStatus
     Orders:
       type: array
       items:
