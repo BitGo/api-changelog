@@ -24147,16 +24147,19 @@ paths:
                         description: Quantity representing the total NOP limit across all currencies. It sets a limit that is compared to the total short position across all currencies (eg. 1000000). Currency represents the currency that the quantity is valued in (eg. USD)
                   marginCallPercentage:
                     description: Number representing the percentage at which a margin call will be initiated if the margin percentage falls below this number. It is in decimal form (eg. 0.8 to mean 80%)
-                    type: number
-                    format: decimal
+                    type: string
+                    pattern: ^[0-9]+(\.[0-9]+)?$
+                    example: '0.8'
                   liquidationThresholdPercentage:
                     description: Number representing the liquidation threshold percentage at which positions will be automatically liquidated if the margin utilization exceeds this level. It is in decimal form (eg. 1.2 to mean 120%)
-                    type: number
-                    format: decimal
+                    type: string
+                    pattern: ^[0-9]+(\.[0-9]+)?$
+                    example: '1.2'
                   marginRequirementPercentage:
                     description: Number representing the margin requirement percentage which is used with the NOP to determine the margin required. It is in decimal form (eg.0.2 for 20%)
-                    type: number
-                    format: decimal
+                    type: string
+                    pattern: ^[0-9]+(\.[0-9]+)?$
+                    example: '0.2'
                   minimumCollateralValue:
                     allOf:
                       - $ref: '#/components/schemas/Amount3'
@@ -24283,8 +24286,10 @@ paths:
                           - type: object
                             description: Quantity representing the marginBalance required to continue trading without risk of margin call or liquidation. If margin requirement is not present, either netOpenPosition is zero or there is no requirement. Currency represents the notional currency (eg. USD)
                       marginUtilizationPercentage:
-                        type: number
+                        type: string
+                        pattern: ^[0-9]+(\.[0-9]+)?$
                         nullable: true
+                        example: '0.85'
                         description: Quantity representing the ratio of marginRequirement to marginBalance, measured directly against liquidation and margin call thresholds. This is null if there is no margin requirement.
                 example:
                   riskProfile:
@@ -24303,7 +24308,7 @@ paths:
                     marginRequirement:
                       quantity: '600000'
                       currency: USD
-                    marginUtilizationPercentage: 0.85
+                    marginUtilizationPercentage: '0.85'
   /api/prime/trading/v1/accounts/{accountID}/margin/collateral/transfer:
     post:
       summary: Transfer collateral for margin
@@ -57992,8 +57997,9 @@ components:
           format: uuid
           description: Enterprise ID for the margin NOP limit
         netOpenPosition:
-          type: number
-          format: decimal
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]+)?$
+          example: '-2.3242'
           description: Number representing the current net open position for the NOP instrument in question (ex. -10 BTC). Negative means a short position and positive means a long position.
         netOpenPositionValue:
           type: number
@@ -58021,7 +58027,7 @@ components:
       example:
         currency: BTC
         enterpriseId: 63925f940c259a00061853808ffea830
-        netOpenPosition: -2.3242
+        netOpenPosition: '-2.3242'
         netOpenPositionValue: -124017.22
         shortMarginPositionNotionalLimit:
           quantity: 1000000
