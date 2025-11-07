@@ -9109,7 +9109,7 @@ paths:
   /api/evs/v1/identity:
     get:
       summary: Get KYC Identity
-      description: Get a Persona transaction.
+      description: Get a KYC identity of a user.
       operationId: entity.validation.identity.get
       tags:
         - Know Your Customer (KYC)
@@ -9118,6 +9118,7 @@ paths:
           in: query
           schema:
             type: string
+            minLength: 1
         - name: enterpriseId
           in: query
           schema:
@@ -9150,6 +9151,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError2'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
         '404':
           description: Not Found
           content:
@@ -9158,7 +9171,7 @@ paths:
                 $ref: '#/components/schemas/PlatformError2'
     post:
       summary: Create KYC Identity
-      description: Create an identity for a user.
+      description: Create a KYC identity for a user.
       operationId: entity.validation.identity.create
       tags:
         - Know Your Customer (KYC)
@@ -9169,6 +9182,7 @@ paths:
             schema:
               oneOf:
                 - type: object
+                  title: Institutional Individual
                   properties:
                     addressCity:
                       type: string
@@ -9187,31 +9201,46 @@ paths:
                       minLength: 1
                     birthdate:
                       type: string
-                      format: date-time
+                      description: The birthdate of the individual (YYYY-MM-DD)
+                      example: 2000-12-25T00:00:00.000Z
+                      format: date
                       title: ISO Date String
                     country:
                       type: string
+                      description: The country of the address (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     countryOfCitizenship:
                       type: string
+                      description: The country of citizenship (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     countryOfResidence:
                       type: string
+                      description: The country of residence (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     debugFailureReason:
                       type: string
+                      description: Debug failure reason to provide additional context when simulating verification failure in the test environment
                       minLength: 1
                     debugStatus:
                       type: string
-                      minLength: 1
+                      enum:
+                        - passed
+                        - failed
+                      description: Debug status for simulating verification failure or success in the test environment - passes by default
                     digitalAssetWalletAddress:
                       type: string
+                      description: A digital asset wallet address of the individual where funds will be deposited from
                       minLength: 1
                     enterpriseId:
                       type: string
                       minLength: 1
                     govIdCountryOfIssuance:
                       type: string
+                      description: The country of issuance of the government ID (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     identificationNumber:
                       type: string
@@ -9260,27 +9289,40 @@ paths:
                     - transactionType
                     - userId
                 - type: object
+                  title: Starter Signup
                   properties:
                     birthdate:
                       type: string
-                      format: date-time
+                      description: The birthdate of the individual (YYYY-MM-DD)
+                      example: 2000-12-25T00:00:00.000Z
+                      format: date
                       title: ISO Date String
                     country:
                       type: string
+                      description: The ISO Alpha-2 or Alpha-3 country code
+                      example: US
                       minLength: 1
                     countryOfIncorporation:
                       type: string
+                      description: The country of incorporation (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     dateOfIncorporation:
                       type: string
-                      format: date-time
+                      description: The date of incorporation (YYYY-MM-DD)
+                      example: 2000-12-25T00:00:00.000Z
+                      format: date
                       title: ISO Date String
                     debugFailureReason:
                       type: string
+                      description: Debug failure reason to provide additional context when simulating verification failure in the test environment
                       minLength: 1
                     debugStatus:
                       type: string
-                      minLength: 1
+                      enum:
+                        - passed
+                        - failed
+                      description: Debug status for simulating verification failure or success in the test environment - passes by default
                     enterpriseId:
                       type: string
                       minLength: 1
@@ -9315,20 +9357,29 @@ paths:
                     - transactionType
                     - userId
                 - type: object
+                  title: Kyc Inc
                   properties:
                     birthdate:
                       type: string
-                      format: date-time
+                      description: The birthdate of the individual (YYYY-MM-DD)
+                      example: 2000-12-25T00:00:00.000Z
+                      format: date
                       title: ISO Date String
                     country:
                       type: string
+                      description: The ISO Alpha-2 or Alpha-3 country code
+                      example: US
                       minLength: 1
                     debugFailureReason:
                       type: string
+                      description: Debug failure reason to provide additional context when simulating verification failure in the test environment
                       minLength: 1
                     debugStatus:
                       type: string
-                      minLength: 1
+                      enum:
+                        - passed
+                        - failed
+                      description: Debug status for simulating verification failure or success in the test environment - passes by default
                     enterpriseId:
                       type: string
                       minLength: 1
@@ -9357,27 +9408,40 @@ paths:
                     - transactionType
                     - userId
                 - type: object
+                  title: Unverified PayGo User
                   properties:
                     birthdate:
                       type: string
-                      format: date-time
+                      description: The birthdate of the individual (YYYY-MM-DD)
+                      example: 2000-12-25T00:00:00.000Z
+                      format: date
                       title: ISO Date String
                     country:
                       type: string
+                      description: The ISO Alpha-2 or Alpha-3 country code
+                      example: US
                       minLength: 1
                     countryOfIncorporation:
                       type: string
+                      description: The country of incorporation (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     dateOfIncorporation:
                       type: string
-                      format: date-time
+                      description: The date of incorporation (YYYY-MM-DD)
+                      example: 2000-12-25T00:00:00.000Z
+                      format: date
                       title: ISO Date String
                     debugFailureReason:
                       type: string
+                      description: Debug failure reason to provide additional context when simulating verification failure in the test environment
                       minLength: 1
                     debugStatus:
                       type: string
-                      minLength: 1
+                      enum:
+                        - passed
+                        - failed
+                      description: Debug status for simulating verification failure or success in the test environment - passes by default
                     enterpriseId:
                       type: string
                       minLength: 1
@@ -9414,6 +9478,7 @@ paths:
                     - transactionType
                     - userId
                 - type: object
+                  title: Inc Contracted
                   properties:
                     addressCity:
                       type: string
@@ -9432,31 +9497,46 @@ paths:
                       minLength: 1
                     birthdate:
                       type: string
-                      format: date-time
+                      description: The birthdate of the individual (YYYY-MM-DD)
+                      example: 2000-12-25T00:00:00.000Z
+                      format: date
                       title: ISO Date String
                     country:
                       type: string
+                      description: The country of the address (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     countryOfCitizenship:
                       type: string
+                      description: The country of citizenship (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     countryOfResidence:
                       type: string
+                      description: The country of residence (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     debugFailureReason:
                       type: string
+                      description: Debug failure reason to provide additional context when simulating verification failure in the test environment
                       minLength: 1
                     debugStatus:
                       type: string
-                      minLength: 1
+                      enum:
+                        - passed
+                        - failed
+                      description: Debug status for simulating verification failure or success in the test environment - passes by default
                     digitalAssetWalletAddress:
                       type: string
+                      description: A digital asset wallet address of the individual where funds will be deposited from
                       minLength: 1
                     enterpriseId:
                       type: string
                       minLength: 1
                     govIdCountryOfIssuance:
                       type: string
+                      description: The country of issuance of the government ID (ISO Alpha-2 or Alpha-3 country code)
+                      example: US
                       minLength: 1
                     identificationNumber:
                       type: string
@@ -9511,6 +9591,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IdentityCreateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
   /api/evs/v1/identity/{id}:
     patch:
       summary: Update KYC Identity
@@ -9551,16 +9649,22 @@ paths:
                   minLength: 1
                 debugStatus:
                   type: string
-                  minLength: 1
+                  enum:
+                    - passed
+                    - failed
+                  description: Debug status for simulating verification failure or success in the test environment - passes by default
                 debugFailureReason:
                   type: string
+                  description: Debug failure reason to provide additional context when simulating verification failure in the test environment
                   minLength: 1
                 contractSignerNameFull:
                   type: string
                   minLength: 1
                 contractSignedDate:
                   type: string
-                  format: date-time
+                  description: The date the contract was signed (YYYY-MM-DD)
+                  example: 2024-12-20T00:00:00.000Z
+                  format: date
                   title: ISO Date String
                 contractSignedIPAddress:
                   type: string
@@ -9644,16 +9748,24 @@ paths:
                   minLength: 1
                 birthdate:
                   type: string
-                  format: date-time
+                  description: The birthdate of the individual (YYYY-MM-DD)
+                  example: 2000-12-25T00:00:00.000Z
+                  format: date
                   title: ISO Date String
                 countryOfCitizenship:
                   type: string
+                  description: The country of citizenship (ISO Alpha-2 or Alpha-3 country code)
+                  example: US
                   minLength: 1
                 countryOfResidence:
                   type: string
+                  description: The country of residence (ISO Alpha-2 or Alpha-3 country code)
+                  example: US
                   minLength: 1
                 govIdCountryOfIssuance:
                   type: string
+                  description: The country of issuance of the government ID (ISO Alpha-2 or Alpha-3 country code)
+                  example: US
                   minLength: 1
                 politicallyExposedPerson:
                   type: boolean
@@ -9668,6 +9780,8 @@ paths:
                   minLength: 1
                 country:
                   type: string
+                  description: The country of the address (ISO Alpha-2 or Alpha-3 country code)
+                  example: US
                   minLength: 1
                 identificationNumber:
                   type: string
@@ -9680,6 +9794,7 @@ paths:
                   minLength: 1
                 digitalAssetWalletAddress:
                   type: string
+                  description: A digital asset wallet address of the individual where funds will be deposited from
                   minLength: 1
                 notionalTradedEachMonth:
                   type: number
@@ -9690,10 +9805,14 @@ paths:
                   minLength: 1
                 countryOfIncorporation:
                   type: string
+                  description: The country of incorporation (ISO Alpha-2 or Alpha-3 country code)
+                  example: US
                   minLength: 1
                 dateOfIncorporation:
                   type: string
-                  format: date-time
+                  description: The date of incorporation (YYYY-MM-DD)
+                  example: 2000-12-25T00:00:00.000Z
+                  format: date
                   title: ISO Date String
       responses:
         '200':
@@ -9702,6 +9821,30 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/IdentityUpdateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
   /api/evs/v1/identity/{id}/signatures:
     post:
       summary: Submit KYC Signatures
@@ -9730,6 +9873,18 @@ paths:
                 $ref: '#/components/schemas/IdentityUpdateResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -9790,6 +9945,7 @@ paths:
                     - vid
                     - visa
                     - wp
+                  description: 'Required when uploading the front and/or back photos of KYC verification documents. It represents the type of identification document being uploaded: `cct` - Citizenship Certificate / `cid` - Consular ID / `dl` - Drivers License / `foid` - CO Foreigner ID / `hic` - Health Insurance Card / `id` - Identification Card / `ipp` - Internal Passport / `keyp` - AU Keypass ID / `ltpass` - Long Term Pass / `munid` - US Municipal ID (e.g. NYC ID) / `myn` - JP My Number Card (SSN) / `nbi` - PH National Bureau of Investigation Certificate / `nric` - SG National Residency ID / `ofw` - PH Overseas Foreign Worker Card / `rp` - Residence Permit / `pan` - IN Permanant Account Number card (SSN) / `pid` - PH Postal Identity Card / `pp` - Passport / `ppc` - Passport Card / `pr` - Permanant Residence Card / `sss` - PH Social Security System Card (SSN) / `td` - US Travel Document / `tribalid` - US/CA Tribal ID / `umid` - PH Unified Multi Purpose ID / `vid` - Voter Id / `visa` - VISA / `wp` - Work Permit'
                 frontPhoto: {}
                 backPhoto: {}
                 proofOfResidency: {}
@@ -9802,6 +9958,18 @@ paths:
                 $ref: '#/components/schemas/PostIdentityDocumentCreateResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -9868,6 +10036,7 @@ paths:
                     - vid
                     - visa
                     - wp
+                  description: 'Required when uploading the front and/or back photos of KYC verification documents. It represents the type of identification document being uploaded: `cct` - Citizenship Certificate / `cid` - Consular ID / `dl` - Drivers License / `foid` - CO Foreigner ID / `hic` - Health Insurance Card / `id` - Identification Card / `ipp` - Internal Passport / `keyp` - AU Keypass ID / `ltpass` - Long Term Pass / `munid` - US Municipal ID (e.g. NYC ID) / `myn` - JP My Number Card (SSN) / `nbi` - PH National Bureau of Investigation Certificate / `nric` - SG National Residency ID / `ofw` - PH Overseas Foreign Worker Card / `rp` - Residence Permit / `pan` - IN Permanant Account Number card (SSN) / `pid` - PH Postal Identity Card / `pp` - Passport / `ppc` - Passport Card / `pr` - Permanant Residence Card / `sss` - PH Social Security System Card (SSN) / `td` - US Travel Document / `tribalid` - US/CA Tribal ID / `umid` - PH Unified Multi Purpose ID / `vid` - Voter Id / `visa` - VISA / `wp` - Work Permit'
                 frontPhoto: {}
                 backPhoto: {}
                 proofOfResidency: {}
@@ -9880,6 +10049,18 @@ paths:
                 $ref: '#/components/schemas/PutIdentityDocumentUpdateResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -9917,6 +10098,18 @@ paths:
                 $ref: '#/components/schemas/IdentityDocumentGetResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError2'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -50376,7 +50569,9 @@ components:
             minLength: 1
           contractSignedDate:
             type: string
-            format: date-time
+            description: The date the contract was signed (YYYY-MM-DD)
+            example: 2024-12-20T00:00:00.000Z
+            format: date
             title: ISO Date String
           contractSignedIPAddress:
             type: string
