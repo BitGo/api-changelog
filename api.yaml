@@ -107,6 +107,14 @@ tags:
       - Trade orders - Subscribe to live status updates for your trade orders, including individual fills for an order. Send messages when statuses update.
   - name: Trade Falcon
     description: Service for our trading platform
+  - name: User Management Service (Internal)
+    description: APIs for user management service
+  - name: User Management Service (Admin)
+    description: APIs for user management service
+  - name: Admin Console
+    description: APIs for admin console
+  - name: Admin - Roles
+    description: Administrative APIs for managing and viewing roles across all organizations
 paths:
   /api/v2/{coin}/pendingapprovals/{approvalId}:
     put:
@@ -8895,7 +8903,7 @@ paths:
         - cryptoCompare
   /api/document-service/v1/documents:
     post:
-      summary: Create a new document
+      summary: Add KYB Documents
       description: Creates a new document and returns presigned URLs for file uploads
       operationId: documents.post.v1.documents
       tags:
@@ -8934,8 +8942,8 @@ paths:
                 $ref: '#/components/schemas/GetInternalDocumentsInternalError'
   /api/document-service/v1/documents/{documentId}:
     get:
-      summary: Retrieve document information
-      description: Get details about a specific document including file information. Users can only access documents they created.
+      summary: Get KYB Document
+      description: Get details about a specific KYB document including file information. Users can only access documents they created.
       operationId: documents.get.v1.documents.id
       tags:
         - Know Your Business (KYB)
@@ -8986,7 +8994,7 @@ paths:
                 $ref: '#/components/schemas/GetInternalDocumentsInternalError'
   /api/document-service/v1/documents/{documentId}/files/{fileId}:
     patch:
-      summary: Update file upload status
+      summary: Update KYB Document Status
       description: Update the status of a file after it has been uploaded to the presigned URL. This endpoint is called by the client after successful upload.
       operationId: documents.patch.v1.documents.id.files.id
       tags:
@@ -9050,7 +9058,7 @@ paths:
                 $ref: '#/components/schemas/GetInternalDocumentsInternalError'
   /api/document-service/v1/documents/{documentId}/verify:
     post:
-      summary: Verify document upload status
+      summary: Verify KYB Document Status
       description: Verify the upload status of all files in a document by checking with the storage provider. Updates file and document statuses based on actual verification results.
       operationId: documents.post.v1.documents.id.verify
       tags:
@@ -40053,6 +40061,30 @@ components:
         properties:
           walletMultisigType: onchain
           type: ETH
+    StoryStakingRequestPOSTBodyExample:
+      summary: Story Protocol Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1536000000000000000000'
+        type: STAKE
+        validator: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
+    StoryStakingRequestWithoutDelegationsExample:
+      summary: Story Protocol Staking Request Example
+      value:
+        id: e155adbc-66a3-4ccd-9a9d-726a05bca0cf
+        clientId: f154adbc-26a3-4acd-8a9d-726a05bca0dr
+        requestingUserId: 6092e75c451052000636831deb797bd1
+        type: STAKE
+        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
+        walletId: 63110fc78b108e00071df2d3c3879dd0
+        walletType: hot
+        withdrawalAddress: '0xf5b9becc5e7e68173a5fc1906a2a5574e884da40'
+        coin: tip
+        status: NEW
+        statusModifiedDate: 2025-11-06T14:00:00.000Z
+        createdDate: 2025-11-06T14:00:00.000Z
+        amount: '1536000000000000000000'
+        validatorAddress: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
     StxStakingRequestPOSTBodyExample:
       summary: STX Staking Request POST Body Example
       value:
@@ -41684,16 +41716,6 @@ components:
             code: AccessDenied
             message: License not added for enterprise
             status: 403
-    Forbidden1:
-      description: Forbidden
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/GeneralError'
-          example:
-            code: AccessDenied
-            message: Access is denied
-            status: 403
     ForbiddenError:
       description: Forbidden
       content:
@@ -41724,16 +41746,6 @@ components:
             code: NotFound
             message: Touchpoint not found
             status: 404
-    NotFound1:
-      description: Not Found
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/GeneralError'
-          example:
-            code: NotFound
-            message: The specified resource was not found
-            status: 404
     NotFoundError:
       description: Not Found
       content:
@@ -41753,16 +41765,6 @@ components:
           example:
             code: Internal_Server_Error
             message: Database is down
-            status: 500
-    ServerError1:
-      description: Internal Server Error
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/GeneralError'
-          example:
-            code: InternalServerError
-            message: An unexpected error occurred
             status: 500
     Unauthorized:
       description: Unauthorized
@@ -47620,6 +47622,7 @@ components:
         - SEI
         - SOMI
         - SOL
+        - STORY
         - STX
         - SUI
         - SUI:WAL
@@ -49467,6 +49470,7 @@ components:
         - $ref: '#/components/schemas/SuiDelegationProperties'
         - $ref: '#/components/schemas/StxDelegationProperties'
         - $ref: '#/components/schemas/SomiDelegationProperties'
+        - $ref: '#/components/schemas/StoryDelegationProperties'
         - $ref: '#/components/schemas/SolDelegationProperties'
         - $ref: '#/components/schemas/PolyxDelegationProperties'
         - $ref: '#/components/schemas/NearDelegationProperties'
@@ -49500,6 +49504,7 @@ components:
         - TRX
         - POLYX
         - SOMI
+        - STORY
         - VET
         - UNKNOWN
     DelegationRequest:
@@ -57967,7 +57972,7 @@ components:
             - $ref: '#/components/schemas/GrantTypes'
           description: Represents the login method that was used
         user:
-          $ref: '#/components/schemas/User2'
+          $ref: '#/components/schemas/User1'
         warning:
           type: string
       required:
@@ -66781,6 +66786,7 @@ components:
             - $ref: '#/components/schemas/WflrStakingRequestEntityProperties'
             - $ref: '#/components/schemas/WflrUnstakingRequestEntityProperties'
             - $ref: '#/components/schemas/SomiStakingRequestEntityProperties'
+            - $ref: '#/components/schemas/StoryStakingRequestEntityProperties'
             - $ref: '#/components/schemas/WflrClaimRewardsRequestEntityProperties'
       required:
         - id
@@ -66904,6 +66910,7 @@ components:
         - WFLR_STAKE
         - WFLR_UNSTAKE
         - SOMI_STAKE
+        - STORY_STAKE
         - VET_STAKE
         - WFLR_CLAIM_REWARDS
         - UNKNOWN
@@ -67808,6 +67815,30 @@ components:
         - pendingChainInitialization
         - creationFailure
         - lastMemoId
+    StoryDelegationProperties:
+      title: STORY Delegation Properties
+      allOf:
+        - $ref: '#/components/schemas/DelegationProperties'
+        - type: object
+          properties:
+            validatorAddress:
+              type: string
+              description: The BLS public key of the validator.
+            stakingPeriod:
+              type: string
+              format: bigInteger
+              description: Staking period (0 for flexible staking).
+    StoryStakingRequestEntityProperties:
+      title: STORY staking request entity properties
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestEntityProperties'
+        - type: object
+          properties:
+            validatorAddress:
+              type: string
+              description: BLS public key of the validator to delegate to.
+          required:
+            - validatorAddress
     StxDelegationProperties:
       title: STX Delegation Properties
       allOf:
@@ -70480,6 +70511,155 @@ components:
           type: string
           description: |
             A `sequenceId` is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a `sequenceId` you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per `sequenceId` (and fails all subsequent attempts), you can retry sending without the risk of double spending. The `sequenceId` is only visible to users on the wallet and is not shared publicly.
+        consolidateId:
+          $ref: '#/components/schemas/Id'
+          description: Consolidation ID if this transfer is part of a consolidation
+        txRequestId:
+          type: string
+          description: Associated transaction request ID
+        goStakingRequestId:
+          type: string
+          description: Associated GO staking request ID
+        subType:
+          type: string
+          description: Transfer subtype
+          enum:
+            - ofc_withdrawal
+            - ofc_deposit
+            - ofc_unstake
+            - ofc_stake
+        feeCoin:
+          type: string
+          description: The coin used to pay the fee (for cross-chain transactions)
+        instant:
+          type: boolean
+          description: Whether this is an instant transaction
+        instantId:
+          type: string
+          description: The instant transaction ID if applicable
+        isFee:
+          type: boolean
+          description: Whether this transfer represents a fee
+        isReward:
+          type: boolean
+          description: Whether this transfer represents a staking reward
+        isUnlock:
+          type: boolean
+          description: Whether this transfer represents an unlock operation
+        metadata:
+          type: array
+          description: Additional metadata associated with the transfer
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+        sendAccounting:
+          type: array
+          description: Accounting breakdown for send transactions
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+              amountString:
+                type: string
+              nOuts:
+                type: integer
+              amount:
+                type: integer
+              id:
+                type: string
+        createdTime:
+          type: string
+          format: date-time
+          description: The time this transfer was created
+        approvedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was approved
+        rejectedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was rejected
+        signedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was signed
+        unconfirmedTime:
+          type: string
+          format: date-time
+          description: The time this transfer became unconfirmed
+        confirmedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was confirmed
+        removedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was removed
+        commentedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was commented on
+        failedTime:
+          type: string
+          format: date-time
+          description: The time this transfer failed
+        regeneratedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was regenerated
+        replacedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was replaced
+        replacingTime:
+          type: string
+          format: date-time
+          description: The time this transfer started replacing another
+        abandonedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was abandoned
+        signedDate:
+          type: string
+          format: date-time
+          description: The date this transfer was signed (legacy field)
+        customerApprovedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was approved by the customer (trust transfers)
+        idVerificationTime:
+          type: string
+          format: date-time
+          description: The time identity verification was completed (trust transfers)
+        trustSignedTime:
+          type: string
+          format: date-time
+          description: The time this transfer was signed by trust (trust transfers)
+        trustFinalApprovalTime:
+          type: string
+          format: date-time
+          description: The time this transfer received final trust approval (trust transfers)
+        walletLabel:
+          type: string
+          description: Label of the wallet associated with this transfer
+        enterpriseName:
+          type: string
+          description: Name of the enterprise associated with this transfer
+        elliptic:
+          type: string
+          description: Elliptic risk score information (trust transfers)
+        senderInformationVerified:
+          type: boolean
+          description: Whether sender information has been verified (trust transfers)
+        buildParams:
+          type: object
+          description: Parameters used to build the transaction
+          additionalProperties: true
         entries:
           type: array
           description: An array of objects describing the change in address balances made as a result of this Transfer
@@ -71117,6 +71297,17 @@ components:
           example: 'true'
     TransferState:
       type: string
+      description: |
+        The state of the transfer. Includes the following:
+        - `confirmed`: The transfer is confirmed on chain.
+        - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction.
+        - `initialized`: The initial state when creating a transfer.
+        - `pendingApproval`: The transfer requires admin approval to proceed.
+        - `rejected`: The transfer was rejected by an admin.
+        - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain.
+        - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee.
+        - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo.
+        - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.
       example: confirmed
       enum:
         - confirmed
@@ -72481,7 +72672,7 @@ components:
             - pending
             - rejected
             - unverified
-    User2:
+    User1:
       title: User
       allOf:
         - type: object
