@@ -24933,6 +24933,7 @@ paths:
                 - $ref: '#/components/schemas/SeiUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiSwitchValidatorsRequestPOSTBody'
+                - $ref: '#/components/schemas/SeiEvmStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolClaimRewardsRequestPOSTBody'
@@ -25103,6 +25104,8 @@ paths:
                 $ref: '#/components/examples/SeiClaimRewardsRequestPOSTBodyExample'
               SeiSwitchValidatorRequestPOSTBodyExample:
                 $ref: '#/components/examples/SeiSwitchValidatorRequestPOSTBodyExample'
+              SeiEvmStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/SeiEvmStakingRequestPOSTBodyExample'
               SolStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SolStakingRequestPOSTBodyExample'
               SolUnStakingRequestPOSTBodyExample:
@@ -39292,6 +39295,13 @@ components:
         clientId: 123e4567-e89b-12d3-a456-426614174006
         type: CLAIM_REWARDS
         delegationId: sei-delegation-1
+    SeiEvmStakingRequestPOSTBodyExample:
+      summary: SeiEvm Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1000000000000000000'
+        validator: seivaloper1abc123...
+        type: STAKE
     SeiStakingRequestPOSTBodyExample:
       summary: Sei Staking Request POST Body Example
       value:
@@ -64567,6 +64577,18 @@ components:
       description: Request to claim staking rewards for Sei.
       allOf:
         - $ref: '#/components/schemas/ClaimRewardsRequestPOSTBody'
+    SeiEvmStakingRequestPOSTBody:
+      title: SEIEVM stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+        - type: object
+          properties:
+            validator:
+              type: string
+              description: SEIEVM validator address
+          required:
+            - validator
+      type: object
     SeiStakingRequest:
       title: SEI
       allOf:
