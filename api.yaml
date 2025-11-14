@@ -378,12 +378,12 @@ paths:
         Add a webhook to a wallet that sends an HTTP callback from BitGo to a specified
         URL when specific conditions occur. A wallet can have up to 10 webhooks of each
         wallet-webhook `type`. Learn more about webhooks on the
-        [Developer Portal](https://developers.bitgo.com/guides/wallets/webhooks).
+        [Developer Portal](/docs/webhooks-overview#/).
 
         **Note:** Before you process webhook notifications, BitGo strongly recommends that
         you verify response details by fetching the transfer or block data from BitGo. For
         example, if you create a transfer webhook and you receive a transfer ID, pass that
-        ID to the [Get Transfer](/api/v2.wallet.gettransfer) endpoint to verify the transfer
+        ID to the [Get Transfer](/reference/v2walletgettransfer#/) endpoint to verify the transfer
         details.
       operationId: v2.wallet.addwebhook
       tags:
@@ -993,7 +993,7 @@ paths:
                     $ref: '#/components/schemas/Session'
     post:
       summary: Create access token
-      description: Create an access token to use BitGo APIs. BitGo restricts access tokens in the production environment to specific IP addresses. However, access tokens in the test environment don't require an IP address restriction. If you omit a spending limit, you must unlock the token using the [Unlock session](https://developers.bitgo.com/api/user.unlock) endpoint on a regular basis to permit operations such as withdrawals. Therefore, BitGo recommends including a spending limit.
+      description: Create an access token to use BitGo APIs. BitGo restricts access tokens in the production environment to specific IP addresses. However, access tokens in the test environment don't require an IP address restriction. If you omit a spending limit, you must unlock the token using the [Unlock session](/reference/userunlock#/) endpoint on a regular basis to permit operations such as withdrawals. Therefore, BitGo recommends including a spending limit.
       operationId: v2.accesstoken.add
       tags:
         - User
@@ -1139,7 +1139,7 @@ paths:
       tags:
         - Transaction request
       summary: Create transaction request
-      description: Allows users to create a transaction request given they have spender permissions on the wallet. Use only with MPC wallets. For multisignature wallets, use [Build a transaction](/api/v2.wallet.tx.build).
+      description: Allows users to create a transaction request given they have spender permissions on the wallet. Use only with MPC wallets. For multisignature wallets, use [Build a transaction](/reference/v2wallettxbuild#/).
       operationId: v2.wallet.txrequest.create
       parameters:
         - $ref: '#/components/parameters/pathWalletId'
@@ -1218,6 +1218,49 @@ paths:
             items:
               type: string
               description: A "sequenceId" is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a "sequenceId" you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per "sequenceId" (and fails all subsequent attempts), you can retry sending without the risk of double spending. The "sequenceId" is only visible to users on the wallet and is not shared publicly.
+        - name: intentTypes
+          description: If provided, only transaction requests with the specified intent types will be returned.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - payment
+                - consolidate
+                - consolidateToken
+                - fanout
+                - vote
+                - createAccount
+                - updateAccount
+                - addTrustLine
+                - removeTrustLine
+                - signMessage
+                - signTypedStructuredData
+                - enableToken
+                - acceleration
+                - transferToken
+                - fillNonce
+                - walletRecovery
+                - contractCall
+                - customTx
+                - closeAssociatedTokenAccount
+                - stake
+                - unstake
+                - delegate
+                - undelegate
+                - switchValidator
+                - claim
+                - stakeClaimRewards
+                - pledge
+                - voteDelegation
+                - authorize
+                - deactivate
+                - createBtcDelegation
+                - goUnstake
+                - stakeWithCallData
+                - unstakeWithCallData
+              description: If provided, only transaction requests with the specified intent types will be returned.
         - name: states
           description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
           in: query
@@ -20843,10 +20886,10 @@ paths:
         - Wallet
       summary: \[DEPRECATED\] Add wallet (advanced only)
       description: |
-        >**Note:** This route is deprecated in favor of [Add Wallet](https://developers.bitgo.com/api/v2.wallet.add).
+        >**Note:** This route is deprecated in favor of [Add Wallet](/reference/v2walletadd#/).
 
         Add Wallet is for advanced API users. It lets you manually create and
-        specify keys. The recommended (and simpler) method is [Generate Wallet](https://developers.bitgo.com/api/express.wallet.generate)
+        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate#/)
         with the SDK or BitGo Express. You can also create wallets in the BitGo UI.
 
         This API creates a new wallet for the user or enterprise. The keys to
@@ -20948,7 +20991,7 @@ paths:
       summary: Add wallet (advanced only)
       description: |
         Add Wallet is for advanced API users. It lets you manually create and
-        specify keys. The recommended (and simpler) method is [Generate Wallet](https://developers.bitgo.com/api/express.wallet.generate)
+        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate#/)
         with the SDK or BitGo Express. You can also create wallets in the BitGo UI.
 
         This API creates a new wallet for the user or enterprise. The keys to
@@ -22071,7 +22114,7 @@ paths:
       summary: Build a transaction
       operationId: v2.wallet.tx.build
       description: |
-        Build a transaction from the wallet using provided options. Use only with multisignature wallets. For MPC wallets, use [Create transaction request](https://developers.bitgo.com/api/v2.wallet.txrequest.create). If you want to build, sign, and send all in one call, use [Send transaction](https://developers.bitgo.com/api/express.wallet.sendcoins).
+        Build a transaction from the wallet using provided options. Use only with multisignature wallets. For MPC wallets, use [Create transaction request](/reference/v2wallettxrequestcreate#/). If you want to build, sign, and send all in one call, use [Send transaction](/reference/expresswalletsendcoins#/).
       parameters:
         - $ref: '#/components/parameters/pathCoin'
         - $ref: '#/components/parameters/pathWalletId'
@@ -22171,9 +22214,7 @@ paths:
       summary: Send a half-signed transaction
       operationId: v2.wallet.tx.send
       description: |
-        Send a half-signed transaction from the specified wallet.
-        Instead of this endpoint, you likely want to use [send transaction](https://developers.bitgo.com/api/express.wallet.sendcoins)
-        in the SDK.
+        Send a half-signed transaction to BitGo for final signing (using the BitGo key) and broadcasting.
       parameters:
         - $ref: '#/components/parameters/pathCoin'
         - $ref: '#/components/parameters/pathWalletId'
@@ -24935,6 +24976,7 @@ paths:
                 - $ref: '#/components/schemas/SeiUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiSwitchValidatorsRequestPOSTBody'
+                - $ref: '#/components/schemas/SeiEvmStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolClaimRewardsRequestPOSTBody'
@@ -25105,6 +25147,8 @@ paths:
                 $ref: '#/components/examples/SeiClaimRewardsRequestPOSTBodyExample'
               SeiSwitchValidatorRequestPOSTBodyExample:
                 $ref: '#/components/examples/SeiSwitchValidatorRequestPOSTBodyExample'
+              SeiEvmStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/SeiEvmStakingRequestPOSTBodyExample'
               SolStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SolStakingRequestPOSTBodyExample'
               SolUnStakingRequestPOSTBodyExample:
@@ -28221,7 +28265,7 @@ paths:
     post:
       summary: Create address
       description: |-
-        Creates a new receive address for a wallet. If you create a forwarder address, whenever it receives assets, BitGo automatically deploys a forwarder smart contract to flush the balance to the base address. See [Blockchain Reference](/coins/Agoric) topics to learn more about address management, fees, and consolidations for specific assets.
+        Creates a new receive address for a wallet. If you create a forwarder address, whenever it receives assets, BitGo automatically deploys a forwarder smart contract to flush the balance to the base address. See [Blockchain Reference](https://assets.bitgo.com/coins/agoric) topics to learn more about address management, fees, and consolidations for specific assets.
         **Note:** New Ethereum addresses require blockchain confirmation before you can consolidate from them.
       operationId: v2.wallet.newaddress
       tags:
@@ -29846,6 +29890,49 @@ paths:
             items:
               type: string
               description: A "sequenceId" is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a "sequenceId" you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per "sequenceId" (and fails all subsequent attempts), you can retry sending without the risk of double spending. The "sequenceId" is only visible to users on the wallet and is not shared publicly.
+        - name: intentTypes
+          description: If provided, only transaction requests with the specified intent types will be returned.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - payment
+                - consolidate
+                - consolidateToken
+                - fanout
+                - vote
+                - createAccount
+                - updateAccount
+                - addTrustLine
+                - removeTrustLine
+                - signMessage
+                - signTypedStructuredData
+                - enableToken
+                - acceleration
+                - transferToken
+                - fillNonce
+                - walletRecovery
+                - contractCall
+                - customTx
+                - closeAssociatedTokenAccount
+                - stake
+                - unstake
+                - delegate
+                - undelegate
+                - switchValidator
+                - claim
+                - stakeClaimRewards
+                - pledge
+                - voteDelegation
+                - authorize
+                - deactivate
+                - createBtcDelegation
+                - goUnstake
+                - stakeWithCallData
+                - unstakeWithCallData
+              description: If provided, only transaction requests with the specified intent types will be returned.
         - name: states
           description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
           in: query
@@ -30110,7 +30197,7 @@ paths:
         Remove a webhook from the enterprise. This will permanently delete the webhook.
         To call this endpoint, you must have the user_manage scope on a short-lived
         access token created either in the web app or programmatically using
-        the [Login](/api/user.login) endpoint.
+        the [Login](/reference/userlogin#/) endpoint.
       operationId: v2.enterprise.webhook.delete
       tags:
         - Enterprise Webhooks
@@ -30149,7 +30236,7 @@ paths:
   /api/v2/enterprise/{enterpriseId}/webhook/{webhookId}/bankaccount/{bankaccountId}/simulate:
     get:
       summary: Simulate bank account webhook
-      description: Simulate a bank account webhook for testing purposes. To call this endpoint, you must have the user_manage scope on a short-lived access token created either in the web app or programmatically using the [Login](/api/user.login) endpoint.
+      description: Simulate a bank account webhook for testing purposes. To call this endpoint, you must have the user_manage scope on a short-lived access token created either in the web app or programmatically using the [Login](/reference/userlogin#/) endpoint.
       operationId: v2.enterprise.webhook.bankaccount.simulate
       tags:
         - Enterprise Webhooks
@@ -30209,7 +30296,7 @@ paths:
   /api/v2/enterprise/{enterpriseId}/webhook/{webhookId}/simulate:
     get:
       summary: Simulate enterprise webhook
-      description: Simulate a webhook for testing purposes. To call this endpoint, you must have the user_manage scope on a short-lived access token created either in the web app or programmatically using the [Login](/api/user.login) endpoint.
+      description: Simulate a webhook for testing purposes. To call this endpoint, you must have the user_manage scope on a short-lived access token created either in the web app or programmatically using the [Login](/reference/userlogin#/) endpoint.
       operationId: v2.enterprise.webhook.simulate
       tags:
         - Enterprise Webhooks
@@ -30335,7 +30422,7 @@ paths:
         Create a webhook that will fire for any bank account associated with the enterprise.
         Must be an organization or enterprise admin to perform this action. To call this
         endpoint, you must have the user_manage scope on a short-lived access token created
-        either in the web app or programmatically using the [Login](/api/user.login) endpoint.
+        either in the web app or programmatically using the [Login](/reference/userlogin#/) endpoint.
       operationId: v2.enterprise.webhook.add
       tags:
         - Enterprise Webhooks
@@ -31625,7 +31712,7 @@ paths:
         specific conditions occur within an organization. Must be an organization
         manager to perform this action. To call this endpoint, you must have the
         `user_manage` scope on a short-lived access token created either in the web app
-        or programmatically using the [Login](/api/user.login) endpoint.
+        or programmatically using the [Login](/reference/userlogin#/) endpoint.
       operationId: v2.organization.webhook.add
       tags:
         - Organization Webhooks
@@ -31889,7 +31976,7 @@ paths:
         Remove a webhook from the organization. This permanently deletes the webhook.
         To call this endpoint, you must have the `user_manage` scope on a short-lived access
         token created either in the web app or programmatically using the
-        [Login](/api/user.login) endpoint.
+        [Login](/reference/userlogin#/) endpoint.
       operationId: v2.organization.webhook.delete
       tags:
         - Organization Webhooks
@@ -31979,7 +32066,7 @@ paths:
       description: |-
         Simulate an organization webhook for testing purposes. To call this endpoint,
         you must have the `user_manage` scope on a short-lived access token created
-        either in the web app or programmatically using the [Login](/api/user.login)
+        either in the web app or programmatically using the [Login](/reference/userlogin#/)
         endpoint.
       operationId: v2.organization.webhook.simulate
       tags:
@@ -32931,8 +33018,8 @@ paths:
       summary: Freeze User
       description: |-
         Route for users to freeze their account. Requires the `user_manage` scope.
-        Session must be unlocked using the [unlock](https://developers.bitgo.com/api/user.unlock) endpoint, prior to hitting this route.
-        In the UI, call to this route is followed by a call to [logout](https://developers.bitgo.com/api/user.logout) endpoint.
+        Session must be unlocked using the [Unlock](/reference/userunlock#/) endpoint, prior to hitting this route.
+        In the UI, call to this route is followed by a call to [Logout](/reference/userlogout#/) endpoint.
       operationId: v2.user.freeze
       tags:
         - User
@@ -32954,7 +33041,7 @@ paths:
   /api/v2/user/login:
     post:
       summary: Login
-      description: Creates a short-lived (1 hour) access token for use with the API. BitGo doesn't recommend using this endpoint for scripting. Instead, use the SDK or the web UI to create long-lived access tokens. However, short-lived access tokens are the only access tokens with the "user_manage" scope that enables you to programmatically add users to your enterprise using the [Add User to Enterprise](/api/v2.enterprise.user.add) endpoint.
+      description: Creates a short-lived (1 hour) access token for use with the API. BitGo doesn't recommend using this endpoint for scripting. Instead, use the SDK or the web UI to create long-lived access tokens. However, short-lived access tokens are the only access tokens with the "user_manage" scope that enables you to programmatically add users to your enterprise using the [Add User to Enterprise](/reference/v2enterpriseuseradd#/) endpoint.
       operationId: v2.user.login
       tags:
         - User
@@ -33031,7 +33118,7 @@ paths:
       summary: Get Recovery Codes
       description: |-
         Get the recovery codes for the given recovery code set ID. Requires the `user_manage` scope.
-        Session must be unlocked using the [unlock](https://developers.bitgo.com/api/user.unlock)
+        Session must be unlocked using the [Unlock](/reference/userunlock#/)
         endpoint, prior to hitting this route.
       operationId: v2.user.recoveryCodes.getById
       tags:
@@ -34408,7 +34495,7 @@ paths:
       description: |-
         Exchange commitments for signing EdDSA transactions. This route is only valid
         for transaction request lite. You must call this endpoint before calling
-        [Create a signature share for the transaction request](/api/v2.wallet.txrequest.signatureshare.create).
+        [Create a signature share for the transaction request](/reference/v2wallettxrequestsignaturesharecreate#/).
       operationId: v2.wallet.txrequest.commitment.exchange
       tags:
         - Transaction request
@@ -34478,7 +34565,7 @@ paths:
       summary: Create ECDSA MPC challenge for message
       description: |-
         Create the challenge required for signing ECDSA transactions. You must call this
-        endpoint before calling [Create a signature share for the transaction request](/api/v2.wallet.txrequest.signatureshare.create).
+        endpoint before calling [Create a signature share for the transaction request](/reference/v2wallettxrequestsignaturesharecreate#/).
       operationId: v2.wallet.txrequest.message.challenge.create
       tags:
         - Transaction request
@@ -34547,7 +34634,7 @@ paths:
       summary: Create ECDSA MPC challenge for transaction
       description: |-
         Create the challenge required for signing ECDSA transactions. You must call this
-        endpoint before calling [Create a signature share for the transaction request](/api/v2.wallet.txrequest.signatureshare.create).
+        endpoint before calling [Create a signature share for the transaction request](/reference/v2wallettxrequestsignaturesharecreate#/).
       operationId: v2.wallet.txrequest.transaction.challenge.create
       tags:
         - Transaction request
@@ -34616,7 +34703,7 @@ paths:
       summary: Exchange commitments for EdDSA transactions (full)
       description: |-
         Exchange commitments for signing EdDSA transactions. This route is only valid for
-        transaction request full. You must call this endpoint before calling [Create a signature share for the transaction request](/api/v2.wallet.txrequest.signatureshare.create).
+        transaction request full. You must call this endpoint before calling [Create a signature share for the transaction request](/reference/v2wallettxrequestsignaturesharecreate#/).
       operationId: v2.wallet.txrequest.transaction.commitment.exchange
       tags:
         - Transaction request
@@ -35536,7 +35623,7 @@ paths:
       summary: Verify Webhook Notification
       description: |-
         Verify that a webhook notification comes from BitGo based on webhook signature and payload.
-        If X-Signature-SHA256 header is not present in the notification, please use the [v2.webhook.secret.create](https://developers.bitgo.com/api/v2.webhook.secret.create) endpoint to generate a secret for your enterprise or organization.
+        If the X-Signature-SHA256 header is absent from the notification, use the [Create webhook secret](/reference/v2webhooksecretcreate#/) endpoint to generate a secret for your enterprise or organization.
         The requester must be an admin of the specified enterprise or organization.
       operationId: v2.webhook.notification.verify
       tags:
@@ -39294,6 +39381,13 @@ components:
         clientId: 123e4567-e89b-12d3-a456-426614174006
         type: CLAIM_REWARDS
         delegationId: sei-delegation-1
+    SeiEvmStakingRequestPOSTBodyExample:
+      summary: SeiEvm Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1000000000000000000'
+        validator: seivaloper1abc123...
+        type: STAKE
     SeiStakingRequestPOSTBodyExample:
       summary: Sei Staking Request POST Body Example
       value:
@@ -45551,6 +45645,17 @@ components:
           $ref: '#/components/schemas/optionalString'
       required:
         - intentType
+    BaseOAuthSetting:
+      title: BaseOAuthSetting
+      type: object
+      properties:
+        clientId:
+          type: string
+        clientSecret:
+          type: string
+      required:
+        - clientId
+        - clientSecret
     BasePermissionAttributes:
       description: Base attributes for all permission types.
       type: object
@@ -48856,6 +48961,9 @@ components:
         newFeeAddress:
           type: boolean
           description: Create a new keychain instead of fetching enterprise key (only for Ethereum)
+        originalPasscodeEncryptionCode:
+          type: string
+          description: Passphrase that is used to decrypt box D (i.e. encrypted wallet passphrase) on your wallet keycard
         pub:
           allOf:
             - $ref: '#/components/schemas/Pub'
@@ -54520,6 +54628,16 @@ components:
         sendTransfer:
           type: object
           properties:
+            abandonedTime:
+              type: string
+              description: The time this transfer was abandoned
+              format: date-time
+              title: ISO Date String
+            approvedTime:
+              type: string
+              description: The time this transfer was approved
+              format: date-time
+              title: ISO Date String
             baseValue:
               type: number
               description: The value (in base units) sent by this transfer, excluding network fees. BitGo is deprecating this field in the future.
@@ -54528,6 +54646,12 @@ components:
               description: The value (in base units) sent by this transfer, excluding network fees represented as a string. BitGo is deprecating this field in the future.
               example: '2000000'
               pattern: ^-?\d+$
+            baseValueWithoutFees:
+              type: number
+              description: The value (in base units) sent by this transfer excluding network fees.
+            baseValueWithoutFeesString:
+              type: string
+              description: The value (in base units) sent by this transfer, excluding network fees, represented as a string
             bitgoOrg:
               type: string
               enum:
@@ -54543,21 +54667,58 @@ components:
                 - BitGo India
                 - BitGo Sister Trust 1
                 - BitGo Inc
+            buildParams:
+              type: object
+              additionalProperties: {}
+              description: Parameters used to build the transaction
             coin:
               $ref: '#/components/schemas/CoinString'
+            coinSpecific: {}
             comment:
               nullable: true
               type: string
               description: A comment from the user
+            commentedTime:
+              type: string
+              description: The time this transfer was commented on
+              format: date-time
+              title: ISO Date String
+            confirmations:
+              type: number
+              description: The number of blocks that have been confirmed since this Transfer's block was confirmed
+            confirmedTime:
+              type: string
+              description: The time this transfer was confirmed
+              format: date-time
+              title: ISO Date String
+            consolidateId:
+              type: string
+              description: Consolidation ID if this transfer is part of a consolidation
+            createdTime:
+              type: string
+              description: The time this transfer was created
+              format: date-time
+              title: ISO Date String
+            customerApprovedTime:
+              type: string
+              description: The time this transfer was approved by the customer (trust transfers)
+              format: date-time
+              title: ISO Date String
             date:
               type: string
               description: The date this Transfer was last updated
               format: date-time
               title: ISO Date String
+            elliptic:
+              type: string
+              description: Elliptic risk score information (trust transfers)
             enterprise:
               type: string
               example: 59cd72485007a239fb00282ed480da1f
               pattern: ^[0-9a-f]{32}$
+            enterpriseName:
+              type: string
+              description: Name of the enterprise associated with this transfer
             entries:
               type: array
               items:
@@ -54636,6 +54797,26 @@ components:
                 required:
                   - address
                 description: An array of objects describing the change in address balances made as a result of this Transfer
+            failedTime:
+              type: string
+              description: The time this transfer failed
+              format: date-time
+              title: ISO Date String
+            feeCoin:
+              type: string
+              description: The coin used to pay the fee (for cross-chain transactions)
+            feeString:
+              type: string
+              description: The Transfer's fee (in base units) represented as a String
+            goStakingRequestId:
+              type: string
+              description: Associated GO staking request ID
+            height:
+              type: number
+              description: The height of the block this Transfer was confirmed in (999999999 if unconfirmed)
+            heightId:
+              type: string
+              description: The unique height id of the block
             history:
               type: array
               items:
@@ -54670,22 +54851,201 @@ components:
               type: string
               example: 59cd72485007a239fb00282ed480da1f
               pattern: ^[0-9a-f]{32}$
+            idVerificationTime:
+              type: string
+              description: The time identity verification was completed (trust transfers)
+              format: date-time
+              title: ISO Date String
+            inputs:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    type: string
+                    description: The address of the UTXO
+                  blockHeight:
+                    type: number
+                    description: The block this Unspent was created in
+                  chain:
+                    type: number
+                    description: The chain of the UTXO
+                  coinbase:
+                    type: boolean
+                    description: True if this unspent came from the coinbase transaction
+                  id:
+                    type: string
+                    description: The ID of the UTXO
+                  index:
+                    type: number
+                    description: The index of the UTXO
+                  redeemScript:
+                    type: string
+                    description: The redeem script of the UTXO
+                  value:
+                    type: number
+                    description: The value of the UTXO
+                  witnessScript:
+                    type: string
+                    description: The witness script of the UTXO
+            instant:
+              type: boolean
+              description: Whether this is an instant transaction
+            instantId:
+              type: string
+              description: The instant transaction ID if applicable
+            intendedValueString:
+              type: string
+              description: A string representation (in base units) of the initial value for the transfer. This is present because when a transaction fails on chain, its value is mutated to be zero. This string is immutable and will always be the intended value of the initial transfer regardless of the final state of the transaction.
+            isFee:
+              type: boolean
+              description: Whether this transfer represents a fee
+            isReward:
+              type: boolean
+              description: Whether this transfer represents a staking reward
+            isUnlock:
+              type: boolean
+              description: Whether this transfer represents an unlock operation
+            label:
+              type: string
+              description: Address labels (if any) from entries concatenated.
+            medianUsdRate:
+              type: number
+              description: The median USD rate at the time this Transfer was created
+            medianUsdValue:
+              type: number
+              description: The median USD value of this Transfer
+            metadata:
+              type: array
+              items:
+                type: object
+                properties:
+                  key:
+                    type: string
+                  value:
+                    type: string
+                required:
+                  - key
+                  - value
+                description: Additional metadata associated with the transfer
+            nSegwitInputs:
+              type: number
+              description: DEPRECATED. Number of segwit inputs on the transfer.
             organization:
               type: string
               example: 59cd72485007a239fb00282ed480da1f
               pattern: ^[0-9a-f]{32}$
+            outputs:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    type: string
+                    description: The address of the UTXO
+                  blockHeight:
+                    type: number
+                    description: The block this Unspent was created in
+                  chain:
+                    type: number
+                    description: The chain of the UTXO
+                  coinbase:
+                    type: boolean
+                    description: True if this unspent came from the coinbase transaction
+                  id:
+                    type: string
+                    description: The ID of the UTXO
+                  index:
+                    type: number
+                    description: The index of the UTXO
+                  redeemScript:
+                    type: string
+                    description: The redeem script of the UTXO
+                  value:
+                    type: number
+                    description: The value of the UTXO
+                  witnessScript:
+                    type: string
+                    description: The witness script of the UTXO
+            payGoFee:
+              type: number
+              description: The Transfer's BitGo fee (in base units)
+            payGoFeeString:
+              type: string
+              description: The Transfer's BitGo fee (in base units) represented as a String
             pendingApproval:
               type: string
+            regeneratedTime:
+              type: string
+              description: The time this transfer was regenerated
+              format: date-time
+              title: ISO Date String
+            rejectedTime:
+              type: string
+              description: The time this transfer was rejected
+              format: date-time
+              title: ISO Date String
+            removedTime:
+              type: string
+              description: The time this transfer was removed
+              format: date-time
+              title: ISO Date String
             replacedBy:
               type: array
               items:
                 type: string
                 description: Transaction IDs that replace this transfer.
+            replacedTime:
+              type: string
+              description: The time this transfer was replaced
+              format: date-time
+              title: ISO Date String
             replaces:
               type: array
               items:
                 type: string
                 description: Transaction IDs that this transfer replaces.
+            replacingTime:
+              type: string
+              description: The time this transfer started replacing another
+              format: date-time
+              title: ISO Date String
+            sendAccounting:
+              type: array
+              items:
+                type: object
+                properties:
+                  amount:
+                    type: number
+                  amountString:
+                    type: string
+                  id:
+                    type: string
+                  nOuts:
+                    type: number
+                  type:
+                    type: string
+                required:
+                  - amountString
+                  - nOuts
+                  - type
+                description: Accounting breakdown for send transactions
+            senderInformationVerified:
+              type: boolean
+              description: Whether sender information has been verified (trust transfers)
+            sequenceId:
+              type: string
+              description: Unique wallet identifier for preventing double-spends
+            signedDate:
+              type: string
+              description: The date this transfer was signed (legacy field)
+              format: date-time
+              title: ISO Date String
+            signedTime:
+              type: string
+              description: The time this transfer was signed
+              format: date-time
+              title: ISO Date String
             stakingParams:
               type: object
               properties:
@@ -54730,20 +55090,79 @@ components:
                 - requestId
             state:
               $ref: '#/components/schemas/TransferState1'
+            subType:
+              type: string
+              enum:
+                - ofc_deposit
+                - ofc_withdrawal
+                - ofc_book_transfer
+                - ofc_exchange
+                - ofc_bn_settlement_transfer
+                - ofc_bn_allocation
+                - ofc_trading_order
+                - ofc_trading_settlement
+                - ofc_margin_collateral
+                - ofc_margin_position
+                - ofc_direct_trade
+                - ofc_routed
+                - ofc_fee
+                - ofc_other
+                - ofc_unstake
+                - receive_from_gastank
+                - reserved_amount
+                - utxo_message_signing
+                - pending_deposit
+                - staking_eth_withdrawal
+                - staking_eth_partial_withdrawal
+                - staking_eth_full_withdrawal
+                - staking_eth_mev_reward
+                - staking_eth_block_reward
+                - staking_bera_withdrawal
+                - staking_bera_block_reward
+              description: Transfer subtype
+            tags:
+              type: array
+              items:
+                type: string
+                description: The tags to be used on this Transfer (used in Policies)
+            trustFinalApprovalTime:
+              type: string
+              description: The time this transfer received final trust approval (trust transfers)
+              format: date-time
+              title: ISO Date String
+            trustSignedTime:
+              type: string
+              description: The time this transfer was signed by trust (trust transfers)
+              format: date-time
+              title: ISO Date String
             txid:
               type: string
               description: The on-chain transaction id
               example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+            txidType:
+              type: string
+              description: The type of the transaction id
+            txRequestId:
+              type: string
+              description: Associated transaction request ID
             type:
               allOf:
                 - $ref: '#/components/schemas/TransferType1'
               description: Defines whether or not this Transfer was sent or received by the user
+            unconfirmedTime:
+              type: string
+              description: The time this transfer became unconfirmed
+              format: date-time
+              title: ISO Date String
             usd:
               type: number
               description: The amount of USD of this Transfer (will be negative if it's a send)
             usdRate:
               type: number
               description: The USD rate at the time this Transfer was created
+            usersNotified:
+              type: boolean
+              description: Whether BitGo already sent notifications to the users of the transfer wallet
             value:
               type: number
               description: The total value (in base units) sent by this Transfer (may be approximate for ETH and other coins where amounts in base units can exceed 2^53 - 1)
@@ -54752,10 +55171,16 @@ components:
               description: The total value (in base units) sent by this Transfer represented as a String
               example: '2000000'
               pattern: ^-?\d+$
+            vSize:
+              type: number
+              description: The size of the transaction
             wallet:
               type: string
               example: 59cd72485007a239fb00282ed480da1f
               pattern: ^[0-9a-f]{32}$
+            walletLabel:
+              type: string
+              description: Label of the wallet associated with this transfer
             walletType:
               type: string
               enum:
@@ -56104,6 +56529,7 @@ components:
         - customTx
         - closeAssociatedTokenAccount
         - stakeWithCallData
+        - unstakeWithCallData
         - feeAddressTransfer
         - tokenApproval
         - goUnstake
@@ -56141,23 +56567,6 @@ components:
         - deactivate
         - customTx
         - closeAssociatedTokenAccount
-    InternalUserOAuthSetting:
-      title: InternalUserOAuthSetting
-      type: object
-      properties:
-        clientId:
-          type: string
-        tenantId:
-          type: string
-        oauthProvider:
-          $ref: '#/components/schemas/OAuthProvider'
-        clientSecret:
-          type: string
-      required:
-        - clientId
-        - tenantId
-        - oauthProvider
-        - clientSecret
     InternationalWireAccountResponseProps:
       title: InternationalWireAccountResponseProps
       type: object
@@ -58459,6 +58868,21 @@ components:
         nullable: true
       title: Metadata
       description: Optional metadata for the document (max 100KB)
+    MicrosoftOAuthSetting:
+      title: MicrosoftOAuthSetting
+      allOf:
+        - type: object
+          properties:
+            oauthProvider:
+              type: string
+              enum:
+                - msEntra
+            tenantId:
+              type: string
+          required:
+            - oauthProvider
+            - tenantId
+        - $ref: '#/components/schemas/BaseOAuthSetting'
     MinRequireActionParameter:
       title: Minimum number of approvals required
       type: object
@@ -59326,21 +59750,11 @@ components:
       required:
         - id
         - isExtensible
-    OAuthProvider:
-      title: OAuthProvider
-      type: string
-      enum:
-        - msEntra
     OAuthSetting:
       title: OAuthSetting
-      allOf:
-        - type: object
-          properties:
-            clientSecret:
-              type: string
-          required:
-            - clientSecret
-        - $ref: '#/components/schemas/InternalUserOAuthSetting'
+      oneOf:
+        - $ref: '#/components/schemas/MicrosoftOAuthSetting'
+        - $ref: '#/components/schemas/OktaOAuthSetting'
     Occupation:
       type: string
       enum:
@@ -59418,6 +59832,21 @@ components:
       title: Offchain Address
       type: object
       additionalProperties: {}
+    OktaOAuthSetting:
+      title: OktaOAuthSetting
+      allOf:
+        - type: object
+          properties:
+            oauthProvider:
+              type: string
+              enum:
+                - okta
+            oktaDomain:
+              type: string
+          required:
+            - oauthProvider
+            - oktaDomain
+        - $ref: '#/components/schemas/BaseOAuthSetting'
     OldOwner:
       title: OldOwner
       allOf:
@@ -63541,6 +63970,7 @@ components:
         price:
           type: string
           format: decimal
+          description: Filled price per unit. Calculated using unrounded filled quantities
         quoteQuantity:
           type: string
           format: decimal
@@ -64569,6 +64999,18 @@ components:
       description: Request to claim staking rewards for Sei.
       allOf:
         - $ref: '#/components/schemas/ClaimRewardsRequestPOSTBody'
+    SeiEvmStakingRequestPOSTBody:
+      title: SEIEVM stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+        - type: object
+          properties:
+            validator:
+              type: string
+              description: SEIEVM validator address
+          required:
+            - validator
+      type: object
     SeiStakingRequest:
       title: SEI
       allOf:
@@ -71050,6 +71492,12 @@ components:
         usdRate:
           type: number
           description: The USD rate at the time this Transfer was created
+        medianUsdValue:
+          type: number
+          description: The median USD value of this Transfer
+        medianUsdRate:
+          type: number
+          description: The median USD rate at the time this Transfer was created
         value:
           type: number
           description: The total value (in base units) sent by this Transfer (may be approximate for ETH and other coins where amounts in base units can exceed 2^53 - 1)
@@ -71083,6 +71531,317 @@ components:
           items:
             type: string
             description: Transaction IDs that replace this transfer.
+        baseValueWithoutFeesString:
+          type: string
+          description: The value (in base units) sent by this transfer, excluding network fees, represented as a string
+        baseValueWithoutFees:
+          type: number
+          description: The value (in base units) sent by this transfer excluding network fees.
+        coinSpecific: {}
+        confirmations:
+          type: number
+          description: The number of blocks that have been confirmed since this Transfer's block was confirmed
+        consolidateId:
+          type: string
+          description: Consolidation ID if this transfer is part of a consolidation
+        feeString:
+          type: string
+          description: The Transfer's fee (in base units) represented as a String
+        feeCoin:
+          type: string
+          description: The coin used to pay the fee (for cross-chain transactions)
+        sequenceId:
+          type: string
+          description: Unique wallet identifier for preventing double-spends
+        subType:
+          type: string
+          enum:
+            - ofc_deposit
+            - ofc_withdrawal
+            - ofc_book_transfer
+            - ofc_exchange
+            - ofc_bn_settlement_transfer
+            - ofc_bn_allocation
+            - ofc_trading_order
+            - ofc_trading_settlement
+            - ofc_margin_collateral
+            - ofc_margin_position
+            - ofc_direct_trade
+            - ofc_routed
+            - ofc_fee
+            - ofc_other
+            - ofc_unstake
+            - receive_from_gastank
+            - reserved_amount
+            - utxo_message_signing
+            - pending_deposit
+            - staking_eth_withdrawal
+            - staking_eth_partial_withdrawal
+            - staking_eth_full_withdrawal
+            - staking_eth_mev_reward
+            - staking_eth_block_reward
+            - staking_bera_withdrawal
+            - staking_bera_block_reward
+          description: Transfer subtype
+        txRequestId:
+          type: string
+          description: Associated transaction request ID
+        goStakingRequestId:
+          type: string
+          description: Associated GO staking request ID
+        height:
+          type: number
+          description: The height of the block this Transfer was confirmed in (999999999 if unconfirmed)
+        heightId:
+          type: string
+          description: The unique height id of the block
+        instant:
+          type: boolean
+          description: Whether this is an instant transaction
+        instantId:
+          type: string
+          description: The instant transaction ID if applicable
+        isFee:
+          type: boolean
+          description: Whether this transfer represents a fee
+        isReward:
+          type: boolean
+          description: Whether this transfer represents a staking reward
+        isUnlock:
+          type: boolean
+          description: Whether this transfer represents an unlock operation
+        nSegwitInputs:
+          type: number
+          description: DEPRECATED. Number of segwit inputs on the transfer.
+        outputs:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+                description: The address of the UTXO
+              blockHeight:
+                type: number
+                description: The block this Unspent was created in
+              chain:
+                type: number
+                description: The chain of the UTXO
+              coinbase:
+                type: boolean
+                description: True if this unspent came from the coinbase transaction
+              id:
+                type: string
+                description: The ID of the UTXO
+              index:
+                type: number
+                description: The index of the UTXO
+              redeemScript:
+                type: string
+                description: The redeem script of the UTXO
+              value:
+                type: number
+                description: The value of the UTXO
+              witnessScript:
+                type: string
+                description: The witness script of the UTXO
+        payGoFee:
+          type: number
+          description: The Transfer's BitGo fee (in base units)
+        payGoFeeString:
+          type: string
+          description: The Transfer's BitGo fee (in base units) represented as a String
+        inputs:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+                description: The address of the UTXO
+              blockHeight:
+                type: number
+                description: The block this Unspent was created in
+              chain:
+                type: number
+                description: The chain of the UTXO
+              coinbase:
+                type: boolean
+                description: True if this unspent came from the coinbase transaction
+              id:
+                type: string
+                description: The ID of the UTXO
+              index:
+                type: number
+                description: The index of the UTXO
+              redeemScript:
+                type: string
+                description: The redeem script of the UTXO
+              value:
+                type: number
+                description: The value of the UTXO
+              witnessScript:
+                type: string
+                description: The witness script of the UTXO
+        intendedValueString:
+          type: string
+          description: A string representation (in base units) of the initial value for the transfer. This is present because when a transaction fails on chain, its value is mutated to be zero. This string is immutable and will always be the intended value of the initial transfer regardless of the final state of the transaction.
+        label:
+          type: string
+          description: Address labels (if any) from entries concatenated.
+        metadata:
+          type: array
+          items:
+            type: object
+            properties:
+              key:
+                type: string
+              value:
+                type: string
+            required:
+              - key
+              - value
+            description: Additional metadata associated with the transfer
+        sendAccounting:
+          type: array
+          items:
+            type: object
+            properties:
+              amount:
+                type: number
+              amountString:
+                type: string
+              id:
+                type: string
+              nOuts:
+                type: number
+              type:
+                type: string
+            required:
+              - amountString
+              - nOuts
+              - type
+            description: Accounting breakdown for send transactions
+        tags:
+          type: array
+          items:
+            type: string
+            description: The tags to be used on this Transfer (used in Policies)
+        txidType:
+          type: string
+          description: The type of the transaction id
+        usersNotified:
+          type: boolean
+          description: Whether BitGo already sent notifications to the users of the transfer wallet
+        vSize:
+          type: number
+          description: The size of the transaction
+        walletLabel:
+          type: string
+          description: Label of the wallet associated with this transfer
+        enterpriseName:
+          type: string
+          description: Name of the enterprise associated with this transfer
+        elliptic:
+          type: string
+          description: Elliptic risk score information (trust transfers)
+        senderInformationVerified:
+          type: boolean
+          description: Whether sender information has been verified (trust transfers)
+        buildParams:
+          type: object
+          additionalProperties: {}
+          description: Parameters used to build the transaction
+        createdTime:
+          type: string
+          description: The time this transfer was created
+          format: date-time
+          title: ISO Date String
+        approvedTime:
+          type: string
+          description: The time this transfer was approved
+          format: date-time
+          title: ISO Date String
+        rejectedTime:
+          type: string
+          description: The time this transfer was rejected
+          format: date-time
+          title: ISO Date String
+        signedTime:
+          type: string
+          description: The time this transfer was signed
+          format: date-time
+          title: ISO Date String
+        unconfirmedTime:
+          type: string
+          description: The time this transfer became unconfirmed
+          format: date-time
+          title: ISO Date String
+        confirmedTime:
+          type: string
+          description: The time this transfer was confirmed
+          format: date-time
+          title: ISO Date String
+        removedTime:
+          type: string
+          description: The time this transfer was removed
+          format: date-time
+          title: ISO Date String
+        commentedTime:
+          type: string
+          description: The time this transfer was commented on
+          format: date-time
+          title: ISO Date String
+        failedTime:
+          type: string
+          description: The time this transfer failed
+          format: date-time
+          title: ISO Date String
+        regeneratedTime:
+          type: string
+          description: The time this transfer was regenerated
+          format: date-time
+          title: ISO Date String
+        replacedTime:
+          type: string
+          description: The time this transfer was replaced
+          format: date-time
+          title: ISO Date String
+        replacingTime:
+          type: string
+          description: The time this transfer started replacing another
+          format: date-time
+          title: ISO Date String
+        abandonedTime:
+          type: string
+          description: The time this transfer was abandoned
+          format: date-time
+          title: ISO Date String
+        signedDate:
+          type: string
+          description: The date this transfer was signed (legacy field)
+          format: date-time
+          title: ISO Date String
+        customerApprovedTime:
+          type: string
+          description: The time this transfer was approved by the customer (trust transfers)
+          format: date-time
+          title: ISO Date String
+        idVerificationTime:
+          type: string
+          description: The time identity verification was completed (trust transfers)
+          format: date-time
+          title: ISO Date String
+        trustSignedTime:
+          type: string
+          description: The time this transfer was signed by trust (trust transfers)
+          format: date-time
+          title: ISO Date String
+        trustFinalApprovalTime:
+          type: string
+          description: The time this transfer received final trust approval (trust transfers)
+          format: date-time
+          title: ISO Date String
       required:
         - coin
         - date
@@ -71429,6 +72188,7 @@ components:
         - failed
         - replaced
         - deleted
+      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
     TransferTokenIntent:
       title: TransferTokenIntent
       allOf:
