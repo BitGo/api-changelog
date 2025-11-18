@@ -64010,47 +64010,70 @@ components:
         id:
           type: string
           format: uuid
+          description: ID of the product
+          example: b68baef1-8dcf-4b33-acd3-6424124cb379
         name:
           type: string
-          description: Product name e.g. BTC
+          description: Product name
+          example: BTC-USD
         baseCurrencyId:
           type: string
           format: uuid
+          description: ID of the base currency
+          example: 6016e0a9-545a-45fb-8370-caab1680956a
         baseCurrency:
           type: string
-          description: Currency name e.g. BTC
+          description: Base currency (the first asset in the trade pair) name
+          example: BTC
         quoteCurrencyId:
           type: string
           format: uuid
+          description: ID of the quote currency
+          example: 7d5d1e8d-e6e1-4676-99af-190012515418
         quoteCurrency:
           type: string
-          description: Currency name e.g. USD
+          description: Quote currency (the second asset in the trade pair) name
+          example: USD
         baseMinSize:
           type: string
           format: decimal
+          description: Minimum order size in base currency
+          example: '0.00000001'
         baseMaxSize:
           type: string
           format: decimal
+          description: Maximum order size in base currency
+          example: '10000.00'
         baseIncrement:
           type: string
           format: decimal
+          description: Maximum precision allowed when entering order quantities in base currency
+          example: '0.00000001'
         quoteMinSize:
           type: string
           format: decimal
+          description: Minimum order size in quote currency
+          example: '10.00'
         quoteMaxSize:
           type: string
           format: decimal
+          description: Maximum order size in quote currency
+          example: '100000000.00'
         quoteIncrement:
           type: string
           format: decimal
+          description: Maximum precision allowed when entering order quantities in the quote currency
+          example: '0.01'
         quoteDisplayPrecision:
           type: integer
-          description: Maximum number of decimal places supported for displaying quote amounts and setting limit prices.
+          description: Maximum number of decimal places used when displaying quote currency amounts and limit prices
+          example: 4
         isTradeDisabled:
           type: boolean
+          description: True, if trading is disabled for the product
         isMarginTradeSupported:
           type: boolean
-          description: True if margin trading is supported for this product
+          description: True, if margin trading is supported for the product
       example:
         id: 86d09911-e58e-4f27-ac1f-91d5f9c79952
         name: BTC-USD
@@ -64058,10 +64081,15 @@ components:
         quoteCurrencyId: 7d5d1e8d-e6e1-4676-99af-190012515418
         baseCurrency: BTC
         quoteCurrency: USD
-        baseMinSize: '0.001'
+        baseMinSize: '0.00001'
         baseMaxSize: '10000.00'
-        quoteIncrement: '0.01'
+        baseIncrement: '0.00000001'
+        quoteMinSize: '0.01'
+        quoteMaxSize: '100000000.00'
+        quoteIncrement: '0.00000001'
         quoteDisplayPrecision: 2
+        isTradeDisabled: false
+        isMarginTradeSupported: true
     Products:
       type: array
       items:
