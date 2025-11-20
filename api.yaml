@@ -1245,6 +1245,9 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - transferAcknowledge
+                - transferAccept
+                - transferReject
                 - stake
                 - unstake
                 - delegate
@@ -29635,18 +29638,17 @@ paths:
               type: string
               format: number
               description: Filter by chains. May be given mutiple times
-        - name: target
-          description: The combined target value of the unspents
+        - name: minConfirms
+          description: The minimum number of confirmations for the unspents
           in: query
           schema:
             type: string
             format: number
-        - name: numRecipients
-          description: number of recipients of the unspents
+        - name: enforceMinConfirmsForChange
+          description: Whether to enforce the minimum number of confirmations for change outputs
           in: query
           schema:
-            type: string
-            format: number
+            type: boolean
         - name: coin
           in: path
           required: true
@@ -30203,6 +30205,9 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - transferAcknowledge
+                - transferAccept
+                - transferReject
                 - stake
                 - unstake
                 - delegate
@@ -47756,6 +47761,63 @@ components:
           required:
             - context
             - name
+    CantonTransferAcceptIntent:
+      title: Canton Transfer Accept Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - transferAccept
+            txRequestId:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonTransferAcknowledgeIntent:
+      title: Canton Transfer Acknowledge Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - transferAcknowledge
+            contractId:
+              type: string
+            senderPartyId:
+              type: string
+            updateId:
+              type: string
+            amount:
+              type: number
+            expiry:
+              type: number
+          required:
+            - intentType
+            - contractId
+            - senderPartyId
+            - updateId
+            - amount
+            - expiry
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonTransferRejectIntent:
+      title: Canton Transfer Reject Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - transferReject
+            txRequestId:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+        - $ref: '#/components/schemas/BaseIntent'
     CasperAddress:
       title: Casper Address
       type: object
@@ -57157,6 +57219,9 @@ components:
         - tokenApproval
         - goUnstake
         - createBtcDelegation
+        - transferAccept
+        - transferReject
+        - transferAcknowledge
     IntentType1:
       title: IntentType
       type: string
@@ -67223,6 +67288,8 @@ components:
                     - numRequiredSignatures
                     - numReadonlySignedAccounts
                     - numReadonlyUnsignedAccounts
+                recentBlockhash:
+                  type: string
               required:
                 - versionedInstructions
                 - addressLookupTables
@@ -70981,6 +71048,9 @@ components:
         - $ref: '#/components/schemas/BscDelegateIntent'
         - $ref: '#/components/schemas/BscUnDelegateIntent'
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
+        - $ref: '#/components/schemas/CantonTransferAcceptIntent'
+        - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
+        - $ref: '#/components/schemas/CantonTransferRejectIntent'
         - $ref: '#/components/schemas/CosmosPaymentIntent'
         - $ref: '#/components/schemas/CosmosStakeIntent'
         - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
