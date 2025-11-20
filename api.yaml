@@ -24984,6 +24984,7 @@ paths:
                 - $ref: '#/components/schemas/SomiUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SomiClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/SomiSwitchValidatorsRequestPOSTBody'
+                - $ref: '#/components/schemas/StoryUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/StxStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/StxUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SuiStakingRequestPOSTBody'
@@ -25161,6 +25162,8 @@ paths:
                 $ref: '#/components/examples/SomiClaimRewardsRequestPOSTBodyExample'
               SomiSwitchValidatorRequestPOSTBodyExample:
                 $ref: '#/components/examples/SomiSwitchValidatorRequestPOSTBodyExample'
+              StoryUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/StoryUnStakingRequestPOSTBodyExample'
               StxStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/StxStakingRequestPOSTBodyExample'
               StxUnStakingRequestPOSTBodyExample:
@@ -25331,6 +25334,8 @@ paths:
                   $ref: '#/components/examples/SomiStakingRequestWithoutDelegationsExample'
                 SomiUnStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/SomiUnStakingRequestWithoutDelegationsExample'
+                StoryUnStakingRequestWithoutDelegationsExample:
+                  $ref: '#/components/examples/StoryUnStakingRequestWithoutDelegationsExample'
                 StxStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/StxStakingRequestWithoutDelegationsExample'
                 StxUnStakingRequestWithoutDelegationsExample:
@@ -40230,6 +40235,29 @@ components:
         createdDate: 2025-11-06T14:00:00.000Z
         amount: '1536000000000000000000'
         validatorAddress: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
+    StoryUnStakingRequestPOSTBodyExample:
+      summary: Story Protocol UnStaking Request POST Body Example
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
+        amount: '512000000000000000000'
+    StoryUnStakingRequestWithoutDelegationsExample:
+      summary: Story Protocol UnStaking Request Example
+      value:
+        id: f155adbc-66a3-4ccd-9a9d-726a05bca0cf
+        clientId: g154adbc-26a3-4acd-8a9d-726a05bca0dr
+        requestingUserId: 6092e75c451052000636831deb797bd1
+        type: UNSTAKE
+        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
+        walletId: 63110fc78b108e00071df2d3c3879dd0
+        walletType: hot
+        withdrawalAddress: '0xf5b9becc5e7e68173a5fc1906a2a5574e884da40'
+        coin: tip
+        status: COOLDOWN
+        statusModifiedDate: 2025-11-06T15:00:00.000Z
+        createdDate: 2025-11-06T15:00:00.000Z
+        amount: '512000000000000000000'
     StxStakingRequestPOSTBodyExample:
       summary: STX Staking Request POST Body Example
       value:
@@ -63970,7 +63998,6 @@ components:
         price:
           type: string
           format: decimal
-          description: Filled price per unit. Calculated using unrounded filled quantities
         quoteQuantity:
           type: string
           format: decimal
@@ -68405,6 +68432,11 @@ components:
               description: BLS public key of the validator to delegate to.
           required:
             - validatorAddress
+    StoryUnStakingRequestPOSTBody:
+      title: STORY unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
+      type: object
     StxDelegationProperties:
       title: STX Delegation Properties
       allOf:
