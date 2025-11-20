@@ -10171,6 +10171,287 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError2'
+  /api/go-staking/v1/{coin}/accounts/{accountId}/requests/{requestId}:
+    get:
+      tags:
+        - Go Account Staking
+      summary: Get staking request for Go Account
+      description: Get a specific staking request for a given asset and Go Account.
+      operationId: v1.goStaking.request.getById
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathAccountId'
+        - $ref: '#/components/parameters/pathRequestId'
+      responses:
+        '200':
+          description: Staking request retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoStakingRequest'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/{coin}/accounts/{accountId}/requests:
+    get:
+      tags:
+        - Go Account Staking
+      summary: List staking requests by asset for Go Account
+      description: List all staking requests for a given asset and Go Account.
+      operationId: v1.goStaking.request.listByCoinAndAccount
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathAccountId'
+        - $ref: '#/components/parameters/queryRequestStatus'
+        - $ref: '#/components/parameters/queryPageNumber'
+        - $ref: '#/components/parameters/queryPageSize'
+        - $ref: '#/components/parameters/queryCreatedDateGte'
+        - $ref: '#/components/parameters/queryCreatedDateLt'
+        - $ref: '#/components/parameters/querySortBy'
+      responses:
+        '200':
+          description: List of staking requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoStakingRequestsResults'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/accounts/{accountId}/rewards:
+    get:
+      tags:
+        - Go Account Staking
+      summary: List staking rewards for Go Account
+      description: List all staking rewards for a given Go Account.
+      operationId: v1.goStaking.rewards.listByAccount
+      parameters:
+        - $ref: '#/components/parameters/pathAccountId'
+        - $ref: '#/components/parameters/queryPageNumber'
+        - $ref: '#/components/parameters/queryPageSize'
+        - $ref: '#/components/parameters/queryStartDate'
+        - $ref: '#/components/parameters/queryEndDate'
+      responses:
+        '200':
+          description: List of rewards
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardsResults'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/{coin}/accounts/{accountId}/rewards:
+    get:
+      tags:
+        - Go Account Staking
+      summary: List staking rewards by asset for Go Account
+      description: List all staking rewards for a given asset and Go Account.
+      operationId: v1.goStaking.rewards.listByAccountAndCoin
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathAccountId'
+        - $ref: '#/components/parameters/queryPageNumber'
+        - $ref: '#/components/parameters/queryPageSize'
+        - $ref: '#/components/parameters/queryStartDate'
+        - $ref: '#/components/parameters/queryEndDate'
+      responses:
+        '200':
+          description: List of rewards
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RewardsResults'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/accounts/{accountId}/requests:
+    get:
+      tags:
+        - Go Account Staking
+      summary: List staking requests for Go Account
+      description: List all staking requests for a given Go Account.
+      operationId: v1.goStaking.request.listByAccount
+      parameters:
+        - $ref: '#/components/parameters/pathAccountId'
+        - $ref: '#/components/parameters/queryRequestStatus'
+        - $ref: '#/components/parameters/queryPageNumber'
+        - $ref: '#/components/parameters/queryPageSize'
+        - $ref: '#/components/parameters/queryCreatedDateGte'
+        - $ref: '#/components/parameters/queryCreatedDateLt'
+        - $ref: '#/components/parameters/querySortBy'
+      responses:
+        '200':
+          description: List of staking requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoStakingRequestsResults'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/{coin}/accounts/{accountId}/requests/preview:
+    post:
+      tags:
+        - Go Account Staking
+      summary: Generate staking request for Go Account
+      description: Generate an unsigned staking request to preview for a given asset and Go Account. Use only for stake requests - don't use for unstaking requests.
+      operationId: v1.goStaking.request.preview
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathAccountId'
+      requestBody:
+        description: Staking request details
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PreviewGoStakingRequest'
+            examples:
+              PreviewGoStakingRequestExample:
+                $ref: '#/components/examples/PreviewGoStakingRequestExample'
+      responses:
+        '200':
+          description: Preview response containing unsigned transaction
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OfcTxBuildResponse'
+              examples:
+                OfcTxBuildResponseExample:
+                  $ref: '#/components/examples/OfcTxBuildResponseExample'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/{coin}/accounts/{accountId}/requests/finalize:
+    post:
+      tags:
+        - Go Account Staking
+      summary: Finalize staking request for Go Account
+      description: Create a finalized staking request based on previously previewed data for a given asset and Go Account.
+      operationId: v1.goStaking.request.finalize
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathAccountId'
+      requestBody:
+        description: Final staking request payload
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/StakeGoStakingRequest'
+                - $ref: '#/components/schemas/UnstakeGoStakingRequest'
+            examples:
+              FinalizeStakeGoStakingRequestExample:
+                $ref: '#/components/examples/FinalizeStakeGoStakingRequestExample'
+              FinalizeUnstakeGoStakingRequestExample:
+                $ref: '#/components/examples/FinalizeGoStakingRequestExample'
+      responses:
+        '200':
+          description: Staking request successfully created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoStakingRequest'
+              examples:
+                StakeGoStakingRequestResponseExample:
+                  $ref: '#/components/examples/StakeGoStakingRequestResponseExample'
+                UnstakeGoStakingRequestResponseExample:
+                  $ref: '#/components/examples/UnstakeGoStakingRequestResponseExample'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/accounts/{accountId}/coins:
+    get:
+      tags:
+        - Go Account Staking
+      summary: List staking wallets for Go Account
+      description: List all staking wallets associated with a given Go Account.
+      operationId: v1.goStaking.wallet.listByAccountId
+      parameters:
+        - $ref: '#/components/parameters/pathAccountId'
+        - $ref: '#/components/parameters/queryPageNumber'
+        - $ref: '#/components/parameters/queryPageSize'
+      responses:
+        '200':
+          description: A paginated list of staking wallets.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoStakingWalletsResults'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/{coin}/accounts/{accountId}/attributes:
+    get:
+      tags:
+        - Go Account Staking
+      summary: Get staking wallet attributes for Go Account
+      description: Get staking wallet attributes for a given asset and Go Account.
+      operationId: v1.goStaking.wallet.getAttributesByCoinAndAccount
+      parameters:
+        - $ref: '#/components/parameters/pathCoin1'
+        - $ref: '#/components/parameters/pathAccountId'
+      responses:
+        '200':
+          description: A staking wallet.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoStakingWallet'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '403':
+          $ref: '#/components/responses/ForbiddenError'
+        '404':
+          $ref: '#/components/responses/NotFoundError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/identity-service/v1/products:
     get:
       summary: List BitGo Products
@@ -41531,6 +41812,13 @@ components:
       description: Filter by organization
       schema:
         $ref: '#/components/schemas/Id'
+    pathAccountId:
+      name: accountId
+      in: path
+      description: Account ID to fetch the staking request for.
+      required: true
+      schema:
+        type: string
     pathAddress:
       name: address
       in: path
@@ -41561,6 +41849,13 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/Coin'
+    pathCoin1:
+      name: coin
+      in: path
+      description: The staking asset.
+      required: true
+      schema:
+        $ref: '#/components/schemas/OfcCoin'
     pathCoin2:
       name: coin
       in: path
@@ -41593,6 +41888,14 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/LightningCoin'
+    pathRequestId:
+      name: requestId
+      in: path
+      description: UUID of the staking request.
+      required: true
+      schema:
+        type: string
+        format: uuid
     pathSequenceId:
       name: sequenceId
       in: path
@@ -41680,6 +41983,27 @@ components:
         type: array
         items:
           $ref: '#/components/schemas/Coin2'
+    queryCreatedDateGte:
+      name: createdDateGte
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    queryCreatedDateLt:
+      name: createdDateLt
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
+    queryEndDate:
+      name: endDate
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
     queryExpandBuildParams:
       name: expandBuildParams
       in: query
@@ -41721,6 +42045,23 @@ components:
         type: integer
         default: 1
         minimum: 1
+    queryPageNumber:
+      name: page
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    queryPageSize:
+      name: pageSize
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
     queryPageSize1:
       name: pageSize
       in: query
@@ -41731,6 +42072,29 @@ components:
         default: 20
         minimum: 1
         maximum: 100
+    queryRequestStatus:
+      name: requestStatus
+      in: query
+      required: false
+      description: Filter by request status.
+      style: form
+      explode: false
+      schema:
+        type: array
+        items:
+          $ref: '#/components/schemas/GlobalGoStakingRequestStatus'
+    querySortBy:
+      name: sortBy
+      in: query
+      required: false
+      schema:
+        type: string
+        enum:
+          - createdDate
+          - '-createdDate'
+          - date
+          - '-date'
+        default: '-createdDate'
     querySortByCreatedDate:
       name: sortBy
       in: query
@@ -41753,6 +42117,13 @@ components:
         enum:
           - '-date'
           - date
+    queryStartDate:
+      name: startDate
+      in: query
+      required: false
+      schema:
+        type: string
+        format: date-time
     reverse:
       name: reverse
       in: query
@@ -49931,6 +50302,15 @@ components:
             anyOf:
               - $ref: '#/components/schemas/WhitelistedAddressValue'
               - $ref: '#/components/schemas/NonWhitelistedAddressValue'
+    DisclaimerAttributes:
+      type: object
+      properties:
+        staking:
+          $ref: '#/components/schemas/StakingDisclaimer'
+        unstaking:
+          $ref: '#/components/schemas/UnstakingDisclaimer'
+        nextRewards:
+          $ref: '#/components/schemas/NextRewardsDisclaimer'
     DisputeClosure:
       title: DisputeClosure
       type: object
@@ -53905,6 +54285,15 @@ components:
             - intentType
             - recipients
         - $ref: '#/components/schemas/BaseIntent'
+    FeeInfo:
+      type: object
+      description: Describes the transaction fee details.
+      properties:
+        feeString:
+          type: string
+          description: Fee value as a string (to preserve precision).
+      required:
+        - feeString
     FeeObject:
       allOf:
         - type: object
@@ -54230,6 +54619,23 @@ components:
           type: string
           format: date-time
           description: When the freeze will end
+    FrontTransferSendRequest:
+      type: object
+      required:
+        - halfSigned
+      properties:
+        halfSigned:
+          $ref: '#/components/schemas/HalfSignedGoWithdrawal'
+        comment:
+          type: string
+          nullable: true
+        sequenceId:
+          type: string
+          nullable: true
+        goStakingRequestId:
+          type: string
+          nullable: true
+      description: Payload to create a Go staking transfer
     FtxHostType:
       title: FtxHostType
       type: string
@@ -55696,6 +56102,114 @@ components:
             - confirmedBalance
             - spendableBalance
         - $ref: '#/components/schemas/baseBalanceStrings'
+    GlobalGoStakingRequestStatus:
+      type: string
+      description: |
+        Coarse-grained status for staking requests.
+      enum:
+        - NEW
+        - PENDING
+        - FAILED
+        - REJECTED
+        - CONFIRMED
+        - COOLDOWN
+        - WARMUP
+        - UNSUPPORTED
+    GoStakingAttributes:
+      type: object
+      properties:
+        permissionAttributes:
+          $ref: '#/components/schemas/PermissionAttributes'
+        spendableAttributes:
+          $ref: '#/components/schemas/SpendableAttributes'
+        disclaimerAttributes:
+          $ref: '#/components/schemas/DisclaimerAttributes'
+    GoStakingRequest:
+      type: object
+      required:
+        - id
+        - status
+        - goAccountId
+        - amount
+        - stakingRequests
+        - createdDate
+        - properties
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          $ref: '#/components/schemas/GlobalGoStakingRequestStatus'
+        goAccountId:
+          type: string
+        amount:
+          type: string
+          format: big-integer
+        stakingRequests:
+          type: array
+          items:
+            $ref: '#/components/schemas/StakingRequest'
+        createdDate:
+          type: string
+          format: date-time
+        properties:
+          $ref: '#/components/schemas/GoStakingRequestProperties'
+    GoStakingRequestProperties:
+      type: object
+      properties:
+        amount:
+          type: string
+          description: Amount to stake or unstake, in base units
+    GoStakingRequestsResults:
+      type: object
+      properties:
+        requests:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoStakingRequest'
+        page:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 5
+        totalElements:
+          type: integer
+          format: int64
+          example: 124
+      required:
+        - requests
+        - page
+        - totalPages
+        - totalElements
+    GoStakingWallet:
+      type: object
+      properties:
+        coin:
+          type: string
+        activeStake:
+          type: string
+        pendingStake:
+          type: string
+        pendingUnstake:
+          type: string
+        rewards:
+          type: string
+        attributes:
+          $ref: '#/components/schemas/GoStakingAttributes'
+    GoStakingWalletsResults:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            $ref: '#/components/schemas/GoStakingWallet'
+        page:
+          type: integer
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
     GoUnstakeIntent:
       title: GoUnstakeIntent
       allOf:
@@ -55733,6 +56247,28 @@ components:
         - refresh_token
         - authorization_code
         - oauth
+    GranularStakingRequestStatus:
+      type: string
+      enum:
+        - NEW
+        - PENDING_VALIDATORS
+        - READY
+        - PENDING_APPROVAL
+        - PENDING_BITGO_TRUST_APPROVAL
+        - PENDING
+        - FAILED
+        - FAILED_RETRIED
+        - REJECTED
+        - VALIDATOR_ACTIVATING
+        - PARTIAL_CONFIRMED
+        - CONFIRMED
+        - COOLDOWN
+        - DELAYED_COOLDOWN
+        - WARMUP
+        - DELAYED_WARMUP
+        - ETH_PARTIAL_EXITED
+        - ETH_EXITED
+        - UNSUPPORTED
     GreaterThanOrEqualToValue:
       title: Greater than or equal to
       type: object
@@ -55777,6 +56313,65 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: The transfer amount must be greater than the given limit for the condition to trigger
+    HalfSignedGoWithdrawal:
+      type: object
+      required:
+        - coin
+        - recipients
+        - fromAccount
+        - nonce
+        - timestamp
+        - feeString
+        - payload
+        - signature
+      properties:
+        coin:
+          type: string
+          description: The coin type, e.g. "ofctsui"
+        recipients:
+          type: array
+          description: List of recipient addresses and amounts
+          items:
+            type: object
+            required:
+              - address
+              - amount
+            properties:
+              address:
+                type: string
+                description: Destination address for the withdrawal
+              amount:
+                type: string
+                format: big-integer
+                description: Amount to send
+        fromAccount:
+          type: string
+          description: Source account id
+        nonce:
+          type: string
+          format: uuid
+          description: Unique identifier for the transaction
+        timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the half-signed payload was created
+        feeString:
+          type: string
+          description: Fee amount as a string
+        shortCircuitBlockchainTransfer:
+          type: boolean
+          description: Indicates whether to short-circuit blockchain transfer
+          default: false
+        isIntraJXTransfer:
+          type: boolean
+          description: Indicates whether the transfer is intra-JX
+          default: false
+        payload:
+          type: string
+          description: Raw JSON payload string representing the unsigned transaction data
+        signature:
+          type: string
+          description: Signature of the payload
     HashStakingRequest:
       title: HASH
       allOf:
@@ -59523,6 +60118,11 @@ components:
       format: uuid
       example: 585951a5df8380e0e3063e9f
       description: When a result set is truncated, this field returns the id of the last object in the previous batch.  To get the next batch of results, pass this value via the `prevId` query parameter.
+    NextRewardsDisclaimer:
+      type: object
+      properties:
+        rewardCycle:
+          type: integer
     NextRewardsDisclaimerAttributes:
       type: object
       description: Information about the next rewards cycle.
@@ -59812,6 +60412,32 @@ components:
         - Weapons Dealers
       title: Occupation
       description: Occupation category of the individual
+    OfcCoin:
+      type: string
+      description: Off-chain symbol for the coin.
+      enum:
+        - OFCSOL
+        - OFCSUI
+    OfcTxBuildResponse:
+      type: object
+      description: Represents an unsigned transaction build response for a staking preview.
+      properties:
+        payload:
+          type: string
+          description: The unsigned payload that should be signed by the client.
+        feeInfo:
+          $ref: '#/components/schemas/FeeInfo'
+        coin:
+          type: string
+          description: The coin symbol (e.g. ofc).
+        token:
+          type: string
+          description: The token symbol (e.g. ofctsui).
+      required:
+        - payload
+        - feeInfo
+        - coin
+        - token
     OffChainWalletBalance:
       title: OffChainWalletBalance
       type: object
@@ -62206,6 +62832,15 @@ components:
         txValueLimit:
           type: number
           description: The maximum transaction value limit for the coin
+    PermissionAttributes:
+      type: object
+      properties:
+        staking:
+          $ref: '#/components/schemas/StakingPermissionAttributes'
+        unstaking:
+          $ref: '#/components/schemas/UnstakingPermissionAttributes'
+        wallet:
+          $ref: '#/components/schemas/WalletPermissionAttributes'
     PersonaIdClass:
       title: PersonaIdClass
       type: string
@@ -63916,6 +64551,19 @@ components:
         - status
         - selectedIdClass
         - fileUploads
+    PreviewGoStakingRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        clientId:
+          type: string
+          maxLength: 256
+          nullable: true
+        amount:
+          type: string
+          format: big-integer
+          description: Amount to stake, must be a positive value
     PricingTypeName:
       title: PricingTypeName
       type: string
@@ -64843,6 +65491,30 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithGasPrice'
       type: object
+    Reward:
+      type: object
+      required:
+        - goAccountId
+        - amount
+        - rewardType
+        - period
+        - createdDate
+      properties:
+        goAccountId:
+          type: string
+        amount:
+          type: string
+          format: big-integer
+        rewardType:
+          type: string
+          enum:
+            - REWARD
+            - ADJUSTMENT
+        period:
+          type: string
+        createdDate:
+          type: string
+          format: date-time
     RewardPairs:
       type: object
       properties:
@@ -64863,6 +65535,28 @@ components:
       required:
         - amount
         - activeAmount
+    RewardsResults:
+      type: object
+      properties:
+        rewards:
+          type: array
+          items:
+            $ref: '#/components/schemas/Reward'
+        page:
+          type: integer
+          example: 1
+        totalPages:
+          type: integer
+          example: 5
+        totalElements:
+          type: integer
+          format: int64
+          example: 124
+      required:
+        - rewards
+        - page
+        - totalPages
+        - totalElements
     RoutingNumberString:
       title: RoutingNumberString
       type: string
@@ -66680,6 +67374,13 @@ components:
               type: object
               additionalProperties:
                 type: string
+    SpendableAttributes:
+      type: object
+      properties:
+        staking:
+          $ref: '#/components/schemas/StakingSpendableAttributes'
+        unstaking:
+          $ref: '#/components/schemas/UnStakingSpendableAttributes'
     SpendingLimits:
       type: object
       additionalProperties:
@@ -66738,6 +67439,30 @@ components:
             - intentType
             - amount
         - $ref: '#/components/schemas/BaseStakeIntent'
+    StakeGoStakingRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        clientId:
+          type: string
+          maxLength: 256
+          nullable: true
+        amount:
+          type: string
+          format: big-integer
+          description: Amount to stake, must be a positive value
+        type:
+          type: string
+          enum:
+            - STAKE
+          description: Must always be STAKE
+        frontTransferSendRequest:
+          allOf:
+            - $ref: '#/components/schemas/FrontTransferSendRequest'
+          nullable: true
+          type: object
+          description: Optional transfer request to initiate before staking
     StakeIntent:
       title: StakeIntent
       allOf:
@@ -66894,6 +67619,19 @@ components:
         unstakeable:
           description: Indicates whether the delegation can currently be unstaked.
           type: boolean
+    StakingDisclaimer:
+      type: object
+      properties:
+        info:
+          type: array
+          items:
+            type: string
+        rewardPercentageRate:
+          type: string
+          nullable: true
+        stakeWarmupPeriodDesc:
+          type: string
+          nullable: true
     StakingDisclaimerAttributes:
       allOf:
         - $ref: '#/components/schemas/BaseDisclaimer'
@@ -67229,6 +67967,16 @@ components:
         totalElements:
           type: integer
           description: The number of elements per page used for paging purposes.
+    StakingPermissionAttributes:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        disabledReason:
+          type: string
+          nullable: true
+        allowClientToUseOwnValidator:
+          type: boolean
     StakingPermissionAttributes1:
       allOf:
         - $ref: '#/components/schemas/BasePermissionAttributes'
@@ -67251,6 +67999,27 @@ components:
           description: ADA-specific. True if vote delegation is required.
           type: boolean
           nullable: true
+    StakingRequest:
+      type: object
+      required:
+        - id
+        - coin
+        - stakingRequestType
+        - createdDate
+        - stakingServiceStatus
+      properties:
+        id:
+          type: string
+          format: uuid
+        coin:
+          type: string
+        stakingRequestType:
+          $ref: '#/components/schemas/StakingRequestType'
+        createdDate:
+          type: string
+          format: date-time
+        stakingServiceStatus:
+          $ref: '#/components/schemas/GranularStakingRequestStatus'
     StakingRequest1:
       title: Staking Request
       type: object
@@ -67571,6 +68340,15 @@ components:
         - DELAYED_WARMUP
         - ETH_PARTIAL_EXITED
         - ETH_EXITED
+    StakingRequestType:
+      type: string
+      enum:
+        - STAKE
+        - UNSTAKE
+        - UNSUPPORTED
+      default: STAKE
+      description: |
+        Type of staking request. `STAKE` to delegate, `UNSTAKE` to undelegate. `UNSUPPORTED` is a fallback.
     StakingRequestType1:
       title: Staking Request Type
       description: The type of staking request.
@@ -67676,6 +68454,27 @@ components:
         totalElements:
           type: integer
           description: The number of elements per page used for paging purposes.
+    StakingSpendableAttributes:
+      type: object
+      properties:
+        fee:
+          type: string
+        max:
+          type: string
+        min:
+          type: string
+        netMax:
+          type: string
+        netMin:
+          type: string
+        minStakeMore:
+          type: string
+        minDuration:
+          type: string
+          nullable: true
+        maxDuration:
+          type: string
+          nullable: true
     StakingSpendableAttributes1:
       allOf:
         - $ref: '#/components/schemas/BaseSpendableAttributes'
@@ -72930,6 +73729,26 @@ components:
             gasPrice:
               type: string
               description: User overridden gas price to apply for the generated transactions for this request. GasPrice is in base units.
+    UnStakingSpendableAttributes:
+      type: object
+      properties:
+        fee:
+          type: string
+          nullable: true
+        max:
+          type: string
+          nullable: true
+        min:
+          type: string
+          nullable: true
+        multipleDelegations:
+          type: boolean
+        requiresAmount:
+          type: boolean
+        requiresDelegationId:
+          type: boolean
+        requiresDelegationIds:
+          type: boolean
     UnStakingSpendableAttributes1:
       allOf:
         - $ref: '#/components/schemas/BaseSpendableAttributes'
@@ -73139,6 +73958,24 @@ components:
       type: string
       description: The id of the unspent in the form <txid>:<tx_index>
       example: 003f688cc349f1fca8ac5ffa21671ca911b6ef351085c60733ed8c2ebf162cb8:2
+    UnstakeGoStakingRequest:
+      type: object
+      required:
+        - amount
+      properties:
+        clientId:
+          type: string
+          maxLength: 256
+          nullable: true
+        amount:
+          type: string
+          format: big-integer
+          description: Amount to unstake, must be a positive value
+        type:
+          type: string
+          enum:
+            - UNSTAKE
+          description: Must always be UNSTAKE
     UnstakeIntent:
       title: UnstakeIntent
       allOf:
@@ -73175,6 +74012,16 @@ components:
                 - unstake
           required:
             - intentType
+    UnstakingDisclaimer:
+      type: object
+      properties:
+        info:
+          type: array
+          items:
+            type: string
+        unStakeCooldownPeriodDesc:
+          type: string
+          nullable: true
     UnstakingDisclaimerAttributes:
       allOf:
         - $ref: '#/components/schemas/BaseDisclaimer'
@@ -73211,6 +74058,14 @@ components:
                   items:
                     type: object
                     description: Covenant unbonding signature object from Babylon
+    UnstakingPermissionAttributes:
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        disabledReason:
+          type: string
+          nullable: true
     UnstakingPermissionAttributes1:
       allOf:
         - $ref: '#/components/schemas/BasePermissionAttributes'
@@ -78172,6 +79027,15 @@ components:
         - trade
         - view
       example: spend,view
+    WalletPermissionAttributes:
+      type: object
+      properties:
+        useValidatorList:
+          type: boolean
+        allowPartialUnstake:
+          type: boolean
+        validatorNotNeededForStake:
+          type: boolean
     WalletPermissionAttributes1:
       type: object
       description: Permission attributes specific to the wallet.
