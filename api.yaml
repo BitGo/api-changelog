@@ -557,6 +557,31 @@ paths:
               properties:
                 state:
                   $ref: '#/components/schemas/PlatformWalletShareState'
+                encryptedPrv:
+                  type: string
+                  description: |
+                    Private key encrypted by the accepting user, used when accepting a wallet share to add to the user's keychains for using the wallet.
+                    Required when accepting a share that includes a keychain or when userMultiKeyRotationRequired is true.
+                pub:
+                  type: string
+                  description: |
+                    Public key of the accepting user. Required for multi-user-key wallet shares (when userMultiKeyRotationRequired is true).
+                    Optional for non-multi-user-key wallets. If provided for non-multi-user-key wallets, it will be validated against the wallet's user key public key.
+                keyId:
+                  type: string
+                  description: |
+                    Key ID to use when accepting a wallet share with keychainOverrideRequired flag set.
+                    Required when keychainOverrideRequired is true and coin is 'ofc'.
+                signature:
+                  type: string
+                  description: |
+                    Signature for key rotation verification. Required when keychainOverrideRequired is true and coin is 'ofc'.
+                payload:
+                  type: string
+                  description: |
+                    Payload used for key rotation verification. Required when keychainOverrideRequired is true and coin is 'ofc'.
+              required:
+                - state
       responses:
         '200':
           description: OK
@@ -1245,9 +1270,6 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
-                - transferAcknowledge
-                - transferAccept
-                - transferReject
                 - stake
                 - unstake
                 - delegate
@@ -25261,6 +25283,7 @@ paths:
                 - $ref: '#/components/schemas/SeiClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiEvmStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/SeiEvmUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolClaimRewardsRequestPOSTBody'
@@ -25434,6 +25457,8 @@ paths:
                 $ref: '#/components/examples/SeiSwitchValidatorRequestPOSTBodyExample'
               SeiEvmStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SeiEvmStakingRequestPOSTBodyExample'
+              SeiEvmUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/SeiEvmUnStakingRequestPOSTBodyExample'
               SolStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SolStakingRequestPOSTBodyExample'
               SolUnStakingRequestPOSTBodyExample:
@@ -30205,9 +30230,6 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
-                - transferAcknowledge
-                - transferAccept
-                - transferReject
                 - stake
                 - unstake
                 - delegate
@@ -39679,6 +39701,14 @@ components:
         amount: '1000000000000000000'
         validator: seivaloper1abc123...
         type: STAKE
+    SeiEvmUnStakingRequestPOSTBodyExample:
+      summary: SeiEvm UnStaking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1000000'
+        validator: seivaloper19tup24vtzed7za6nz3r0dylm0eln2clpvhtawu
+        type: UNSTAKE
     SeiStakingRequestPOSTBodyExample:
       summary: Sei Staking Request POST Body Example
       value:
@@ -47761,63 +47791,6 @@ components:
           required:
             - context
             - name
-    CantonTransferAcceptIntent:
-      title: Canton Transfer Accept Intent
-      allOf:
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - transferAccept
-            txRequestId:
-              type: string
-          required:
-            - intentType
-            - txRequestId
-        - $ref: '#/components/schemas/BaseIntent'
-    CantonTransferAcknowledgeIntent:
-      title: Canton Transfer Acknowledge Intent
-      allOf:
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - transferAcknowledge
-            contractId:
-              type: string
-            senderPartyId:
-              type: string
-            updateId:
-              type: string
-            amount:
-              type: number
-            expiry:
-              type: number
-          required:
-            - intentType
-            - contractId
-            - senderPartyId
-            - updateId
-            - amount
-            - expiry
-        - $ref: '#/components/schemas/BaseIntent'
-    CantonTransferRejectIntent:
-      title: Canton Transfer Reject Intent
-      allOf:
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - transferReject
-            txRequestId:
-              type: string
-          required:
-            - intentType
-            - txRequestId
-        - $ref: '#/components/schemas/BaseIntent'
     CasperAddress:
       title: Casper Address
       type: object
@@ -53283,7 +53256,8 @@ components:
             - hot
             - cold
             - custodial
-          description: The type of wallet, defined by key management and signing protocols. 'hot' and 'cold' are both self-managed wallets. If absent, defaults to 'hot'.
+            - trading
+          description: The type of wallet, defined by key management and signing protocols. 'hot' and 'cold' are both self-managed wallets. If absent, defaults to 'hot'. 'trading' for Go Account wallets.
         passphrase:
           type: string
           description: Passphrase to be used to encrypt the user key on the wallet
@@ -57219,9 +57193,6 @@ components:
         - tokenApproval
         - goUnstake
         - createBtcDelegation
-        - transferAccept
-        - transferReject
-        - transferAcknowledge
     IntentType1:
       title: IntentType
       type: string
@@ -65825,6 +65796,36 @@ components:
           required:
             - validator
       type: object
+    SeiEvmUnStakingRequestPOSTBody:
+      title: SEIEVM unstake
+      description: |
+        Request to unstake SEIEVM tokens.
+
+        **Auto-Claim Feature:** During unstaking, any pending rewards may be automatically claimed
+        and included in the final transaction. This auto-claim behavior is handled transparently
+        and will be reflected in the transaction events and delegation reward tracking.
+
+        **Unbonding Period:** After the unstake transaction completes, tokens enter a 21-day
+        unbonding period before they become available in your wallet. During this period, the
+        tokens are locked and cannot be used for staking or transfers.
+
+        **Decimal Units:** Amount must be specified in micro units (6 decimals).
+        Example: 1 SEI = 1,000,000 micro. To unstake 10 SEI, use amount '10000000'.
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          description: Amount to unstake in micro units (6 decimals). Example - 1000000 micro = 1 SEI. Supports partial unstaking.
+          type: string
+          example: '1000000'
+        validator:
+          description: The SEIEVM validator address (seivaloper format) to unstake from.
+          type: string
+          example: seivaloper19tup24vtzed7za6nz3r0dylm0eln2clpvhtawu
+      required:
+        - amount
+        - validator
     SeiStakingRequest:
       title: SEI
       allOf:
@@ -67288,8 +67289,6 @@ components:
                     - numRequiredSignatures
                     - numReadonlySignedAccounts
                     - numReadonlyUnsignedAccounts
-                recentBlockhash:
-                  type: string
               required:
                 - versionedInstructions
                 - addressLookupTables
@@ -71048,9 +71047,6 @@ components:
         - $ref: '#/components/schemas/BscDelegateIntent'
         - $ref: '#/components/schemas/BscUnDelegateIntent'
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
-        - $ref: '#/components/schemas/CantonTransferAcceptIntent'
-        - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
-        - $ref: '#/components/schemas/CantonTransferRejectIntent'
         - $ref: '#/components/schemas/CosmosPaymentIntent'
         - $ref: '#/components/schemas/CosmosStakeIntent'
         - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
