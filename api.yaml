@@ -23662,6 +23662,56 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/policy/v1/organizations/{organizationId}/rules:
+    get:
+      tags:
+        - Policy Builder
+      summary: List organization policy rules
+      description: |
+        Lists all policy rules for an organization.
+
+        **Authorization:** Organization admins can access their organization's rules. BitGo admins have access to all organizations.
+      operationId: v1.policy.organization.rules.list
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          description: The organization ID
+          schema:
+            type: string
+            pattern: ^[0-9a-f]{32}$
+        - $ref: '#/components/parameters/Touchpoints1'
+        - $ref: '#/components/parameters/PolicyRuleStatus1'
+        - name: page
+          in: query
+          description: Page number (1-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 20
+      responses:
+        '200':
+          description: List of organization policy rules
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyRulesResults'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/rules/{id}:
     get:
       tags:
@@ -26473,7 +26523,7 @@ paths:
                 $ref: '#/components/schemas/StakingRewards'
               examples:
                 WalletLevelRewards:
-                  summary: Reward history aggregated at wallet level
+                  summary: Wallet Level
                   value:
                     rewards:
                       - reward: '1000000000000000'
@@ -26490,7 +26540,7 @@ paths:
                     totalPages: 1
                     totalElements: 1
                 DelegationLevelRewards:
-                  summary: Reward history aggregated at delegation level
+                  summary: Delegation Level
                   value:
                     rewards:
                       - reward: '1000000000000000'
@@ -26515,7 +26565,7 @@ paths:
                     totalPages: 1
                     totalElements: 1
                 EnterpriseAccrual:
-                  summary: Reward history aggregated at enterprise level
+                  summary: Enterprise Level
                   value:
                     rewards:
                       - reward: '5000000000000000'
