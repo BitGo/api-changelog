@@ -239,6 +239,18 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: exactConfirmedBalance
+          description: |-
+            When set to true, the `confirmedBalance` in the response will be the exact on-chain balance
+            without considering any unconfirmed transactions (for UTXO-based coins only).
+
+            When `false`, the `confirmedBalance` will not include the outputs consumed of unconfirmed
+            withdrawals. This may be inaccurate in certain situations
+
+            Default value: false.
+          in: query
+          schema:
+            type: boolean
         - name: coin
           in: path
           required: true
@@ -1083,6 +1095,7 @@ paths:
                           - pending_approval_update
                           - metamask_institutional
                           - crypto_compare
+                          - scim
                           - all
                     - type: array
                       items:
@@ -1320,6 +1333,9 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - transferAcknowledge
+                - transferAccept
+                - transferReject
                 - stake
                 - unstake
                 - delegate
@@ -1428,6 +1444,20 @@ paths:
             enum:
               - ASC
               - DESC
+        - name: dateLt
+          description: Optional get transaction requests less than date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: dateGte
+          description: Optional get transaction requests greater than or equal to date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
         - name: walletId
           in: path
           required: true
@@ -10065,7 +10095,7 @@ paths:
             title: uuid
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -10156,7 +10186,7 @@ paths:
             title: uuid
       requestBody:
         content:
-          application/json:
+          multipart/form-data:
             schema:
               type: object
               properties:
@@ -21503,48 +21533,6 @@ paths:
                   - $ref: '#/components/schemas/InvalidWalletId'
         '404':
           description: Not Found
-  /api/v2/{coin}/wallet/{walletId}/freeze:
-    post:
-      tags:
-        - Wallet
-      summary: Freeze wallet
-      description: Lock the wallet, preventing any outgoing transactions for a specified number of seconds
-      operationId: v2.wallet.freeze
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                duration:
-                  type: number
-                  description: time in seconds
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Freeze1'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-        '404':
-          description: Not Found
   /api/v2/{coin}/wallet/{walletId}/maximumSpendable:
     get:
       tags:
@@ -29488,6 +29476,91 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidWalletId1'
+  /api/v2/{coin}/wallet/{walletId}/freeze:
+    post:
+      summary: Freeze the wallet for the given coin and wallet id.
+      description: |-
+        Permissions:
+        - spender for the given wallet and coin
+      operationId: v2.wallet.freeze
+      tags:
+        - Wallet
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                duration:
+                  nullable: true
+                  oneOf:
+                    - type: number
+                    - type: string
+                      enum:
+                        - max
+                  default: 3600 (1 hour)
+                  description: How long to freeze the wallet
+                reason:
+                  allOf:
+                    - $ref: '#/components/schemas/FreezeReason'
+                  description: Reason for freezing the wallet
+                referenceId:
+                  type: string
+                  description: Used for tracking purposes
+                metadata:
+                  allOf:
+                    - $ref: '#/components/schemas/FreezeMetadata'
+                  description: Provides more context on why a wallet was frozen
+              required:
+                - duration
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletFreezeResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/fundforwarders:
     post:
       summary: Send funds to forwarder
@@ -30375,6 +30448,9 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - transferAcknowledge
+                - transferAccept
+                - transferReject
                 - stake
                 - unstake
                 - delegate
@@ -30483,6 +30559,20 @@ paths:
             enum:
               - ASC
               - DESC
+        - name: dateLt
+          description: Optional get transaction requests less than date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: dateGte
+          description: Optional get transaction requests greater than or equal to date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
         - name: enterpriseId
           in: path
           required: true
@@ -30855,6 +30945,22 @@ paths:
                       pattern: ^[0-9a-f]{32}$
                   required:
                     - accessTokenId
+                - type: object
+                  properties:
+                    enterpriseId:
+                      type: string
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                  required:
+                    - enterpriseId
+                - type: object
+                  properties:
+                    transferId:
+                      type: string
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                  required:
+                    - transferId
       responses:
         '200':
           description: OK
@@ -32488,6 +32594,21 @@ paths:
                   required:
                     - type
                     - url
+                - type: object
+                  title: Reversal
+                  properties:
+                    label:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - reversal
+                    url:
+                      type: string
+                      minLength: 1
+                  required:
+                    - type
+                    - url
       responses:
         '200':
           description: OK
@@ -32700,6 +32821,14 @@ paths:
                   required:
                     - identityId
                     - identityStatus
+                - type: object
+                  properties:
+                    transferId:
+                      type: string
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                  required:
+                    - transferId
       responses:
         '200':
           description: OK
@@ -33471,6 +33600,207 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/scim/v2/Users:
+    get:
+      summary: List SCIM Users
+      description: Lists users with pagination and filtering
+      operationId: scim.v2.users.list
+      tags:
+        - SCIM
+      parameters:
+        - name: filter
+          in: query
+          schema:
+            type: string
+        - name: startIndex
+          in: query
+          schema:
+            type: string
+        - name: count
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schemas:
+                    type: array
+                    items:
+                      type: string
+                  totalResults:
+                    type: number
+                  Resources:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        userName:
+                          type: string
+                        meta:
+                          $ref: '#/components/schemas/ScimMeta'
+                        externalId:
+                          type: string
+                        name:
+                          $ref: '#/components/schemas/ScimName'
+                        emails:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              value:
+                                type: string
+                              primary:
+                                type: boolean
+                            required:
+                              - value
+                        active:
+                          type: boolean
+                      required:
+                        - id
+                        - userName
+                        - meta
+                  startIndex:
+                    type: number
+                  itemsPerPage:
+                    type: number
+                required:
+                  - schemas
+                  - totalResults
+                  - Resources
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Create SCIM User
+      description: Creates a new user via SCIM provisioning
+      operationId: scim.v2.users.create
+      tags:
+        - SCIM
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                schemas:
+                  type: array
+                  items:
+                    type: string
+                userName:
+                  type: string
+                externalId:
+                  type: string
+                name:
+                  type: object
+                  properties:
+                    familyName:
+                      type: string
+                    formatted:
+                      type: string
+                    givenName:
+                      type: string
+                emails:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      primary:
+                        type: boolean
+                      value:
+                        type: string
+                    required:
+                      - value
+                active:
+                  type: boolean
+              required:
+                - schemas
+                - userName
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      schemas:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - schemas
+                  - $ref: '#/components/schemas/ScimUserResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/scim/v2/Users/{id}:
+    get:
+      summary: Get SCIM User
+      description: Retrieves a user by ID via SCIM provisioning
+      operationId: scim.v2.users.get
+      tags:
+        - SCIM
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      schemas:
+                        type: array
+                        items:
+                          type: string
+                    required:
+                      - schemas
+                  - $ref: '#/components/schemas/ScimUserResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/tss/settings:
     get:
       summary: Get MPC settings.
@@ -33764,6 +34094,18 @@ paths:
             type: boolean
         - name: includeBalance
           description: Omit trying to fetch the wallet balance
+          in: query
+          schema:
+            type: boolean
+        - name: exactConfirmedBalance
+          description: |-
+            When set to true, the `confirmedBalance` in the response will be the exact on-chain balance
+            without considering any unconfirmed transactions (for UTXO-based coins only).
+
+            When `false`, the `confirmedBalance` will not include the outputs consumed of unconfirmed
+            withdrawals. This may be inaccurate in certain situations
+
+            Default value: false.
           in: query
           schema:
             type: boolean
@@ -35768,6 +36110,12 @@ paths:
                   type: string
                   example: 59cd72485007a239fb00282ed480da1f
                   pattern: ^[0-9a-f]{32}$
+        - name: includeEvmKeyring
+          description: If true and wallet ID(s) are provided, include all wallets in the same EVM keyring family (parent + all children)
+          in: query
+          schema:
+            type: boolean
+            default: false
         - name: includeStakingBalances
           description: Include `stakingBalanceString` and `rewardBalanceString` properties for each staking wallet.
           in: query
@@ -42960,6 +43308,7 @@ components:
         - recommendBackingWalletRouting
         - getManualTrustReview
         - getManualSupportReview
+        - getSupportManagerApproval
         - getVideoApprovalFromSupport
     Actions:
       type: object
@@ -48040,6 +48389,63 @@ components:
           required:
             - context
             - name
+    CantonTransferAcceptIntent:
+      title: Canton Transfer Accept Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - transferAccept
+            txRequestId:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonTransferAcknowledgeIntent:
+      title: Canton Transfer Acknowledge Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - transferAcknowledge
+            contractId:
+              type: string
+            senderPartyId:
+              type: string
+            updateId:
+              type: string
+            amount:
+              type: number
+            expiry:
+              type: number
+          required:
+            - intentType
+            - contractId
+            - senderPartyId
+            - updateId
+            - amount
+            - expiry
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonTransferRejectIntent:
+      title: Canton Transfer Reject Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - transferReject
+            txRequestId:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+        - $ref: '#/components/schemas/BaseIntent'
     CasperAddress:
       title: Casper Address
       type: object
@@ -54903,17 +55309,51 @@ components:
         unFrozenBy:
           type: string
           description: The user that unfroze the entity
-    Freeze1:
-      type: object
-      properties:
-        time:
-          type: string
-          format: date-time
-          description: When the freeze started
-        expires:
-          type: string
-          format: date-time
-          description: When the freeze will end
+    FreezeMetadata:
+      title: FreezeMetadata
+      oneOf:
+        - type: string
+        - type: object
+          properties:
+            suspiciousTransactionHex:
+              type: string
+            txParams:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
+                    type: string
+                  amount:
+                    oneOf:
+                      - type: string
+                      - type: number
+                  data:
+                    oneOf:
+                      - type: string
+                      - $ref: '#/components/schemas/TokenTransferRecipientParams'
+                  feeLimit:
+                    type: string
+                  tokenData:
+                    $ref: '#/components/schemas/TokenTransferRecipientParams'
+                  tokenName:
+                    type: string
+                required:
+                  - address
+                  - amount
+          required:
+            - suspiciousTransactionHex
+            - txParams
+    FreezeReason:
+      title: FreezeReason
+      type: string
+      enum:
+        - TxIntentMismatch
+        - TxIntentMismatchRecipient
+        - TxIntentMismatchContract
+        - TxIntentMismatchApproval
+        - UserRequest
+        - AdminRequest
     FrontTransferSendRequest:
       type: object
       required:
@@ -57464,9 +57904,9 @@ components:
         - tokenApproval
         - goUnstake
         - createBtcDelegation
-      x-enumDescriptions:
-        goUnstake: Unstake and transfer funds from a staking wallet to a go account.
-        createBtcDelegation: Register a BTC delegation on the Babylon chain for Baby BTC staking.
+        - transferAccept
+        - transferReject
+        - transferAcknowledge
     IntentType1:
       title: IntentType
       type: string
@@ -58652,6 +59092,10 @@ components:
                 pattern: ^[0-9a-f]{32}$
               type:
                 $ref: '#/components/schemas/AuditLogType1'
+              isBitGoAdminAction:
+                type: boolean
+                description: Indicates whether the action was performed by a BitGo admin
+                example: false
               ip:
                 type: string
                 description: The client IP that caused the AuditLog entry to be written
@@ -58680,6 +59124,7 @@ components:
             required:
               - id
               - type
+              - isBitGoAdminAction
             description: The audit logs
         coin:
           $ref: '#/components/schemas/CoinString'
@@ -62106,6 +62551,7 @@ components:
             - enterprise
             - wallet
             - organization
+            - global
           description: What kind of entity the Pending Approval is tied to
         userIds:
           type: array
@@ -66034,6 +66480,58 @@ components:
                                 val:
                                   type: string
                                   description: The BTC Address version.
+    ScimMeta:
+      title: ScimMeta
+      type: object
+      properties:
+        resourceType:
+          type: string
+        location:
+          type: string
+      required:
+        - resourceType
+        - location
+    ScimName:
+      title: ScimName
+      type: object
+      properties:
+        givenName:
+          type: string
+        familyName:
+          type: string
+        formatted:
+          type: string
+    ScimUserResponse:
+      title: ScimUserResponse
+      type: object
+      properties:
+        id:
+          type: string
+        userName:
+          type: string
+        meta:
+          $ref: '#/components/schemas/ScimMeta'
+        externalId:
+          type: string
+        name:
+          $ref: '#/components/schemas/ScimName'
+        emails:
+          type: array
+          items:
+            type: object
+            properties:
+              value:
+                type: string
+              primary:
+                type: boolean
+            required:
+              - value
+        active:
+          type: boolean
+      required:
+        - id
+        - userName
+        - meta
     Scope:
       type: array
       items:
@@ -67610,6 +68108,8 @@ components:
                     - numRequiredSignatures
                     - numReadonlySignedAccounts
                     - numReadonlyUnsignedAccounts
+                recentBlockhash:
+                  type: string
               required:
                 - versionedInstructions
                 - addressLookupTables
@@ -70702,6 +71202,25 @@ components:
       required:
         - tokenQuantity
         - tokenType
+    TokenTransferRecipientParams:
+      title: TokenTransferRecipientParams
+      type: object
+      properties:
+        tokenType:
+          type: string
+        tokenQuantity:
+          type: string
+        tokenContractAddress:
+          type: string
+        tokenName:
+          type: string
+        tokenId:
+          type: string
+        decimalPlaces:
+          type: number
+      required:
+        - tokenType
+        - tokenQuantity
     TonAddress:
       title: Ton Address
       type: object
@@ -71368,6 +71887,9 @@ components:
         - $ref: '#/components/schemas/BscDelegateIntent'
         - $ref: '#/components/schemas/BscUnDelegateIntent'
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
+        - $ref: '#/components/schemas/CantonTransferAcceptIntent'
+        - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
+        - $ref: '#/components/schemas/CantonTransferRejectIntent'
         - $ref: '#/components/schemas/CosmosPaymentIntent'
         - $ref: '#/components/schemas/CosmosStakeIntent'
         - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
@@ -78366,6 +78888,16 @@ components:
               type: string
               format: date-time
               title: ISO Date String
+            reason:
+              allOf:
+                - $ref: '#/components/schemas/FreezeReason'
+              description: Why a wallet was frozen
+            referenceId:
+              type: string
+              description: An optional reference ID for tracking purposes
+            adminOrUserId:
+              type: string
+              description: The user who froze the wallet (could be a regular user or an admin)
         instantProvider:
           type: string
         keys:
@@ -79027,6 +79559,21 @@ components:
         - enableWalletConnect
         - enableSolCustomTx
         - enableAptCustomTx
+    WalletFreezeResponse:
+      title: WalletFreezeResponse
+      type: object
+      properties:
+        time:
+          type: string
+          format: date
+          title: Date String
+        expires:
+          type: string
+          format: date
+          title: Date String
+      required:
+        - time
+        - expires
     WalletId:
       type: string
       example: 59cd72485007a239fb00282ed480da1f
@@ -79298,6 +79845,16 @@ components:
                     type: string
                     format: date-time
                     title: ISO Date String
+                  reason:
+                    allOf:
+                      - $ref: '#/components/schemas/FreezeReason'
+                    description: Why a wallet was frozen
+                  referenceId:
+                    type: string
+                    description: An optional reference ID for tracking purposes
+                  adminOrUserId:
+                    type: string
+                    description: The user who froze the wallet (could be a regular user or an admin)
               instantProvider:
                 type: string
               keys:
