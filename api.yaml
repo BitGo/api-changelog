@@ -1352,6 +1352,52 @@ paths:
                 - stakeWithCallData
                 - unstakeWithCallData
               description: If provided, only transaction requests with the specified intent types will be returned.
+        - name: excludeIntentTypes
+          description: If provided, transaction requests with the specified intent types will be excluded.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - payment
+                - consolidate
+                - consolidateToken
+                - fanout
+                - vote
+                - createAccount
+                - updateAccount
+                - addTrustLine
+                - removeTrustLine
+                - signMessage
+                - signTypedStructuredData
+                - enableToken
+                - acceleration
+                - transferToken
+                - fillNonce
+                - walletRecovery
+                - contractCall
+                - customTx
+                - closeAssociatedTokenAccount
+                - transferAcknowledge
+                - transferAccept
+                - transferReject
+                - stake
+                - unstake
+                - delegate
+                - undelegate
+                - switchValidator
+                - claim
+                - stakeClaimRewards
+                - pledge
+                - voteDelegation
+                - authorize
+                - deactivate
+                - createBtcDelegation
+                - goUnstake
+                - stakeWithCallData
+                - unstakeWithCallData
+              description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: |-
             If provided, only transaction requests of the specified state will be returned.
@@ -31480,6 +31526,52 @@ paths:
                 - stakeWithCallData
                 - unstakeWithCallData
               description: If provided, only transaction requests with the specified intent types will be returned.
+        - name: excludeIntentTypes
+          description: If provided, transaction requests with the specified intent types will be excluded.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - payment
+                - consolidate
+                - consolidateToken
+                - fanout
+                - vote
+                - createAccount
+                - updateAccount
+                - addTrustLine
+                - removeTrustLine
+                - signMessage
+                - signTypedStructuredData
+                - enableToken
+                - acceleration
+                - transferToken
+                - fillNonce
+                - walletRecovery
+                - contractCall
+                - customTx
+                - closeAssociatedTokenAccount
+                - transferAcknowledge
+                - transferAccept
+                - transferReject
+                - stake
+                - unstake
+                - delegate
+                - undelegate
+                - switchValidator
+                - claim
+                - stakeClaimRewards
+                - pledge
+                - voteDelegation
+                - authorize
+                - deactivate
+                - createBtcDelegation
+                - goUnstake
+                - stakeWithCallData
+                - unstakeWithCallData
+              description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: |-
             If provided, only transaction requests of the specified state will be returned.
@@ -64312,6 +64404,9 @@ components:
                   allOf:
                     - $ref: '#/components/schemas/ApiRuleType'
                   description: The type of the API rule
+                walletId:
+                  type: string
+                  description: Optional walletId field for multi-wallet updates
         updateApprovalsRequiredRequest:
           type: object
           properties:
@@ -65559,6 +65654,22 @@ components:
             expires:
               type: string
               format: dateTime
+            reason:
+              type: string
+              description: Reason why the wallet was frozen
+              enum:
+                - TxIntentMismatch
+                - TxIntentMismatchRecipient
+                - TxIntentMismatchContract
+                - TxIntentMismatchApproval
+                - UserRequest
+                - AdminRequest
+            referenceId:
+              type: string
+              description: Optional reference ID for tracking purposes
+            adminOrUserId:
+              type: string
+              description: The user who froze the wallet
         id:
           $ref: '#/components/schemas/Id'
         isCold:
@@ -80868,6 +80979,22 @@ components:
             expires:
               type: string
               format: dateTime
+            reason:
+              type: string
+              description: Reason why the wallet was frozen
+              enum:
+                - TxIntentMismatch
+                - TxIntentMismatchRecipient
+                - TxIntentMismatchContract
+                - TxIntentMismatchApproval
+                - UserRequest
+                - AdminRequest
+            referenceId:
+              type: string
+              description: Optional reference ID for tracking purposes
+            adminOrUserId:
+              type: string
+              description: The user who froze the wallet
         id:
           $ref: '#/components/schemas/Id'
         isCold:
