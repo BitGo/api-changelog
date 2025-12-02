@@ -26476,6 +26476,8 @@ paths:
                 - $ref: '#/components/schemas/SuiWalUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TaoStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TaoUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/TaoSwitchValidatorRequestPOSTBody'
+                - $ref: '#/components/schemas/TaoSwitchNetuidRequestPOSTBody'
                 - $ref: '#/components/schemas/TiaStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TiaUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TiaClaimRewardsRequestPOSTBody'
@@ -26664,6 +26666,10 @@ paths:
                 $ref: '#/components/examples/TaoStakingRequestPOSTBodyExample'
               TaoUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/TaoUnStakingRequestPOSTBodyExample'
+              TaoSwitchValidatorRequestPOSTBodyExample:
+                $ref: '#/components/examples/TaoSwitchValidatorRequestPOSTBodyExample'
+              TaoSwitchNetuidRequestPOSTBodyExample:
+                $ref: '#/components/examples/TaoSwitchNetuidRequestPOSTBodyExample'
               TiaStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/TiaStakingRequestPOSTBodyExample'
               TiaUnStakingRequestPOSTBodyExample:
@@ -26680,6 +26686,8 @@ paths:
                 $ref: '#/components/examples/TrxStakingRequestPOSTBodyExample'
               TrxUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/TrxUnStakingRequestPOSTBodyExample'
+              VetStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/VetStakingRequestPOSTBodyExample'
               VetUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/VetUnStakingRequestPOSTBodyExample'
               WctStakingRequestPOSTBodyExample:
@@ -27763,6 +27771,8 @@ paths:
                   $ref: '#/components/examples/MaticWalletStakingStateAttributesExamples'
                 NearWalletStakingStateAttributesExamples:
                   $ref: '#/components/examples/NearWalletStakingStateAttributesExamples'
+                TaoWalletStakingStateAttributesExamples:
+                  $ref: '#/components/examples/TaoWalletStakingStateAttributesExamples'
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
@@ -42461,6 +42471,8 @@ components:
                 enabled: true
               switchValidator:
                 enabled: true
+              switchNetuid:
+                enabled: true
         page: 1
         totalPages: 1
         totalElements: 1
@@ -42469,6 +42481,7 @@ components:
       value:
         clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
         amount: '1000'
+        netUID: 0
         type: STAKE
     TaoStakingRequestWithTransactionsExample:
       summary: Tao Staking Request Example
@@ -42524,6 +42537,24 @@ components:
         statusModifiedDate: 2022-01-10T14:32:28.000Z
         status: NEW
         amount: '1000000000'
+    TaoSwitchNetuidRequestPOSTBodyExample:
+      summary: TAO Switch Network UID Request Example
+      value:
+        clientId: switch-netuid-001
+        type: SWITCH_VALIDATORS
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        netUID: 3
+        validator: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+        amount: '1000000000'
+        switchNetuid: true
+    TaoSwitchValidatorRequestPOSTBodyExample:
+      summary: TAO Switch Validator Request Example
+      value:
+        clientId: switch-validator-001
+        type: SWITCH_VALIDATORS
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        validator: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+        amount: '500000000'
     TaoUnStakingRequestPOSTBodyExample:
       summary: Tao UnStaking Request POST Body Example
       value:
@@ -42592,6 +42623,86 @@ components:
         statusModifiedDate: 2022-01-10T14:32:28.000Z
         status: NEW
         amount: '1012000000'
+    TaoWalletStakingStateAttributesExamples:
+      summary: Tao Wallet Staking Attributes
+      value:
+        disclaimer:
+          staking:
+            info:
+              - Rewards compound automatically. There is no warmup or cooldown period so your staked balance will earn rewards immediately.
+            minStake: '100000000'
+            rewardPercentageRate: '14.92'
+            rewardsCompounding: true
+            transactionsNeeded: 1
+          unstaking:
+            info:
+              - There is no partial unstaking. Users must unstake all or nothing.
+              - There is no bonding period so unstaked funds will be released immediately upon confirmation on chain.
+            transactionsNeeded: 1
+        permission:
+          staking:
+            enabled: true
+            allowClientToUseOwnValidator: false
+          unstaking:
+            enabled: true
+            allowClientToUseOwnValidator: false
+          switchValidator:
+            enabled: true
+            allowClientToUseOwnValidator: false
+          switchNetuid:
+            enabled: true
+            allowClientToUseOwnValidator: false
+        spendable:
+          staking:
+            fee: '300000'
+            max: '16010303'
+            min: '100000000'
+            multiplier: '1'
+            netMax: '15710303'
+            netMin: '100000000'
+            isStakingDurationNeeded: false,
+            minStakeMore: '0'
+            fields:
+              - name: netUID
+                label: Network
+                required: false
+                type: select
+                useValidatorList: false
+                readonly: false
+                options:
+                  - label: root
+                    value: '0'
+          unstaking:
+            fee: '300000'
+            max: '200000000'
+            min: '200000000'
+            multiplier: '1'
+            multipleDelegations: true
+            requiresAmount: false
+            requiresDelegationId: true,
+            requiresDelegationIds: false
+          switchValidator:
+            fee: '300000'
+            max: '16010303'
+            min: '100000000'
+            multiplier: '1'
+            requiresDelegationId: true
+          switchNetuid:
+            fee: '300000'
+            max: '16010303'
+            min: '100000000'
+            multiplier: '1'
+            requiresDelegationId: true
+            fields:
+              - name: netUID
+                label: Network
+                required: false
+                type: select
+                useValidatorList: false
+                readonly: false
+                options:
+                  - label: root
+                    value: '0'
     TiaClaimRewardsRequestPOSTBodyExample:
       summary: Example TIA Claim Rewards Request
       value:
@@ -42894,6 +43005,14 @@ components:
         statusModifiedDate: '2025-08-15T19:36:15.560401474Z'
         createdDate: '2025-08-15T19:36:15.560363Z'
         amount: 3000000
+    VetStakingRequestPOSTBodyExample:
+      summary: VET Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '10000000000000000000000'
+        nftTier: DAWN
+        validator: '0xae99cb89767a09d53e589a40cb4016974aba4b94'
+        type: STAKE
     VetUnStakingRequestPOSTBodyExample:
       summary: VET UnStaking Request POST Body Example
       value:
@@ -70266,6 +70385,7 @@ components:
             - $ref: '#/components/schemas/WflrUnstakingRequestEntityProperties'
             - $ref: '#/components/schemas/SomiStakingRequestEntityProperties'
             - $ref: '#/components/schemas/StoryStakingRequestEntityProperties'
+            - $ref: '#/components/schemas/VetStakingRequestEntityProperties'
             - $ref: '#/components/schemas/WflrClaimRewardsRequestEntityProperties'
       required:
         - id
@@ -72006,9 +72126,11 @@ components:
           properties:
             validatorAddress:
               type: string
+              description: The hotkey address of the validator.
             netUID:
               type: string
               format: bigInteger
+              description: The network UID (subnet) where this delegation exists. TAO uses different subnets for different purposes.
               nullable: true
     TaoStakeIntent:
       title: Tao Stake Intent
@@ -72075,11 +72197,12 @@ components:
       type: object
       properties:
         netUID:
-          description: The net UID for the staking request (0-128)
+          description: The network UID (subnet) for the staking request. TAO uses different subnets for different purposes (0-128).
           type: integer
           minimum: 0
           maximum: 128
           nullable: true
+          example: 0
     TaoStakingTransactionProperties:
       title: TAO Staking Transaction Properties
       allOf:
@@ -72090,6 +72213,54 @@ components:
               type: string
             validator:
               type: string
+    TaoSwitchNetuidRequestPOSTBody:
+      title: TAO Switch Network UID Request
+      type: object
+      description: |
+        Request to switch TAO stake from one subnet (netUID) to another.
+        This operation moves your stake to a different subnet, potentially with the same or different validator.
+        If validator is not specified, the stake will remain with the same validator in the new subnet.
+      required:
+        - type
+        - delegationId
+        - netUID
+      properties:
+        clientId:
+          type: string
+          description: Optional client-defined identifier to detect duplicate requests.
+          maxLength: 256
+          nullable: true
+        type:
+          type: string
+          enum:
+            - SWITCH_VALIDATORS
+          description: Type of request. Must be SWITCH_VALIDATORS for netuid switching.
+        delegationId:
+          type: string
+          description: The ID of the existing delegation to switch from.
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        validator:
+          type: string
+          description: Optional hotkey address of the validator in the new subnet. If not provided, uses the same validator.
+          example: 5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
+          nullable: true
+        netUID:
+          type: integer
+          description: The destination network UID (subnet) to switch to.
+          minimum: 0
+          maximum: 128
+          example: 1
+        amount:
+          type: string
+          description: The amount to switch in base units (RAO). If not specified, the entire delegation will be switched.
+          example: '1000000000'
+          nullable: true
+        switchNetuid:
+          type: boolean
+          description: Must be set to true to indicate this is a netUID switch operation.
+          default: true
+          example: true
     TaoSwitchValidatorIntent:
       title: Tao Switch Validator Intent
       allOf:
@@ -72127,6 +72298,41 @@ components:
             destinationNetuid:
               type: string
               description: TAO-specific destination network UID.
+    TaoSwitchValidatorRequestPOSTBody:
+      title: TAO Switch Validator Request
+      type: object
+      description: |
+        Request to switch TAO stake from one validator to another within the same subnet.
+        This operation moves your existing stake to a different validator without unstaking.
+      required:
+        - type
+        - delegationId
+        - validator
+      properties:
+        clientId:
+          type: string
+          description: Optional client-defined identifier to detect duplicate requests.
+          maxLength: 256
+          nullable: true
+        type:
+          type: string
+          enum:
+            - SWITCH_VALIDATORS
+          description: Type of request. Must be SWITCH_VALIDATORS for validator switching.
+        delegationId:
+          type: string
+          description: The ID of the existing delegation to switch from.
+          format: uuid
+          example: 123e4567-e89b-12d3-a456-426614174000
+        validator:
+          type: string
+          description: The hotkey address of the new validator to switch to.
+          example: 5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
+        amount:
+          type: string
+          description: The amount to switch in base units (RAO). If not specified, the entire delegation will be switched.
+          example: '1000000000'
+          nullable: true
     TaoSwitchValidatorTransactionProperties:
       title: TAO Switch Validator Transaction Properties
       allOf:
@@ -72135,14 +72341,19 @@ components:
           properties:
             amount:
               type: string
+              description: The amount being switched in base units (RAO).
             validatorAddress:
               type: string
+              description: The hotkey address of the origin validator.
             destValidatorAddress:
               type: string
+              description: The hotkey address of the destination validator.
             originNetuid:
               type: string
+              description: The network UID (subnet) where the stake is currently located.
             destinationNetuid:
               type: string
+              description: The network UID (subnet) where the stake will be moved to.
     TaoUnStakingRequestPOSTBody:
       title: TAO unstake
       allOf:
@@ -80537,10 +80748,38 @@ components:
             - amount
             - stakingContractAddress
         - $ref: '#/components/schemas/StakeIntent'
+    VetStakingRequestEntityProperties:
+      title: VET staking request entity properties
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestEntityProperties'
+        - type: object
+          properties:
+            nftTier:
+              type: string
+              description: The NFT tier selected for staking (e.g., DAWN, LIGHTNING, FLASH).
+            validatorAddress:
+              type: string
+              nullable: true
+              description: The validator address to delegate to.
+          required:
+            - nftTier
     VetStakingRequestPOSTBody:
       title: VET stake
       allOf:
         - $ref: '#/components/schemas/StakingRequestPOSTBody'
+        - type: object
+          properties:
+            nftTier:
+              description: The NFT tier to stake for VET PoS. Amount will be auto-populated based on the selected tier. Options are dynamically populated from the wallet attributes endpoint based on user balance.
+              type: string
+              example: DAWN
+            validator:
+              description: The validator address to delegate the NFT to.
+              type: string
+              example: '0xae99cb89767a09d53e589a40cb4016974aba4b94'
+          required:
+            - nftTier
+            - validator
       type: object
     VetStakingTransactionProperties:
       title: VET Staking Transaction Properties
@@ -81988,6 +82227,9 @@ components:
           type: boolean
         skipAddressValidation:
           description: Boolean flag to control whether to perform validator address validation or not.
+          type: boolean
+        showValidatorAddress:
+          description: Boolean flag to control whether to display the validator address in the UI even when skipAddressValidation is true.
           type: boolean
         allowPartialUnstake:
           description: True if the wallet allows partial unstaking.
