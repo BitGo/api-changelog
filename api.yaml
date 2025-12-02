@@ -29138,6 +29138,9 @@ paths:
                     - failed_to_burn
                     - failed_to_initiate_disbursal
                     - failed_to_complete_disbursal
+                    - rejected
+                    - failed
+                    - expired
               - type: string
                 enum:
                   - created
@@ -29160,6 +29163,9 @@ paths:
                   - failed_to_burn
                   - failed_to_initiate_disbursal
                   - failed_to_complete_disbursal
+                  - rejected
+                  - failed
+                  - expired
             example: created
         - name: fromDate
           description: Start date for order search
@@ -29463,13 +29469,18 @@ paths:
           in: query
           schema:
             oneOf:
-              - $ref: '#/components/schemas/BaseStablecoin'
               - type: array
                 items:
                   type: string
                   enum:
-                    - usd1
                     - gousd
+                    - usd1
+                    - sofid
+              - type: string
+                enum:
+                  - gousd
+                  - usd1
+                  - sofid
             example: usd1
         - name: chain
           description: Blockchain network identifier to filter summary
@@ -45976,6 +45987,15 @@ components:
             type: boolean
             description: Flag indicating if BitGo issued this token
             example: false
+          baseAsset:
+            type: string
+            enum:
+              - gousd
+              - usd1
+              - sofid
+              - usd
+            description: Base asset for the token
+            example: usd1
           chain:
             type: string
             description: Blockchain network identifier for the token
@@ -45997,6 +46017,7 @@ components:
           - name
           - decimals
           - isIssuedByBitgo
+          - baseAsset
     AssociatedPersonInput:
       type: object
       properties:
@@ -47965,12 +47986,6 @@ components:
         fee:
           description: The blockchain fee to submit the transactions.
           type: string
-    BaseStablecoin:
-      title: BaseStablecoin
-      type: string
-      enum:
-        - usd1
-        - gousd
     BaseStakeIntent:
       title: BaseStakeIntent
       allOf:
@@ -63034,6 +63049,9 @@ components:
             - failed_to_burn
             - failed_to_initiate_disbursal
             - failed_to_complete_disbursal
+            - rejected
+            - failed
+            - expired
           description: Status of the order
           example: created
         timestamp:
@@ -63299,6 +63317,9 @@ components:
             - failed_to_burn
             - failed_to_initiate_disbursal
             - failed_to_complete_disbursal
+            - rejected
+            - failed
+            - expired
           description: Current status of the order
           example: fulfilled
         enterpriseId:
