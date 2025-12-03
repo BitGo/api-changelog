@@ -23139,6 +23139,53 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/{coin}/wallet/{walletId}/iswalletaddress:
+    post:
+      tags:
+        - Express
+      summary: Verify if an address belongs to a wallet
+      operationId: express.wallet.isWalletAddress
+      description: |
+        This endpoint verifies whether a given address belongs to the specified wallet.
+        It performs cryptographic verification, checking address derivation against wallet keychains and configuration.
+
+        Returns `true` if the address belongs to the wallet.
+        Throws an error if verification fails or parameters are invalid.
+
+        To verify a baseAddress, set `baseAddress` and `address` to the base address of the wallet.
+
+        Due to architecture limitations, forwarder version 0 addresses cannot be verified and will return `true` without verification.
+
+        Verifying custodial wallet addresses is not supported.
+      parameters:
+        - $ref: '#/components/parameters/pathCoin'
+        - $ref: '#/components/parameters/pathWalletId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpressIsWalletAddressRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressIsWalletAddressResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+        '500':
+          description: Addresss Verification Failure
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
   /api/v2/{coin}/wallet/{walletId}/sweep:
     post:
       tags:
@@ -54434,6 +54481,78 @@ components:
         passphrase:
           type: string
           description: Passphrase to encrypt the admin macaroon of the signer node.
+    ExpressIsWalletAddressRequest:
+      type: object
+      description: Request body for verifying if an address belongs to a wallet
+      required:
+        - address
+        - keychains
+      properties:
+        address:
+          type: string
+          description: The address to verify
+        keychains:
+          type: array
+          items:
+            type: object
+            description: |
+              Keychains for cryptographic verification
+              Can be retrieved from GET /api/v2/{coin}/key/{id}
+            properties:
+              pub:
+                type: string
+              ethAddress:
+                type: string
+                description: Ethereum address (required for V1, V2, V4 ETH wallets base address verification)
+              commonKeychain:
+                type: string
+                description: Common keychain (required for  wallets version 3, 5, 6)
+            required:
+              - pub
+        baseAddress:
+          type: string
+          description: Base address of the wallet (wallet.coinSpecific.baseAddress)
+        walletVersion:
+          type: number
+          description: Wallet version (wallet.coinSpecific.walletVersion)
+        index:
+          oneOf:
+            - type: number
+            - type: string
+          description: |
+            Address derivation index
+            For Base Address verification, set index to 0
+        coinSpecific:
+          type: object
+          description: Coin-specific address data
+          properties:
+            baseAddress:
+              type: string
+              description: Base address (wallet.coinSpecific.baseAddress)
+            feeAddress:
+              type: string
+              description: Fee address for v4 forwarders (wallet.coinSpecific.feeAddress)
+            forwarderVersion:
+              type: number
+              description: Forwarder version (address.coinSpecific.forwarderVersion, required for forwarder addresses only)
+            salt:
+              type: string
+              description: |
+                Salt for address derivation
+                ForwarderAddress: address.coinSpecific.salt
+                BaseAddress: wallet.coinSpecific.salt
+        impliedForwarderVersion:
+          type: number
+          description: Implied forwarder version
+        format:
+          type: string
+          description: Format for the address
+        rootAddress:
+          type: string
+          description: Root address for coins that use root address
+    ExpressIsWalletAddressResponse:
+      type: boolean
+      description: Returns true if the address belongs to the wallet
     ExpressLightningNodeStateResponse:
       type: object
       properties:
