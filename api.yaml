@@ -24099,14 +24099,7 @@ paths:
       tags:
         - Accounts
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       responses:
         '200':
           description: An array of account balances
@@ -24133,14 +24126,7 @@ paths:
       tags:
         - Orders
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: offset
           in: query
           required: false
@@ -24209,19 +24195,17 @@ paths:
                 $ref: '#/components/schemas/Error'
     post:
       summary: Place Order
-      description: Places a new order. There are several types of orders available - Market, Limit, TWAP and SteadyPace (with or without a limit). Orders can only be placed if your account has a sufficient balance. When an order is placed, funds will be reserved for the amount of the order.
+      description: |
+        Places a new order. There are several types of orders available - Market, Limit, TWAP, and SteadyPace (the latter two optionally support a limit price).
+        Orders can be funded by your account balance or on margin.
+        - When an order with funding type "funded" is placed, funds will be reserved from your Go account for the amount of the order. You must have sufficient available balance in your Go account to place a funded order.
+        - When an order with funding type "margin" is placed, funds will be reserved from your Margin Trade Account. You must have sufficient available margin (NOP limit) to place a margin order.
+        See our [Trade Guide](/docs/trade-overview) for more details on each order type and funding options. 
       operationId: trade.orders.add
       tags:
         - Orders
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       requestBody:
         content:
           application/json:
@@ -24235,6 +24219,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
+        '409':
+          description: clientOrderId already exists for an order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConflictError'
         default:
           description: unexpected error
           content:
@@ -24244,23 +24234,17 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/orders/{orderId}:
     get:
       summary: Get Order
-      description: Get a single order by order id.
+      description: Get an order by order ID.
       operationId: trade.orders.order
       tags:
         - Orders
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: orderId
           in: path
-          description: The id of the order to retrieve
+          description: The id of the order to retrieve. This is the value of the ID field returned when the order was created.
           required: true
+          example: eee68637-6fb2-4ed5-ad8c-04afdb062b60
           style: simple
           explode: false
           schema:
@@ -24281,23 +24265,19 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/orders/{orderId}/cancel:
     put:
       summary: Cancel Order
-      description: Attempt to cancel an order that was previously placed. The response will return successful if the cancel request is submitted. Use Get Order endpoint or subscribe to the orders websocket to get the order details.
+      description: |
+        Submits a request to cancel a previously placed order. The successful response confirms the request submission only, not the final order cancellation.
+        Use the Get Order endpoint or the orders websocket to confirm the final order status.
       operationId: trade.orders.order.cancel
       tags:
         - Orders
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: orderId
           in: path
-          description: The id of the order to retrieve
+          description: The ID of the order to cancel. This is the value of the ID field returned when the order was created.
           required: true
+          example: eee68637-6fb2-4ed5-ad8c-04afdb062b60
           style: simple
           explode: false
           schema:
@@ -24319,14 +24299,7 @@ paths:
       tags:
         - Orders
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: offset
           in: query
           required: false
@@ -24394,14 +24367,7 @@ paths:
       tags:
         - Orders
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: tradeId
           in: path
           description: The id of the trade to retrieve
@@ -24431,14 +24397,7 @@ paths:
       tags:
         - Products
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       responses:
         '200':
           description: An array of currencies
@@ -24465,14 +24424,7 @@ paths:
       tags:
         - Products
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       responses:
         '200':
           description: An array of products
@@ -24499,17 +24451,11 @@ paths:
       tags:
         - Order Book
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: product
           in: path
           description: The name of the product
+          example: BTC-USD
           required: true
           style: simple
           explode: false
@@ -24536,17 +24482,11 @@ paths:
       tags:
         - Order Book
       parameters:
-        - name: accountId
-          in: path
-          description: The id of the trading account to retrieve
-          required: true
-          style: simple
-          explode: false
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: product
           in: path
           description: The name of the product
+          example: BTC-USD
           required: true
           style: simple
           explode: false
@@ -24565,7 +24505,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/currencies:
+  /api/prime/trading/v1/accounts/{accountId}/margin/collateral/currencies:
     get:
       summary: List available currencies for collateral
       description: Returns the list of currencies that are available for use as collateral.
@@ -24573,12 +24513,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       responses:
         '200':
           description: A list of available currencies for collateral
@@ -24592,7 +24527,7 @@ paths:
                     description: Returns a Currency object that consists of the ID, Name and Symbol for the instrument
                     items:
                       $ref: '#/components/schemas/Currency'
-  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/transferred:
+  /api/prime/trading/v1/accounts/{accountId}/margin/collateral/transferred:
     get:
       summary: List transferred collateral
       description: Returns the balance of assets deposited as collateral for the specified account.
@@ -24600,12 +24535,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       responses:
         '200':
           description: A list of transferred collateral
@@ -24637,7 +24567,7 @@ paths:
                       balanceValue:
                         quantity: '1000000'
                         currency: USD
-  /api/prime/trading/v1/accounts/{accountID}/margin/risksettings:
+  /api/prime/trading/v1/accounts/{accountId}/margin/risksettings:
     get:
       summary: Get margin risk settings
       description: Returns the margin risk settings for the specified account.
@@ -24645,12 +24575,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       responses:
         '200':
           description: Margin risk settings
@@ -24694,7 +24619,7 @@ paths:
                   minimumCollateralValue:
                     quantity: '50000'
                     currency: USD
-  /api/prime/trading/v1/accounts/{accountID}/margin/netopenpositions:
+  /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositions:
     get:
       summary: Get net open margin positions
       description: Returns the net open positions for the specified account.
@@ -24702,12 +24627,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: currency
           in: query
           required: false
@@ -24728,7 +24648,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MarginNetOpenPosition'
-  /api/prime/trading/v1/accounts/{accountID}/margin/netopenpositionlimits:
+  /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositionlimits:
     get:
       summary: Get net open margin position limits
       description: Returns the asset-specific net open position limits for the specified account.
@@ -24736,12 +24656,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       responses:
         '200':
           description: Net open position limits
@@ -24754,7 +24669,7 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MarginNetOpenPositionLimit'
-  /api/prime/trading/v1/accounts/{accountID}/margin/riskprofile:
+  /api/prime/trading/v1/accounts/{accountId}/margin/riskprofile:
     get:
       summary: Get margin risk profile
       description: Runs margin calculations and returns the margin risk profile for the specified account.
@@ -24762,12 +24677,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       responses:
         '200':
           description: Margin risk profile
@@ -24828,7 +24738,7 @@ paths:
                       quantity: '600000'
                       currency: USD
                     marginUtilizationPercentage: '0.85'
-  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/transfer:
+  /api/prime/trading/v1/accounts/{accountId}/margin/collateral/transfer:
     post:
       summary: Transfer collateral for margin
       description: Transfers collateral for the specified account.
@@ -24836,12 +24746,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       requestBody:
         required: true
         content:
@@ -24881,7 +24786,7 @@ paths:
                   balanceValue:
                     quantity: '1000000'
                     currency: USD
-  /api/prime/trading/v1/accounts/{accountID}/margin/positions/transfer:
+  /api/prime/trading/v1/accounts/{accountId}/margin/positions/transfer:
     post:
       summary: Transfer margin position
       description: Transfers the amount specified to cover margin position for the specified account.
@@ -24889,12 +24794,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       requestBody:
         required: true
         content:
@@ -24934,7 +24834,7 @@ paths:
                   balanceValue:
                     quantity: '1000000'
                     currency: USD
-  /api/prime/trading/v1/accounts/{accountID}/margin/positions/cover:
+  /api/prime/trading/v1/accounts/{accountId}/margin/positions/cover:
     post:
       summary: Cover all short margin positions
       description: Transfers the exact amount to cover all short margin positions for the specified account.
@@ -24942,12 +24842,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       requestBody:
         required: true
         content:
@@ -25000,7 +24895,7 @@ paths:
                       balanceValue:
                         quantity: '1000000'
                         currency: USD
-  /api/prime/trading/v1/accounts/{accountID}/margin/positions/close:
+  /api/prime/trading/v1/accounts/{accountId}/margin/positions/close:
     post:
       summary: Close all margin positions
       description: Starts an asynchronous process to automatically close all positions by selling and buying assets to attempt to net them to zero.
@@ -25008,12 +24903,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       requestBody:
         required: true
         content:
@@ -25042,7 +24932,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClosePositionRequestResponse'
-  /api/prime/trading/v1/accounts/{accountID}/margin/positions/close/requests:
+  /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests:
     get:
       summary: List close position requests
       description: List all close position requests for an account with optional filters on status and creation date.
@@ -25050,12 +24940,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account.
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: offset
           in: query
           required: false
@@ -25114,7 +24999,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
-  /api/prime/trading/v1/accounts/{accountID}/margin/positions/close/requests/{closePositionRequestID}:
+  /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests/{closePositionRequestID}:
     get:
       summary: Get close position request details
       description: Get details of a specific close position request.
@@ -25122,12 +25007,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: closePositionRequestID
           in: path
           required: true
@@ -25142,7 +25022,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClosePositionRequestResponse'
-  /api/prime/trading/v1/accounts/{accountID}/margin/positions/close/requests/{closePositionRequestID}/orders:
+  /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests/{closePositionRequestID}/orders:
     get:
       summary: List orders for close position request
       description: List orders associated with a close position request.
@@ -25150,12 +25030,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: closePositionRequestID
           in: path
           required: true
@@ -25170,7 +25045,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClosePositionRequestOrdersResponse'
-  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/withdrawalrequests:
+  /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests:
     post:
       summary: Create collateral withdrawal request
       description: Create a collateral withdrawal request.
@@ -25178,12 +25053,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
       requestBody:
         required: true
         content:
@@ -25218,12 +25088,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: offset
           in: query
           required: false
@@ -25246,7 +25111,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollateralWithdrawalRequestsResponse'
-  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/withdrawalrequests/{requestID}:
+  /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests/{requestID}:
     get:
       summary: Get collateral withdrawal request
       description: Get details of a specific collateral withdrawal request.
@@ -25254,12 +25119,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: requestID
           in: path
           required: true
@@ -25274,7 +25134,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollateralWithdrawalRequestResponse'
-  /api/prime/trading/v1/accounts/{accountID}/margin/collateral/withdrawalrequests/{requestID}/cancel:
+  /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests/{requestID}/cancel:
     patch:
       summary: Cancel collateral withdrawal request
       description: Cancel a collateral withdrawal request.
@@ -25282,12 +25142,7 @@ paths:
       tags:
         - Margin
       parameters:
-        - name: accountID
-          in: path
-          required: true
-          description: The ID of the account
-          schema:
-            type: string
+        - $ref: '#/components/parameters/AccountIdPathParam'
         - name: requestID
           in: path
           required: true
@@ -42466,6 +42321,16 @@ components:
   headers: {}
   links: {}
   parameters:
+    AccountIdPathParam:
+      name: accountId
+      in: path
+      description: The ID of the account
+      example: a980fdebfa084ffebc7e00515f54603f
+      required: true
+      style: simple
+      explode: false
+      schema:
+        type: string
     Base:
       name: base
       in: query
@@ -43547,11 +43412,13 @@ components:
         id:
           type: string
           format: uuid
+          description: The ID of the account
         name:
           type: string
+          description: Name for the trading account
       example:
         id: f230fdebfa084ffebc7e00515f54603f
-        name: Uncle MoneyPenny's Trading Wallet
+        name: Example Trading Wallet
     AccountBalance:
       required:
         - currency
@@ -43603,6 +43470,7 @@ components:
           - held
     AccountBalances:
       type: array
+      description: List of balance entries for a trading account
       items:
         $ref: '#/components/schemas/AccountBalance'
     AccountBaseBuildOptions:
@@ -43663,6 +43531,9 @@ components:
             - intentType
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/AccountBaseBuildOptions'
+    AccountId:
+      type: string
+      description: The ID of the account
     AccountType:
       title: AccountType
       type: string
@@ -49149,6 +49020,12 @@ components:
         - apiSecret
         - clientAccountId
         - companyRegistrationNumber
+    ClientOrderId:
+      type: string
+      description: |
+        Custom order ID provided by the client. This must be a unique ID for each individual order and cannot be the same across multiple requests.
+        Can be used to ensure idempotency of order requests.
+      maxLength: 256
     ClosePositionOrderResponse:
       type: object
       required:
@@ -49235,8 +49112,7 @@ components:
           format: uuid
           description: Unique identifier for the close position request
         accountId:
-          type: string
-          description: Account ID associated with the request
+          $ref: '#/components/schemas/AccountId'
         enterpriseId:
           type: string
           description: Enterprise ID associated with the request
@@ -55866,7 +55742,11 @@ components:
       enum:
         - margin
         - funded
-      description: The funding type of the order. Funded orders will be placed with the user's available balance. Margin orders will be placed with the user's margin balance.
+      description: |
+        The funding type of the order.
+        - Funded orders will be placed using the Go account balance.
+        - Margin orders will be placed using the margin account balances.
+        See our [Trade Guide](/docs/trade-overview) for more details on each funding type.
       default: funded
     GeneralError:
       type: object
@@ -59229,28 +59109,39 @@ components:
         time:
           type: string
           format: date-time
+          description: The timestamp when the order book snapshot was generated
+          example: '2025-11-27T18:48:51.383577451Z'
         product:
           type: string
-          description: Product name e.g. BTC
+          description: Product name
+          example: BTC-USD
         bidPrice:
           type: string
           format: decimal
+          description: Highest bid price for base asset in quote currency
+          example: '7090.96'
         bidSize:
           type: string
           format: decimal
+          description: Quantity of base asset at highest bid price
+          example: '1.253433'
         askPrice:
           type: string
           format: decimal
+          description: Lowest ask price for base asset in quote currency
+          example: '7090.97'
         askSize:
           type: string
           format: decimal
+          description: Quantity of base asset at lowest ask price
+          example: '1.2'
       example:
-        time: {}
+        time: '2025-11-27T18:48:51.383577451Z'
         product: BTC-USD
         bidPrice: '7090.96'
         bidSize: '1.253433'
         askPrice: '7090.97'
-        askSize: '25.23881'
+        askSize: '1.2'
     Level2OrderBookSnapshot:
       required:
         - asks
@@ -59262,30 +59153,41 @@ components:
         time:
           type: string
           format: date-time
+          description: The timestamp when the order book snapshot was generated
+          example: '2025-11-27T18:48:51.383577451Z'
         product:
           type: string
-          description: Product name e.g. BTC
+          description: Product name
+          example: BTC-USD
         bids:
           type: array
-          description: An array of levels of [price, size]
+          description: |
+            An array of bid price levels. Each level is an array in the format [price, size], ordered from highest price to lowest price.
+            `price' is the bid price in the quote currency and 'size' is the quantity of the base asset at that price level.
           items:
             type: string
             format: decimal
         asks:
           type: array
-          description: An array of levels of [price, size]
+          description: |
+            An array of ask price levels. Each level is an array in the format [price, size], ordered from lowest price to highest price.
+            `price' is the ask price in the quote currency and 'size' is the quantity of the base asset at that price level.
           items:
             type: string
             format: decimal
       example:
-        time: {}
+        time: '2025-11-27T18:48:51.383577451Z'
         product: BTC-USD
         bids:
-          - - '7090.96'
-            - '1.253433'
+          - - '90814.34'
+            - '0.4'
+          - - '90810.62'
+            - '0.2'
         asks:
-          - - '7090.97'
-            - '25.23881'
+          - - '92653.49'
+            - '1'
+          - - '92653.5'
+            - '0.4'
     LightningBackupResponse:
       type: object
       properties:
@@ -59506,6 +59408,13 @@ components:
             - coin
             - wallet
         - $ref: '#/components/schemas/BaseWalletAddress'
+    LimitPrice:
+      type: string
+      format: decimal
+      description: |
+        The limit price. It always refers to the quote currency.
+        - It's maximum precision is determined by the product's `quoteDisplayPrecision` field, which can be fetched from the list products endpoint.
+      example: '10005.00'
     LimitRuleCondition:
       title: LimitRuleCondition
       type: object
@@ -61232,15 +61141,13 @@ components:
       type: object
       properties:
         clientOrderId:
-          type: string
-          description: Custom order ID. This must be a unique ID associated with an order and cannot be the same across multiple requests.
-          maxLength: 256
+          $ref: '#/components/schemas/ClientOrderId'
         product:
           type: string
           description: Product name e.g. BTC-USD
         type:
           type: string
-          description: Must be set to "limit"
+          description: Must be set to "limit" to place a limit order
         fundingType:
           $ref: '#/components/schemas/FundingType'
         side:
@@ -61250,18 +61157,18 @@ components:
           format: decimal
         quantityCurrency:
           type: string
-          description: The quantity currency must be in the base currency for both buy and sell. e.g. If product is BTC-USD, the base currency will be BTC.
+          description: |
+            The quantity currency:
+            - Must be in base currency for sell orders.
+            - Can be in base or quote currency for for buy orders
+            e.g. If product is `BTC-USD`, the base currency will be BTC and the quote currency will be `USD`.
         limitPrice:
-          type: string
-          format: decimal
+          $ref: '#/components/schemas/LimitPrice'
         duration:
           type: integer
           description: Duration of the limit order in minutes. For orders that are good till cancelled, skip duration and use timeInForce=GTC.
         timeInForce:
-          type: string
-          description: Time in force for the order. GTC (Good Till Cancelled) is the only allowed value.
-          enum:
-            - GTC
+          $ref: '#/components/schemas/TimeInForce'
       example:
         clientOrderId: myorder1
         type: limit
@@ -61279,19 +61186,16 @@ components:
         - quantityCurrency
         - side
         - type
-        - fundingType
       type: object
       properties:
         clientOrderId:
-          type: string
-          description: Custom order ID. This must be a unique ID associated with an order and cannot be the same across multiple requests.
-          maxLength: 256
+          $ref: '#/components/schemas/ClientOrderId'
         product:
           type: string
           description: Product name e.g. BTC-USD
         type:
           type: string
-          description: Must be set to "market"
+          description: Must be set to "market" to place a market order
         fundingType:
           $ref: '#/components/schemas/FundingType'
         side:
@@ -61299,9 +61203,15 @@ components:
         quantity:
           type: string
           format: decimal
+          description: The quantity of the `quantityCurrency` to buy or sell.
         quantityCurrency:
           type: string
-          description: The quantity currency must be in quote currency for buy and base currency for sell. e.g. If product is BTC-USD, the base currency will be BTC.
+          description: |
+            The quantity currency for the order:
+            - Must be in base currency for sell orders.
+            - Must be in quote currency for buy orders with `fundingType: funded` (default funding type).
+            - Can be in base or quote currency for for buy orders with `fundingType: margin`.
+            e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
       example:
         clientOrderId: myorder1
         type: market
@@ -61326,15 +61236,13 @@ components:
       type: object
       properties:
         clientOrderId:
-          type: string
-          description: Custom order ID. This must be a unique ID associated with an order and cannot be the same across multiple requests.
-          maxLength: 256
+          $ref: '#/components/schemas/ClientOrderId'
         product:
           type: string
           description: Product name e.g. BTC-USD
         type:
           type: string
-          description: Must be set to "steady_pace"
+          description: Must be set to "steady_pace" to place a Steady Pace order
         fundingType:
           $ref: '#/components/schemas/FundingType'
         side:
@@ -61344,13 +61252,15 @@ components:
           format: decimal
         quantityCurrency:
           type: string
-          description: The quantity currency must be in quote currency for buy unless a limit price is specified, in which case buy orders can only be placed in the base currency. For sell, the quantity currency must be in base. e.g. If product is BTC-USD, the base currency will be BTC.
+          description: |
+            The quantity currency:
+            - Must be in base currency for sell orders.
+            - Must be in quote currency or if a `limitPrice` is set it must be in base currency for buy orders.
+            e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
         limitPrice:
-          type: string
-          format: decimal
+          $ref: '#/components/schemas/LimitPrice'
         scheduledDate:
-          type: string
-          format: date-time
+          $ref: '#/components/schemas/ScheduledDate'
         parameters:
           allOf:
             - $ref: '#/components/schemas/SteadyPaceOrderParameters'
@@ -61378,15 +61288,13 @@ components:
       type: object
       properties:
         clientOrderId:
-          type: string
-          description: Custom order ID. This must be a unique ID associated with an order and cannot be the same across multiple requests.
-          maxLength: 256
+          $ref: '#/components/schemas/ClientOrderId'
         product:
           type: string
           description: Product name e.g. BTC-USD
         type:
           type: string
-          description: Must be set to "twap"
+          description: Must be set to "twap" to place a TWAP order
         fundingType:
           $ref: '#/components/schemas/FundingType'
         side:
@@ -61396,19 +61304,21 @@ components:
           format: decimal
         quantityCurrency:
           type: string
-          description: The quantity currency must be in quote currency for buy unless a limit price is specified, in which case buy orders can only be placed in the base currency. For sell, the quantity currency must be in base. e.g. If product is BTC-USD, the base currency will be BTC.
+          description: |
+            The quantity currency:
+            - Must be in base currency for sell orders.
+            - Must be in quote currency or if a `limitPrice` is set it must be in base currency for buy orders.
+            e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
         limitPrice:
-          type: string
-          format: decimal
+          $ref: '#/components/schemas/LimitPrice'
         duration:
           type: integer
-          description: Duration of the TWAP order in minutes.
+          description: Duration of the TWAP order in minutes. Must be greater than 0.
         interval:
           type: integer
           description: Interval of the time-sliced TWAP order in minutes. Only required if `isTimeSliced` is `true`.
         scheduledDate:
-          type: string
-          format: date-time
+          $ref: '#/components/schemas/ScheduledDate'
         parameters:
           allOf:
             - $ref: '#/components/schemas/TWAPOrderParameters'
@@ -61929,12 +61839,22 @@ components:
       required:
         - id
         - accountId
+        - enterpriseId
+        - initiatedByUserId
+        - cancelledByUserId
+        - clientOrderId
         - time
         - creationDate
+        - scheduledDate
+        - lastFillDate
         - completionDate
-        - type
+        - settleDate
         - fundingType
+        - type
+        - timeInForce
         - status
+        - reason
+        - reasonDescription
         - product
         - side
         - quantity
@@ -61942,25 +61862,35 @@ components:
         - filledQuantity
         - filledQuoteQuantity
         - averagePrice
+        - limitPrice
+        - duration
+        - twapInterval
+        - rtid
+        - notes
       type: object
       properties:
         id:
           type: string
           format: uuid
+          description: Unique identifier for the order. Used to reference the order in other endpoints.
         accountId:
+          $ref: '#/components/schemas/AccountId'
+        enterpriseId:
+          type: string
+        initiatedByUserId:
+          type: string
+        cancelledByUserId:
           type: string
         clientOrderId:
-          type: string
+          $ref: '#/components/schemas/ClientOrderId'
         time:
           type: string
           format: date-time
-          description: DEPRECATED
         creationDate:
           type: string
           format: date-time
         scheduledDate:
-          type: string
-          format: date-time
+          $ref: '#/components/schemas/ScheduledDate'
         lastFillDate:
           type: string
           format: date-time
@@ -61970,15 +61900,26 @@ components:
         settleDate:
           type: string
           format: date-time
-        type:
-          type: string
         fundingType:
           $ref: '#/components/schemas/FundingType'
+        type:
+          $ref: '#/components/schemas/OrderType'
+        timeInForce:
+          $ref: '#/components/schemas/TimeInForce'
         status:
           $ref: '#/components/schemas/OrderStatus'
+        reason:
+          description: Reason for order cancellation. 'internalError' indicates an error occurred within the server while processing the order, resulting in an order cancellation. 'insufficientFunds' indicates that the order was cancelled due to shortage of funds to complete the transaction.
+          type: string
+          enum:
+            - internalError
+            - insufficientFunds
+          example: insufficientFunds
+        reasonDescription:
+          type: string
         product:
           type: string
-          description: Product name e.g. BTC-USD
+          description: Product name e.g. BTC-USD (base-quote)
         side:
           $ref: '#/components/schemas/Side'
         quantity:
@@ -61999,38 +61940,41 @@ components:
         averagePrice:
           type: string
           format: decimal
+          description: The average price at which the order was filled.
         limitPrice:
-          type: string
-          format: decimal
+          $ref: '#/components/schemas/LimitPrice'
         duration:
           type: integer
           description: Duration of the order in minutes.
         twapInterval:
           type: integer
           description: Interval length of the TWAP order in minutes.
-        reason:
-          description: Reason for order cancellation. 'internalError' indicates an error occurred within the server while processing the order, resulting in an order cancellation. 'insufficientFunds' indicates that the order was cancelled due to shortage of funds to complete the transaction.
+        rtid:
           type: string
-          enum:
-            - internalError
-            - insufficientFunds
-          example: insufficientFunds
+          description: The request tracking ID associated with the order.
         parameters:
           allOf:
             - $ref: '#/components/schemas/TWAPOrderParameters'
             - $ref: '#/components/schemas/SteadyPaceOrderParameters'
+        notes:
+          type: string
+          description: Additional notes associated with the order.
       example:
         id: 67fd640c-cb6c-4218-80ae-49e79ec15646
         accountId: 60e740e7898f7d00064d43769a73dc48
+        enterpriseId: 129841a2143f99c3229c1f4x590396b4
+        initiatedByUserId: 1203c28030c4320a4b90255b4683ecq6
+        canceledByUserId: null
         clientOrderId: myorderid1
-        time: {}
-        creationDate: {}
-        scheduledDate: {}
-        lastFillDate: {}
-        completionDate: {}
-        settleDate: {}
+        time: '2025-11-25T23:12:18.210507Z'
+        creationDate: '2025-11-25T23:12:18.210507Z'
+        scheduledDate: null
+        lastFillDate: '2025-11-25T23:12:17.642764Z'
+        completionDate: '2025-11-25T23:12:17.642764Z'
+        settleDate: null
         fundingType: funded
         type: market
+        timeInForce: null
         status: completed
         product: BTC-USD
         side: buy
@@ -62039,6 +61983,11 @@ components:
         filledQuantity: '0.02457152'
         filledQuoteQuantity: '1000'
         averagePrice: '40697.32'
+        limitPrice: null
+        duration: null
+        twapInterval: null
+        rtId: null
+        notes: null
     OrderBooksRequest:
       title: Order Books
       required:
@@ -62055,8 +62004,7 @@ components:
           type: string
           description: The subscription channel (e.g. "level2" for order books)
         accountId:
-          type: string
-          description: The ID of the account
+          $ref: '#/components/schemas/AccountId'
         productId:
           type: string
           description: The ID of product. (e.g. "TBTC-TUSD*")
@@ -62161,6 +62109,19 @@ components:
         quantity: '1.01'
         cumulativeQuantity: '1.01'
         averagePrice: '7090.1'
+    OrderConflictError:
+      required:
+        - error
+        - errorName
+      type: object
+      properties:
+        error:
+          type: string
+        errorName:
+          type: string
+      example:
+        error: backend:common:inUse key=clientOrderId
+        errorName: backend:common:inUse
     OrderCreated:
       title: Order Created
       allOf:
@@ -62544,6 +62505,14 @@ components:
       required:
         - count
         - amount
+    OrderType:
+      type: string
+      enum:
+        - market
+        - twap
+        - limit
+        - steady_pace
+      description: The type of order to be placed. See our [Trade Guide](/docs/trade-overview) for more details on each order type.
     OrderTypeSummary:
       title: OrderTypeSummary
       type: object
@@ -66015,7 +65984,7 @@ components:
       example:
         id: 7e0c768e-2d16-4c1e-b39d-06fa20009397
         orderId: d50ec984-77a8-460a-b958-66f114b0de9b
-        time: {}
+        time: '2025-11-26T15:27:41.5318Z'
         side: buy
         product: BTC-USD
         quoteQuantity: '100.50'
@@ -66027,6 +65996,9 @@ components:
         - baseCurrencyId
         - baseCurrency
         - baseMinSize
+        - baseMaxSize
+        - baseIncrement
+        - quoteDisplayPrecision
         - id
         - isTradeDisabled
         - isMarginTradeSupported
@@ -67033,6 +67005,10 @@ components:
                                 val:
                                   type: string
                                   description: The BTC Address version.
+    ScheduledDate:
+      type: string
+      format: date-time
+      description: Date to schedule the order. If not provided, the order will be placed immediately.
     ScimListResponseSchemas:
       title: ScimListResponseSchemas
       type: array
@@ -67803,7 +67779,7 @@ components:
         - ZM
         - ZW
     Side:
-      description: Side of a trade, from the perspective of the requesting user
+      description: The side of the order
       type: string
       enum:
         - buy
@@ -70616,12 +70592,14 @@ components:
             - hour
         subOrderSize:
           type: string
+          format: decimal
           description: The size of each sub-order in the SteadyPace order.
         variance:
-          type: number
+          type: string
+          format: decimal
           description: |
             Optional degree of randomization for sub-order sizes. Accepts a decimal value rounded to two decimal places between 0 and 1, representing the variation in the size of each sub-order. 
-            For example, a value of 0.20 indicates a 20% variance.
+            For example, a value of 0.20 indicates a 20% variance in sub-order sizes.
     StellarAddress:
       title: Stellar Address
       type: object
@@ -71327,16 +71305,18 @@ components:
         isTimeSliced:
           type: boolean
           description: |
-            The isTimeSliced field, when provided under the parameters section, determines the order's time slicing behavior:
+            The isTimeSliced field when provided determines the order's time slicing behavior:
             - If isTimeSliced is set to true, the order will be executed using a time-sliced strategy.
             - If isTimeSliced is set to false, the order will be executed using a regular TWAP strategy without time slicing.
             - If isTimeSliced is not specified, the default behavior uses a regular TWAP strategy without time slicing.
         boundsControl:
           type: string
           description: |
-            The boundsControl field, when provided under the parameters section, determines how strictly the TWAP algorithm adheres to the target fill progression.
-            - It is optional but can be provided for a regular TWAP strategy.
-            - Default value is `standard`.
+            The boundsControl field when provided determines how strictly the TWAP order adheres to its target fill progression.
+            - narrow - within 3% or 3 minutes
+            - standard - within 5% or 5 minutes
+            - wide - within 7.5% or 7.5 minutes
+            - If boundsControl is not specified, the default behavior is `standard`.
           enum:
             - narrow
             - standard
@@ -71709,6 +71689,11 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
+    TimeInForce:
+      type: string
+      enum:
+        - GTC
+      description: Time in force policy for the order. GTC (Good Till Cancelled) is the only allowed value.
     TimeRange:
       type: string
       description: The time range for the data, either hourly or daily.
@@ -72162,14 +72147,12 @@ components:
           type: string
           format: date-time
         accountId:
-          type: string
-          description: The ID of the account
+          $ref: '#/components/schemas/AccountId'
         orderId:
           type: string
           description: The ID of the order
         clientOrderId:
-          type: string
-          description: Custom order ID.
+          $ref: '#/components/schemas/ClientOrderId'
         product:
           type: string
           description: Product name e.g. BTC-USD
@@ -72266,8 +72249,7 @@ components:
           type: string
           description: The subscription channel (e.g. "orders" for trade orders)
         accountId:
-          type: string
-          description: The ID of the account
+          $ref: '#/components/schemas/AccountId'
       example:
         type: subscribe
         channel: orders
@@ -72291,18 +72273,22 @@ components:
         id:
           type: string
           format: uuid
+          description: The ID of the user
         firstName:
           type: string
+          description: First name of the user
         lastName:
           type: string
+          description: Last name of the user
         email:
           type: string
           format: email
+          description: Email address of the user
       example:
         id: a253c86c-1f0f-42cc-bcd0-2dcc5040b204
-        firstName: Uncle
-        lastName: MoneyPenny
-        email: uncle.moneypenny@bitgo.com
+        firstName: John
+        lastName: Doe
+        email: john.doe@example.com
     Trades:
       type: array
       items:
