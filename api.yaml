@@ -43660,7 +43660,7 @@ components:
         - accountType
     AchBankAccountRequest:
       title: AchBankAccountRequest
-      description: Request schema for creating an ACH bank account
+      description: Request schema for creating an ACH bank account.
       allOf:
         - type: object
           properties:
@@ -46219,88 +46219,91 @@ components:
         name:
           type: string
           minLength: 1
-          description: Name of the bank account
+          description: Name of the banking institution.
         shortCountryCode:
           type: string
           minLength: 1
-          description: Two-letter ISO country code
+          description: Two-letter ISO country code of bank's address.
         accountNumber:
           type: string
           minLength: 1
-          description: Bank account number
+          description: Bank account number.
         enterpriseId:
           type: string
           minLength: 1
-          description: ID of the enterprise the account belongs to
+          description: ID of the enterprise the account belongs to.
         currency:
           allOf:
             - $ref: '#/components/schemas/BackingFiatCoin'
-          description: The currency of the bank account
+          description: The currency of the bank account.
         ownerName:
           type: string
           minLength: 1
-          description: Name of the account owner
+          description: Name of the account owner.
         accountType:
           type: string
           enum:
             - checking
             - saving
-            - unknown
-          description: Type of bank account (checking, saving, etc.)
+          description: Type of bank account (checking, saving).
         description:
           type: string
-          description: User-provided description of the account
+          description: User-provided description of the account.
         furtherCreditTo:
           type: string
-          description: Further credit recipient information
+          description: Further credit recipient information sometimes referred to as a reference.
         intermediaryBankName:
           type: string
-          description: Name of intermediary bank if applicable
+          description: Name of intermediary bank if applicable.
         intermediaryBankId:
           type: string
-          description: Identifier of the intermediary bank
+          description: Intermediary bank routing number.
         ownerAddressLine1:
           type: string
-          description: First line of owner's address (street number and name)
+          description: First line of owner's address (street number and name).
         ownerAddressLine2:
           type: string
-          description: Second line of owner's address (apartment/suite number, etc.)
+          description: Second line of owner's address (apartment/suite number, etc.).
         ownerAddressCityLocality:
           type: string
-          description: City or locality of owner's address
+          description: City or locality of owner's address. Can be required depending ownerAddressCountryCode.
         ownerAddressStateProvince:
           type: string
-          description: State or province of owner's address
+          description: State or province of owner's address. Can be required depending on ownerAddressCountryCode.
         ownerAddressPostalCode:
           type: string
-          description: Postal code of owner's address
+          description: Postal code of owner's address. Can be required depending on ownerAddressCountryCode.
         ownerAddressCountryCode:
           type: string
-          description: Two-letter ISO country code of owner's address
+          description: Two-letter ISO country code of owner's address.
         bankAddressLine1:
           type: string
-          description: First line of bank's address (street number and name)
+          description: First line of bank's address (street number and name).
         bankAddressLine2:
           type: string
-          description: Second line of bank's address (branch information, etc.)
+          description: Second line of bank's address (branch information, etc.).
         bankAddressCityLocality:
           type: string
-          description: City or locality of bank's address
+          description: City or locality of bank's address. Can be required depending on bankAddressCountryCode.
         bankAddressStateProvince:
           type: string
-          description: State or province of bank's address
+          description: State or province of bank's address. Can be required depending on bankAddressCountryCode.
         bankAddressPostalCode:
           type: string
-          description: Postal code of bank's address
+          description: Postal code of bank's address. Can be required depending on bankAddressCountryCode.
         bankAddressCountryCode:
           type: string
-          description: Two-letter ISO country code of bank's address
+          description: Two-letter ISO country code of bank's address, should be the same as shortCountryCode.
       required:
-        - name
-        - shortCountryCode
         - accountNumber
+        - bankAddressCountryCode
+        - bankAddressLine1
         - currency
+        - name
+        - ownerAddressCountryCode
+        - ownerAddressLine1
         - ownerName
+        - shortCountryCode
     BankAccountResponse1:
       title: BankAccountResponse
       oneOf:
@@ -47630,7 +47633,7 @@ components:
         - externalId
     BlincBankAccountRequest:
       title: BlincBankAccountRequest
-      description: Request schema for creating a Blinc bank account
+      description: Request schema for creating a Blinc bank account. Note that bankAddressCountryCode, bankAddressLine1, bankAddressStateProvince, bankAddressPostalCode, bankAddressCityLocality are not required for this bank account type and will be overridden on successful request.
       allOf:
         - type: object
           properties:
@@ -48900,7 +48903,7 @@ components:
         - accountType
     CbitBankAccountRequest:
       title: CbitBankAccountRequest
-      description: Request schema for creating a CBIT bank account
+      description: Request schema for creating a CBIT bank account. Note that bankAddressCountryCode, bankAddressLine1, bankAddressStateProvince, bankAddressPostalCode, bankAddressCityLocality are not required for this bank account type and will be overridden on successful request.
       allOf:
         - type: object
           properties:
@@ -51899,7 +51902,7 @@ components:
         - routingNumber
     DomesticWireBankAccountRequest:
       title: DomesticWireBankAccountRequest
-      description: Request schema for creating a domestic wire bank account
+      description: Request schema for creating a domestic wire bank account.
       allOf:
         - type: object
           properties:
@@ -58494,7 +58497,7 @@ components:
         - swiftCode
     InternationalWireBankAccountRequest:
       title: InternationalWireBankAccountRequest
-      description: Request schema for creating an international wire bank account
+      description: Request schema for creating an international wire bank account.
       allOf:
         - type: object
           properties:
@@ -67405,7 +67408,7 @@ components:
         - accountType
     SepaBankAccountRequest:
       title: SepaBankAccountRequest
-      description: Request schema for creating a SEPA bank account
+      description: Request schema for creating a SEPA bank account.
       allOf:
         - type: object
           properties:
