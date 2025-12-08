@@ -24175,6 +24175,7 @@ paths:
           explode: true
           schema:
             $ref: '#/components/schemas/OrderStatus'
+        - $ref: '#/components/parameters/FundingTypeQueryParam'
       responses:
         '200':
           description: An array of orders
@@ -24341,6 +24342,33 @@ paths:
           schema:
             type: string
             format: date-time
+        - name: creationDateGte
+          in: query
+          description: Return exchange trades with a creation date that is greater than or equal to the given timestamp
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: string
+            format: date-time
+        - name: creationDateLt
+          in: query
+          description: Return exchange trades with a creation date that is less than the given timestamp
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: string
+            format: date-time
+        - name: isSettled
+          in: query
+          description: Return trades based on settlement status. true for settled trades, false for unsettled trades.
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/FundingTypeQueryParam'
       responses:
         '200':
           description: An array of trades
@@ -42428,6 +42456,15 @@ components:
         action.approvals.always.deny.parameters.actionId=ruleAction1
         action.parameters.bool=true
         action.parameters.userIds=user1,user2
+    FundingTypeQueryParam:
+      name: fundingType
+      in: query
+      description: Filter by funding type. 'funded' for available balance, 'margin' for margin balance.
+      required: false
+      style: form
+      explode: true
+      schema:
+        $ref: '#/components/schemas/FundingType'
     Interval:
       name: interval
       in: query
@@ -65948,11 +65985,13 @@ components:
         - id
         - orderId
         - time
+        - creationDate
         - product
         - side
         - price
         - quoteQuantity
         - quantity
+        - fundingType
         - settled
       type: object
       properties:
@@ -65965,6 +66004,11 @@ components:
         time:
           type: string
           format: date-time
+          description: The exchange trade date (when the trade occurred at the LP)
+        creationDate:
+          type: string
+          format: date-time
+          description: The date when the trade was created in our system
         product:
           type: string
           description: Product name e.g. BTC-USD
@@ -65981,17 +66025,21 @@ components:
           type: string
           format: decimal
           description: Base quantity, e.g. For BTC-USD product, 0.0045 BTC
+        fundingType:
+          $ref: '#/components/schemas/FundingType'
         settled:
           type: boolean
       example:
         id: 7e0c768e-2d16-4c1e-b39d-06fa20009397
         orderId: d50ec984-77a8-460a-b958-66f114b0de9b
-        time: '2025-11-26T15:27:41.5318Z'
+        time: '2025-11-26T15:27:35.1234Z'
+        creationDate: '2025-11-26T15:27:41.5318Z'
         side: buy
         product: BTC-USD
         quoteQuantity: '100.50'
         price: '22333.33'
         quantity: '0.0045'
+        fundingType: funded
         settled: true
     Product:
       required:
