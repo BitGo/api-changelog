@@ -10130,7 +10130,35 @@ paths:
                     - vid
                     - visa
                     - wp
-                  description: 'Required when uploading the front and/or back photos of KYC verification documents. It represents the type of identification document being uploaded: `cct` - Citizenship Certificate / `cid` - Consular ID / `dl` - Drivers License / `foid` - CO Foreigner ID / `hic` - Health Insurance Card / `id` - Identification Card / `ipp` - Internal Passport / `keyp` - AU Keypass ID / `ltpass` - Long Term Pass / `munid` - US Municipal ID (e.g. NYC ID) / `myn` - JP My Number Card (SSN) / `nbi` - PH National Bureau of Investigation Certificate / `nric` - SG National Residency ID / `ofw` - PH Overseas Foreign Worker Card / `rp` - Residence Permit / `pan` - IN Permanant Account Number card (SSN) / `pid` - PH Postal Identity Card / `pp` - Passport / `ppc` - Passport Card / `pr` - Permanant Residence Card / `sss` - PH Social Security System Card (SSN) / `td` - US Travel Document / `tribalid` - US/CA Tribal ID / `umid` - PH Unified Multi Purpose ID / `vid` - Voter Id / `visa` - VISA / `wp` - Work Permit'
+                  description: |-
+                    Required when uploading the front and/or back photos of KYC verification documents. It represents the type of identification document being uploaded:
+                    - `cct` - Citizenship Certificate
+                    - `cid` - Consular ID
+                    - `dl` - Drivers License
+                    - `foid` - CO Foreigner ID
+                    - `hic` - Health Insurance Card
+                    - `id` - Identification Card
+                    - `ipp` - Internal Passport
+                    - `keyp` - AU Keypass ID
+                    - `ltpass` - Long Term Pass
+                    - `munid` - US Municipal ID (e.g. NYC ID)
+                    - `myn` - JP My Number Card (SSN)
+                    - `nbi` - PH National Bureau of Investigation Certificate
+                    - `nric` - SG National Residency ID
+                    - `ofw` - PH Overseas Foreign Worker Card
+                    - `rp` - Residence Permit
+                    - `pan` - IN Permanant Account Number card (SSN)
+                    - `pid` - PH Postal Identity Card
+                    - `pp` - Passport
+                    - `ppc` - Passport Card
+                    - `pr` - Permanant Residence Card
+                    - `sss` - PH Social Security System Card (SSN)
+                    - `td` - US Travel Document
+                    - `tribalid` - US/CA Tribal ID
+                    - `umid` - PH Unified Multi Purpose ID
+                    - `vid` - Voter Id
+                    - `visa` - VISA
+                    - `wp` - Work Permit
                 frontPhoto: {}
                 backPhoto: {}
                 proofOfResidency: {}
@@ -10221,7 +10249,35 @@ paths:
                     - vid
                     - visa
                     - wp
-                  description: 'Required when uploading the front and/or back photos of KYC verification documents. It represents the type of identification document being uploaded: `cct` - Citizenship Certificate / `cid` - Consular ID / `dl` - Drivers License / `foid` - CO Foreigner ID / `hic` - Health Insurance Card / `id` - Identification Card / `ipp` - Internal Passport / `keyp` - AU Keypass ID / `ltpass` - Long Term Pass / `munid` - US Municipal ID (e.g. NYC ID) / `myn` - JP My Number Card (SSN) / `nbi` - PH National Bureau of Investigation Certificate / `nric` - SG National Residency ID / `ofw` - PH Overseas Foreign Worker Card / `rp` - Residence Permit / `pan` - IN Permanant Account Number card (SSN) / `pid` - PH Postal Identity Card / `pp` - Passport / `ppc` - Passport Card / `pr` - Permanant Residence Card / `sss` - PH Social Security System Card (SSN) / `td` - US Travel Document / `tribalid` - US/CA Tribal ID / `umid` - PH Unified Multi Purpose ID / `vid` - Voter Id / `visa` - VISA / `wp` - Work Permit'
+                  description: |-
+                    Required when uploading the front and/or back photos of KYC verification documents. It represents the type of identification document being uploaded:
+                    - `cct` - Citizenship Certificate
+                    - `cid` - Consular ID
+                    - `dl` - Drivers License
+                    - `foid` - CO Foreigner ID
+                    - `hic` - Health Insurance Card
+                    - `id` - Identification Card
+                    - `ipp` - Internal Passport
+                    - `keyp` - AU Keypass ID
+                    - `ltpass` - Long Term Pass
+                    - `munid` - US Municipal ID (e.g. NYC ID)
+                    - `myn` - JP My Number Card (SSN)
+                    - `nbi` - PH National Bureau of Investigation Certificate
+                    - `nric` - SG National Residency ID
+                    - `ofw` - PH Overseas Foreign Worker Card
+                    - `rp` - Residence Permit
+                    - `pan` - IN Permanant Account Number card (SSN)
+                    - `pid` - PH Postal Identity Card
+                    - `pp` - Passport
+                    - `ppc` - Passport Card
+                    - `pr` - Permanant Residence Card
+                    - `sss` - PH Social Security System Card (SSN)
+                    - `td` - US Travel Document
+                    - `tribalid` - US/CA Tribal ID
+                    - `umid` - PH Unified Multi Purpose ID
+                    - `vid` - Voter Id
+                    - `visa` - VISA
+                    - `wp` - Work Permit
                 frontPhoto: {}
                 backPhoto: {}
                 proofOfResidency: {}
@@ -57821,8 +57877,7 @@ components:
           type: string
           title: uuid
         status:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/KycIdentityStatus'
       required:
         - id
         - status
@@ -57902,8 +57957,7 @@ components:
                 type: string
                 title: uuid
               status:
-                type: string
-                minLength: 1
+                $ref: '#/components/schemas/KycIdentityStatus'
               organizationId:
                 type: string
                 minLength: 1
@@ -58084,8 +58138,7 @@ components:
           type: string
           title: uuid
         status:
-          type: string
-          minLength: 1
+          $ref: '#/components/schemas/KycIdentityStatus'
         organizationId:
           type: string
           minLength: 1
@@ -59124,6 +59177,13 @@ components:
           $ref: '#/components/schemas/UserKycState1'
       required:
         - state
+    KycIdentityStatus:
+      title: KycIdentityStatus
+      type: string
+      description: |-
+        The status of the KYC identity:
+        `initiating`, `awaiting document upload`, `input error`, `ssn error`, `in review`, `incomplete verifications`, `awaiting signature`, `records uploaded`, `approved`, `declined`
+      minLength: 1
     KycOngoingScreening:
       title: KycOngoingScreening
       type: object
