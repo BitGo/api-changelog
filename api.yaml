@@ -25247,6 +25247,35 @@ paths:
           $ref: '#/components/responses/ConflictError'
         '500':
           $ref: '#/components/responses/InternalServerError1'
+  /api/staking/v1/{coin}/requests/{stakingRequestId}/retry:
+    post:
+      tags:
+        - Staking Request
+      summary: Retry staking request
+      description: Try to resubmit the failed staking transaction
+      operationId: v1.staking.request.retry
+      parameters:
+        - $ref: '#/components/parameters/pathCoin2'
+        - $ref: '#/components/parameters/pathStakingRequestId'
+      responses:
+        '202':
+          description: Successful retried Staking Request Accepted and Needs Approval
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StakingRequestSchemas'
+        '400':
+          $ref: '#/components/responses/BadRequestError1'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '404':
+          $ref: '#/components/responses/NotFoundError1'
+        '409':
+          $ref: '#/components/responses/ConflictError'
+        '500':
+          $ref: '#/components/responses/InternalServerError1'
   /api/staking/v1/{coin}/wallets/{walletId}/requests:
     post:
       tags:
@@ -71340,6 +71369,12 @@ components:
         requiresDelegationId:
           type: boolean
           description: True if a delegation ID must be specified when switching validators.
+        requiresAmount:
+          type: boolean
+          description: True if an amount must be specified when switching validators.
+        useDelegationForTarget:
+          type: boolean
+          description: True if the validator field of a switch validator request must be a validator public key.
     SwitchValidatorSpendableBreakdown:
       type: object
       properties:
