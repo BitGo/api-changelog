@@ -12124,6 +12124,31 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/notifications/v1/user/categories:
+    get:
+      tags:
+        - User Management Notification
+      summary: Get user categories with subscription status
+      description: Retrieves all available notification categories with their current subscription status for the authenticated user and specified channel. A category is considered 'subscribed' if all non-mandatory notifications within that category are subscribed for the specified channel.
+      operationId: getUserCategories
+      parameters:
+        - name: channel
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: request-id
+          in: header
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: List of categories with subscription status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserCategoriesResponse'
   /api/notifications/v1/mute/wallet:
     put:
       tags:
@@ -76328,6 +76353,28 @@ components:
             - phone
             - timezone
         - $ref: '#/components/schemas/UserRequiredFields'
+    UserCategoriesResponse:
+      required:
+        - categories
+      type: object
+      properties:
+        categories:
+          type: array
+          items:
+            $ref: '#/components/schemas/UserCategoryStatusDTO'
+    UserCategoryStatusDTO:
+      required:
+        - isSubscribed
+        - isMandatory
+        - categoryName
+      type: object
+      properties:
+        categoryName:
+          type: string
+        isSubscribed:
+          type: boolean
+        isMandatory:
+          type: boolean
     UserKycState:
       type: string
       enum:
