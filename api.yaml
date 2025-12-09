@@ -62049,6 +62049,8 @@ components:
         - quantityCurrency
         - filledQuantity
         - filledQuoteQuantity
+        - leavesQuantity
+        - leavesQuoteQuantity
         - averagePrice
         - limitPrice
         - duration
@@ -62120,15 +62122,29 @@ components:
         filledQuantity:
           type: string
           format: decimal
-          description: The base quantity that was filled.
+          description: The total base quantity filled.
         filledQuoteQuantity:
           type: string
           format: decimal
-          description: The quote quantity that was filled.
+          description: The total quote quantity filled.
+        leavesQuantity:
+          type: string
+          format: decimal
+          description: |
+            For orders created with base currency, this field is set to the remaining unfilled base quantity.
+            - Only one of leavesQuantity or leavesQuoteQuantity will be set.
+            - This field is set to null for orders created with quote currency.
+        leavesQuoteQuantity:
+          type: string
+          format: decimal
+          description: |
+            For orders created with quote currency, this field is set to the remaining unfilled quote quantity.
+            - Only one of leavesQuantity or leavesQuoteQuantity will be set.
+            - This field is set to null for orders created with base currency.
         averagePrice:
           type: string
           format: decimal
-          description: The average price at which the order was filled.
+          description: The average price for the order's trades.
         limitPrice:
           $ref: '#/components/schemas/LimitPrice'
         duration:
