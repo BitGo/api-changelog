@@ -1458,6 +1458,11 @@ paths:
             type: string
             format: date-time
             title: ISO Date String
+        - name: includeEvmKeyringTxRequests
+          description: If true, include transaction requests for all EVM keyring related wallets (main + derived).
+          in: query
+          schema:
+            type: boolean
         - name: walletId
           in: path
           required: true
@@ -30722,6 +30727,11 @@ paths:
             type: string
             format: date-time
             title: ISO Date String
+        - name: includeEvmKeyringTxRequests
+          description: If true, include transaction requests for all EVM keyring related wallets (main + derived).
+          in: query
+          schema:
+            type: boolean
         - name: enterpriseId
           in: path
           required: true
@@ -30743,11 +30753,19 @@ paths:
   /api/v2/enterprise/{enterpriseId}/txrequests/bypermission:
     get:
       summary: Get transaction requests by enterprise filtering by wallet permissions
-      description: Only supported for transaction request full
+      description: Supports both lite and full transaction requests. Use the apiVersion query parameter to filter by version.
       operationId: v2.enterprise.txrequest.getByPermission
       tags:
         - Transaction request
       parameters:
+        - name: apiVersion
+          description: If present, filters transaction requests by the specified API version (lite or full). If not provided, returns all transaction requests regardless of API version.
+          in: query
+          schema:
+            type: string
+            enum:
+              - lite
+              - full
         - name: walletTypes
           description: If present, filters transaction requests by the specified wallet types
           in: query
@@ -33239,6 +33257,13 @@ paths:
             type: string
             format: date-time
             title: ISO Date String
+        - name: createdAtLte
+          description: Only return reports created before or on this date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
         - name: enterprise
           description: Only return reports for this enterprise
           in: query
@@ -33815,6 +33840,71 @@ paths:
               schema: {}
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/scim/v2/ServiceProviderConfig:
+    get:
+      summary: Returns SCIM service provider configuration including supported features and authentication schemes.
+      operationId: v2.scim.config
+      tags:
+        - SCIM
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  schemas:
+                    $ref: '#/components/schemas/ScimServiceProviderConfigSchemas'
+                  patch:
+                    $ref: '#/components/schemas/FeatureSupport'
+                  bulk:
+                    $ref: '#/components/schemas/BulkConfig'
+                  filter:
+                    $ref: '#/components/schemas/FilterConfig'
+                  changePassword:
+                    $ref: '#/components/schemas/FeatureSupport'
+                  sort:
+                    $ref: '#/components/schemas/FeatureSupport'
+                  etag:
+                    $ref: '#/components/schemas/FeatureSupport'
+                  authenticationSchemes:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          type: string
+                        name:
+                          type: string
+                        description:
+                          type: string
+                        specUri:
+                          type: string
+                        documentationUri:
+                          type: string
+                      required:
+                        - type
+                        - name
+                        - description
+                  documentationUri:
+                    type: string
+                required:
+                  - schemas
+                  - patch
+                  - bulk
+                  - filter
+                  - changePassword
+                  - sort
+                  - etag
+                  - authenticationSchemes
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -35321,6 +35411,57 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/potentialStuckTxs:
+    get:
+      summary: Get list of potentially stuck transactions across multiple wallets.
+      description: |-
+        This endpoint aggregates stuck transactions from a wallet and its EVM keyring derived wallets (if applicable).
+
+        Use cases:
+        - EVM keyring parent wallet: Returns stuck txs from parent + all derived wallets (ETH, BSC, Polygon, etc.)
+        - Non-keyring wallet: Returns stuck txs from that single wallet only
+
+        The response includes both successful results and any errors encountered while querying individual wallets,
+        allowing clients to handle partial failures gracefully.
+      operationId: v2.wallet.getmultiwalletstucktxs
+      tags:
+        - Wallet
+      parameters:
+        - name: expandSendTransferMetadata
+          description: True, if expanding the send transfer for each stuck transaction if one is available.
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: txid
+          description: The transaction ID of the stuck transaction.
+          in: query
+          schema:
+            type: string
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiWalletStuckTxsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -47056,6 +47197,8 @@ components:
               - Advanced Wallets
               - Stablecoins
               - Loans against Go Account
+              - ACH Debits
+              - Go Lightning
             description: Requested BitGo Products
         isContractedClient:
           type: boolean
@@ -48418,6 +48561,20 @@ components:
         - nextContractSequenceId
         - coin
         - walletId
+    BulkConfig:
+      title: BulkConfig
+      type: object
+      properties:
+        supported:
+          type: boolean
+        maxOperations:
+          type: number
+        maxPayloadSize:
+          type: number
+      required:
+        - supported
+        - maxOperations
+        - maxPayloadSize
     BulkUpdateResponse:
       title: BulkUpdateResponse
       type: object
@@ -55463,6 +55620,14 @@ components:
           - createdAt
           - updatedAt
           - externalSettlementId
+    FeatureSupport:
+      title: FeatureSupport
+      type: object
+      properties:
+        supported:
+          type: boolean
+      required:
+        - supported
     FederationError:
       type: object
       properties:
@@ -55670,6 +55835,17 @@ components:
         tradeId: a6a9ab1b-2947-41b7-b44d-4ce61fca8b92
         fillQuantity: '0.50'
         fillPrice: '7090.1'
+    FilterConfig:
+      title: FilterConfig
+      type: object
+      properties:
+        supported:
+          type: boolean
+        maxResults:
+          type: number
+      required:
+        - supported
+        - maxResults
     FilteringConditions:
       type: object
       description: |
@@ -56090,12 +56266,16 @@ components:
                   - id
             stablecoinAgreementLatestVersion:
               type: number
+            hasScimClient:
+              type: boolean
+              description: Whether the enterprise has a SCIM OAuth client configured
             organizationId:
               type: string
               deprecated: true
           required:
             - wallets
             - tags
+            - hasScimClient
         - $ref: '#/components/schemas/Enterprise'
     GetEnterpriseUserSigningKeyResponse:
       title: GetEnterpriseUserSigningKeyResponse
@@ -56524,6 +56704,12 @@ components:
             feeString:
               type: string
               description: The Transfer's fee (in base units) represented as a String
+            feeUsd:
+              type: number
+              description: The fee USD value for token transfers
+            feeUsdRate:
+              type: number
+              description: The fee coin USD rate for token transfers
             goStakingRequestId:
               type: string
               description: Associated GO staking request ID
@@ -56947,6 +57133,10 @@ components:
         userActionDisabled:
           type: boolean
           description: True, if manual user action is disabled on this stuck transaction
+        coin:
+          type: string
+          description: The coin name for the stuck transaction
+          example: hteth
       required:
         - cause
         - message
@@ -59904,63 +60094,44 @@ components:
             properties:
               id:
                 type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
               created:
                 type: string
-                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
-              coin:
-                type: string
-                description: A cryptocurrency or token ticker symbol.
-                example: btc
               url:
                 type: string
-                example: https://your.server.com/webhook
-                format: uri
               version:
                 type: number
-                description: 2 for coins running on API v2.
-                example: 2
               scope:
                 $ref: '#/components/schemas/WebhookScope'
               state:
                 $ref: '#/components/schemas/WebhookState'
               successiveFailedAttempts:
                 type: number
-                example: 0
               listenToFailureStates:
                 type: boolean
-                description: Whether or not to listen to failed transactions on chain.
+              coin:
+                type: string
               label:
                 type: string
-                description: Label of the new webhook.
               walletId:
                 type: string
               enterpriseId:
                 type: string
               organizationId:
                 type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
               userId:
                 type: string
               type:
-                allOf:
-                  - $ref: '#/components/schemas/WebhookType'
-                description: Event type to listen to.
+                $ref: '#/components/schemas/WebhookType'
               numConfirmations:
                 type: number
-                example: 6
               lastAttempt:
                 type: string
-                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
               failingSince:
                 type: string
-                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
               allToken:
@@ -59983,7 +60154,6 @@ components:
                     - readyToSend
                     - signed
                     - failed
-                  description: If present, only transaction request state changes from the list will trigger notifications. If not present, all transaction request state changes will trigger notifications.
               txRequestTransactionStates:
                 type: array
                 items:
@@ -60003,11 +60173,10 @@ components:
                     - delivered
                     - invalidSignature
                     - rejected
-                  description: If present, only transaction request transaction state changes from the list will trigger notifications. If not present, all transaction request transaction state changes will trigger notifications.
+                  description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
             required:
               - id
               - created
-              - coin
               - url
               - version
               - scope
@@ -61014,6 +61183,43 @@ components:
         - onchain
         - tss
         - blsdkg
+    MultiWalletStuckTxsResponse:
+      title: Multi-Wallet Stuck Transactions Response
+      type: object
+      properties:
+        stuckTxs:
+          allOf:
+            - $ref: '#/components/schemas/GetPotentialStuckTxsResponse'
+          description: Array of stuck transactions from all successfully queried wallets
+        errors:
+          type: array
+          items:
+            type: object
+            title: Stuck Transaction Query Error
+            properties:
+              walletId:
+                type: string
+                description: The wallet ID that failed
+                example: 59cd72485007a239fb00282ed480da1f
+              coin:
+                type: string
+                description: The coin/chain of the wallet that failed
+                example: tbsc
+              code:
+                type: string
+                description: Error code
+              message:
+                type: string
+                description: Human-readable error message
+            required:
+              - walletId
+              - coin
+              - code
+              - message
+            description: Array of errors encountered while querying individual wallets (if any)
+      required:
+        - stuckTxs
+        - errors
     MultisigTypeVersion:
       title: MultisigTypeVersion
       type: string
@@ -67256,6 +67462,13 @@ components:
           type: string
         formatted:
           type: string
+    ScimServiceProviderConfigSchemas:
+      title: ScimServiceProviderConfigSchemas
+      type: array
+      items:
+        type: string
+        enum:
+          - urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig
     ScimUserResponse:
       title: ScimUserResponse
       type: object
@@ -74153,6 +74366,12 @@ components:
         medianUsdRate:
           type: number
           description: The median USD rate at the time this Transfer was created
+        feeUsd:
+          type: number
+          description: The fee USD value for token transfers
+        feeUsdRate:
+          type: number
+          description: The fee coin USD rate for token transfers
         value:
           type: number
           description: The total value (in base units) sent by this Transfer (may be approximate for ETH and other coins where amounts in base units can exceed 2^53 - 1)
@@ -81797,63 +82016,44 @@ components:
       properties:
         id:
           type: string
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
         created:
           type: string
-          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
-        coin:
-          type: string
-          description: A cryptocurrency or token ticker symbol.
-          example: btc
         url:
           type: string
-          example: https://your.server.com/webhook
-          format: uri
         version:
           type: number
-          description: 2 for coins running on API v2.
-          example: 2
         scope:
           $ref: '#/components/schemas/WebhookScope'
         state:
           $ref: '#/components/schemas/WebhookState'
         successiveFailedAttempts:
           type: number
-          example: 0
         listenToFailureStates:
           type: boolean
-          description: Whether or not to listen to failed transactions on chain.
+        coin:
+          type: string
         label:
           type: string
-          description: Label of the new webhook.
         walletId:
           type: string
         enterpriseId:
           type: string
         organizationId:
           type: string
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
         userId:
           type: string
         type:
-          allOf:
-            - $ref: '#/components/schemas/WebhookType'
-          description: Event type to listen to.
+          $ref: '#/components/schemas/WebhookType'
         numConfirmations:
           type: number
-          example: 6
         lastAttempt:
           type: string
-          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
         failingSince:
           type: string
-          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
         allToken:
@@ -81876,7 +82076,6 @@ components:
               - readyToSend
               - signed
               - failed
-            description: If present, only transaction request state changes from the list will trigger notifications. If not present, all transaction request state changes will trigger notifications.
         txRequestTransactionStates:
           type: array
           items:
@@ -81896,11 +82095,10 @@ components:
               - delivered
               - invalidSignature
               - rejected
-            description: If present, only transaction request transaction state changes from the list will trigger notifications. If not present, all transaction request transaction state changes will trigger notifications.
+            description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
       required:
         - id
         - created
-        - coin
         - url
         - version
         - scope
