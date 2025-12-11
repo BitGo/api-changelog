@@ -8993,7 +8993,9 @@ paths:
       tags:
         - Market Data
       summary: Get historical prices
-      description: Get a list of historical prices in a specified time range. Using this endpoint requires an access token with the appropriate enterprise ID.
+      description: |
+        Get a list of historical OHLCV (Open, High, Low, Close, Volume) prices for a currency pair within a specified time range.
+        Using this endpoint requires an access token with the appropriate enterprise ID.
       operationId: marketdata.cryptocompare.historical.prices.get
       parameters:
         - $ref: '#/components/parameters/Base'
@@ -9001,9 +9003,12 @@ paths:
         - $ref: '#/components/parameters/Interval'
         - $ref: '#/components/parameters/Start'
         - $ref: '#/components/parameters/End'
+        - $ref: '#/components/parameters/NextBatchPrevId'
       responses:
         '200':
-          description: Returns historical-price data points. Also returns a page cursor if there are more than 1,000 results.
+          description: |
+            Returns historical-price data points.
+            Also returns a page cursor if there are more than 1,000 results.
           content:
             application/json:
               schema:
@@ -9021,7 +9026,9 @@ paths:
       tags:
         - Market Data
       summary: Get spot prices
-      description: Get historical spot prices from a specific time. Using this endpoint requires an access token with the appropriate enterprise ID.
+      description: |
+        Get historical spot prices from a specific time.
+        Using this endpoint requires an access token with the appropriate enterprise ID.
       operationId: marketdata.cryptocompare.spot.prices.get
       parameters:
         - $ref: '#/components/parameters/Base'
@@ -42149,8 +42156,10 @@ components:
       name: base
       in: query
       required: true
-      description: The asset or currency to compare to the quote asset or currency (case insensitive).
-      example: btc
+      description: |
+        The base currency symbol (the asset being priced).
+        Must be a BitGo-supported instrument symbol (case-insensitive).
+      example: BTC
       schema:
         type: string
     CreatedDateGte1:
@@ -42175,7 +42184,9 @@ components:
       name: end
       in: query
       required: false
-      description: End time for the pricing data range. If not provided, defaults to the current time.
+      description: |
+        End time for the pricing data range (RFC 3339 format).
+        If not provided, defaults to the current time.
       schema:
         type: string
         format: date-time
@@ -42255,7 +42266,7 @@ components:
       name: interval
       in: query
       required: true
-      description: Unit of time.
+      description: The time interval for each price data point.
       example: hour
       schema:
         type: string
@@ -42272,6 +42283,16 @@ components:
       schema:
         type: integer
       example: 20
+    NextBatchPrevId:
+      name: nextBatchPrevId
+      in: query
+      required: false
+      description: |
+        Pagination cursor returned from a previous request.
+        Use this to fetch the next batch of results when there are more than 1,000 data points.
+      schema:
+        type: string
+        example: 63ff9f4c0c01fcd7162c28fc901ad915
     PolicyRuleId:
       name: id
       in: path
@@ -42329,8 +42350,10 @@ components:
       name: quote
       in: query
       required: true
-      description: The asset or currency to compare to the base asset or currency (case insensitive).
-      example: eth
+      description: |
+        The quote currency symbol (the currency in which the price is expressed).
+        Must be a BitGo-supported instrument symbol (case-insensitive).
+      example: USD
       schema:
         type: string
     ScopeName1:
@@ -42350,7 +42373,9 @@ components:
       name: start
       in: query
       required: false
-      description: Start time for the pricing data range. If not provided, defaults to 1 interval before to the current time.
+      description: |
+        Start time for the pricing data range (RFC 3339 format).
+        If not provided, defaults to 1 interval before the current time.
       schema:
         type: string
         format: date-time
@@ -57423,6 +57448,7 @@ components:
         - trustedTokens
     HistoricalPrice:
       type: object
+      description: OHLCV price data for a single time interval.
       required:
         - time
         - open
@@ -57435,24 +57461,31 @@ components:
         time:
           type: string
           format: date-time
+          description: The timestamp marking the start of this interval (RFC 3339 format).
         open:
           type: number
           format: float
+          description: The opening price at the start of the interval.
         high:
           type: number
           format: float
+          description: The highest price reached during the interval.
         low:
           type: number
           format: float
+          description: The lowest price reached during the interval.
         close:
           type: number
           format: float
+          description: The closing price at the end of the interval.
         base_volume:
           type: number
           format: float
+          description: The total trading volume in the base currency during the interval.
         quote_volume:
           type: number
           format: float
+          description: The total trading volume in the quote currency during the interval.
       example:
         time: '2014-11-07T22:19:28.578Z'
         open: 576.0590066
@@ -57463,6 +57496,7 @@ components:
         quote_volume: 170627.62385
     HistoricalPriceResult:
       type: object
+      description: Response containing historical price data with pagination support.
       required:
         - data
       properties:
@@ -57470,16 +57504,21 @@ components:
           type: object
           required:
             - prices
-            - nextBatchPrevId
           properties:
             prices:
               type: object
+              description: A map of currency pair to price data
+              example: BTC-USD
               additionalProperties:
                 type: array
                 items:
                   $ref: '#/components/schemas/HistoricalPrice'
             nextBatchPrevId:
               type: string
+              nullable: true
+              description: |
+                Pagination cursor for fetching the next batch of results.
+                Null if there are no more results.
       example:
         data:
           prices:
@@ -60349,12 +60388,14 @@ components:
         latestFutureTransferDate: 2025-12-02T10:00:00.000Z
     MarketDataError:
       type: object
-      description: Market Data Error
+      description: Error response for market data requests.
       properties:
         error:
           type: string
+          description: Detailed error message.
         errorName:
           type: string
+          description: Error code identifier.
       required:
         - error
         - errorName
