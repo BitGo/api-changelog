@@ -636,42 +636,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/enterprise:
-    get:
-      summary: List enterprises
-      operationId: enterprise.list
-      tags:
-        - Enterprise
-      parameters:
-        - name: expandTotalWalletCounts
-          description: True, if returning the total number of wallets for each enterprise.
-          in: query
-          schema:
-            type: boolean
-        - name: excludeWalletMemberships
-          description: True, if excluding enterprises that the user joined only through wallet memberships.
-          in: query
-          schema:
-            type: boolean
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EnterprisesResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}:
     put:
       tags:
@@ -22599,7 +22563,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidAddress1'
+                  - $ref: '#/components/schemas/InvalidAddress'
                   - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/consolidateUnspents:
     post:
@@ -23163,7 +23127,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidAddress1'
+                  - $ref: '#/components/schemas/InvalidAddress'
                   - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/consolidateunspents:
     post:
@@ -29428,7 +29392,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidAddress'
+                $ref: '#/components/schemas/InvalidAddress1'
   /api/v2/{coin}/wallet/{walletId}/crossChainUnspents:
     get:
       summary: Get Wallet Cross Chain Unspents
@@ -30224,6 +30188,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListAuditLogsResponse'
+  /api/v2/enterprise:
+    get:
+      summary: List enterprises
+      operationId: enterprise.list
+      tags:
+        - Enterprise
+      parameters:
+        - name: expandTotalWalletCounts
+          description: True, if returning the total number of wallets for each enterprise.
+          in: query
+          schema:
+            type: boolean
+        - name: excludeWalletMemberships
+          description: True, if excluding enterprises that the user joined only through wallet memberships.
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisesResponse1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}/availableassets:
     get:
       summary: List available assets
@@ -53253,7 +53253,7 @@ components:
           minLength: 1
       required:
         - enterprises
-    EnterprisesResponse:
+    EnterprisesResponse1:
       title: EnterprisesResponse
       type: object
       properties:
@@ -58789,18 +58789,6 @@ components:
         - $ref: '#/components/schemas/InternationalWireAccountResponseProps'
         - $ref: '#/components/schemas/BankAccountResponseProps'
     InvalidAddress:
-      title: Invalid Address
-      allOf:
-        - type: object
-          properties:
-            name:
-              type: string
-              enum:
-                - InvalidAddress
-          required:
-            - name
-        - $ref: '#/components/schemas/InvalidId'
-    InvalidAddress1:
       title: Invalid address
       allOf:
         - $ref: '#/components/schemas/PlatformErrorNoName3'
@@ -58825,6 +58813,18 @@ components:
             - context
             - address
             - name
+    InvalidAddress1:
+      title: Invalid Address
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              enum:
+                - InvalidAddress
+          required:
+            - name
+        - $ref: '#/components/schemas/InvalidId'
     InvalidEnterpriseId:
       title: Invalid Enterprise ID
       allOf:
