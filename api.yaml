@@ -24726,6 +24726,50 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MarginNetOpenPosition'
+  /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositions/snapshot:
+    get:
+      summary: Get net open positions snapshot
+      description: Returns the net open positions snapshot as of a given time for the specified account.
+      operationId: trade.margin.netopenpositions.snapshot.get
+      tags:
+        - Margin
+      parameters:
+        - $ref: '#/components/parameters/AccountIdPathParam'
+        - name: transactionDateLt
+          in: query
+          required: true
+          description: Returns unsettled positions based on transactions that occurred before this timestamp.
+          schema:
+            type: string
+            format: date-time
+          example: 2025-12-02T00:00:00.000Z
+        - name: currency
+          in: query
+          required: false
+          explode: true
+          description: Filter results to specific currencies. If omitted, returns unsettled positions for all currencies with non-zero balances.
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - BTC
+            - ETH
+        - name: useFutureTransfers
+          in: query
+          required: false
+          description: If true, applies position transfers sent after transactionDateLt to cover short positions as of transactionDateLt.
+          schema:
+            type: boolean
+            default: false
+          example: true
+      responses:
+        '200':
+          description: Net open positions snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarginGetNetOpenPositionsSnapshotResponse'
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositionlimits:
     get:
       summary: Get net open margin position limits
@@ -39185,175 +39229,6 @@ components:
         statusModifiedDate: 2025-09-08T14:32:28.000Z
         status: NEW
         amount: '32000000000000000000'
-    EvaluationExample:
-      summary: Evaluation
-      description: A successful evaluation response.
-      value:
-        id: 7b0e0c89-180a-47d1-a855-586f480def21
-        idempotencyKey: 744d7578-a921-47b5-8259-2fb8d04f0427
-        scope: wallet.segregated
-        touchpoint: wallet.segregated.transfer
-        clientRequest:
-          coin: tnear
-          amount: '2e+23'
-          outputs:
-            - value: '2e+23'
-              address: 35baf313ddabd2904c4bf0f26153201f62d3bf3fb542893c4518214bad72c0a3
-              isVerified: true
-              walletWhitelistedAddress: true
-          bitgoOrg: BitGo Trust
-          walletId: 649dd0d990a1fd0007e6ab1b229ffe7f
-          initiator: 63cf101298470200073bbae71add80d5
-          requestId: 9bd3c62016761e5bca6b-0000
-          coinIsFiat: false
-          walletType: custodial
-          enterpriseId: 63c86bf4555aba000652d5c59aff2866
-          waiveVideoId: true
-          usdCentAmount: '161.16'
-          idempotencyKey: 744d7578-a921-47b5-8259-2fb8d04f0427
-          transactionTypes: []
-          hasUnvalidatedData: false
-          walletWhitelistExists: true
-          enterpriseWhitelistExists: false
-        status: DENIED
-        evaluatedPolicyRules:
-          - id: 73bb6587-4f4d-44ce-b189-e8f61e96e544
-            status: NOT_TRIGGERED
-            filteringConditionInputs:
-              walletType: custodial
-            policyRuleId: 00000000-0000-0000-0000-000000000001
-            version: 1
-            clauses:
-              - id: 5c39f31d-5c16-48a1-96ec-449b3831a2d1
-                policyRuleClauseId: 00000000-0000-0000-0000-000000000001
-                status: NOT_TRIGGERED
-                conditions:
-                  - id: 52c4c3b6-6cc5-4826-9b28-2741bde3c97f
-                    policyConditionId: 00000000-0000-0000-0000-000000000001
-                    name: transfer.destination.type
-                    status: NOT_TRIGGERED
-                    inputs:
-                      coin: tnear
-                      amount: '2e+23'
-                      ruleId: 00000000-0000-0000-0000-000000000001
-                      outputs:
-                        - value: '2e+23'
-                          address: 35baf313ddabd2904c4bf0f26153201f62d3bf3fb542893c4518214bad72c0a3
-                          isVerified: true
-                          walletWhitelistedAddress: true
-                      bitgoOrg: BitGo Trust
-                      walletId: 649dd0d990a1fd0007e6ab1b229ffe7f
-                      initiator: 63cf101298470200073bbae71add80d5
-                      requestId: 9bd3c62016761e5bca6b-0000
-                      coinIsFiat: false
-                      walletType: custodial
-                      enterpriseId: 63c86bf4555aba000652d5c59aff2866
-                      waiveVideoId: true
-                      usdCentAmount: '161.16'
-                      idempotencyKey: 744d7578-a921-47b5-8259-2fb8d04f0427
-                      transactionTypes: []
-                      hasUnvalidatedData: false
-                      walletWhitelistExists: true
-                      enterpriseWhitelistExists: false
-                    parameters:
-                      type: nonWhitelistedAddress
-                    evaluationMetadata: {}
-                    evaluationMessage:
-                      messageTemplate: The destination address was whitelisted on the wallet whitelist.
-                      variables: []
-                      message: The destination address was whitelisted on the wallet whitelist.
-                actions:
-                  - name: approvals.always.deny
-                    parameters: {}
-          - id: b9f3062d-983f-4b8f-8e95-43064da22d99
-            status: TRIGGERED
-            filteringConditionInputs:
-              walletType: custodial
-            policyRuleId: c1437a69-b701-4783-abd2-cf0a22185323
-            version: 1
-            clauses:
-              - id: 5a4fae05-022d-4633-ac93-c33348c13311
-                policyRuleClauseId: d5246645-94e4-4a2d-9a9e-8b112e7c8470
-                status: TRIGGERED
-                conditions:
-                  - id: 4020abef-012f-4d57-9b7b-f2e102d85dd9
-                    policyConditionId: fb41229b-c54f-4a80-b1e7-82b9a47dc7ef
-                    name: trust.transfer.velocity.limit
-                    status: TRIGGERED
-                    inputs:
-                      coin: tnear
-                      amount: '2e+23'
-                      ruleId: 9d52414e-781c-4a5f-961b-1556af08abeb
-                      outputs:
-                        - value: '2e+23'
-                          address: 35baf313ddabd2904c4bf0f26153201f62d3bf3fb542893c4518214bad72c0a3
-                          isVerified: true
-                          walletWhitelistedAddress: true
-                      bitgoOrg: BitGo Trust
-                      walletId: 649dd0d990a1fd0007e6ab1b229ffe7f
-                      initiator: 63cf101298470200073bbae71add80d5
-                      requestId: 9bd3c62016761e5bca6b-0000
-                      coinIsFiat: false
-                      walletType: custodial
-                      enterpriseId: 63c86bf4555aba000652d5c59aff2866
-                      waiveVideoId: true
-                      usdCentAmount: '161.16'
-                      idempotencyKey: 744d7578-a921-47b5-8259-2fb8d04f0427
-                      transactionTypes: []
-                      hasUnvalidatedData: false
-                      walletWhitelistExists: true
-                      enterpriseWhitelistExists: false
-                    parameters:
-                      coin: tnear
-                      scope: wallet
-                      amount: '1000000000000000000000000'
-                      timeWindow: 15
-                    evaluationMetadata:
-                      spending: '1100000000000000000000000'
-                    evaluationMessage:
-                      messageTemplate: The velocity calculation reached {spendingAmount} with this transaction, exceeding the wallet limit of {limitAmount} over {timeWindow}.
-                      variables:
-                        - name: spendingAmount
-                          value: '1100000000000000000000000'
-                          coin: tnear
-                          type: COIN_AMOUNT
-                        - name: limitAmount
-                          value: '1000000000000000000000000'
-                          coin: tnear
-                          type: COIN_AMOUNT
-                        - name: timeWindow
-                          value: '15'
-                          unit: seconds
-                          type: TIME_DURATION
-                      message: The velocity calculation reached 1100000000000000000000000 tnear with this transaction, exceeding the wallet limit of 1000000000000000000000000 tnear over 15 seconds.
-                actions:
-                  - name: approvals.customer.walletAdmin
-                    parameters:
-                      minRequired: '1'
-        actions:
-          - id: 31a68c61-f98b-49cc-9e4d-b9f5bfbf618c
-            status: CANCELLED
-            action:
-              name: approvals.customer.walletAdmin
-              parameters:
-                minRequired: '1'
-            resolution:
-              reason: Rejected by user
-              pendingApproval: 664ed267aad92c62a183ac5f28883495
-          - id: aa371c4c-6adc-4039-ba88-5f9a3e807ca3
-            status: CANCELLED
-            action:
-              name: approvals.bitgo.custodialSigning
-              parameters: {}
-            resolution:
-              reason: Rejected by user
-              pendingApproval: 664ed267aad92c62a183ac5f28883495
-        resolutionOrder:
-          - actions:
-              - 31a68c61-f98b-49cc-9e4d-b9f5bfbf618c
-          - actions:
-              - aa371c4c-6adc-4039-ba88-5f9a3e807ca3
-        createdDate: '2024-05-23T05:21:41.805829Z'
     FilteringConditionsExample:
       summary: Filtering Conditions
       description: A successful response with two Filtering Conditions.
@@ -39573,129 +39448,6 @@ components:
           - coin: sol
             fee: '5'
         defaultFee: '10'
-    MMIBalanceEventNoErrorExample:
-      value:
-        - type: MMI
-          subtype: BALANCE
-          timeEventOccurred: 2021-12-02T00:00:01.000Z
-          timeEventSent: 2021-01-10T00:00:17.000Z
-          source: defi-service
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: i28e44259cf048638a293e7850594e39
-          AUDGroupId: g34e4425-ccf0-2863-1a29-457850594e37
-          chainId: '137'
-          asset: SNX
-          amountDelta: '30289390048741049'
-          totalAUD: '70770742.03999998'
-          totalAUDCurrency: USD
-          object: token
-          objectAddress: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f'
-          objectName: Synthetix Network Token
-          symbol: SNX
-          decimals: 18
-          iconUrl: https://assets.coingecko.com/coins/images/3406/large/SNX.png
-          coingeckoId: havven
-          rawBalance: '30289390048741049'
-          balance: 0.03028939004874105
-          valueBalanceDate: 2021-12-01T23:59:59.000Z
-          valueBlockNumber: '13724084'
-          valueVsCurrency: USD
-          valueTokenName: Synthetix Network Token
-          valueTimestamp: 1638400406610
-          valuePrice: 7.361103870620357
-          valueError: false
-          valueErrorMessage: ''
-    MMIBalanceEventWithErrorExample:
-      value:
-        - type: MMI
-          subtype: BALANCE
-          timeEventOccurred: 2021-12-02T00:00:01.000Z
-          timeEventSent: 2021-01-10T00:00:17.000Z
-          source: defi-service
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: h28e44259cf048638a293e7850594e39
-          AUDGroupId: g34e4425-ccf0-2863-1a29-457850594e37
-          chainId: '137'
-          asset: SNX
-          amountDelta: '30289390048741049'
-          totalAUD: '70770742.03999998'
-          totalAUDCurrency: USD
-          object: token
-          objectAddress: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f'
-          objectName: Synthetix Network Token
-          symbol: SNX
-          decimals: 18
-          iconUrl: https://assets.coingecko.com/coins/images/3406/large/SNX.png
-          coingeckoId: ''
-          rawBalance: '30289390048741049'
-          balance: 0.03028939004874105
-          valueBalanceDate: ''
-          valueBlockNumber: ''
-          valueVsCurrency: ''
-          valueTokenName: ''
-          valueTimestamp: 0
-          valuePrice: 0
-          valueError: true
-          valueErrorMessage: Missing coingeckoId, unable to calculate price
-    MMIDailyRollupEventExample:
-      value:
-        - type: MMI
-          subtype: ROLLUP
-          timeEventOccurred: 2021-12-02T00:00:01.000Z
-          timeEventSent: 2021-01-10T00:00:17.000Z
-          source: defi-service
-          asset: USD
-          amountDelta: '70770742.03999998'
-          AUDGroupId: g28e4425-9cf0-4863-8a29-3e7850594e39
-          rollupPeriod: daily
-          fromDate: 2021-12-01T00:00:00.000Z
-          toDate: 2021-12-02T00:00:00.000Z
-          totalAUD: '70770742.03999998'
-          totalAUDCurrency: USD
-          averageAUD: '60770742.03999998'
-          averageAUDCurrency: 48dd72485007a239fb00282ed480da1f
-          usersAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: g28e44259cf048638a293e7850594e39
-          chainId: '137'
-    MMIMonthlyRollupEventExample:
-      value:
-        - type: MMI
-          subtype: ROLLUP
-          timeEventOccurred: 2021-12-02T00:00:01.000Z
-          timeEventSent: 2021-01-10T00:00:17.000Z
-          source: defi-service
-          asset: USD
-          amountDelta: '70770742.03999998'
-          AUDGroupId: g28e4425-9cf0-4863-8a29-3e7850594e39
-          rollupPeriod: monthly
-          fromDate: 2021-12-01T00:00:00.000Z
-          toDate: 2022-01-01T00:00:00.000Z
-          totalAUD: '900077074.03999998'
-          totalAUDCurrency: USD
-          averageAUD: '60770742.03999998'
-          averageAUDCurrency: USD
-          walletId: 48dd72485007a239fb00282ed480da1f
-          usersAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          idempotencyKey: a28e4425-9cf0-4863-8a29-3e7850594e39
-          chainId: '137'
-    MMITransactionEventExample:
-      value:
-        - type: MMI
-          subtype: TRANSACTION
-          timeEventOccurred: 2022-01-10T17:32:28.000Z
-          timeEventSent: 2022-01-10T17:33:28.000Z
-          source: defi-service
-          asset: ETH
-          amountDelta: '-60000003247'
-          decimals: 18
-          marketPrice: 7.361103870620357
-          usersAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          idempotencyKey: f28e44259cf048638a293e7850594e39
-          walletId: 48dd72485007a239fb00282ed480da1f
-          enterpriseId: 61b8e0043daafc65a85d4bd36b4649d4
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-          txState: CONFIRMED
     MaticDelegationResultsExample:
       summary: Matic Delegation Results Example
       value:
@@ -40270,38 +40022,6 @@ components:
           feeString: '0'
         coin: ofc
         token: ofctsol
-    OrganizationPolicyRulesResultsExample:
-      summary: policy rules.
-      description: A successful response with 1 organization policy rules.
-      value:
-        rules:
-          - uniqueId: cb4e0a0a-2768-4024-904a-178ca6d2cd54
-            id: 81d00054-72b5-4e7c-95cf-74d4f1f7d946
-            name: Get One Organization Admin Approval
-            status: ACTIVE
-            version: 5
-            adminOnly: false
-            touchpointLabel: A Role is modified
-            scopeLabel: Roles
-            clauses:
-              - actions:
-                  - name: approvals.customer.organizationAdmin
-                    parameters:
-                      minRequired: 1
-                conditions: []
-            filteringConditions:
-              name: role.all
-            locked: true
-            lockType: LOCK_AFTER_DATE
-            lockDate: '2023-11-13T14:49:48.830522Z'
-            organizationId: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
-            lastTriggeredDate: '2023-11-13T14:49:48.830522Z'
-            lastTriggeredEvaluationId: 306258df-dcab-489e-a9fe-ff28ce9fa312
-            createdBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
-            modifiedBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
-            lockModifiedBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
-            evaluationId: 306258df-dcab-489e-a9fe-ff28ce9fa312
-        nextBatchPrevId: 5
     OsmoClaimRewardsRequestPOSTBodyExample:
       summary: Example OSMO Claim Rewards Request
       value:
@@ -40445,72 +40165,6 @@ components:
         createdBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
         modifiedBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
         evaluationId: 306258df-dcab-489e-a9fe-ff28ce9fa312
-    PolicyRulesResultsExample:
-      summary: Policy Rules.
-      description: A successful response with 3 Policy Rules.
-      value:
-        rules:
-          - id: 81d00054-72b5-4e7c-95cf-74d4f1f7d946
-            name: Get final approval on custodial wallets
-            status: ACTIVE
-            version: 5
-            adminOnly: false
-            touchpointLabel: Transfer from a Segregated Wallet
-            scopeLabel: Wallet
-            clauses:
-              - actions:
-                  - name: approvals.customer.finalApproval
-                    parameters:
-                      userIds:
-                        - 63f949ed0d96f8000718b29585ce0765
-                conditions: []
-            filteringConditions:
-              - parameters:
-                  walletType: custodial
-                name: wallet.type
-          - id: 4fa8326b-4f5f-4065-8cfc-85a08c290c49
-            name: Get approval if transferring more than 2 BTC in a minute
-            status: ACTIVE
-            version: 1
-            adminOnly: false
-            touchpointLabel: Transfer from a Segregated Wallet
-            scopeLabel: Wallet
-            clauses:
-              - actions:
-                  - name: approvals.customer.walletAdmin
-                    parameters: {}
-                conditions:
-                  - name: transfer.velocity.limit
-                    parameters:
-                      amount: '2000000'
-                      timeWindow: '60'
-                      coin: btc
-            filteringConditions:
-              - parameters:
-                  walletId:
-                    - 643f146bb13653000765c478a384a656
-                name: wallet.ids
-          - id: 4bbe1f5c-12e3-4648-aab1-c1dc1da4cdb5
-            name: Test Rule
-            status: ACTIVE
-            version: 1
-            adminOnly: false
-            touchpointLabel: Get approval when transferring to a non enterprise whitelisted destination
-            scopeLabel: Wallet
-            clauses:
-              - actions:
-                  - name: approvals.customer.walletAdmin
-                    parameters: {}
-                conditions:
-                  - name: transfer.destination.type
-                    parameters:
-                      type: nonWhitelistedAddress
-            filteringConditions:
-              - parameters:
-                  walletId:
-                    - 643f146bb13653000765c478a384a656
-                name: wallet.ids
-        nextBatchPrevId: 3
     PolicyRulesResultsExample1:
       summary: policy rules.
       description: A successful response with 3 policy rules.
@@ -41352,133 +41006,6 @@ components:
         page: 1
         totalPages: 1
         totalElements: 2
-    StakingClaimEventExample:
-      value:
-        - type: STAKING
-          subtype: CLAIM
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '30000000000000000000'
-          stakedDelta: '0'
-          totalStaked: '0'
-          rewardsBalance: '0'
-          apy: '8.2'
-          address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          validatorAddress: ''
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: a28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingDelegateEventExample:
-      value:
-        - type: STAKING
-          subtype: DELEGATE
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '-32000000000000000000'
-          stakedDelta: '32000000000000000000'
-          totalStaked: '32000000000000000000'
-          rewardsBalance: '0'
-          apy: '8.2'
-          address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          stakingRequestId: a28e4425-9cf0-4863-8a29-3e7850594e39
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: p28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingRewardEventExample:
-      value:
-        - type: STAKING
-          subtype: REWARD
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '0'
-          stakedDelta: '50000000000000000000'
-          totalStaked: '32000000000000000000'
-          rewardsBalance: '50000000000000000000'
-          apy: '8.2'
-          address: ''
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          uuid: q28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingSlashEventExample:
-      value:
-        - type: STAKING
-          subtype: SLASH
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '0'
-          stakedDelta: '-4000000000000000000'
-          totalStaked: '32000000000000000000'
-          rewardsBalance: '1000000000000000000'
-          apy: '8.2'
-          address: ''
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: s28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingSlashEventNegativeBalanceExample:
-      value:
-        - type: STAKING
-          subtype: SLASH
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '0'
-          stakedDelta: '-3000000000000000000'
-          totalStaked: '32000000000000000000'
-          rewardsBalance: '-2000000000000000000'
-          apy: '8.2'
-          address: ''
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: f28e4425-9cf0-4863-8a29-3e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingUndelegateEventExample:
-      value:
-        - type: STAKING
-          subtype: UNDELEGATE
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '0'
-          stakedDelta: '-30000000000000000000'
-          totalStaked: '0'
-          rewardsBalance: '0'
-          apy: '8.2'
-          address: ''
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: v28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
     StakingWalletExample:
       summary: Example staking wallet response
       value:
@@ -41598,30 +41125,6 @@ components:
         properties:
           walletMultisigType: onchain
           type: ETH
-    StoryStakingRequestPOSTBodyExample:
-      summary: Story Protocol Staking Request POST Body Example
-      value:
-        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
-        amount: '1536000000000000000000'
-        type: STAKE
-        validator: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
-    StoryStakingRequestWithoutDelegationsExample:
-      summary: Story Protocol Staking Request Example
-      value:
-        id: e155adbc-66a3-4ccd-9a9d-726a05bca0cf
-        clientId: f154adbc-26a3-4acd-8a9d-726a05bca0dr
-        requestingUserId: 6092e75c451052000636831deb797bd1
-        type: STAKE
-        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
-        walletId: 63110fc78b108e00071df2d3c3879dd0
-        walletType: hot
-        withdrawalAddress: '0xf5b9becc5e7e68173a5fc1906a2a5574e884da40'
-        coin: tip
-        status: NEW
-        statusModifiedDate: 2025-11-06T14:00:00.000Z
-        createdDate: 2025-11-06T14:00:00.000Z
-        amount: '1536000000000000000000'
-        validatorAddress: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
     StoryUnStakingRequestPOSTBodyExample:
       summary: Story Protocol UnStaking Request POST Body Example
       value:
@@ -60682,6 +60185,15 @@ components:
         - token_type
         - grant_type
         - user
+    MarginGetNetOpenPositionsSnapshotResponse:
+      type: object
+      required:
+        - netOpenPositions
+      properties:
+        netOpenPositions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarginNetOpenPositionSnapshot'
     MarginNetOpenPosition:
       type: object
       required:
@@ -60777,6 +60289,64 @@ components:
         longMarginPositionNotionalLimit:
           quantity: '2000000'
           currency: USD
+    MarginNetOpenPositionSnapshot:
+      type: object
+      required:
+        - currency
+        - enterpriseId
+        - accountId
+        - netOpenPosition
+        - appliedFutureTransfers
+        - earliestTransactionDate
+        - latestTransactionDate
+      properties:
+        currency:
+          type: string
+          description: The currency symbol for this position
+          example: BTC
+        enterpriseId:
+          type: string
+          description: The enterprise ID associated with this position
+          example: 63925f940c259a00061853808ffea830
+        accountId:
+          type: string
+          description: The trading account ID
+          example: f230fdebfa084ffebc7e00515f54603f
+        netOpenPosition:
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]+)?$
+          description: The net position quantity at the snapshot time. Negative values indicate short positions (borrowed/owed), positive values indicate long positions (owned).
+          example: '-2.5'
+        appliedFutureTransfers:
+          type: string
+          pattern: ^[0-9]+(\.[0-9]+)?$
+          description: The total amount of pending transfers (after cutoff) applied to cover this position (only when useFutureTransfers=true). Always zero for long positions. For short positions, shows how much of the position will be covered by pending incoming transfers.
+          example: '1.5'
+        earliestTransactionDate:
+          type: string
+          format: date-time
+          description: Timestamp of the earliest transaction that contributed to this position
+          example: 2025-12-01T01:30:00.000Z
+        latestTransactionDate:
+          type: string
+          format: date-time
+          description: Timestamp of the most recent transaction that contributed to this position (before the cutoff)
+          example: 2025-12-01T23:45:00.000Z
+        latestFutureTransferDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the most recent pending transfer applied to this position. Only present when useFutureTransfers=true and pending transfers were applied. Null otherwise.
+          example: 2025-12-02T10:00:00.000Z
+      example:
+        currency: BTC
+        enterpriseId: 63925f940c259a00061853808ffea830
+        accountId: f230fdebfa084ffebc7e00515f54603f
+        netOpenPosition: '-2.5'
+        appliedFutureTransfers: '1.5'
+        earliestTransactionDate: 2025-12-01T01:30:00.000Z
+        latestTransactionDate: 2025-12-01T23:45:00.000Z
+        latestFutureTransferDate: 2025-12-02T10:00:00.000Z
     MarketDataError:
       type: object
       description: Market Data Error
