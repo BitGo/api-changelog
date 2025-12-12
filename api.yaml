@@ -636,42 +636,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/enterprise:
-    get:
-      summary: List enterprises
-      operationId: enterprise.list
-      tags:
-        - Enterprise
-      parameters:
-        - name: expandTotalWalletCounts
-          description: True, if returning the total number of wallets for each enterprise.
-          in: query
-          schema:
-            type: boolean
-        - name: excludeWalletMemberships
-          description: True, if excluding enterprises that the user joined only through wallet memberships.
-          in: query
-          schema:
-            type: boolean
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/EnterprisesResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}:
     put:
       tags:
@@ -1458,6 +1422,11 @@ paths:
             type: string
             format: date-time
             title: ISO Date String
+        - name: includeEvmKeyringTxRequests
+          description: If true, include transaction requests for all EVM keyring related wallets (main + derived).
+          in: query
+          schema:
+            type: boolean
         - name: walletId
           in: path
           required: true
@@ -9024,7 +8993,9 @@ paths:
       tags:
         - Market Data
       summary: Get historical prices
-      description: Get a list of historical prices in a specified time range. Using this endpoint requires an access token with the appropriate enterprise ID.
+      description: |
+        Get a list of historical OHLCV (Open, High, Low, Close, Volume) prices for a currency pair within a specified time range.
+        Using this endpoint requires an access token with the appropriate enterprise ID.
       operationId: marketdata.cryptocompare.historical.prices.get
       parameters:
         - $ref: '#/components/parameters/Base'
@@ -9032,9 +9003,12 @@ paths:
         - $ref: '#/components/parameters/Interval'
         - $ref: '#/components/parameters/Start'
         - $ref: '#/components/parameters/End'
+        - $ref: '#/components/parameters/NextBatchPrevId'
       responses:
         '200':
-          description: Returns historical-price data points. Also returns a page cursor if there are more than 1,000 results.
+          description: |
+            Returns historical-price data points.
+            Also returns a page cursor if there are more than 1,000 results.
           content:
             application/json:
               schema:
@@ -9052,7 +9026,9 @@ paths:
       tags:
         - Market Data
       summary: Get spot prices
-      description: Get historical spot prices from a specific time. Using this endpoint requires an access token with the appropriate enterprise ID.
+      description: |
+        Get historical spot prices from a specific time.
+        Using this endpoint requires an access token with the appropriate enterprise ID.
       operationId: marketdata.cryptocompare.spot.prices.get
       parameters:
         - $ref: '#/components/parameters/Base'
@@ -22594,7 +22570,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidAddress1'
+                  - $ref: '#/components/schemas/InvalidAddress'
                   - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/consolidateUnspents:
     post:
@@ -23158,7 +23134,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidAddress1'
+                  - $ref: '#/components/schemas/InvalidAddress'
                   - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/consolidateunspents:
     post:
@@ -24193,12 +24169,12 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AccountBalances'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/orders:
     get:
       summary: List Orders
@@ -24269,12 +24245,12 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Orders'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
     post:
       summary: Place Order
       description: |
@@ -24301,18 +24277,165 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-        '409':
-          description: clientOrderId already exists for an order
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderConflictError'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid order parameters
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  summary: Request is invalid
+                  value:
+                    error: backend:common:invalidRequest
+                    errorName: backend:common:invalidRequest
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidArgument:
+                  summary: Generic parameter validation failure
+                  value:
+                    error: backend:common:invalidArgument key=type
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidQuantity:
+                  summary: Invalid quantity specified (e.g., below minimum order size or above maximum order size)
+                  value:
+                    errorName: backend:trade:invalidQuantity
+                    error:
+                      currencySymbol: TUSD*
+                      minQuantity: '10'
+                    currencySymbol: TUSD*
+                    minQuantity: '10'
+                required:
+                  summary: Required field is missing
+                  value:
+                    error: backend:common:required key=duration
+                    errorName: backend:common:required
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidUserIntent:
+                  summary: Invalid user intent (quantity vs funds)
+                  value:
+                    error: sell orders must be placed in base quantity
+                    errorName: backend:trade:invalidUserIntent
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidClientOrderID:
+                  summary: Client order ID format issue
+                  value:
+                    error: backend:trade:invalidClientOrderID
+                    errorName: backend:trade:invalidClientOrderID
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                unsupportedProduct:
+                  summary: Product not supported for trading
+                  value:
+                    error: backend:trade:unsupportedProduct
+                    errorName: backend:trade:unsupportedProduct
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                positiveIntegerRequired:
+                  summary: A field requires a positive integer such as limitPrice, duration, or interval
+                  value:
+                    error: backend:common:positiveIntegerRequired
+                    errorName: backend:common:positiveIntegerRequired
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                tradingDisabled:
+                  summary: All trading is currently disabled
+                  value:
+                    error: backend:trade:tradingDisabled
+                    errorName: backend:trade:tradingDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productTradingDisabled:
+                  summary: Trading this specific product is disabled
+                  value:
+                    error: backend:trade:productTradingDisabled
+                    errorName: backend:trade:productTradingDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productSideTradingDisabled:
+                  summary: Trading on this product and side (buy/sell) is disabled
+                  value:
+                    error: backend:trade:productSideTradingDisabled
+                    errorName: backend:trade:productSideTradingDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productMarginTradingDisabled:
+                  summary: Margin trading for this product is disabled
+                  value:
+                    error: backend:trade:productMarginTradingDisabled
+                    errorName: backend:trade:productMarginTradingDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productAlgoStrategyDisabled:
+                  summary: Requested algorithm is disabled for this product
+                  value:
+                    error: backend:trade:productAlgoStrategyDisabled
+                    errorName: backend:trade:productAlgoStrategyDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                kycNotApproved:
+                  summary: KYC not approved
+                  value:
+                    error: backend:trade:KYCNotApproved
+                    errorName: backend:trade:KYCNotApproved
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                insufficientFunds:
+                  summary: Insufficient funds to place order
+                  value:
+                    error: backend:trade:insufficientFunds
+                    errorName: backend:trade:insufficientFunds
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                marginShortNOP:
+                  summary: Short position limit is breached, or would be breached
+                  value:
+                    error: backend:trade:marginShortNOP
+                    errorName: backend:trade:marginShortNOP
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                marginLongNOP:
+                  summary: Long position limit is breached, or would be breached
+                  value:
+                    error: backend:trade:marginLongNOP
+                    errorName: backend:trade:marginLongNOP
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                marginTotalShortNOP:
+                  summary: Account-level total short NOP is breached, or would be breached
+                  value:
+                    error: backend:trade:marginTotalShortNOP
+                    errorName: backend:trade:marginTotalShortNOP
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                willTriggerLiquidation:
+                  summary: Account is in liquidation, or trade would trigger liquidation
+                  value:
+                    error: backend:trade:willTriggerLiquidation
+                    errorName: backend:trade:willTriggerLiquidation
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                velocityLimitBreached:
+                  summary: Trading velocity limit reached
+                  value:
+                    error: backend:trade:velocityLimitBreached
+                    errorName: backend:trade:velocityLimitBreached
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                marginInsufficientCollateral:
+                  summary: Insufficient collateral for margin trading
+                  value:
+                    error: backend:trade:marginInsufficientCollateral
+                    errorName: backend:trade:marginInsufficientCollateral
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '409':
+          description: Conflict - An identifier or resource is already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConflictError'
+              examples:
+                inUse:
+                  summary: An identifier or resource is already in use (e.g., clientOrderId)
+                  value:
+                    error: backend:common:inUse key=clientOrderId
+                    errorName: backend:common:inUse
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/orders/{orderId}:
     get:
       summary: Get Order
@@ -24338,12 +24461,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid order ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidArgument:
+                  summary: Invalid order ID format
+                  value:
+                    error: backend:common:invalidArgument key=orderID
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '404':
+          description: Not Found - Order does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Order not found
+                  value:
+                    error: backend:common:notFound key=orderID
+                    errorName: backend:common:notFound
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/orders/{orderId}/cancel:
     put:
       summary: Cancel Order
@@ -24367,12 +24516,47 @@ paths:
       responses:
         '200':
           description: OK
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid request or order cannot be cancelled
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  summary: Request is invalid
+                  value:
+                    error: backend:common:invalidRequest
+                    errorName: backend:common:invalidRequest
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidArgument:
+                  summary: Invalid order ID format
+                  value:
+                    error: backend:common:invalidArgument key=orderID
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                required:
+                  summary: Required field is missing
+                  value:
+                    error: backend:common:required
+                    errorName: backend:common:required
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                orderNotCancelable:
+                  summary: Order cannot be cancelled (completed, cancelled, or error status)
+                  value:
+                    error: backend:trade:orderNotCancelable
+                    errorName: backend:trade:orderNotCancelable
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/trades:
     get:
       summary: List Trades
@@ -24462,12 +24646,25 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Trades'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid query parameters
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidArgument:
+                  summary: Invalid query parameter
+                  value:
+                    error: backend:common:invalidArgument
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/trades/{tradeId}:
     get:
       summary: Get Trade
@@ -24492,12 +24689,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PrimeTrade'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid trade ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidArgument:
+                  summary: Invalid trade ID format
+                  value:
+                    error: backend:common:invalidArgument key=tradeID
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '404':
+          description: Not Found - Trade does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Trade not found
+                  value:
+                    error: backend:common:notFound key=tradeID
+                    errorName: backend:common:notFound
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/currencies:
     get:
       summary: List Currencies
@@ -24757,6 +24980,50 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MarginNetOpenPosition'
+  /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositions/snapshot:
+    get:
+      summary: Get net open positions snapshot
+      description: Returns the net open positions snapshot as of a given time for the specified account.
+      operationId: trade.margin.netopenpositions.snapshot.get
+      tags:
+        - Margin
+      parameters:
+        - $ref: '#/components/parameters/AccountIdPathParam'
+        - name: transactionDateLt
+          in: query
+          required: true
+          description: Returns unsettled positions based on transactions that occurred before this timestamp.
+          schema:
+            type: string
+            format: date-time
+          example: 2025-12-02T00:00:00.000Z
+        - name: currency
+          in: query
+          required: false
+          explode: true
+          description: Filter results to specific currencies. If omitted, returns unsettled positions for all currencies with non-zero balances.
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - BTC
+            - ETH
+        - name: useFutureTransfers
+          in: query
+          required: false
+          description: If true, applies position transfers sent after transactionDateLt to cover short positions as of transactionDateLt.
+          schema:
+            type: boolean
+            default: false
+          example: true
+      responses:
+        '200':
+          description: Net open positions snapshot
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarginGetNetOpenPositionsSnapshotResponse'
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositionlimits:
     get:
       summary: Get net open margin position limits
@@ -25297,7 +25564,7 @@ paths:
                   - $ref: '#/components/schemas/OrderBooksResponse'
                   - $ref: '#/components/schemas/TradeOrdersResponse'
         '403':
-          description: Forbidden - Missing or invalid access token header
+          $ref: '#/components/responses/ForbiddenError1'
   /api/staking/v1/{coin}/wallets/{walletId}/requests/{stakingRequestId}:
     delete:
       tags:
@@ -25319,9 +25586,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -25348,9 +25615,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -25857,9 +26124,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -25904,9 +26171,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -25984,9 +26251,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26040,9 +26307,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26137,9 +26404,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26192,9 +26459,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26252,9 +26519,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26290,9 +26557,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26383,9 +26650,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26419,9 +26686,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26451,9 +26718,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26480,9 +26747,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26617,9 +26884,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26669,9 +26936,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26700,9 +26967,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26758,9 +27025,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26840,9 +27107,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26911,9 +27178,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26942,9 +27209,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '500':
@@ -26986,9 +27253,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '500':
@@ -27020,9 +27287,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '500':
@@ -27051,9 +27318,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '500':
@@ -29423,7 +29690,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidAddress'
+                $ref: '#/components/schemas/InvalidAddress1'
   /api/v2/{coin}/wallet/{walletId}/crossChainUnspents:
     get:
       summary: Get Wallet Cross Chain Unspents
@@ -30219,6 +30486,42 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ListAuditLogsResponse'
+  /api/v2/enterprise:
+    get:
+      summary: List enterprises
+      operationId: enterprise.list
+      tags:
+        - Enterprise
+      parameters:
+        - name: expandTotalWalletCounts
+          description: True, if returning the total number of wallets for each enterprise.
+          in: query
+          schema:
+            type: boolean
+        - name: excludeWalletMemberships
+          description: True, if excluding enterprises that the user joined only through wallet memberships.
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisesResponse1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}/availableassets:
     get:
       summary: List available assets
@@ -30722,6 +31025,11 @@ paths:
             type: string
             format: date-time
             title: ISO Date String
+        - name: includeEvmKeyringTxRequests
+          description: If true, include transaction requests for all EVM keyring related wallets (main + derived).
+          in: query
+          schema:
+            type: boolean
         - name: enterpriseId
           in: path
           required: true
@@ -30743,11 +31051,19 @@ paths:
   /api/v2/enterprise/{enterpriseId}/txrequests/bypermission:
     get:
       summary: Get transaction requests by enterprise filtering by wallet permissions
-      description: Only supported for transaction request full
+      description: Supports both lite and full transaction requests. Use the apiVersion query parameter to filter by version.
       operationId: v2.enterprise.txrequest.getByPermission
       tags:
         - Transaction request
       parameters:
+        - name: apiVersion
+          description: If present, filters transaction requests by the specified API version (lite or full). If not provided, returns all transaction requests regardless of API version.
+          in: query
+          schema:
+            type: string
+            enum:
+              - lite
+              - full
         - name: walletTypes
           description: If present, filters transaction requests by the specified wallet types
           in: query
@@ -33239,6 +33555,13 @@ paths:
             type: string
             format: date-time
             title: ISO Date String
+        - name: createdAtLte
+          description: Only return reports created before or on this date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
         - name: enterprise
           description: Only return reports for this enterprise
           in: query
@@ -33815,310 +34138,6 @@ paths:
               schema: {}
         '400':
           description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-  /api/v2/scim/v2/Users:
-    get:
-      summary: Lists all SCIM-provisioned users in the requesting enterprise with support for pagination and filtering.
-      description: Results include only users that have been provisioned via SCIM for the requesting client.
-      operationId: v2.scim.users.list
-      tags:
-        - SCIM
-      parameters:
-        - name: filter
-          description: SCIM filter expression (e.g., userName eq "user@example.com")
-          in: query
-          schema:
-            type: string
-        - name: startIndex
-          description: '1-based index of the first result to return (default: 1)'
-          in: query
-          schema:
-            type: string
-        - name: count
-          description: 'Maximum number of results to return per page (default: 100, max: 1000)'
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  schemas:
-                    $ref: '#/components/schemas/ScimListResponseSchemas'
-                  totalResults:
-                    type: number
-                  Resources:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        id:
-                          type: string
-                        userName:
-                          type: string
-                        meta:
-                          $ref: '#/components/schemas/ScimMeta'
-                        externalId:
-                          type: string
-                        name:
-                          $ref: '#/components/schemas/ScimName'
-                        emails:
-                          type: array
-                          items:
-                            type: object
-                            properties:
-                              value:
-                                type: string
-                              primary:
-                                type: boolean
-                            required:
-                              - value
-                        active:
-                          type: boolean
-                      required:
-                        - id
-                        - userName
-                        - meta
-                  startIndex:
-                    type: number
-                  itemsPerPage:
-                    type: number
-                required:
-                  - schemas
-                  - totalResults
-                  - Resources
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-    post:
-      summary: Creates a new user via SCIM 2.0 provisioning.
-      description: |-
-        If the user already exists, they will be invited to join the enterprise and assigned the SCIM identifier. The userName must be a valid email address and
-        match the primary email in the emails array.
-      operationId: v2.scim.users.create
-      tags:
-        - SCIM
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                schemas:
-                  allOf:
-                    - $ref: '#/components/schemas/ScimUserSchemas'
-                  description: SCIM schemas array (must include urn:ietf:params:scim:schemas:core:2.0:User)
-                userName:
-                  type: string
-                  description: User's primary email address
-                externalId:
-                  type: string
-                  description: External identifier from the identity provider (e.g., Okta user ID)
-                name:
-                  type: object
-                  description: User's name information
-                  properties:
-                    familyName:
-                      type: string
-                    formatted:
-                      type: string
-                    givenName:
-                      type: string
-                emails:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      primary:
-                        type: boolean
-                      value:
-                        type: string
-                    required:
-                      - value
-                    description: User's email addresses (primary email must match userName)
-              required:
-                - schemas
-                - userName
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - type: object
-                    properties:
-                      schemas:
-                        $ref: '#/components/schemas/ScimUserSchemas'
-                    required:
-                      - schemas
-                  - $ref: '#/components/schemas/ScimUserResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '409':
-          description: Conflict
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-  /api/v2/scim/v2/Users/{id}:
-    get:
-      summary: Retrieves a SCIM-provisioned user by their BitGo user ID.
-      description: Only users that have been provisioned via SCIM for the requesting client can be retrieved.
-      operationId: v2.scim.users.get
-      tags:
-        - SCIM
-      parameters:
-        - name: id
-          description: The BitGo user ID
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - type: object
-                    properties:
-                      schemas:
-                        $ref: '#/components/schemas/ScimUserSchemas'
-                    required:
-                      - schemas
-                  - $ref: '#/components/schemas/ScimUserResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-    put:
-      summary: Updates an existing SCIM-provisioned user using the PUT method (full replacement).
-      description: The user must be a member of the requesting enterprise.
-      operationId: v2.scim.users.update
-      tags:
-        - SCIM
-      parameters:
-        - name: id
-          description: The BitGo user ID
-          in: path
-          required: true
-          schema:
-            type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                schemas:
-                  allOf:
-                    - $ref: '#/components/schemas/ScimUserSchemas'
-                  description: SCIM schemas array (must include urn:ietf:params:scim:schemas:core:2.0:User)
-                userName:
-                  type: string
-                  description: User's primary email address
-                externalId:
-                  type: string
-                  description: External identifier from the identity provider (e.g., Okta user ID)
-                name:
-                  type: object
-                  description: User's name information (givenName, familyName, formatted)
-                  properties:
-                    familyName:
-                      type: string
-                    formatted:
-                      type: string
-                    givenName:
-                      type: string
-                emails:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      primary:
-                        type: boolean
-                      value:
-                        type: string
-                    required:
-                      - value
-                    description: User's email addresses (primary email must match userName)
-                active:
-                  type: boolean
-                  description: Whether the user account is active
-              required:
-                - schemas
-                - userName
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - type: object
-                    properties:
-                      schemas:
-                        $ref: '#/components/schemas/ScimUserSchemas'
-                    required:
-                      - schemas
-                  - $ref: '#/components/schemas/ScimUserResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '500':
-          description: Internal Server Error
           content:
             application/json:
               schema:
@@ -35321,6 +35340,57 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/potentialStuckTxs:
+    get:
+      summary: Get list of potentially stuck transactions across multiple wallets.
+      description: |-
+        This endpoint aggregates stuck transactions from a wallet and its EVM keyring derived wallets (if applicable).
+
+        Use cases:
+        - EVM keyring parent wallet: Returns stuck txs from parent + all derived wallets (ETH, BSC, Polygon, etc.)
+        - Non-keyring wallet: Returns stuck txs from that single wallet only
+
+        The response includes both successful results and any errors encountered while querying individual wallets,
+        allowing clients to handle partial failures gracefully.
+      operationId: v2.wallet.getmultiwalletstucktxs
+      tags:
+        - Wallet
+      parameters:
+        - name: expandSendTransferMetadata
+          description: True, if expanding the send transfer for each stuck transaction if one is available.
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - name: txid
+          description: The transaction ID of the stuck transaction.
+          in: query
+          schema:
+            type: string
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MultiWalletStuckTxsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -39044,175 +39114,6 @@ components:
         statusModifiedDate: 2025-09-08T14:32:28.000Z
         status: NEW
         amount: '32000000000000000000'
-    EvaluationExample:
-      summary: Evaluation
-      description: A successful evaluation response.
-      value:
-        id: 7b0e0c89-180a-47d1-a855-586f480def21
-        idempotencyKey: 744d7578-a921-47b5-8259-2fb8d04f0427
-        scope: wallet.segregated
-        touchpoint: wallet.segregated.transfer
-        clientRequest:
-          coin: tnear
-          amount: '2e+23'
-          outputs:
-            - value: '2e+23'
-              address: 35baf313ddabd2904c4bf0f26153201f62d3bf3fb542893c4518214bad72c0a3
-              isVerified: true
-              walletWhitelistedAddress: true
-          bitgoOrg: BitGo Trust
-          walletId: 649dd0d990a1fd0007e6ab1b229ffe7f
-          initiator: 63cf101298470200073bbae71add80d5
-          requestId: 9bd3c62016761e5bca6b-0000
-          coinIsFiat: false
-          walletType: custodial
-          enterpriseId: 63c86bf4555aba000652d5c59aff2866
-          waiveVideoId: true
-          usdCentAmount: '161.16'
-          idempotencyKey: 744d7578-a921-47b5-8259-2fb8d04f0427
-          transactionTypes: []
-          hasUnvalidatedData: false
-          walletWhitelistExists: true
-          enterpriseWhitelistExists: false
-        status: DENIED
-        evaluatedPolicyRules:
-          - id: 73bb6587-4f4d-44ce-b189-e8f61e96e544
-            status: NOT_TRIGGERED
-            filteringConditionInputs:
-              walletType: custodial
-            policyRuleId: 00000000-0000-0000-0000-000000000001
-            version: 1
-            clauses:
-              - id: 5c39f31d-5c16-48a1-96ec-449b3831a2d1
-                policyRuleClauseId: 00000000-0000-0000-0000-000000000001
-                status: NOT_TRIGGERED
-                conditions:
-                  - id: 52c4c3b6-6cc5-4826-9b28-2741bde3c97f
-                    policyConditionId: 00000000-0000-0000-0000-000000000001
-                    name: transfer.destination.type
-                    status: NOT_TRIGGERED
-                    inputs:
-                      coin: tnear
-                      amount: '2e+23'
-                      ruleId: 00000000-0000-0000-0000-000000000001
-                      outputs:
-                        - value: '2e+23'
-                          address: 35baf313ddabd2904c4bf0f26153201f62d3bf3fb542893c4518214bad72c0a3
-                          isVerified: true
-                          walletWhitelistedAddress: true
-                      bitgoOrg: BitGo Trust
-                      walletId: 649dd0d990a1fd0007e6ab1b229ffe7f
-                      initiator: 63cf101298470200073bbae71add80d5
-                      requestId: 9bd3c62016761e5bca6b-0000
-                      coinIsFiat: false
-                      walletType: custodial
-                      enterpriseId: 63c86bf4555aba000652d5c59aff2866
-                      waiveVideoId: true
-                      usdCentAmount: '161.16'
-                      idempotencyKey: 744d7578-a921-47b5-8259-2fb8d04f0427
-                      transactionTypes: []
-                      hasUnvalidatedData: false
-                      walletWhitelistExists: true
-                      enterpriseWhitelistExists: false
-                    parameters:
-                      type: nonWhitelistedAddress
-                    evaluationMetadata: {}
-                    evaluationMessage:
-                      messageTemplate: The destination address was whitelisted on the wallet whitelist.
-                      variables: []
-                      message: The destination address was whitelisted on the wallet whitelist.
-                actions:
-                  - name: approvals.always.deny
-                    parameters: {}
-          - id: b9f3062d-983f-4b8f-8e95-43064da22d99
-            status: TRIGGERED
-            filteringConditionInputs:
-              walletType: custodial
-            policyRuleId: c1437a69-b701-4783-abd2-cf0a22185323
-            version: 1
-            clauses:
-              - id: 5a4fae05-022d-4633-ac93-c33348c13311
-                policyRuleClauseId: d5246645-94e4-4a2d-9a9e-8b112e7c8470
-                status: TRIGGERED
-                conditions:
-                  - id: 4020abef-012f-4d57-9b7b-f2e102d85dd9
-                    policyConditionId: fb41229b-c54f-4a80-b1e7-82b9a47dc7ef
-                    name: trust.transfer.velocity.limit
-                    status: TRIGGERED
-                    inputs:
-                      coin: tnear
-                      amount: '2e+23'
-                      ruleId: 9d52414e-781c-4a5f-961b-1556af08abeb
-                      outputs:
-                        - value: '2e+23'
-                          address: 35baf313ddabd2904c4bf0f26153201f62d3bf3fb542893c4518214bad72c0a3
-                          isVerified: true
-                          walletWhitelistedAddress: true
-                      bitgoOrg: BitGo Trust
-                      walletId: 649dd0d990a1fd0007e6ab1b229ffe7f
-                      initiator: 63cf101298470200073bbae71add80d5
-                      requestId: 9bd3c62016761e5bca6b-0000
-                      coinIsFiat: false
-                      walletType: custodial
-                      enterpriseId: 63c86bf4555aba000652d5c59aff2866
-                      waiveVideoId: true
-                      usdCentAmount: '161.16'
-                      idempotencyKey: 744d7578-a921-47b5-8259-2fb8d04f0427
-                      transactionTypes: []
-                      hasUnvalidatedData: false
-                      walletWhitelistExists: true
-                      enterpriseWhitelistExists: false
-                    parameters:
-                      coin: tnear
-                      scope: wallet
-                      amount: '1000000000000000000000000'
-                      timeWindow: 15
-                    evaluationMetadata:
-                      spending: '1100000000000000000000000'
-                    evaluationMessage:
-                      messageTemplate: The velocity calculation reached {spendingAmount} with this transaction, exceeding the wallet limit of {limitAmount} over {timeWindow}.
-                      variables:
-                        - name: spendingAmount
-                          value: '1100000000000000000000000'
-                          coin: tnear
-                          type: COIN_AMOUNT
-                        - name: limitAmount
-                          value: '1000000000000000000000000'
-                          coin: tnear
-                          type: COIN_AMOUNT
-                        - name: timeWindow
-                          value: '15'
-                          unit: seconds
-                          type: TIME_DURATION
-                      message: The velocity calculation reached 1100000000000000000000000 tnear with this transaction, exceeding the wallet limit of 1000000000000000000000000 tnear over 15 seconds.
-                actions:
-                  - name: approvals.customer.walletAdmin
-                    parameters:
-                      minRequired: '1'
-        actions:
-          - id: 31a68c61-f98b-49cc-9e4d-b9f5bfbf618c
-            status: CANCELLED
-            action:
-              name: approvals.customer.walletAdmin
-              parameters:
-                minRequired: '1'
-            resolution:
-              reason: Rejected by user
-              pendingApproval: 664ed267aad92c62a183ac5f28883495
-          - id: aa371c4c-6adc-4039-ba88-5f9a3e807ca3
-            status: CANCELLED
-            action:
-              name: approvals.bitgo.custodialSigning
-              parameters: {}
-            resolution:
-              reason: Rejected by user
-              pendingApproval: 664ed267aad92c62a183ac5f28883495
-        resolutionOrder:
-          - actions:
-              - 31a68c61-f98b-49cc-9e4d-b9f5bfbf618c
-          - actions:
-              - aa371c4c-6adc-4039-ba88-5f9a3e807ca3
-        createdDate: '2024-05-23T05:21:41.805829Z'
     FilteringConditionsExample:
       summary: Filtering Conditions
       description: A successful response with two Filtering Conditions.
@@ -39432,129 +39333,6 @@ components:
           - coin: sol
             fee: '5'
         defaultFee: '10'
-    MMIBalanceEventNoErrorExample:
-      value:
-        - type: MMI
-          subtype: BALANCE
-          timeEventOccurred: 2021-12-02T00:00:01.000Z
-          timeEventSent: 2021-01-10T00:00:17.000Z
-          source: defi-service
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: i28e44259cf048638a293e7850594e39
-          AUDGroupId: g34e4425-ccf0-2863-1a29-457850594e37
-          chainId: '137'
-          asset: SNX
-          amountDelta: '30289390048741049'
-          totalAUD: '70770742.03999998'
-          totalAUDCurrency: USD
-          object: token
-          objectAddress: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f'
-          objectName: Synthetix Network Token
-          symbol: SNX
-          decimals: 18
-          iconUrl: https://assets.coingecko.com/coins/images/3406/large/SNX.png
-          coingeckoId: havven
-          rawBalance: '30289390048741049'
-          balance: 0.03028939004874105
-          valueBalanceDate: 2021-12-01T23:59:59.000Z
-          valueBlockNumber: '13724084'
-          valueVsCurrency: USD
-          valueTokenName: Synthetix Network Token
-          valueTimestamp: 1638400406610
-          valuePrice: 7.361103870620357
-          valueError: false
-          valueErrorMessage: ''
-    MMIBalanceEventWithErrorExample:
-      value:
-        - type: MMI
-          subtype: BALANCE
-          timeEventOccurred: 2021-12-02T00:00:01.000Z
-          timeEventSent: 2021-01-10T00:00:17.000Z
-          source: defi-service
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: h28e44259cf048638a293e7850594e39
-          AUDGroupId: g34e4425-ccf0-2863-1a29-457850594e37
-          chainId: '137'
-          asset: SNX
-          amountDelta: '30289390048741049'
-          totalAUD: '70770742.03999998'
-          totalAUDCurrency: USD
-          object: token
-          objectAddress: '0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f'
-          objectName: Synthetix Network Token
-          symbol: SNX
-          decimals: 18
-          iconUrl: https://assets.coingecko.com/coins/images/3406/large/SNX.png
-          coingeckoId: ''
-          rawBalance: '30289390048741049'
-          balance: 0.03028939004874105
-          valueBalanceDate: ''
-          valueBlockNumber: ''
-          valueVsCurrency: ''
-          valueTokenName: ''
-          valueTimestamp: 0
-          valuePrice: 0
-          valueError: true
-          valueErrorMessage: Missing coingeckoId, unable to calculate price
-    MMIDailyRollupEventExample:
-      value:
-        - type: MMI
-          subtype: ROLLUP
-          timeEventOccurred: 2021-12-02T00:00:01.000Z
-          timeEventSent: 2021-01-10T00:00:17.000Z
-          source: defi-service
-          asset: USD
-          amountDelta: '70770742.03999998'
-          AUDGroupId: g28e4425-9cf0-4863-8a29-3e7850594e39
-          rollupPeriod: daily
-          fromDate: 2021-12-01T00:00:00.000Z
-          toDate: 2021-12-02T00:00:00.000Z
-          totalAUD: '70770742.03999998'
-          totalAUDCurrency: USD
-          averageAUD: '60770742.03999998'
-          averageAUDCurrency: 48dd72485007a239fb00282ed480da1f
-          usersAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: g28e44259cf048638a293e7850594e39
-          chainId: '137'
-    MMIMonthlyRollupEventExample:
-      value:
-        - type: MMI
-          subtype: ROLLUP
-          timeEventOccurred: 2021-12-02T00:00:01.000Z
-          timeEventSent: 2021-01-10T00:00:17.000Z
-          source: defi-service
-          asset: USD
-          amountDelta: '70770742.03999998'
-          AUDGroupId: g28e4425-9cf0-4863-8a29-3e7850594e39
-          rollupPeriod: monthly
-          fromDate: 2021-12-01T00:00:00.000Z
-          toDate: 2022-01-01T00:00:00.000Z
-          totalAUD: '900077074.03999998'
-          totalAUDCurrency: USD
-          averageAUD: '60770742.03999998'
-          averageAUDCurrency: USD
-          walletId: 48dd72485007a239fb00282ed480da1f
-          usersAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          idempotencyKey: a28e4425-9cf0-4863-8a29-3e7850594e39
-          chainId: '137'
-    MMITransactionEventExample:
-      value:
-        - type: MMI
-          subtype: TRANSACTION
-          timeEventOccurred: 2022-01-10T17:32:28.000Z
-          timeEventSent: 2022-01-10T17:33:28.000Z
-          source: defi-service
-          asset: ETH
-          amountDelta: '-60000003247'
-          decimals: 18
-          marketPrice: 7.361103870620357
-          usersAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          idempotencyKey: f28e44259cf048638a293e7850594e39
-          walletId: 48dd72485007a239fb00282ed480da1f
-          enterpriseId: 61b8e0043daafc65a85d4bd36b4649d4
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-          txState: CONFIRMED
     MaticDelegationResultsExample:
       summary: Matic Delegation Results Example
       value:
@@ -40129,38 +39907,6 @@ components:
           feeString: '0'
         coin: ofc
         token: ofctsol
-    OrganizationPolicyRulesResultsExample:
-      summary: policy rules.
-      description: A successful response with 1 organization policy rules.
-      value:
-        rules:
-          - uniqueId: cb4e0a0a-2768-4024-904a-178ca6d2cd54
-            id: 81d00054-72b5-4e7c-95cf-74d4f1f7d946
-            name: Get One Organization Admin Approval
-            status: ACTIVE
-            version: 5
-            adminOnly: false
-            touchpointLabel: A Role is modified
-            scopeLabel: Roles
-            clauses:
-              - actions:
-                  - name: approvals.customer.organizationAdmin
-                    parameters:
-                      minRequired: 1
-                conditions: []
-            filteringConditions:
-              name: role.all
-            locked: true
-            lockType: LOCK_AFTER_DATE
-            lockDate: '2023-11-13T14:49:48.830522Z'
-            organizationId: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
-            lastTriggeredDate: '2023-11-13T14:49:48.830522Z'
-            lastTriggeredEvaluationId: 306258df-dcab-489e-a9fe-ff28ce9fa312
-            createdBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
-            modifiedBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
-            lockModifiedBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
-            evaluationId: 306258df-dcab-489e-a9fe-ff28ce9fa312
-        nextBatchPrevId: 5
     OsmoClaimRewardsRequestPOSTBodyExample:
       summary: Example OSMO Claim Rewards Request
       value:
@@ -40304,72 +40050,6 @@ components:
         createdBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
         modifiedBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
         evaluationId: 306258df-dcab-489e-a9fe-ff28ce9fa312
-    PolicyRulesResultsExample:
-      summary: Policy Rules.
-      description: A successful response with 3 Policy Rules.
-      value:
-        rules:
-          - id: 81d00054-72b5-4e7c-95cf-74d4f1f7d946
-            name: Get final approval on custodial wallets
-            status: ACTIVE
-            version: 5
-            adminOnly: false
-            touchpointLabel: Transfer from a Segregated Wallet
-            scopeLabel: Wallet
-            clauses:
-              - actions:
-                  - name: approvals.customer.finalApproval
-                    parameters:
-                      userIds:
-                        - 63f949ed0d96f8000718b29585ce0765
-                conditions: []
-            filteringConditions:
-              - parameters:
-                  walletType: custodial
-                name: wallet.type
-          - id: 4fa8326b-4f5f-4065-8cfc-85a08c290c49
-            name: Get approval if transferring more than 2 BTC in a minute
-            status: ACTIVE
-            version: 1
-            adminOnly: false
-            touchpointLabel: Transfer from a Segregated Wallet
-            scopeLabel: Wallet
-            clauses:
-              - actions:
-                  - name: approvals.customer.walletAdmin
-                    parameters: {}
-                conditions:
-                  - name: transfer.velocity.limit
-                    parameters:
-                      amount: '2000000'
-                      timeWindow: '60'
-                      coin: btc
-            filteringConditions:
-              - parameters:
-                  walletId:
-                    - 643f146bb13653000765c478a384a656
-                name: wallet.ids
-          - id: 4bbe1f5c-12e3-4648-aab1-c1dc1da4cdb5
-            name: Test Rule
-            status: ACTIVE
-            version: 1
-            adminOnly: false
-            touchpointLabel: Get approval when transferring to a non enterprise whitelisted destination
-            scopeLabel: Wallet
-            clauses:
-              - actions:
-                  - name: approvals.customer.walletAdmin
-                    parameters: {}
-                conditions:
-                  - name: transfer.destination.type
-                    parameters:
-                      type: nonWhitelistedAddress
-            filteringConditions:
-              - parameters:
-                  walletId:
-                    - 643f146bb13653000765c478a384a656
-                name: wallet.ids
-        nextBatchPrevId: 3
     PolicyRulesResultsExample1:
       summary: policy rules.
       description: A successful response with 3 policy rules.
@@ -41211,133 +40891,6 @@ components:
         page: 1
         totalPages: 1
         totalElements: 2
-    StakingClaimEventExample:
-      value:
-        - type: STAKING
-          subtype: CLAIM
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '30000000000000000000'
-          stakedDelta: '0'
-          totalStaked: '0'
-          rewardsBalance: '0'
-          apy: '8.2'
-          address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          validatorAddress: ''
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: a28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingDelegateEventExample:
-      value:
-        - type: STAKING
-          subtype: DELEGATE
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '-32000000000000000000'
-          stakedDelta: '32000000000000000000'
-          totalStaked: '32000000000000000000'
-          rewardsBalance: '0'
-          apy: '8.2'
-          address: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          stakingRequestId: a28e4425-9cf0-4863-8a29-3e7850594e39
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: p28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingRewardEventExample:
-      value:
-        - type: STAKING
-          subtype: REWARD
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '0'
-          stakedDelta: '50000000000000000000'
-          totalStaked: '32000000000000000000'
-          rewardsBalance: '50000000000000000000'
-          apy: '8.2'
-          address: ''
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          uuid: q28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingSlashEventExample:
-      value:
-        - type: STAKING
-          subtype: SLASH
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '0'
-          stakedDelta: '-4000000000000000000'
-          totalStaked: '32000000000000000000'
-          rewardsBalance: '1000000000000000000'
-          apy: '8.2'
-          address: ''
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: s28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingSlashEventNegativeBalanceExample:
-      value:
-        - type: STAKING
-          subtype: SLASH
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '0'
-          stakedDelta: '-3000000000000000000'
-          totalStaked: '32000000000000000000'
-          rewardsBalance: '-2000000000000000000'
-          apy: '8.2'
-          address: ''
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: f28e4425-9cf0-4863-8a29-3e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
-    StakingUndelegateEventExample:
-      value:
-        - type: STAKING
-          subtype: UNDELEGATE
-          timeEventOccurred: 2022-01-10T14:32:28.000Z
-          timeEventSent: 2022-01-10T15:32:28.000Z
-          source: staking-service
-          asset: eth
-          unit: wei
-          amountDelta: '0'
-          stakedDelta: '-30000000000000000000'
-          totalStaked: '0'
-          rewardsBalance: '0'
-          apy: '8.2'
-          address: ''
-          validatorAddress: '0x71C7656EC7ab88b098defB751B7401B5f6d8976F'
-          delegationId: 4c8b80da-8d26-4481-83fe-5ea7f4744f2e
-          txRequestId: c22769a4-731a-411e-a7fc-4a0ab87f6d5b
-          walletId: 48dd72485007a239fb00282ed480da1f
-          idempotencyKey: v28e44259cf048638a293e7850594e39
-          txid: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
     StakingWalletExample:
       summary: Example staking wallet response
       value:
@@ -41457,30 +41010,6 @@ components:
         properties:
           walletMultisigType: onchain
           type: ETH
-    StoryStakingRequestPOSTBodyExample:
-      summary: Story Protocol Staking Request POST Body Example
-      value:
-        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
-        amount: '1536000000000000000000'
-        type: STAKE
-        validator: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
-    StoryStakingRequestWithoutDelegationsExample:
-      summary: Story Protocol Staking Request Example
-      value:
-        id: e155adbc-66a3-4ccd-9a9d-726a05bca0cf
-        clientId: f154adbc-26a3-4acd-8a9d-726a05bca0dr
-        requestingUserId: 6092e75c451052000636831deb797bd1
-        type: STAKE
-        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
-        walletId: 63110fc78b108e00071df2d3c3879dd0
-        walletType: hot
-        withdrawalAddress: '0xf5b9becc5e7e68173a5fc1906a2a5574e884da40'
-        coin: tip
-        status: NEW
-        statusModifiedDate: 2025-11-06T14:00:00.000Z
-        createdDate: 2025-11-06T14:00:00.000Z
-        amount: '1536000000000000000000'
-        validatorAddress: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
     StoryUnStakingRequestPOSTBodyExample:
       summary: Story Protocol UnStaking Request POST Body Example
       value:
@@ -42505,8 +42034,10 @@ components:
       name: base
       in: query
       required: true
-      description: The asset or currency to compare to the quote asset or currency (case insensitive).
-      example: btc
+      description: |
+        The base currency symbol (the asset being priced).
+        Must be a BitGo-supported instrument symbol (case-insensitive).
+      example: BTC
       schema:
         type: string
     CreatedDateGte1:
@@ -42531,7 +42062,9 @@ components:
       name: end
       in: query
       required: false
-      description: End time for the pricing data range. If not provided, defaults to the current time.
+      description: |
+        End time for the pricing data range (RFC 3339 format).
+        If not provided, defaults to the current time.
       schema:
         type: string
         format: date-time
@@ -42611,7 +42144,7 @@ components:
       name: interval
       in: query
       required: true
-      description: Unit of time.
+      description: The time interval for each price data point.
       example: hour
       schema:
         type: string
@@ -42628,6 +42161,16 @@ components:
       schema:
         type: integer
       example: 20
+    NextBatchPrevId:
+      name: nextBatchPrevId
+      in: query
+      required: false
+      description: |
+        Pagination cursor returned from a previous request.
+        Use this to fetch the next batch of results when there are more than 1,000 data points.
+      schema:
+        type: string
+        example: 63ff9f4c0c01fcd7162c28fc901ad915
     PolicyRuleId:
       name: id
       in: path
@@ -42685,8 +42228,10 @@ components:
       name: quote
       in: query
       required: true
-      description: The asset or currency to compare to the base asset or currency (case insensitive).
-      example: eth
+      description: |
+        The quote currency symbol (the currency in which the price is expressed).
+        Must be a BitGo-supported instrument symbol (case-insensitive).
+      example: USD
       schema:
         type: string
     ScopeName1:
@@ -42706,7 +42251,9 @@ components:
       name: start
       in: query
       required: false
-      description: Start time for the pricing data range. If not provided, defaults to 1 interval before to the current time.
+      description: |
+        Start time for the pricing data range (RFC 3339 format).
+        If not provided, defaults to 1 interval before the current time.
       schema:
         type: string
         format: date-time
@@ -43377,6 +42924,19 @@ components:
           schema:
             $ref: '#/components/schemas/StakingError'
     ForbiddenError1:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            forbidden:
+              summary: Insufficient permissions
+              value:
+                error: Forbidden, reqId=unk-nqo97l23l2ofpvgkbb8z
+                errorName: backend:common:forbidden
+                reqId: unk-nqo97l23l2ofpvgkbb8z
+    ForbiddenError2:
       description: Forbidden
       content:
         application/json:
@@ -43402,6 +42962,19 @@ components:
             error: Database is down
             errorName: Internal_Server_Error
             reqId: some-id
+    MalformedJSONError:
+      description: Unprocessable Entity - JSON payload is improperly formatted
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            malformedJSON:
+              summary: JSON payload is improperly formatted
+              value:
+                error: backend:common:malformedJSON
+                errorName: backend:common:malformedJSON
+                reqId: unk-nqo97l23l2ofpvgkbb8z
     NotFound:
       description: The specified resource was not found
       content:
@@ -43428,6 +43001,19 @@ components:
             error: Wallet not found
             errorName: NotFound
             reqId: some-id
+    RateLimitError:
+      description: Too Many Requests - Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            rateLimitExceeded:
+              summary: Too many API requests
+              value:
+                error: backend:common:rateLimitExceeded
+                errorName: backend:common:rateLimitExceeded
+                reqId: unk-nqo97l23l2ofpvgkbb8z
     ServerError:
       description: Server Error - Transient error please try again
       content:
@@ -43455,6 +43041,19 @@ components:
           schema:
             $ref: '#/components/schemas/StakingError'
     UnauthorizedError1:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            unauthorized:
+              summary: Unauthorized access
+              value:
+                error: Unauthorized
+                errorName: Error
+                reqId: unk-nqo97l23l2ofpvgkbb8z
+    UnauthorizedError2:
       description: Unauthorized
       content:
         application/json:
@@ -43464,6 +43063,19 @@ components:
             error: Unauthorized
             errorName: Unauthorized
             reqId: some-id
+    internalServerError1:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            internalServerError:
+              summary: Generic server error - Reach out to support for more information
+              value:
+                error: backend:common:internalServerError
+                errorName: backend:common:internalServerError
+                reqId: unk-nqo97l23l2ofpvgkbb8z
   schemas:
     AccelerationIntent:
       title: AccelerationIntent
@@ -47056,6 +46668,8 @@ components:
               - Advanced Wallets
               - Stablecoins
               - Loans against Go Account
+              - ACH Debits
+              - Go Lightning
             description: Requested BitGo Products
         isContractedClient:
           type: boolean
@@ -53096,7 +52710,7 @@ components:
           minLength: 1
       required:
         - enterprises
-    EnterprisesResponse:
+    EnterprisesResponse1:
       title: EnterprisesResponse
       type: object
       properties:
@@ -53173,7 +52787,7 @@ components:
       example:
         error: invalid permission
         errorName: backend:common:forbidden
-        reqId: d41d4d21e63d63b293caf55f2a739a79
+        reqId: unk-nqo97l23l2ofpvgkbb8z
     EstimateTransactionFees:
       title: Bitcoin
       type: object
@@ -56090,12 +55704,16 @@ components:
                   - id
             stablecoinAgreementLatestVersion:
               type: number
+            hasScimClient:
+              type: boolean
+              description: Whether the enterprise has a SCIM OAuth client configured
             organizationId:
               type: string
               deprecated: true
           required:
             - wallets
             - tags
+            - hasScimClient
         - $ref: '#/components/schemas/Enterprise'
     GetEnterpriseUserSigningKeyResponse:
       title: GetEnterpriseUserSigningKeyResponse
@@ -56524,6 +56142,12 @@ components:
             feeString:
               type: string
               description: The Transfer's fee (in base units) represented as a String
+            feeUsd:
+              type: number
+              description: The fee USD value for token transfers
+            feeUsdRate:
+              type: number
+              description: The fee coin USD rate for token transfers
             goStakingRequestId:
               type: string
               description: Associated GO staking request ID
@@ -56947,6 +56571,10 @@ components:
         userActionDisabled:
           type: boolean
           description: True, if manual user action is disabled on this stuck transaction
+        coin:
+          type: string
+          description: The coin name for the stuck transaction
+          example: hteth
       required:
         - cause
         - message
@@ -57730,6 +57358,7 @@ components:
         - trustedTokens
     HistoricalPrice:
       type: object
+      description: OHLCV price data for a single time interval.
       required:
         - time
         - open
@@ -57742,24 +57371,31 @@ components:
         time:
           type: string
           format: date-time
+          description: The timestamp marking the start of this interval (RFC 3339 format).
         open:
           type: number
           format: float
+          description: The opening price at the start of the interval.
         high:
           type: number
           format: float
+          description: The highest price reached during the interval.
         low:
           type: number
           format: float
+          description: The lowest price reached during the interval.
         close:
           type: number
           format: float
+          description: The closing price at the end of the interval.
         base_volume:
           type: number
           format: float
+          description: The total trading volume in the base currency during the interval.
         quote_volume:
           type: number
           format: float
+          description: The total trading volume in the quote currency during the interval.
       example:
         time: '2014-11-07T22:19:28.578Z'
         open: 576.0590066
@@ -57770,6 +57406,7 @@ components:
         quote_volume: 170627.62385
     HistoricalPriceResult:
       type: object
+      description: Response containing historical price data with pagination support.
       required:
         - data
       properties:
@@ -57777,16 +57414,21 @@ components:
           type: object
           required:
             - prices
-            - nextBatchPrevId
           properties:
             prices:
               type: object
+              description: A map of currency pair to price data
+              example: BTC-USD
               additionalProperties:
                 type: array
                 items:
                   $ref: '#/components/schemas/HistoricalPrice'
             nextBatchPrevId:
               type: string
+              nullable: true
+              description: |
+                Pagination cursor for fetching the next batch of results.
+                Null if there are no more results.
       example:
         data:
           prices:
@@ -58599,18 +58241,6 @@ components:
         - $ref: '#/components/schemas/InternationalWireAccountResponseProps'
         - $ref: '#/components/schemas/BankAccountResponseProps'
     InvalidAddress:
-      title: Invalid Address
-      allOf:
-        - type: object
-          properties:
-            name:
-              type: string
-              enum:
-                - InvalidAddress
-          required:
-            - name
-        - $ref: '#/components/schemas/InvalidId'
-    InvalidAddress1:
       title: Invalid address
       allOf:
         - $ref: '#/components/schemas/PlatformErrorNoName3'
@@ -58635,6 +58265,18 @@ components:
             - context
             - address
             - name
+    InvalidAddress1:
+      title: Invalid Address
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              enum:
+                - InvalidAddress
+          required:
+            - name
+        - $ref: '#/components/schemas/InvalidId'
     InvalidEnterpriseId:
       title: Invalid Enterprise ID
       allOf:
@@ -59904,63 +59546,44 @@ components:
             properties:
               id:
                 type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
               created:
                 type: string
-                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
-              coin:
-                type: string
-                description: A cryptocurrency or token ticker symbol.
-                example: btc
               url:
                 type: string
-                example: https://your.server.com/webhook
-                format: uri
               version:
                 type: number
-                description: 2 for coins running on API v2.
-                example: 2
               scope:
                 $ref: '#/components/schemas/WebhookScope'
               state:
                 $ref: '#/components/schemas/WebhookState'
               successiveFailedAttempts:
                 type: number
-                example: 0
               listenToFailureStates:
                 type: boolean
-                description: Whether or not to listen to failed transactions on chain.
+              coin:
+                type: string
               label:
                 type: string
-                description: Label of the new webhook.
               walletId:
                 type: string
               enterpriseId:
                 type: string
               organizationId:
                 type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
               userId:
                 type: string
               type:
-                allOf:
-                  - $ref: '#/components/schemas/WebhookType'
-                description: Event type to listen to.
+                $ref: '#/components/schemas/WebhookType'
               numConfirmations:
                 type: number
-                example: 6
               lastAttempt:
                 type: string
-                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
               failingSince:
                 type: string
-                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
               allToken:
@@ -59983,7 +59606,6 @@ components:
                     - readyToSend
                     - signed
                     - failed
-                  description: If present, only transaction request state changes from the list will trigger notifications. If not present, all transaction request state changes will trigger notifications.
               txRequestTransactionStates:
                 type: array
                 items:
@@ -60003,11 +59625,10 @@ components:
                     - delivered
                     - invalidSignature
                     - rejected
-                  description: If present, only transaction request transaction state changes from the list will trigger notifications. If not present, all transaction request transaction state changes will trigger notifications.
+                  description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
             required:
               - id
               - created
-              - coin
               - url
               - version
               - scope
@@ -60513,6 +60134,15 @@ components:
         - token_type
         - grant_type
         - user
+    MarginGetNetOpenPositionsSnapshotResponse:
+      type: object
+      required:
+        - netOpenPositions
+      properties:
+        netOpenPositions:
+          type: array
+          items:
+            $ref: '#/components/schemas/MarginNetOpenPositionSnapshot'
     MarginNetOpenPosition:
       type: object
       required:
@@ -60608,14 +60238,74 @@ components:
         longMarginPositionNotionalLimit:
           quantity: '2000000'
           currency: USD
+    MarginNetOpenPositionSnapshot:
+      type: object
+      required:
+        - currency
+        - enterpriseId
+        - accountId
+        - netOpenPosition
+        - appliedFutureTransfers
+        - earliestTransactionDate
+        - latestTransactionDate
+      properties:
+        currency:
+          type: string
+          description: The currency symbol for this position
+          example: BTC
+        enterpriseId:
+          type: string
+          description: The enterprise ID associated with this position
+          example: 63925f940c259a00061853808ffea830
+        accountId:
+          type: string
+          description: The trading account ID
+          example: f230fdebfa084ffebc7e00515f54603f
+        netOpenPosition:
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]+)?$
+          description: The net position quantity at the snapshot time. Negative values indicate short positions (borrowed/owed), positive values indicate long positions (owned).
+          example: '-2.5'
+        appliedFutureTransfers:
+          type: string
+          pattern: ^[0-9]+(\.[0-9]+)?$
+          description: The total amount of pending transfers (after cutoff) applied to cover this position (only when useFutureTransfers=true). Always zero for long positions. For short positions, shows how much of the position will be covered by pending incoming transfers.
+          example: '1.5'
+        earliestTransactionDate:
+          type: string
+          format: date-time
+          description: Timestamp of the earliest transaction that contributed to this position
+          example: 2025-12-01T01:30:00.000Z
+        latestTransactionDate:
+          type: string
+          format: date-time
+          description: Timestamp of the most recent transaction that contributed to this position (before the cutoff)
+          example: 2025-12-01T23:45:00.000Z
+        latestFutureTransferDate:
+          type: string
+          format: date-time
+          nullable: true
+          description: Timestamp of the most recent pending transfer applied to this position. Only present when useFutureTransfers=true and pending transfers were applied. Null otherwise.
+          example: 2025-12-02T10:00:00.000Z
+      example:
+        currency: BTC
+        enterpriseId: 63925f940c259a00061853808ffea830
+        accountId: f230fdebfa084ffebc7e00515f54603f
+        netOpenPosition: '-2.5'
+        appliedFutureTransfers: '1.5'
+        earliestTransactionDate: 2025-12-01T01:30:00.000Z
+        latestTransactionDate: 2025-12-01T23:45:00.000Z
+        latestFutureTransferDate: 2025-12-02T10:00:00.000Z
     MarketDataError:
       type: object
-      description: Market Data Error
+      description: Error response for market data requests.
       properties:
         error:
           type: string
+          description: Detailed error message.
         errorName:
           type: string
+          description: Error code identifier.
       required:
         - error
         - errorName
@@ -61014,6 +60704,43 @@ components:
         - onchain
         - tss
         - blsdkg
+    MultiWalletStuckTxsResponse:
+      title: Multi-Wallet Stuck Transactions Response
+      type: object
+      properties:
+        stuckTxs:
+          allOf:
+            - $ref: '#/components/schemas/GetPotentialStuckTxsResponse'
+          description: Array of stuck transactions from all successfully queried wallets
+        errors:
+          type: array
+          items:
+            type: object
+            title: Stuck Transaction Query Error
+            properties:
+              walletId:
+                type: string
+                description: The wallet ID that failed
+                example: 59cd72485007a239fb00282ed480da1f
+              coin:
+                type: string
+                description: The coin/chain of the wallet that failed
+                example: tbsc
+              code:
+                type: string
+                description: Error code
+              message:
+                type: string
+                description: Human-readable error message
+            required:
+              - walletId
+              - coin
+              - code
+              - message
+            description: Array of errors encountered while querying individual wallets (if any)
+      required:
+        - stuckTxs
+        - errors
     MultisigTypeVersion:
       title: MultisigTypeVersion
       type: string
@@ -61872,6 +61599,12 @@ components:
         outboundLockedBalance:
           type: string
           description: Locked (from pending force closed channels) outbound balance in millisatoshis (locked local balance)
+        outboundReservedBalance:
+          type: string
+          description: Total outbound reserved balance in millisatoshis (reserved local balance)
+        outboundSpendableBalance:
+          type: string
+          description: Total outbound spendable balance in millisatoshis (spendable local balance)
       required:
         - inboundBalance
         - inboundPendingBalance
@@ -61880,6 +61613,8 @@ components:
         - outboundPendingBalance
         - outboundUnsettledBalance
         - outboundLockedBalance
+        - outboundReservedBalance
+        - outboundSpendableBalance
     Offchain:
       title: Offchain
       type: object
@@ -67228,72 +66963,6 @@ components:
       type: string
       format: date-time
       description: Date to schedule the order. If not provided, the order will be placed immediately.
-    ScimListResponseSchemas:
-      title: ScimListResponseSchemas
-      type: array
-      items:
-        type: string
-        enum:
-          - urn:ietf:params:scim:api:messages:2.0:ListResponse
-    ScimMeta:
-      title: ScimMeta
-      type: object
-      properties:
-        resourceType:
-          type: string
-        location:
-          type: string
-      required:
-        - resourceType
-        - location
-    ScimName:
-      title: ScimName
-      type: object
-      properties:
-        givenName:
-          type: string
-        familyName:
-          type: string
-        formatted:
-          type: string
-    ScimUserResponse:
-      title: ScimUserResponse
-      type: object
-      properties:
-        id:
-          type: string
-        userName:
-          type: string
-        meta:
-          $ref: '#/components/schemas/ScimMeta'
-        externalId:
-          type: string
-        name:
-          $ref: '#/components/schemas/ScimName'
-        emails:
-          type: array
-          items:
-            type: object
-            properties:
-              value:
-                type: string
-              primary:
-                type: boolean
-            required:
-              - value
-        active:
-          type: boolean
-      required:
-        - id
-        - userName
-        - meta
-    ScimUserSchemas:
-      title: ScimUserSchemas
-      type: array
-      items:
-        type: string
-        enum:
-          - urn:ietf:params:scim:schemas:core:2.0:User
     Scope:
       type: array
       items:
@@ -73881,6 +73550,18 @@ components:
               associatedNativeCoinAddress:
                 type: string
                 description: The native coin receive address associated with the solana ATA address. This is currently present only for BitGo addresses.
+              memo:
+                type: string
+                description: Memo associated with this entry. Only available for STX, EOS, SOL, NEAR, and POLYX. For other coins (XLM, XRP, Cosmos-based, TON), memo is stored at the transaction level or appended to the address.
+              type:
+                type: string
+                description: The type of this entry (e.g., transfer, fee, contract_call).
+              nftId:
+                type: string
+                description: NFT ID associated with this entry. Only present for NFT transfers.
+              nftSymbol:
+                type: string
+                description: NFT symbol associated with this entry. Only present for NFT transfers.
           required:
             - address
             - valueString
@@ -74141,6 +73822,12 @@ components:
         medianUsdRate:
           type: number
           description: The median USD rate at the time this Transfer was created
+        feeUsd:
+          type: number
+          description: The fee USD value for token transfers
+        feeUsdRate:
+          type: number
+          description: The fee coin USD rate for token transfers
         value:
           type: number
           description: The total value (in base units) sent by this Transfer (may be approximate for ETH and other coins where amounts in base units can exceed 2^53 - 1)
@@ -81785,63 +81472,44 @@ components:
       properties:
         id:
           type: string
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
         created:
           type: string
-          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
-        coin:
-          type: string
-          description: A cryptocurrency or token ticker symbol.
-          example: btc
         url:
           type: string
-          example: https://your.server.com/webhook
-          format: uri
         version:
           type: number
-          description: 2 for coins running on API v2.
-          example: 2
         scope:
           $ref: '#/components/schemas/WebhookScope'
         state:
           $ref: '#/components/schemas/WebhookState'
         successiveFailedAttempts:
           type: number
-          example: 0
         listenToFailureStates:
           type: boolean
-          description: Whether or not to listen to failed transactions on chain.
+        coin:
+          type: string
         label:
           type: string
-          description: Label of the new webhook.
         walletId:
           type: string
         enterpriseId:
           type: string
         organizationId:
           type: string
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
         userId:
           type: string
         type:
-          allOf:
-            - $ref: '#/components/schemas/WebhookType'
-          description: Event type to listen to.
+          $ref: '#/components/schemas/WebhookType'
         numConfirmations:
           type: number
-          example: 6
         lastAttempt:
           type: string
-          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
         failingSince:
           type: string
-          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
         allToken:
@@ -81864,7 +81532,6 @@ components:
               - readyToSend
               - signed
               - failed
-            description: If present, only transaction request state changes from the list will trigger notifications. If not present, all transaction request state changes will trigger notifications.
         txRequestTransactionStates:
           type: array
           items:
@@ -81884,11 +81551,10 @@ components:
               - delivered
               - invalidSignature
               - rejected
-            description: If present, only transaction request transaction state changes from the list will trigger notifications. If not present, all transaction request transaction state changes will trigger notifications.
+            description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
       required:
         - id
         - created
-        - coin
         - url
         - version
         - scope
