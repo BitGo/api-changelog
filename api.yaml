@@ -24169,12 +24169,12 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/AccountBalances'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/orders:
     get:
       summary: List Orders
@@ -24245,12 +24245,12 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Orders'
-        default:
-          description: unexpected error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Error'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
     post:
       summary: Place Order
       description: |
@@ -24277,18 +24277,165 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-        '409':
-          description: clientOrderId already exists for an order
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/OrderConflictError'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid order parameters
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  summary: Request is invalid
+                  value:
+                    error: backend:common:invalidRequest
+                    errorName: backend:common:invalidRequest
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidArgument:
+                  summary: Generic parameter validation failure
+                  value:
+                    error: backend:common:invalidArgument key=type
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidQuantity:
+                  summary: Invalid quantity specified (e.g., below minimum order size or above maximum order size)
+                  value:
+                    errorName: backend:trade:invalidQuantity
+                    error:
+                      currencySymbol: TUSD*
+                      minQuantity: '10'
+                    currencySymbol: TUSD*
+                    minQuantity: '10'
+                required:
+                  summary: Required field is missing
+                  value:
+                    error: backend:common:required key=duration
+                    errorName: backend:common:required
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidUserIntent:
+                  summary: Invalid user intent (quantity vs funds)
+                  value:
+                    error: sell orders must be placed in base quantity
+                    errorName: backend:trade:invalidUserIntent
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidClientOrderID:
+                  summary: Client order ID format issue
+                  value:
+                    error: backend:trade:invalidClientOrderID
+                    errorName: backend:trade:invalidClientOrderID
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                unsupportedProduct:
+                  summary: Product not supported for trading
+                  value:
+                    error: backend:trade:unsupportedProduct
+                    errorName: backend:trade:unsupportedProduct
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                positiveIntegerRequired:
+                  summary: A field requires a positive integer such as limitPrice, duration, or interval
+                  value:
+                    error: backend:common:positiveIntegerRequired
+                    errorName: backend:common:positiveIntegerRequired
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                tradingDisabled:
+                  summary: All trading is currently disabled
+                  value:
+                    error: backend:trade:tradingDisabled
+                    errorName: backend:trade:tradingDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productTradingDisabled:
+                  summary: Trading this specific product is disabled
+                  value:
+                    error: backend:trade:productTradingDisabled
+                    errorName: backend:trade:productTradingDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productSideTradingDisabled:
+                  summary: Trading on this product and side (buy/sell) is disabled
+                  value:
+                    error: backend:trade:productSideTradingDisabled
+                    errorName: backend:trade:productSideTradingDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productMarginTradingDisabled:
+                  summary: Margin trading for this product is disabled
+                  value:
+                    error: backend:trade:productMarginTradingDisabled
+                    errorName: backend:trade:productMarginTradingDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productAlgoStrategyDisabled:
+                  summary: Requested algorithm is disabled for this product
+                  value:
+                    error: backend:trade:productAlgoStrategyDisabled
+                    errorName: backend:trade:productAlgoStrategyDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                kycNotApproved:
+                  summary: KYC not approved
+                  value:
+                    error: backend:trade:KYCNotApproved
+                    errorName: backend:trade:KYCNotApproved
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                insufficientFunds:
+                  summary: Insufficient funds to place order
+                  value:
+                    error: backend:trade:insufficientFunds
+                    errorName: backend:trade:insufficientFunds
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                marginShortNOP:
+                  summary: Short position limit is breached, or would be breached
+                  value:
+                    error: backend:trade:marginShortNOP
+                    errorName: backend:trade:marginShortNOP
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                marginLongNOP:
+                  summary: Long position limit is breached, or would be breached
+                  value:
+                    error: backend:trade:marginLongNOP
+                    errorName: backend:trade:marginLongNOP
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                marginTotalShortNOP:
+                  summary: Account-level total short NOP is breached, or would be breached
+                  value:
+                    error: backend:trade:marginTotalShortNOP
+                    errorName: backend:trade:marginTotalShortNOP
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                willTriggerLiquidation:
+                  summary: Account is in liquidation, or trade would trigger liquidation
+                  value:
+                    error: backend:trade:willTriggerLiquidation
+                    errorName: backend:trade:willTriggerLiquidation
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                velocityLimitBreached:
+                  summary: Trading velocity limit reached
+                  value:
+                    error: backend:trade:velocityLimitBreached
+                    errorName: backend:trade:velocityLimitBreached
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                marginInsufficientCollateral:
+                  summary: Insufficient collateral for margin trading
+                  value:
+                    error: backend:trade:marginInsufficientCollateral
+                    errorName: backend:trade:marginInsufficientCollateral
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '409':
+          description: Conflict - An identifier or resource is already in use
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderConflictError'
+              examples:
+                inUse:
+                  summary: An identifier or resource is already in use (e.g., clientOrderId)
+                  value:
+                    error: backend:common:inUse key=clientOrderId
+                    errorName: backend:common:inUse
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/orders/{orderId}:
     get:
       summary: Get Order
@@ -24314,12 +24461,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid order ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidArgument:
+                  summary: Invalid order ID format
+                  value:
+                    error: backend:common:invalidArgument key=orderID
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '404':
+          description: Not Found - Order does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Order not found
+                  value:
+                    error: backend:common:notFound key=orderID
+                    errorName: backend:common:notFound
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/orders/{orderId}/cancel:
     put:
       summary: Cancel Order
@@ -24343,12 +24516,47 @@ paths:
       responses:
         '200':
           description: OK
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid request or order cannot be cancelled
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidRequest:
+                  summary: Request is invalid
+                  value:
+                    error: backend:common:invalidRequest
+                    errorName: backend:common:invalidRequest
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidArgument:
+                  summary: Invalid order ID format
+                  value:
+                    error: backend:common:invalidArgument key=orderID
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                required:
+                  summary: Required field is missing
+                  value:
+                    error: backend:common:required
+                    errorName: backend:common:required
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                orderNotCancelable:
+                  summary: Order cannot be cancelled (completed, cancelled, or error status)
+                  value:
+                    error: backend:trade:orderNotCancelable
+                    errorName: backend:trade:orderNotCancelable
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/trades:
     get:
       summary: List Trades
@@ -24438,12 +24646,25 @@ paths:
                 properties:
                   data:
                     $ref: '#/components/schemas/Trades'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid query parameters
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidArgument:
+                  summary: Invalid query parameter
+                  value:
+                    error: backend:common:invalidArgument
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/trades/{tradeId}:
     get:
       summary: Get Trade
@@ -24468,12 +24689,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PrimeTrade'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid trade ID
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+              examples:
+                invalidArgument:
+                  summary: Invalid trade ID format
+                  value:
+                    error: backend:common:invalidArgument key=tradeID
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '404':
+          description: Not Found - Trade does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                notFound:
+                  summary: Trade not found
+                  value:
+                    error: backend:common:notFound key=tradeID
+                    errorName: backend:common:notFound
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/currencies:
     get:
       summary: List Currencies
@@ -25317,7 +25564,7 @@ paths:
                   - $ref: '#/components/schemas/OrderBooksResponse'
                   - $ref: '#/components/schemas/TradeOrdersResponse'
         '403':
-          description: Forbidden - Missing or invalid access token header
+          $ref: '#/components/responses/ForbiddenError1'
   /api/staking/v1/{coin}/wallets/{walletId}/requests/{stakingRequestId}:
     delete:
       tags:
@@ -25339,9 +25586,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -25368,9 +25615,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -25877,9 +26124,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -25924,9 +26171,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26004,9 +26251,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26060,9 +26307,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26157,9 +26404,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26212,9 +26459,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26272,9 +26519,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26310,9 +26557,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26403,9 +26650,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26439,9 +26686,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26471,9 +26718,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26500,9 +26747,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26637,9 +26884,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26689,9 +26936,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26720,9 +26967,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26778,9 +27025,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26860,9 +27107,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26931,9 +27178,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '409':
@@ -26962,9 +27209,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '500':
@@ -27006,9 +27253,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '500':
@@ -27040,9 +27287,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '500':
@@ -27071,9 +27318,9 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
-          $ref: '#/components/responses/UnauthorizedError1'
+          $ref: '#/components/responses/UnauthorizedError2'
         '403':
-          $ref: '#/components/responses/ForbiddenError1'
+          $ref: '#/components/responses/ForbiddenError2'
         '404':
           $ref: '#/components/responses/NotFoundError1'
         '500':
@@ -42677,6 +42924,19 @@ components:
           schema:
             $ref: '#/components/schemas/StakingError'
     ForbiddenError1:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            forbidden:
+              summary: Insufficient permissions
+              value:
+                error: Forbidden, reqId=unk-nqo97l23l2ofpvgkbb8z
+                errorName: backend:common:forbidden
+                reqId: unk-nqo97l23l2ofpvgkbb8z
+    ForbiddenError2:
       description: Forbidden
       content:
         application/json:
@@ -42702,6 +42962,19 @@ components:
             error: Database is down
             errorName: Internal_Server_Error
             reqId: some-id
+    MalformedJSONError:
+      description: Unprocessable Entity - JSON payload is improperly formatted
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            malformedJSON:
+              summary: JSON payload is improperly formatted
+              value:
+                error: backend:common:malformedJSON
+                errorName: backend:common:malformedJSON
+                reqId: unk-nqo97l23l2ofpvgkbb8z
     NotFound:
       description: The specified resource was not found
       content:
@@ -42728,6 +43001,19 @@ components:
             error: Wallet not found
             errorName: NotFound
             reqId: some-id
+    RateLimitError:
+      description: Too Many Requests - Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            rateLimitExceeded:
+              summary: Too many API requests
+              value:
+                error: backend:common:rateLimitExceeded
+                errorName: backend:common:rateLimitExceeded
+                reqId: unk-nqo97l23l2ofpvgkbb8z
     ServerError:
       description: Server Error - Transient error please try again
       content:
@@ -42755,6 +43041,19 @@ components:
           schema:
             $ref: '#/components/schemas/StakingError'
     UnauthorizedError1:
+      description: Unauthorized - Invalid or missing authentication
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            unauthorized:
+              summary: Unauthorized access
+              value:
+                error: Unauthorized
+                errorName: Error
+                reqId: unk-nqo97l23l2ofpvgkbb8z
+    UnauthorizedError2:
       description: Unauthorized
       content:
         application/json:
@@ -42764,6 +43063,19 @@ components:
             error: Unauthorized
             errorName: Unauthorized
             reqId: some-id
+    internalServerError1:
+      description: Internal Server Error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            internalServerError:
+              summary: Generic server error - Reach out to support for more information
+              value:
+                error: backend:common:internalServerError
+                errorName: backend:common:internalServerError
+                reqId: unk-nqo97l23l2ofpvgkbb8z
   schemas:
     AccelerationIntent:
       title: AccelerationIntent
@@ -52475,7 +52787,7 @@ components:
       example:
         error: invalid permission
         errorName: backend:common:forbidden
-        reqId: d41d4d21e63d63b293caf55f2a739a79
+        reqId: unk-nqo97l23l2ofpvgkbb8z
     EstimateTransactionFees:
       title: Bitcoin
       type: object
