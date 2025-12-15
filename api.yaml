@@ -25045,11 +25045,17 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - balances
                 properties:
                   balances:
                     type: array
                     items:
                       type: object
+                      required:
+                        - currency
+                        - quantity
+                        - balanceValue
                       properties:
                         currency:
                           type: string
@@ -25106,11 +25112,11 @@ paths:
                     type: string
                     pattern: ^[0-9]+(\.[0-9]+)?$
                     example: '0.2'
-                  minimumCollateralValue:
+                  minimumTransferredCollateral:
                     allOf:
                       - $ref: '#/components/schemas/Amount3'
                       - type: object
-                        description: Quantity representing the minimum collateral value required for margin trading. Currency represents the currency that the quantity is valued in (eg. USD)
+                        description: Quantity representing the minimum transferred collateral value required for margin trading. Currency represents the currency that the quantity is valued in (eg. USD)
                 example:
                   totalShortPositionLimit:
                     quantity: '1000000'
@@ -25118,7 +25124,7 @@ paths:
                   marginCallPercentage: '1.1'
                   liquidationThresholdPercentage: '1.2'
                   marginRequirementPercentage: '0.2'
-                  minimumCollateralValue:
+                  minimumTransferredCollateral:
                     quantity: '50000'
                     currency: USD
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositions:
@@ -25231,9 +25237,16 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - riskProfile
                 properties:
                   riskProfile:
                     type: object
+                    required:
+                      - netOpenPosition
+                      - transferredCollateral
+                      - unrealizedPnL
+                      - marginBalance
                     properties:
                       netOpenPosition:
                         allOf:
@@ -25314,6 +25327,10 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - currency
+                  - quantity
+                  - balanceValue
                 properties:
                   currency:
                     type: string
@@ -25362,24 +25379,37 @@ paths:
             application/json:
               schema:
                 type: object
+                required:
+                  - balances
                 properties:
-                  currency:
-                    type: string
-                    description: Symbol of the collateral asset
-                  quantity:
-                    type: number
-                    description: Number representing the balance for the specified collateral
-                  balanceValue:
-                    allOf:
-                      - $ref: '#/components/schemas/Amount3'
-                      - type: object
-                        description: Returns the value of the collateral. Has 2 fields denoting the currency used and the actual value.
+                  balances:
+                    type: array
+                    description: List of position transfer balances
+                    items:
+                      type: object
+                      required:
+                        - currency
+                        - quantity
+                        - balanceValue
+                      properties:
+                        currency:
+                          type: string
+                          description: Symbol of the collateral asset
+                        quantity:
+                          type: string
+                          description: String representing the balance for the specified collateral
+                        balanceValue:
+                          allOf:
+                            - $ref: '#/components/schemas/Amount3'
+                            - type: object
+                              description: Returns the value of the collateral. Has 2 fields denoting the currency used and the actual value.
                 example:
-                  currency: BTC
-                  quantity: 2
-                  balanceValue:
-                    quantity: '1000000'
-                    currency: USD
+                  balances:
+                    - currency: BTC
+                      quantity: '2'
+                      balanceValue:
+                        quantity: '1000000'
+                        currency: USD
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/cover:
     post:
       summary: Cover all short margin positions
@@ -25444,7 +25474,7 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close:
     post:
       summary: Close all margin positions
-      description: Starts an asynchronous process to automatically close all positions by selling and buying assets to attempt to net them to zero.
+      description: Initiates an asynchronous process to close margin positions by executing market trades to net positions to zero. Unlike 'cover' which transfers assets, 'close' creates trade orders to sell or buy assets. Returns immediately with a request ID that can be used to track progress via the close position requests endpoints.
       operationId: trade.margin.positions.close
       tags:
         - Margin
@@ -25516,7 +25546,7 @@ paths:
               - cancelled
         - name: dateGte
           in: query
-          description: Return close position requests with a `createdAt` that is greater than or equal to the given timestamp,
+          description: Return close position requests with a `creationDate` that is greater than or equal to the given timestamp.
           required: false
           style: form
           explode: true
@@ -25525,7 +25555,7 @@ paths:
             format: date-time
         - name: dateLt
           in: query
-          description: Return close position requests with a `createdAt` that is less than the given timestamp.
+          description: Return close position requests with a `creationDate` that is less than the given timestamp.
           required: false
           style: form
           explode: true
@@ -25621,8 +25651,8 @@ paths:
                 currency: BTC
                 quantity: '0.5'
       responses:
-        '201':
-          description: Collateral withdrawal request created
+        '202':
+          description: Collateral withdrawal request accepted for processing
           content:
             application/json:
               schema:
@@ -49007,71 +49037,51 @@ components:
     ClosePositionOrderResponse:
       type: object
       required:
-        - orderId
         - closePositionsRequestId
-        - currency
-        - side
-        - quantity
         - status
-        - createdAt
+        - currency
+        - targetCurrency
+        - creationDate
+        - modifiedDate
       properties:
-        orderId:
-          type: string
-          format: uuid
-          description: Unique identifier for the close position order
         closePositionsRequestId:
           type: string
           format: uuid
-          description: Associated close position request ID
+          description: The close position request ID associated with this order
+        status:
+          $ref: '#/components/schemas/ClosePositionStatus'
         currency:
           type: string
           description: Currency symbol for the order
-        side:
-          $ref: '#/components/schemas/Side'
-        quantity:
+        targetCurrency:
           type: string
-          format: decimal
-          description: Order quantity
-        filledQuantity:
-          type: string
-          format: decimal
-          description: Filled quantity
-        averagePrice:
-          type: string
-          format: decimal
-          description: Average fill price
-        status:
-          $ref: '#/components/schemas/OrderStatus'
-        createdAt:
+          description: The target currency to trade into when closing the position
+        creationDate:
           type: string
           format: date-time
           description: Timestamp when the order was created
-        completedAt:
+        modifiedDate:
           type: string
           format: date-time
-          description: Timestamp when the order was completed
-        clientOrderId:
+          description: Timestamp when the order was last modified
+        orderId:
           type: string
           format: uuid
-          description: Optional client order ID if the close position order is associated with a client order
-          nullable: true
+          description: The order ID of the trade created to close this position. Omitted if the trade order has not been created yet.
       example:
-        orderId: c3d4e5f6-g7h8-9012-cdef-345678901234
         closePositionsRequestId: b2c3d4e5-f6g7-8901-bcde-f23456789012
-        currency: BTC
-        side: sell
-        quantity: '0.5'
-        filledQuantity: '0.5'
-        averagePrice: '45000.00'
         status: completed
-        createdAt: 2024-01-15T11:05:00.000Z
-        completedAt: 2024-01-15T11:06:00.000Z
+        currency: BTC
+        targetCurrency: USD
+        creationDate: 2024-01-15T11:05:00.000Z
+        modifiedDate: 2024-01-15T11:06:00.000Z
+        orderId: c3d4e5f6-g7h8-9012-cdef-345678901234
     ClosePositionRequestOrdersResponse:
       type: object
       required:
-        - data
+        - orders
       properties:
-        data:
+        orders:
           type: array
           items:
             $ref: '#/components/schemas/ClosePositionOrderResponse'
@@ -49095,14 +49105,7 @@ components:
           type: string
           description: Enterprise ID associated with the request
         status:
-          type: string
-          enum:
-            - pending
-            - in_progress
-            - completed
-            - failed
-            - cancelled
-          description: Current status of the close position request
+          $ref: '#/components/schemas/ClosePositionStatus'
         bitgoUserId:
           type: string
           description: BitGo user ID who initiated the request
@@ -49140,6 +49143,14 @@ components:
             status: completed
             bitgoUserId: user456
             creationDate: 2024-01-15T10:30:00.000Z
+    ClosePositionStatus:
+      type: string
+      description: Status of a close position request or order
+      enum:
+        - pending
+        - in_progress
+        - completed
+        - failed
     ClosedByUnion:
       title: ClosedByUnion
       type: string
@@ -49287,16 +49298,26 @@ components:
     CollateralWithdrawalRequestResponse:
       type: object
       required:
-        - requestId
+        - id
+        - accountId
+        - enterpriseId
         - currency
         - quantity
         - status
-        - createdAt
+        - createdBy
+        - creationDate
+        - modifiedDate
       properties:
-        requestId:
+        id:
           type: string
           format: uuid
           description: Unique identifier for the withdrawal request
+        accountId:
+          type: string
+          description: Account ID associated with the withdrawal request
+        enterpriseId:
+          type: string
+          description: Enterprise ID associated with the withdrawal request
         currency:
           type: string
           description: Currency symbol for the withdrawal
@@ -49313,32 +49334,31 @@ components:
             - completed
             - cancelled
           description: Current status of the withdrawal request
-        createdAt:
+        createdBy:
+          type: string
+          description: User who created the withdrawal request
+        canceledBy:
+          type: string
+          nullable: true
+          description: User who canceled the withdrawal request, if applicable
+        creationDate:
           type: string
           format: date-time
           description: Timestamp when the request was created
-        updatedAt:
+        modifiedDate:
           type: string
           format: date-time
-          description: Timestamp when the request was last updated
-        approvedAt:
-          type: string
-          format: date-time
-          description: Timestamp when the request was approved
-        completedAt:
-          type: string
-          format: date-time
-          description: Timestamp when the request was completed
-        rejectionReason:
-          type: string
-          description: Reason for rejection if status is rejected
+          description: Timestamp when the request was last modified
       example:
-        requestId: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        id: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+        accountId: account123
+        enterpriseId: enterprise456
         currency: BTC
         quantity: '0.5'
         status: pending
-        createdAt: 2024-01-15T10:30:00.000Z
-        updatedAt: 2024-01-15T10:30:00.000Z
+        createdBy: user789
+        creationDate: 2024-01-15T10:30:00.000Z
+        modifiedDate: 2024-01-15T10:30:00.000Z
     CollateralWithdrawalRequestsResponse:
       type: object
       required:
@@ -49348,18 +49368,6 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/CollateralWithdrawalRequestResponse'
-        pagination:
-          type: object
-          properties:
-            offset:
-              type: integer
-              description: Current offset for pagination
-            limit:
-              type: integer
-              description: Number of items per page
-            total:
-              type: integer
-              description: Total number of withdrawal requests
     CommitmentShare:
       type: object
       properties:
