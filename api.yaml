@@ -24103,6 +24103,72 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/policy/v1/organizations/{organizationId}/touchpoints/{touchpointName}/rules/{sharedId}:
+    put:
+      tags:
+        - Policy Builder
+      summary: Update organization policy rule
+      description: |
+        Updates an existing policy rule for an organization.
+
+        **Authorization:** Organization admins can update their organization's rules. BitGo admins have access to all organizations.
+
+        **Requirements:**
+        - Cannot update if there is a pending change (PENDING_APPROVAL status) for the same rule
+        - When the touchpoint has self_controlled=true, evaluation uses rules from that touchpoint instead of Policy Management
+      operationId: v1.policy.organization.rules.update
+      parameters:
+        - name: organizationId
+          in: path
+          required: true
+          description: The organization ID
+          schema:
+            type: string
+            pattern: ^[0-9a-f]{32}$
+        - name: touchpointName
+          in: path
+          required: true
+          description: The touchpoint name where the rule exists
+          schema:
+            type: string
+        - name: sharedId
+          in: path
+          required: true
+          description: The policy rule shared ID
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePolicyRuleRequest'
+            examples:
+              example:
+                $ref: '#/components/examples/CreatePolicyRuleExample'
+      responses:
+        '201':
+          description: The updated policy rule (new version created)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyRule1'
+              examples:
+                example:
+                  $ref: '#/components/examples/PolicyRuleExample'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /api/prime/trading/v1/user/current:
     get:
       summary: Get Current User
@@ -42897,6 +42963,16 @@ components:
             error: Bad Request
             errorName: BadRequest
             reqId: some-id
+    Conflict:
+      description: Conflict - The request conflicts with the current state of the resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/GeneralError'
+          example:
+            code: Conflict
+            message: A pending change already exists for this policy rule
+            status: 409
     ConflictError:
       description: Conflict
       content:
