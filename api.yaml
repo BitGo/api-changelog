@@ -27867,6 +27867,64 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/banks/{bankType}/{routingNumber}:
+    get:
+      tags:
+        - Fiat
+      summary: Verify routing number by bank type
+      description: Endpoint for routing number verification.
+      operationId: V1GetBankAccountsRoutingNumberRoute
+      parameters:
+        - name: bankType
+          in: path
+          required: true
+          description: The banking system where a bank operates.
+          schema:
+            type: string
+            enum:
+              - aba
+        - name: routingNumber
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1BankRoutingResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/v2/bankaccounts:
     get:
       tags:
@@ -27874,8 +27932,6 @@ paths:
       summary: List bank accounts
       description: List all bank accounts associated with a BitGo enterprise.
       operationId: v2.bankaccount.list
-      x-unknown-tags:
-        tags: Fiat Accounts
       parameters:
         - name: bankAccountId
           in: query
@@ -27980,10 +28036,11 @@ paths:
       tags:
         - Fiat
       summary: Add bank account
-      description: Add a bank account to a BitGo enterprise so you can deposit and withdraw fiat.
+      description: |
+        Add a bank account to a BitGo enterprise so you can deposit and withdraw fiat. 
+
+        >**NOTE:** Required address parameters vary by country. Determine required parameters by calling [Get address format information](https://developers.bitgo.com/reference/fiataddressinfo).
       operationId: v2.bankaccount.add
-      x-unknown-tags:
-        tags: Fiat Accounts
       parameters: []
       requestBody:
         content:
@@ -28034,8 +28091,6 @@ paths:
       summary: Delete bank account
       description: Delete a bank account associated with a BitGo enterprise.
       operationId: v2.bankaccount.delete
-      x-unknown-tags:
-        tags: Fiat Accounts
       parameters:
         - name: bankAccountId
           in: path
@@ -28092,8 +28147,6 @@ paths:
       summary: Get bank account
       description: Get a bank account associated with a BitGo enterprise by its ID.
       operationId: v2.bankaccount.get
-      x-unknown-tags:
-        tags: Fiat Accounts
       parameters:
         - name: bankAccountId
           in: path
@@ -28138,8 +28191,6 @@ paths:
       summary: Update bank account
       description: Update a bank account associated with a BitGo enterprise.
       operationId: v2.bankaccount.update
-      x-unknown-tags:
-        tags: Fiat Accounts
       parameters:
         - name: bankAccountId
           in: path
@@ -28292,8 +28343,6 @@ paths:
       summary: Get deposit info
       description: Get BitGo's bank account information so you can deposit fiat into a Go Account.
       operationId: fiat.get.deposit.info
-      x-unknown-tags:
-        tags: Fiat Accounts
       parameters:
         - name: currency
           in: query
@@ -46112,21 +46161,70 @@ components:
     BankAccountRequest1:
       title: BankAccountRequest
       description: |
-        Base schema for bank account creation requests.
+        Schema for bank account creation requests.
 
-        NOTE: Address fields required depend on the country format.
-        Use the /api/accounts/v1/address endpoint with the appropriate country code
-        to determine which address fields are required for a specific country.
+        Supports two address formats:
+        - Recommended: Normalized address fields (`bankAddressLine1`, `ownerAddressLine1`, etc.).
+        - Deprecated: Simple string fields (`address`, `ownerAddress`)
+      oneOf:
+        - $ref: '#/components/schemas/BankAccountRequestAddressNormalized'
+        - $ref: '#/components/schemas/DeprecatedBankAccountRequest'
+    BankAccountRequestAddressNormalized:
+      title: BankAccountRequestAddressNormalized
+      description: Bank account request using normalized address format.
+      allOf:
+        - $ref: '#/components/schemas/BankAccountRequestCore'
+        - type: object
+          properties:
+            ownerAddressLine1:
+              type: string
+              description: First line of owner's address (street number and name).
+            ownerAddressLine2:
+              type: string
+              description: Second line of owner's address (apartment/suite number, etc.).
+            ownerAddressCityLocality:
+              type: string
+              description: City or locality of owner's address. Depending on country, may be required.
+            ownerAddressStateProvince:
+              type: string
+              description: State or province of owner's address. Depending on country, may be required.
+            ownerAddressPostalCode:
+              type: string
+              description: Postal code of owner's address. Depending on country, may be required.
+            ownerAddressCountryCode:
+              type: string
+              description: Two-letter ISO country code of owner's address.
+            bankAddressLine1:
+              type: string
+              description: First line of bank's address (street number and name).
+            bankAddressLine2:
+              type: string
+              description: Second line of bank's address (branch information, etc.).
+            bankAddressCityLocality:
+              type: string
+              description: City or locality of bank's address. Depending on country, may be required.
+            bankAddressStateProvince:
+              type: string
+              description: State or province of bank's address. Depending on country, may be required.
+            bankAddressPostalCode:
+              type: string
+              description: Postal code of bank's address. Depending on country, may be required.
+            bankAddressCountryCode:
+              type: string
+              description: Two-letter ISO country code of bank's address.
+          required:
+            - bankAddressCountryCode
+            - bankAddressLine1
+            - ownerAddressCountryCode
+            - ownerAddressLine1
+    BankAccountRequestCore:
+      title: BankAccountRequestCore
       type: object
       properties:
         name:
           type: string
           minLength: 1
           description: Name of the banking institution.
-        shortCountryCode:
-          type: string
-          minLength: 1
-          description: Two-letter ISO country code of bank's address.
         accountNumber:
           type: string
           minLength: 1
@@ -46161,52 +46259,11 @@ components:
         intermediaryBankId:
           type: string
           description: Intermediary bank routing number.
-        ownerAddressLine1:
-          type: string
-          description: First line of owner's address (street number and name).
-        ownerAddressLine2:
-          type: string
-          description: Second line of owner's address (apartment/suite number, etc.).
-        ownerAddressCityLocality:
-          type: string
-          description: City or locality of owner's address. Can be required depending ownerAddressCountryCode.
-        ownerAddressStateProvince:
-          type: string
-          description: State or province of owner's address. Can be required depending on ownerAddressCountryCode.
-        ownerAddressPostalCode:
-          type: string
-          description: Postal code of owner's address. Can be required depending on ownerAddressCountryCode.
-        ownerAddressCountryCode:
-          type: string
-          description: Two-letter ISO country code of owner's address.
-        bankAddressLine1:
-          type: string
-          description: First line of bank's address (street number and name).
-        bankAddressLine2:
-          type: string
-          description: Second line of bank's address (branch information, etc.).
-        bankAddressCityLocality:
-          type: string
-          description: City or locality of bank's address. Can be required depending on bankAddressCountryCode.
-        bankAddressStateProvince:
-          type: string
-          description: State or province of bank's address. Can be required depending on bankAddressCountryCode.
-        bankAddressPostalCode:
-          type: string
-          description: Postal code of bank's address. Can be required depending on bankAddressCountryCode.
-        bankAddressCountryCode:
-          type: string
-          description: Two-letter ISO country code of bank's address, should be the same as shortCountryCode.
       required:
         - accountNumber
-        - bankAddressCountryCode
-        - bankAddressLine1
         - currency
         - name
-        - ownerAddressCountryCode
-        - ownerAddressLine1
         - ownerName
-        - shortCountryCode
     BankAccountResponse1:
       title: BankAccountResponse
       oneOf:
@@ -51183,6 +51240,42 @@ components:
       required:
         - toAddress
         - token
+    DeprecatedBankAccountRequest:
+      title: DeprecatedBankAccountRequest
+      description: |
+        DEPRECATED - Bank account request using simple string fields for addresses.
+
+        This format is deprecated, because it's less flexible for international address validation.
+
+        Instead, use the normalized address format.
+      deprecated: true
+      allOf:
+        - $ref: '#/components/schemas/BankAccountRequestCore'
+        - type: object
+          properties:
+            shortCountryCode:
+              type: string
+              minLength: 2
+              maxLength: 2
+              deprecated: true
+              description: |
+                Two-letter ISO country code of bank's address. This field is deprecated. Instead use `bankAddressCountryCode`.
+            address:
+              type: string
+              minLength: 1
+              deprecated: true
+              description: |
+                Unstructured bank address. This field is deprecated. Instead, use the normalized bank address fields (`bankAddressLine1`, `bankAddressCityLocality`, etc.).
+            ownerAddress:
+              type: string
+              minLength: 1
+              deprecated: true
+              description: |
+                DEPRECATED - Unstructured owner address string. This field is deprecated. Instead, use the normalized bank address fields (`bankAddressLine1`, `bankAddressCityLocality`, etc.).
+          required:
+            - shortCountryCode
+            - address
+            - ownerAddress
     DestinationTypeCoinConditionParameter:
       title: Asset
       type: object
@@ -76770,6 +76863,37 @@ components:
             required:
               - settledInSettlementId
           - $ref: '#/components/schemas/V1ClosedDisputeWithClosureOutput'
+    V1BankRoutingResponse:
+      title: V1BankRoutingResponse
+      type: object
+      properties:
+        address:
+          $ref: '#/components/schemas/V1RoutingAddress'
+        bankType:
+          type: string
+          enum:
+            - aba
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        name:
+          type: string
+        routingNumber:
+          type: string
+          description: The banks routing number
+        swiftCode:
+          type: string
+          description: SWIFT/BIC code for the account
+        transferTypes:
+          type: array
+          description: The transfer types supported by the bank
+          items:
+            type: string
+            enum:
+              - ach-us
+              - wire-domestic
+              - wire-swift
     V1BlockListResponse:
       title: V1BlockListResponse
       type: object
@@ -79040,6 +79164,33 @@ components:
           description: The retriable reserved deallocation details. Contains information about the deallocation that is in the reserved state (pending) and can be retried if needed.
       required:
         - deallocation
+    V1RoutingAddress:
+      type: object
+      properties:
+        city:
+          type: string
+        countryCode:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        locality:
+          type: string
+        postalCode:
+          type: string
+        region:
+          type: string
+        street:
+          type: string
+        subregion:
+          type: string
+        unit:
+          type: string
+        updatedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
     V1SettlementOutput:
       title: V1SettlementOutput
       oneOf:
