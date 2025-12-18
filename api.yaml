@@ -27078,6 +27078,8 @@ paths:
               oneOf:
                 - $ref: '#/components/schemas/AdaStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AdaUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/AptStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/AptUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AsiStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AsiUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AtomStakingRequestPOSTBody'
@@ -27188,6 +27190,10 @@ paths:
                 $ref: '#/components/examples/AdaStakingRequestPOSTBodyExample'
               AdaUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/AdaUnStakingRequestPOSTBodyExample'
+              AptStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/AptStakingRequestPOSTBodyExample'
+              AptUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/AptUnStakingRequestPOSTBodyExample'
               AsiStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/AsiStakingRequestPOSTBodyExample'
               AsiUnStakingRequestPOSTBodyExample:
@@ -38675,6 +38681,20 @@ components:
             min: '0'
             multiplier: '1'
             requiresDelegationId: false
+    AptStakingRequestPOSTBodyExample:
+      summary: Apt Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1100000000'
+        type: STAKE
+        validator: '0xa4e5e77b47a2a9731f24a717b23ad65f7c6c446e05a02413df096a4240533e7b'
+    AptUnStakingRequestPOSTBodyExample:
+      summary: Apt UnStaking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1100000000'
+        type: UNSTAKE
+        delegationId: 123e4567-e89b-12d3-a456-426614174000
     AsiStakingRequestPOSTBodyExample:
       summary: Asi Staking Request POST Body Example
       value:
@@ -41329,7 +41349,7 @@ components:
               - Once staked, unstaking takes 4 epochs (about 36-48 hours).
             transactionsNeeded: 1
             stakeWarmupPeriodDesc: ''
-            rewardPercentageRate: '6.87'
+            rewardPercentageRate: '4.76'
             rewardsCompounding: false
             period:
               periodLow: '43200'
@@ -46268,6 +46288,52 @@ components:
             - aptosCustomTransactionParams
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/AptBuildOptions'
+    AptDelegationProperties:
+      title: APT Delegation Properties
+      allOf:
+        - $ref: '#/components/schemas/ByovDelegationProperties'
+        - type: object
+          properties:
+            activeRewards:
+              type: string
+              format: bigInteger
+              nullable: true
+    AptStakingDelegation:
+      title: APT Staking Delegation
+      allOf:
+        - $ref: '#/components/schemas/BaseDelegation'
+      type: object
+    AptStakingRequest:
+      title: APT
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest1'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/AptStakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+        amount:
+          description: Amount to stake in base units (octas).
+          type: string
+    AptStakingRequestPOSTBody:
+      title: APT stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+    AptUnStakingRequestPOSTBody:
+      title: APT unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
+      type: object
     AsiStakingRequest:
       title: ASI
       allOf:
@@ -50519,6 +50585,7 @@ components:
       description: The staking asset.
       enum:
         - ADA
+        - APT
         - ASI
         - ATOM
         - AVAXC
@@ -52373,6 +52440,7 @@ components:
     DelegationPropertiesSchemas:
       oneOf:
         - $ref: '#/components/schemas/AdaDelegationProperties'
+        - $ref: '#/components/schemas/AptDelegationProperties'
         - $ref: '#/components/schemas/AtomDelegationProperties'
         - $ref: '#/components/schemas/AvaxPDelegationProperties'
         - $ref: '#/components/schemas/AvaxCDelegationProperties'
@@ -52402,6 +52470,7 @@ components:
     DelegationPropertiesType:
       type: string
       enum:
+        - APT
         - AVAXP
         - AVAXC
         - ETH
@@ -71214,6 +71283,7 @@ components:
     StakingRequestSchemas:
       oneOf:
         - $ref: '#/components/schemas/AdaStakingRequest'
+        - $ref: '#/components/schemas/AptStakingRequest'
         - $ref: '#/components/schemas/AsiStakingRequest'
         - $ref: '#/components/schemas/AtomStakingRequest'
         - $ref: '#/components/schemas/AvaxCStakingRequest'
