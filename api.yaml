@@ -2706,6 +2706,1239 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /advancedwallet/ping:
+    post:
+      summary: Advanced Wallets - Ping
+      description: Test your connection to the Master Bitgo Express (MBE) server.
+      operationId: advancedwallet.mbe.ping
+      tags:
+        - Advanced Wallets
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PingResponseType'
+  /advancedwallet/version:
+    get:
+      summary: Advanced Wallets - Check Version
+      description: Check your version of the Master Bitgo Express (MBE) server.
+      operationId: advancedwallet.mbe.version
+      tags:
+        - Advanced Wallets
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VersionResponseType'
+  /api/v1/{coin}/advancedwallet/{walletId}/accelerate:
+    post:
+      summary: Advanced Wallets - Accelerate Transaction
+      description: |-
+        Send a new transaction to accelerate the targeted unconfirmed transaction either by using Child-Pays-For-Parent (CPFP) or Replace-By-Fee (RBF).
+
+        Retrieves the private key from KMS using the provided public key, then signs and broadcasts the transaction.
+
+        Use this endpoint only with advanced wallets. For other wallet types, use [Accelerate Transaction](https://developers.bitgo.com/reference/expresswalletacceleratetx).
+      operationId: advancedwallet.accelerate.tx
+      tags:
+        - Advanced Wallets
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: coin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pubkey:
+                  type: string
+                  description: Public key used for signing the acceleration transaction.
+                  example: xpub661MyMwAqRbcGCNnmzqt3u5KhxmXBHiC78cwAyUMaKJXpFDfHpJwNap6qpG1Kz2SPexKXy3akhPQz7GDYWpHNWkLxRLj6bDxQSf74aTAP9y
+                source:
+                  type: string
+                  enum:
+                    - user
+                    - backup
+                  description: The key to use for signing the transaction.
+                  example: user
+                cpfpTxIds:
+                  type: array
+                  example:
+                    - abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234
+                  items:
+                    type: string
+                    description: Transaction IDs to accelerate using Child-Pays-For-Parent (CPFP). CPFP creates a new transaction that spends an output from the original transaction.
+                cpfpFeeRate:
+                  type: number
+                  description: Fee rate in satoshis per byte for the CPFP transaction. Higher fee rates result in faster confirmations but higher transaction costs.
+                  example: null
+                maxFee:
+                  type: number
+                  description: Maximum fee in satoshis for the acceleration transaction. Helps prevent overpaying for transaction acceleration.
+                  example: null
+                rbfTxIds:
+                  type: array
+                  example:
+                    - abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234
+                  items:
+                    type: string
+                    description: Transaction IDs to accelerate using Replace-By-Fee (RBF). RBF creates a new transaction that replaces the original transaction. The original transaction must have been created with RBF enabled.
+                feeMultiplier:
+                  type: number
+                  description: Fee multiplier for RBF transactions. The new fee will be the original fee multiplied by this value.
+                  example: null
+              required:
+                - pubkey
+                - source
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Successful acceleration response.
+                example:
+                  txid: abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234
+                  tx: 01000000000101edd7a5d948a6c79f273ce686a6a8f2e96ed8c2583b5e77b866aa2a1b3426fbed0100000000ffffffff02102700000000000017a914192f23283c2a9e6c5d11562db0eb5d4eb47f460287b9bc2c000000000017a9145c139b242ab3701f321d2399d3a11b028b3b361e870247304402206ac9477fece38d96688c6c3719cb27396c0563ead0567457e7e884b406b6da8802201992d1cfa1b55a67ce8acb482e9957812487d2555f5f54fb0286ecd3095d78e4012103c92564575197c4d6e3d9792280e7548b3ba52a432101c62de2186c4e2fa7fc580000000000
+                properties:
+                  txid:
+                    type: string
+                    description: The transaction ID (hash) of the acceleration transaction. This can be used to track the transaction on a block explorer.
+                    example: abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234abcd1234
+                  tx:
+                    type: string
+                    description: The full signed transaction in hexadecimal format. This transaction can be broadcast to the network.
+                    example: 01000000000101edd7a5d948a6c79f273ce686a6a8f2e96ed8c2583b5e77b866aa2a1b3426fbed0100000000ffffffff02102700000000000017a914192f23283c2a9e6c5d11562db0eb5d4eb47f460287b9bc2c000000000017a9145c139b242ab3701f321d2399d3a11b028b3b361e870247304402206ac9477fece38d96688c6c3719cb27396c0563ead0567457e7e884b406b6da8802201992d1cfa1b55a67ce8acb482e9957812487d2555f5f54fb0286ecd3095d78e4012103c92564575197c4d6e3d9792280e7548b3ba52a432101c62de2186c4e2fa7fc580000000000
+                required:
+                  - txid
+                  - tx
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/{coin}/advancedwallet/{walletId}/consolidate:
+    post:
+      summary: Advanced Wallets - Consolidate Account
+      description: |-
+        Build, sign, and send a consolidation transaction, all in one call. For account-based assets, consolidating the balances in the receive addresses to the base address maximizes the spendable balance of a wallet.
+
+        Retrieves the private key from KMS using the provided public key or common keychain, then signs and broadcasts the transaction.
+
+        Use this endpoint only with advanced wallets. For other wallet types, use [Consolidate account (simple)](https://developers.bitgo.com/reference/expresswalletconsolidateaccount).
+      operationId: advancedwallet.consolidate
+      tags:
+        - Advanced Wallets
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: coin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source:
+                  type: string
+                  enum:
+                    - user
+                    - backup
+                  description: The key to use for signing the transaction
+                pubkey:
+                  type: string
+                  description: Public key of the key used for signing multisig transactions
+                consolidateAddresses:
+                  type: array
+                  items:
+                    type: string
+                    description: 'Optional: restrict the consolidation to the specified receive addresses. If not provided, will consolidate the funds from all receive addresses up to 500 addresses.'
+                commonKeychain:
+                  type: string
+                  description: For TSS wallets, this is the common keychain of the wallet
+                apiVersion:
+                  type: string
+                  enum:
+                    - full
+                    - lite
+                  description: The Trasaction Request API version to use for MPC EdDSA Hot Wallets. Defaults based on the wallet type and asset curve.
+              required:
+                - source
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/{coin}/advancedwallet/{walletId}/consolidateunspents:
+    post:
+      summary: Advanced Wallets - Consolidate Unspents
+      description: |-
+        Builds, signs, and sends a transaction to consolidate unspents all in 1 call. Consolidating unspents is only for UTXO-based assets.
+
+        Retrieves the private key from KMS using the provided public key, then signs and broadcasts the transaction.
+
+        Use this endpoint only with advanced wallets. For other wallet types, use [Consolidate unspents (simple)](https://developers.bitgo.com/reference/expresswalletconsolidateunspents).
+      operationId: advancedwallet.consolidate.unspents
+      tags:
+        - Advanced Wallets
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: coin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                pubkey:
+                  type: string
+                  description: Public key of the key used for signing multisig transactions
+                source:
+                  type: string
+                  enum:
+                    - user
+                    - backup
+                  description: The key to use for signing the transaction
+                feeRate:
+                  type: number
+                  description: Custom fee rate (in base units) per kilobyte
+                maxFeeRate:
+                  type: number
+                  description: Maximum fee rate (in base units) per kilobyte
+                maxFeePercentage:
+                  type: number
+                  description: Maximum fee percentage
+                feeTxConfirmTarget:
+                  type: number
+                  description: Fee transaction confirmation target
+                bulk:
+                  type: boolean
+                  description: Enable bulk processing
+                minValue:
+                  oneOf:
+                    - type: string
+                    - type: number
+                  description: Minimum value for unspents
+                maxValue:
+                  oneOf:
+                    - type: string
+                    - type: number
+                  description: Maximum value for unspents
+                minHeight:
+                  type: number
+                  description: Minimum block height
+                minConfirms:
+                  type: number
+                  description: Minimum confirmations required
+                enforceMinConfirmsForChange:
+                  type: boolean
+                  description: Enforce minimum confirmations for change outputs
+                limit:
+                  type: number
+                  description: Limit the number of unspents to process
+                numUnspentsToMake:
+                  type: number
+                  description: Number of unspents to make
+                targetAddress:
+                  type: string
+                  description: Target address for consolidation
+              required:
+                - pubkey
+                - source
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tx:
+                    type: string
+                  txid:
+                    type: string
+                required:
+                  - tx
+                  - txid
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/{coin}/advancedwallet/{walletId}/sendMany:
+    post:
+      summary: Advanced Wallets - Send to Many
+      description: |-
+        Send coins or tokens to one or more recipients. You can use this endpoint to schedule outgoing transactions in bulk, lowering your aggregate amount of blockchain fees.
+
+        Retrieves the private key from KMS using the provided public key, then signs and broadcasts the transaction.
+
+        Works with both multisignature and MPC wallets.
+
+        Works with most BitGo-supported assets, but currently unavailable for: ALGO, ARBETH, AVAXC, CELO, CELO:CUSD, CSPR, DOT, EOS, HTETH:BGERCH, NEAR, OPETH, STX, TON, TRX, TRX:USDC, XLM, XRP, XTZ
+
+        Use this endpoint only with advanced wallets. For other wallet types, use [Send to many](https://developers.bitgo.com/reference/expresswalletsendmany).
+      operationId: advancedwallet.sendmany
+      tags:
+        - Advanced Wallets
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: coin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source:
+                  type: string
+                  enum:
+                    - user
+                    - backup
+                  description: The key to use for signing the transaction
+                type:
+                  type: string
+                  enum:
+                    - transfer
+                    - fillNonce
+                    - acceleration
+                    - accountSet
+                    - enabletoken
+                    - transfertoken
+                    - trustline
+                  description: Required for transactions from MPC wallets.
+                recipients:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address:
+                        type: string
+                        description: Destination address
+                        example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
+                        maxLength: 250
+                      amount:
+                        oneOf:
+                          - type: string
+                          - type: number
+                        description: The amount in base units (e.g. satoshis) to send. For doge, only string is allowed.
+                        example: '"2000000"'
+                        pattern: ^-?\d+$
+                    required:
+                      - address
+                      - amount
+                    description: List of recipient addresses and amounts to send
+                pubkey:
+                  type: string
+                  description: Public key of the key used for signing multisig transactions i.e if source is user, this is the user's public key if source is backup, this is the backup key's public key
+                commonKeychain:
+                  type: string
+                  description: For TSS wallets, this is the common keychain of the wallet, it remains the same whether source is user or backup
+                numBlocks:
+                  type: number
+                  description: '(BTC only) The number of blocks required to confirm a transaction. You can use `numBlocks` to estimate the fee rate by targeting confirmation within a given number of blocks. If both `feeRate` and `numBlocks` are absent, the transaction defaults to 2 blocks for confirmation. Note: The `maxFeeRate` limits the fee rate generated by `numBlocks`.'
+                  minimum: 2
+                  maximum: 1000
+                feeRate:
+                  type: number
+                  description: 'Custom fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte. If the `feeRate` is less than the minimum required network fee, then the minimum fee applies. For example, 1000 sat/kvByte, a flat 1000 microAlgos, or a flat 10 drops of xrp. For XRP, the actual fee is usually 4.5 times the open ledger fee. Note: The `feeRate` overrides the `maxFeeRate` and `minFeeRate`.'
+                feeMultiplier:
+                  type: number
+                  description: '(UTXO only) Custom multiplier to the `feeRate`. The resulting fee rate is limited by the `maxFeeRate`. For replace-by-fee (RBF) transactions (that include `rbfTxIds`), the `feeMultiplier` must be greater than 1, since it''s an absolute fee multiplier to the transaction being replaced. Note: The `maxFeeRate` limits the fee rate generated by `feeMultiplier`.'
+                maxFeeRate:
+                  type: number
+                  description: '(BTC only) The maximum fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte. The `maxFeeRate` limits the fee rate generated by both `feeMultiplier` and `numBlocks`. Note: The `feeRate` overrides the `maxFeeRate`.'
+                minConfirms:
+                  type: number
+                  description: The unspent selection for the transaction will only consider unspents with at least this many confirmations to be used as inputs. Does not apply to change outputs unless used in combination with `enforceMinConfirmsForChange`.
+                enforceMinConfirmsForChange:
+                  type: boolean
+                  default: false
+                  description: When set to true, will enforce minConfirms for change outputs. Defaults to false.
+                targetWalletUnspents:
+                  type: number
+                  default: 1000
+                  description: 'Specifies the minimum count of good-sized unspents to maintain in the wallet. Change splitting ceases when the wallet has `targetWalletUnspents` good-sized unspents. Note: Wallets that continuously send a high count of transactions will automatically split large change amounts into multiple good-sized change outputs while they have fewer than `targetWalletUnspents` good-sized unspents in their unspent pool. Breaking up large unspents helps to reduce the amount of unconfirmed funds in flight in future transactions, and helps to avoid long chains of unconfirmed transactions. This is especially useful for newly funded wallets or recently refilled send-only wallets.'
+                message:
+                  type: string
+                  description: Optional metadata (only persisted in BitGo) to be applied to the transaction. Use this to add transaction-specific information such as the transaction's purpose or another identifier that you want to reference later. The value is shown in the UI in the transfer listing page.
+                  maxLength: 256
+                minValue:
+                  oneOf:
+                    - type: number
+                    - type: string
+                  description: Ignore unspents smaller than this amount of base units (e.g. satoshis). For doge, only string is allowed.
+                maxValue:
+                  oneOf:
+                    - type: number
+                    - type: string
+                  description: Ignore unspents larger than this amount of base units (e.g. satoshis). For doge, only string is allowed.
+                sequenceId:
+                  type: string
+                  description: A `sequenceId` is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a `sequenceId` you can easily reference transfers and transactions—for example, to safely retry sending. Because the system only confirms one send request per `sequenceId` (and fails all subsequent attempts), you can retry sending without the risk of double spending. The `sequenceId` is only visible to users on the wallet and is not shared publicly.
+                lastLedgerSequence:
+                  type: number
+                  description: (XRP only) Absolute max ledger the transaction should be accepted in, whereafter it will be rejected
+                ledgerSequenceDelta:
+                  type: number
+                  description: (XRP only) Relative ledger height (in relation to the current ledger) that the transaction should be accepted in, whereafter it will be rejected
+                noSplitChange:
+                  type: boolean
+                  default: false
+                  description: 'Set `true` to disable automatic change splitting. Also see: `targetWalletUnspents`'
+                unspents:
+                  type: array
+                  items:
+                    type: string
+                    description: Used to explicitly specify the unspents to be used in the input set in the transaction. Each unspent should be in the form `prevTxId:nOutput`.
+                comment:
+                  type: string
+                  description: Optional metadata (only persisted in BitGo) to be applied to the transaction. Use this to add transaction-specific information such as the transaction's purpose or another identifier that you want to reference later. The value is shown in the UI in the transfer listing page.
+                  maxLength: 256
+                otp:
+                  type: string
+                  description: Two factor auth code to enable sending the transaction. Not necessary if using a long lived access token within the spending limit.
+                changeAddress:
+                  type: string
+                  description: Specifies a custom destination address for the transaction's change output(s)
+                  maxLength: 250
+                allowExternalChangeAddress:
+                  type: boolean
+                  description: Flag for allowing external change addresses
+                instant:
+                  type: boolean
+                  description: (DASH only) Specifies whether or not to use Dash's "InstantSend" feature when sending a transaction.
+                memo:
+                  type: string
+                  description: 'Extra transaction information for CSPR, EOS, HBAR, RUNE, STX, TON, XLM, and XRP. Required for XLM transactions. Note: For XRP this is the destination tag (DT). For CSPR this is the transfer ID.'
+                transferId:
+                  type: number
+                  description: Transfer ID for the transaction
+                eip1559: {}
+                gasLimit:
+                  type: number
+                  description: Custom gas limit to be used for sending the transaction. Only for ETH and ERC20 tokens.
+                custodianTransactionId:
+                  type: string
+                  description: Custodian transaction ID
+                nonce:
+                  type: string
+                  description: (DOT only) A nonce ID is a number used to protect private communications by preventing replay attacks. This is an advanced option where users can manually input a new nonce value in order to correct or fill in a missing nonce ID value.
+              required:
+                - source
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/{coin}/advancedwallet/{walletId}/txrequest/{txRequestId}/signAndSend:
+    post:
+      summary: Advanced Wallets - Sign and Send MPC Transaction
+      description: |-
+        Sign and send a MPC transaction.
+
+        Retrieves the private key from KMS using the provided common keychain, then signs and broadcasts the transaction.
+
+        Use this endpoint only with advanced wallets. For other wallet types, use [Sign MPC transaction](https://developers.bitgo.com/reference/expresswalletsigntxtss).
+      operationId: advancedwallet.sign.tx.tss
+      tags:
+        - Advanced Wallets
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: coin
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: txRequestId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                source:
+                  type: string
+                  enum:
+                    - user
+                    - backup
+                  description: The key to use for signing the transaction
+                commonKeychain:
+                  type: string
+                  description: Common keychain of the wallet during wallet creation
+              required:
+                - source
+                - commonKeychain
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/{coin}/advancedwallet/generate:
+    post:
+      summary: Advanced Wallets - Generate Wallet
+      description: |-
+        Create a new advanced wallet. Calling this endpoint does the following:
+        1. Generates user keychain in isolated AWM, then sends to KMS (encrypts private key, stores public key mapping).
+        2. Generates backup keychain in isolated AWM, then sends to KMS (encrypts private key, stores public key mapping).
+        3. Uploads the user and backup public keys to BitGo.
+        4. Creates the BitGo key on the BitGo service.
+        5. Creates the wallet on BitGo with the 3 keys.
+      operationId: advancedwallet.generate
+      tags:
+        - Advanced Wallets
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                label:
+                  type: string
+                  description: A human-readable label for the wallet This will be displayed in the BitGo dashboard and API responses
+                  example: My Wallet
+                multisigType:
+                  type: string
+                  enum:
+                    - onchain
+                    - tss
+                  description: 'The type of multisig wallet to create - onchain: Traditional multisig wallets using on-chain scripts - tss: Threshold Signature Scheme wallets using MPC protocols If absent, BitGo uses the default wallet type for the asset'
+                  example: tss
+                enterprise:
+                  type: string
+                  description: Enterprise ID - Required for Ethereum wallets Ethereum wallets can only be created under an enterprise Each enterprise has a fee address which will be used to pay for transaction fees Your enterprise ID can be seen by clicking on the "Manage Organization" link on the enterprise dropdown
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+                disableTransactionNotifications:
+                  type: boolean
+                  description: Flag for disabling wallet transaction notifications When true, BitGo will not send email/SMS notifications for wallet transactions
+                  example: false
+                isDistributedCustody:
+                  type: boolean
+                  description: True, if the wallet type is a distributed-custodial If passed, you must also pass the 'enterprise' parameter Distributed custody allows multiple parties to share control of the wallet
+                  example: false
+                walletVersion:
+                  type: number
+                  description: 'Specify the wallet creation contract version used when creating an Ethereum wallet contract - 0: Old wallet creation (legacy) - 1: New wallet creation, only deployed upon receiving funds - 2: Same functionality as v1 but with NFT support - 3: MPC wallets'
+                  example: 1
+                  minimum: 0
+                  maximum: 3
+              required:
+                - label
+                - multisigType
+                - enterprise
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  wallet:
+                    $ref: '#/components/schemas/WalletType1'
+                  userKeychain:
+                    $ref: '#/components/schemas/UserKeychainType'
+                  backupKeychain:
+                    $ref: '#/components/schemas/UserKeychainType'
+                  bitgoKeychain:
+                    $ref: '#/components/schemas/BitgoKeychainType'
+                  responseType:
+                    type: string
+                required:
+                  - wallet
+                  - userKeychain
+                  - backupKeychain
+                  - bitgoKeychain
+                  - responseType
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/{coin}/advancedwallet/recovery:
+    post:
+      summary: Advanced Wallets - Recover Assets
+      description: |-
+        Recover assets from an advanced wallet with a balance only in the base address. Works for both multisignature and MPC recoveries.
+
+        Retrieves the private keys from KMS using the provided public keys or common keychain, then signs and returns the broadcastable transaction hex.
+
+        Note: This endpoint only works when AWM and MBE are running in recovery mode.
+
+        To recover assets from an advanced wallet with balances in multiple receive addresses, use [Advanced Wallets - Consolidate and Recover Assets](https://developers.bitgo.com/reference/advancedwalletconsolidaterecovery).
+
+        Use this endpoint only with advanced wallets. For other wallet types, use the [Wallet Recovery Wizard](https://developers.bitgo.com/docs/wallets-recover#/).
+      operationId: advancedwallet.recovery
+      tags:
+        - Advanced Wallets
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request type for the wallet recovery endpoint. Used to recover funds from both standard multisig and TSS wallets. Recover funds from an advanced wallet by building a transaction with user and backup keys.
+              properties:
+                isTssRecovery:
+                  type: boolean
+                  description: Set to true to perform a TSS (Threshold Signature Scheme) recovery.
+                  example: true
+                tssRecoveryParams:
+                  type: object
+                  description: Parameters specific to TSS recovery. Required when isTssRecovery is true.
+                  properties:
+                    commonKeychain:
+                      type: string
+                      description: The common keychain string used for TSS wallets. Required for TSS recovery.
+                      example: 0280ec751d3b165a48811b2cc90f90dcf323f33e8bcaadc0341e1e010adcdcf7005afde80dd286d65b6be947af0424dd1e9f7611f3d20e02a4fc84ad8c8b74c1a5
+                  required:
+                    - commonKeychain
+                multiSigRecoveryParams:
+                  type: object
+                  description: Parameters specific to standard multisig recovery. Required when isTssRecovery is false (default).
+                  properties:
+                    backupPub:
+                      type: string
+                      description: The backup public key.
+                      example: xpub661MyMwAqRbcGCNnmzqt3u5KhxmXBHiC78cwAyUMaKJXpFDfHpJwNap6qpG1Kz2SPexKXy3akhPQz7GDYWpHNWkLxRLj6bDxQSf74aTAP9y
+                    bitgoPub:
+                      type: string
+                      description: The BitGo public key. Required for UTXO coins, optional for others.
+                      example: xpub661MyMwAqRbcGCNnmzqt3u5KhxmXBHiC78cwAyUMaKJXpFDfHpJwNap6qpG1Kz2SPexKXy3akhPQz7GDYWpHNWkLxRLj6bDxQSf74aTAP9y
+                    userPub:
+                      type: string
+                      description: The user's public key.
+                      example: xpub661MyMwAqRbcGCNnmzqt3u5KhxmXBHiC78cwAyUMaKJXpFDfHpJwNap6qpG1Kz2SPexKXy3akhPQz7GDYWpHNWkLxRLj6bDxQSf74aTAP9y
+                    walletContractAddress:
+                      type: string
+                      description: The wallet contract address. Required for ETH-like recoveries.
+                      example: '0x1234567890123456789012345678901234567890'
+                  required:
+                    - backupPub
+                    - bitgoPub
+                    - userPub
+                    - walletContractAddress
+                recoveryDestinationAddress:
+                  type: string
+                  description: The address where recovered funds will be sent. Must be a valid address for the coin being recovered.
+                  example: '"9zvKDB8o96QvToQierXtwSfqK9NqaHw7uvmxWsmSrxns" // For SOL'
+                apiKey:
+                  type: string
+                  description: API Key for a block chain explorer. Required for some coins (BTC, ETH) to build a recovery transaction without BitGo.
+                coinSpecificParams:
+                  type: object
+                  description: 'Coin-specific recovery options. Different parameters are required based on the coin family: - For UTXO coins (BTC, etc): provide utxoRecoveryOptions. - For EVM chains (ETH, etc): provide evmRecoveryOptions. - For Solana: provide solanaRecoveryOptions.'
+                  properties:
+                    ecdsaCosmosLikeRecoverySpecificParams:
+                      type: object
+                      properties:
+                        rootAddress:
+                          type: string
+                      required:
+                        - rootAddress
+                    ecdsaEthLikeRecoverySpecificParams:
+                      type: object
+                      properties:
+                        apiKey:
+                          type: string
+                        bitgoDestinationAddress:
+                          type: string
+                        walletContractAddress:
+                          type: string
+                      required:
+                        - apiKey
+                        - bitgoDestinationAddress
+                        - walletContractAddress
+                    evmRecoveryOptions:
+                      type: object
+                      description: EVM-specific recovery parameters for Ethereum and EVM-compatible chains. Used for recovering funds from standard multisig wallets on Ethereum and EVM-compatible chains. Required when recovering ETH, MATIC, BSC, AVAX C-Chain, etc.
+                      properties:
+                        eip1559:
+                          type: object
+                          description: EIP-1559 gas parameters for modern Ethereum transactions. Required for EIP-1559 compatible networks (Ethereum post-London fork).
+                          properties:
+                            maxFeePerGas:
+                              type: number
+                              description: Maximum fee per gas in wei (base fee + priority fee).
+                              example: null
+                            maxPriorityFeePerGas:
+                              type: number
+                              description: Maximum priority fee per gas in wei (tip for miners/validators).
+                              example: null
+                          required:
+                            - maxFeePerGas
+                            - maxPriorityFeePerGas
+                        gasLimit:
+                          type: number
+                          description: Gas limit for the recovery transaction. Must be enough to cover the contract execution costs.
+                          example: 500000
+                        gasPrice:
+                          type: number
+                          description: Gas price in wei for the recovery transaction (for legacy transactions). Higher gas prices result in faster confirmations but higher transaction costs.
+                          example: null
+                        replayProtectionOptions:
+                          type: object
+                          description: Replay protection options for the transaction. Required to prevent transaction replay attacks across different chains.
+                          properties:
+                            chain:
+                              oneOf:
+                                - type: string
+                                - type: number
+                              description: Chain ID or name.
+                              example: '"goerli" // Goerli Testnet'
+                            hardfork:
+                              type: string
+                              default: london
+                              description: Hardfork name to determine the transaction format.
+                              example: '"istanbul" // Pre-London fork'
+                          required:
+                            - chain
+                            - hardfork
+                        scan:
+                          type: number
+                          default: 20
+                          description: Number of addresses to scan for funds. Higher values will scan more addresses but take longer to complete.
+                          example: null
+                    solanaRecoveryOptions:
+                      type: object
+                      description: Solana-specific recovery parameters.
+                      properties:
+                        closeAtaAddress:
+                          type: string
+                          description: The close associated token account address. Required for token recovery.
+                        durableNonce:
+                          type: object
+                          description: Durable nonce configuration for transaction durability. Optional but recommended for recovery operations. Refer to https://github.com/BitGo/wallet-recovery-wizard/blob/master/DURABLE_NONCE.md on durable nonce creation.
+                          properties:
+                            publicKey:
+                              type: string
+                              description: The public key of the durable nonce account.
+                            secretKey:
+                              type: string
+                              description: The secret key of the durable nonce account.
+                          required:
+                            - publicKey
+                            - secretKey
+                        programId:
+                          type: string
+                          description: The program ID for the token. Required for token recovery.
+                        recoveryDestinationAtaAddress:
+                          type: string
+                          description: The recovery destination's associated token account address. Required for token recovery.
+                        tokenContractAddress:
+                          type: string
+                          description: The token contract address for token recovery. Required when recovering tokens.
+                    utxoRecoveryOptions:
+                      type: object
+                      description: UTXO-specific recovery parameters for Bitcoin & Bitcoin-like cryptocurrencies. Used for recovering funds from standard multisig wallets on UTXO chains. Required when recovering BTC, BCH, LTC, DASH, ZEC, etc.
+                      properties:
+                        feeRate:
+                          type: number
+                          description: Fee rate for the recovery transaction in satoshis per byte. Higher fee rates result in faster confirmations but higher transaction costs.
+                          example: null
+                        ignoreAddressTypes:
+                          type: array
+                          example:
+                            - p2sh-p2wsh
+                            - p2wsh
+                          items:
+                            type: string
+                            description: Array of address types to ignore during recovery. Useful when you want to exclude specific address types from the recovery process.
+                        scan:
+                          type: number
+                          description: Number of addresses to scan for funds. Higher values will scan more addresses but take longer to complete.
+                          example: null
+                        userKeyPath:
+                          type: string
+                          default: m/0
+                          description: Derivation path for the user key. Specifies the HD path to derive the correct user key for signing.
+                          example: m/0/0/0/0
+              required:
+                - recoveryDestinationAddress
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Successful recovery response.
+                example:
+                  txHex: 01000000000101edd7a5d948a6c79f273ce686a6a8f2e96ed8c2583b5e77b866aa2a1b3426fbed0100000000ffffffff02102700000000000017a914192f23283c2a9e6c5d11562db0eb5d4eb47f460287b9bc2c000000000017a9145c139b242ab3701f321d2399d3a11b028b3b361e870247304402206ac9477fece38d96688c6c3719cb27396c0563ead0567457e7e884b406b6da8802201992d1cfa1b55a67ce8acb482e9957812487d2555f5f54fb0286ecd3095d78e4012103c92564575197c4d6e3d9792280e7548b3ba52a432101c62de2186c4e2fa7fc580000000000
+                properties:
+                  txHex:
+                    type: string
+                    description: The full signed transaction in hexadecimal format. This transaction can be broadcast to the network to complete the recovery.
+                required:
+                  - txHex
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /api/v1/{coin}/advancedwallet/recoveryconsolidations:
+    post:
+      summary: Advanced Wallets - Consolidate and Recover Assets
+      description: |-
+        Recover assets from an advanced wallet with a balance in multiple receive addresses. Build, sign, and send a consolidation and recovery, all in one call. Sign using your user and backup keys. Works for both multisignature and MPC recoveries.
+
+        Retrieves the private keys from KMS using the provided public keys or common keychain, then signs and returns the broadcastable transaction hex.
+
+        Note: This endpoint only works when AWM and MBE are running in recovery mode.
+
+        To recover assets from an advanced wallet with a balance only in the base address, use [Advanced Wallets - Recover Assets](https://developers.bitgo.com/reference/advancedwalletrecovery).
+
+        Use this endpoint only with advanced wallets. For other wallet types, use the [Wallet Recovery Wizard](https://developers.bitgo.com/docs/wallets-recover#/).
+      operationId: advancedwallet.consolidate.recovery
+      tags:
+        - Advanced Wallets
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request type for wallet recovery consolidations endpoint. Used to consolidate and recover funds from multiple addresses in a wallet, via signing with user and backup keys.
+              properties:
+                userPub:
+                  type: string
+                  description: The user's public key for standard multisig wallets. Required for onchain multisig recovery consolidations.
+                  example: xpub661MyMwAqRbcGCNnmzqt3u5KhxmXBHiC78cwAyUMaKJXpFDfHpJwNap6qpG1Kz2SPexKXy3akhPQz7GDYWpHNWkLxRLj6bDxQSf74aTAP9y
+                backupPub:
+                  type: string
+                  description: The backup public key for standard multisig wallets. Required for onchain multisig recovery consolidations.
+                  example: xpub661MyMwAqRbcGCNnmzqt3u5KhxmXBHiC78cwAyUMaKJXpFDfHpJwNap6qpG1Kz2SPexKXy3akhPQz7GDYWpHNWkLxRLj6bDxQSf74aTAP9y
+                bitgoPub:
+                  type: string
+                  description: The BitGo public key for standard multisig wallets. Required for onchain UTXO multisig recovery consolidations.
+                  example: xpub661MyMwAqRbcGCNnmzqt3u5KhxmXBHiC78cwAyUMaKJXpFDfHpJwNap6qpG1Kz2SPexKXy3akhPQz7GDYWpHNWkLxRLj6bDxQSf74aTAP9y
+                multisigType:
+                  type: string
+                  enum:
+                    - onchain
+                    - tss
+                  description: 'The type of wallet to recover - onchain: Traditional multisig wallets. - tss: Threshold Signature Scheme wallets.'
+                  example: onchain
+                commonKeychain:
+                  type: string
+                  description: The common keychain for TSS wallets. Required when multisigType is 'tss'.
+                  example: 0280ec751d3b165a48811b2cc90f90dcf323f33e8bcaadc0341e1e010adcdcf7005afde80dd286d65b6be947af0424dd1e9f7611f3d20e02a4fc84ad8c8b74c1a5
+                tokenContractAddress:
+                  type: string
+                  description: The token contract address for token recovery (e.g., ERC20 tokens on Ethereum or SPL tokens on Solana). Required when recovering specific tokens instead of the native coin.
+                  example: '"EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" // USDC on Solana'
+                startingScanIndex:
+                  type: number
+                  description: The starting index to scan for addresses to consolidate. Useful for limiting the scan range for better performance.
+                  example: 0
+                endingScanIndex:
+                  type: number
+                  default: 20
+                  description: The ending index to scan for addresses to consolidate. Useful for limiting the scan range for better performance.
+                  example: 100
+                apiKey:
+                  type: string
+                  description: API key for blockchain explorer services. Required for some coins to build recovery transactions.
+                  example: v2x8d5e46cf15a7b9b7xc60685d4f56xd8bd5f5cdcef3c1e9d4399c955d587179b
+                durableNonces:
+                  type: object
+                  description: Durable nonces configuration for Solana transactions. Provides transaction durability for Solana recovery operations. Refer to https://github.com/BitGo/wallet-recovery-wizard/blob/master/DURABLE_NONCE.md on durable nonce creation.
+                  properties:
+                    publicKeys:
+                      type: array
+                      example:
+                        - BurablNonc1234567890123456789012345678901
+                        - BurablNonc1234567890123456789012345678902
+                      items:
+                        type: string
+                        description: Array of public keys associated with the durable nonce.
+                    secretKey:
+                      type: string
+                      description: The secret key of the durable nonce account.
+                      example: 3XNrU5JSPs2VnZCLnWK8GDzB6Pqoy3tYNMJJVesKBXnGqRxwdXDg2QKgv7E9a6QbAiKnLHSxysKWgXDKNdfXZCQM
+                  required:
+                    - publicKeys
+                    - secretKey
+              required:
+                - multisigType
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '501':
+          description: Not Implemented
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+  /ping/advancedWalletManager:
+    post:
+      summary: Advanced Wallets - Ping Advanced Wallet Manager
+      description: Test your connection between the Advanced Wallet Manager (AWM) and the Master Bitgo Express (MBE) servers.
+      operationId: advancedwallet.mbe.awm.ping
+      tags:
+        - Advanced Wallets
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                  awmResponse:
+                    $ref: '#/components/schemas/PingResponseType'
+                required:
+                  - status
+                  - awmResponse
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                  details:
+                    type: string
+                required:
+                  - error
+                  - details
   /api/network/v1/enterprises/{enterpriseId}/clients:
     post:
       summary: Create client
@@ -47499,6 +48732,64 @@ components:
             format:
               $ref: '#/components/schemas/SupportedAddressFormat'
         - $ref: '#/components/schemas/UtxoAddress'
+    BitgoKeychainType:
+      title: BitgoKeychainType
+      type: object
+      properties:
+        id:
+          type: string
+          description: Keychain ID
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        source:
+          type: string
+          description: Party that created the key
+          example: bitgo
+        type:
+          type: string
+          description: Keychain type (e.g. "independent" for onchain, "tss" for MPC)
+        isBitGo:
+          type: boolean
+          description: Flag for identifying keychain as created by BitGo
+          example: true
+        isTrust:
+          type: boolean
+          description: Flag for identifying keychain as trust keychain
+          example: false
+        hsmType:
+          type: string
+          description: HSM type used for the BitGo key
+          example: institutional
+        pub:
+          type: string
+          description: Public part of a key pair (onchain wallets)
+        ethAddress:
+          type: string
+          description: Ethereum address corresponding to this keychain (onchain wallets)
+        commonKeychain:
+          type: string
+          description: Common keychain string (TSS wallets)
+        verifiedVssProof:
+          oneOf:
+            - type: boolean
+            - type: string
+          description: Whether VSS proof was verified (TSS wallets)
+        keyShares:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+            description: TSS key share metadata (TSS wallets)
+        walletHSMGPGPublicKeySigs:
+          type: string
+          description: Wallet HSM GPG public key signatures (TSS wallets)
+      required:
+        - id
+        - source
+        - type
+        - isBitGo
+        - isTrust
+        - hsmType
     BitgoOrg:
       title: BitgoOrg
       type: string
@@ -53075,6 +54366,19 @@ components:
         error: invalid permission
         errorName: backend:common:forbidden
         reqId: unk-nqo97l23l2ofpvgkbb8z
+    ErrorResponse:
+      title: ErrorResponse
+      type: object
+      properties:
+        error:
+          type: string
+          description: The error name
+        details:
+          type: string
+          description: Error details
+      required:
+        - error
+        - details
     EstimateTransactionFees:
       title: Bitcoin
       type: object
@@ -64428,6 +65732,17 @@ components:
       required:
         - phone
         - verified
+    PingResponseType:
+      title: PingResponseType
+      type: object
+      properties:
+        status:
+          type: string
+        timestamp:
+          type: string
+      required:
+        - status
+        - timestamp
     PinnedWallets:
       title: PinnedWallets
       type: object
@@ -76430,6 +77745,40 @@ components:
           type: boolean
         isMandatory:
           type: boolean
+    UserKeychainType:
+      title: UserKeychainType
+      type: object
+      properties:
+        id:
+          type: string
+          description: Keychain ID
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        source:
+          type: string
+          description: Party that created the key
+          example: user
+        type:
+          type: string
+          description: Keychain type (e.g. "independent" for onchain, "tss" for MPC)
+        pub:
+          type: string
+          description: Public part of a key pair (onchain wallets)
+          example: xpub661MyMwAqRbcGMVhmc7wqQRYMtcX9LAvSj1pjB213y5TsrkV2uuzJjWnjBrT1FUeNWGPjaVm5p7o6jdNcQJrV1cy3a1R8NQ9m7LuYKA8RpH
+        ethAddress:
+          type: string
+          description: Ethereum address corresponding to this keychain (onchain wallets)
+          example: '0xf5b7cca8621691f9dde304cb7128b6bb3d409363'
+        coin:
+          type: string
+          description: Asset ticker for this keychain (onchain wallets)
+        commonKeychain:
+          type: string
+          description: Common keychain string (TSS wallets)
+      required:
+        - id
+        - source
+        - type
     UserKycState:
       type: string
       enum:
@@ -79459,6 +80808,17 @@ components:
       required:
         - webhookId
         - isValid
+    VersionResponseType:
+      title: VersionResponseType
+      type: object
+      properties:
+        version:
+          type: string
+        name:
+          type: string
+      required:
+        - version
+        - name
     VetBurnNFTIntent:
       title: VET Burn NFT Intent
       allOf:
@@ -81322,6 +82682,226 @@ components:
         - hot
         - advanced
         - trading
+    WalletType1:
+      title: WalletType
+      type: object
+      properties:
+        id:
+          type: string
+          description: Wallet ID
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              user:
+                type: string
+              permissions:
+                type: array
+                items:
+                  type: string
+            required:
+              - user
+              - permissions
+            description: Ids of users with access to the wallet
+        coin:
+          type: string
+          description: Name of the blockchain the wallet is on
+          example: tbtc4
+        label:
+          type: string
+          description: Name the user assigned to the wallet
+          example: My TBTC4 Wallet
+        m:
+          type: number
+          description: Number of signatures required for the wallet to send
+          example: 2
+        'n':
+          type: number
+          description: Number of signers on the wallet
+          example: 3
+        keys:
+          type: array
+          example:
+            - 59cd72485007a239fb00282ed480da1f
+          items:
+            type: string
+            description: Ids of wallet keys
+        keySignatures:
+          type: object
+          additionalProperties: {}
+          description: Signatures for the backup and BitGo public keys signed by the user key
+        enterprise:
+          type: string
+        organization:
+          type: string
+        bitgoOrg:
+          type: string
+        tags:
+          type: array
+          example:
+            - 59cd72485007a239fb00282ed480da1f
+          items:
+            type: string
+            description: Tags set on the wallet
+        disableTransactionNotifications:
+          type: boolean
+          description: Flag for disabling wallet transaction notifications
+          example: false
+        freeze:
+          type: object
+          additionalProperties: {}
+          description: Freeze state (used to stop the wallet from spending)
+          example: {}
+        deleted:
+          type: boolean
+          description: Flag which indicates the wallet has been deleted
+          example: false
+        approvalsRequired:
+          type: number
+          description: Number of admin approvals required for an action to fire
+          example: 1
+        isCold:
+          type: boolean
+          description: Flag for identifying cold wallets
+          example: false
+        coinSpecific:
+          type: object
+          additionalProperties: {}
+          description: Coin-specific data
+        admin:
+          type: object
+          additionalProperties: {}
+          description: Admin data (wallet policies)
+          example: {}
+        allowBackupKeySigning:
+          type: boolean
+          description: Flag for allowing signing with backup key
+          example: false
+        clientFlags:
+          type: array
+          items:
+            type: string
+        recoverable:
+          type: boolean
+          description: Flag indicating whether this wallet's user key is recoverable with the passphrase held by the user.
+        startDate:
+          type: string
+          description: Time when this wallet was created
+        hasLargeNumberOfAddresses:
+          type: boolean
+          description: Flag indicating that this wallet is large (more than 100,000 addresses). If this is set, some APIs may omit properties which are expensive to calculate for wallets with many addresses (for example, the total address counts returned by the List Addresses API).
+        config:
+          type: object
+          additionalProperties: {}
+          description: Custom configuration options for this wallet
+        balanceString:
+          type: string
+          description: Wallet balance as string
+          example: '0'
+        confirmedBalanceString:
+          type: string
+          description: Confirmed wallet balance as string
+          example: '0'
+        spendableBalanceString:
+          type: string
+          description: Spendable wallet balance as string
+          example: '0'
+        receiveAddress:
+          type: object
+          properties:
+            id:
+              type: string
+            address:
+              type: string
+            chain:
+              type: number
+            index:
+              type: number
+            coin:
+              type: string
+            wallet:
+              type: string
+            coinSpecific:
+              type: object
+              additionalProperties: {}
+          required:
+            - id
+            - address
+            - chain
+            - index
+            - coin
+            - wallet
+            - coinSpecific
+        balance:
+          type: number
+          description: Wallet balance as number
+          example: 0
+        rbfBalance:
+          type: number
+        rbfBalanceString:
+          type: string
+        reservedBalanceString:
+          type: string
+        lockedBalanceString:
+          type: string
+        stakedBalanceString:
+          type: string
+        unspentCount:
+          type: number
+        pendingChainInitialization:
+          type: boolean
+        pendingEcdsaTssInitialization:
+          type: boolean
+        pendingApprovals:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+        multisigType:
+          type: string
+        multisigTypeVersion:
+          type: string
+        type:
+          type: string
+        subType:
+          type: string
+        creator:
+          type: string
+        walletFullyCreated:
+          type: boolean
+      required:
+        - id
+        - users
+        - coin
+        - label
+        - m
+        - 'n'
+        - keys
+        - keySignatures
+        - enterprise
+        - organization
+        - bitgoOrg
+        - tags
+        - disableTransactionNotifications
+        - freeze
+        - deleted
+        - approvalsRequired
+        - isCold
+        - coinSpecific
+        - admin
+        - allowBackupKeySigning
+        - clientFlags
+        - recoverable
+        - startDate
+        - hasLargeNumberOfAddresses
+        - config
+        - balanceString
+        - confirmedBalanceString
+        - spendableBalanceString
+        - receiveAddress
     WalletTypeCondition:
       title: Wallet type
       type: object
