@@ -31926,6 +31926,7 @@ paths:
               - fundsDeposited
               - kycResult
               - policyBalanceChange
+              - reversal
               - transaction_finality_on_l1
             example: transfer
         - name: prevId
@@ -33068,6 +33069,7 @@ paths:
               - bankAccount
               - accessToken
               - policyBalanceChange
+              - reversal
         - name: prevId
           in: query
           schema:
@@ -33335,7 +33337,7 @@ paths:
                   enum:
                     - individual
                     - entity
-                  description: The account type for the enterprise. Defaults to 'individual' if not specified. Only available when feature flag 'wp_kyb_enable-account-type-entity' is enabled.
+                  description: The account type for the enterprise. Defaults to 'individual' if not specified.
                 thirdPartyIdentifier:
                   type: array
                   items:
@@ -34352,6 +34354,7 @@ paths:
               - contractSigned
               - kycResult
               - policyBalanceChange
+              - reversal
               - transaction_finality_on_l1
         - name: prevId
           in: query
@@ -34799,6 +34802,7 @@ paths:
               - fundsDeposited
               - kycResult
               - policyBalanceChange
+              - reversal
               - transaction_finality_on_l1
             example: transfer
         - name: prevId
@@ -35111,6 +35115,78 @@ paths:
                 $ref: '#/components/schemas/ListPendingApprovalsCountByEnterpriseResponse'
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/policy/rule/bulk:
+    put:
+      summary: Bulk update wallet policy rules
+      description: |-
+        Updates whitelist policy rules across multiple wallets in a single request.
+        Only advancedWhitelist rules are supported.
+      operationId: v2.policy.rule.bulk
+      tags:
+        - Wallet Policy
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                updates:
+                  type: array
+                  items:
+                    type: object
+                    description: Request body for a single wallet policy rule update in a bulk request
+                    properties:
+                      walletId:
+                        type: string
+                        description: The ID of the wallet to update
+                      coin:
+                        type: string
+                        description: The coin type for this rule
+                      id:
+                        type: string
+                        description: The id of the rule
+                      type:
+                        type: string
+                        enum:
+                          - advancedWhitelist
+                        description: Must be advancedWhitelist
+                      action:
+                        allOf:
+                          - $ref: '#/components/schemas/BulkPolicyRuleAction'
+                        description: The action to take when the rule is triggered
+                      condition:
+                        allOf:
+                          - $ref: '#/components/schemas/BulkWhitelistCondition'
+                        description: The condition for the rule (add/remove address)
+                    required:
+                      - walletId
+                      - coin
+                      - id
+                      - type
+                      - action
+                      - condition
+              required:
+                - updates
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkPolicyRuleUpdateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -46737,8 +46813,6 @@ components:
           properties:
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
             recipients:
               type: array
               items:
@@ -46755,8 +46829,8 @@ components:
                   - amount
           required:
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/StakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     AtomStakingDelegation:
       title: ATOM Staking Delegation
       allOf:
@@ -46835,8 +46909,6 @@ components:
           properties:
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
             recipients:
               type: array
               items:
@@ -46853,8 +46925,8 @@ components:
                   - amount
           required:
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/UnstakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     AtomUnstakingTransactionProperties:
       title: ATOM Unstaking Transaction Properties
       allOf:
@@ -46888,12 +46960,10 @@ components:
           properties:
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
           required:
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/WithdrawIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     AuditLogType1:
       title: AuditLogType
       type: string
@@ -48335,6 +48405,10 @@ components:
         isContractedClient:
           type: boolean
           description: True, if the enterprise has been onboarded by Salesforce
+        documents:
+          allOf:
+            - $ref: '#/components/schemas/DocumentCollection'
+          description: Documents that need to be collected from this enterprise
       required:
         - id
         - name
@@ -48422,6 +48496,61 @@ components:
             A `memo` is an additional address feature necessary for identifying a transaction recipient beyond wallet address.
       required:
         - intentType
+    BaseIntentWithAmount:
+      title: BaseIntentWithAmount
+      type: object
+      description: 'Schema fragment for intents with direct amount field This fragment defines an amount field directly on the intent object (not nested in recipients). Common in staking, claiming, and delegation intents. Used by: - StakeIntent variants (AtomStakeIntent, SolStakeIntent, etc.) - UnstakeIntent variants (AtomUnstakeIntent, etc.) - DelegateIntent variants (BscDelegateIntent, TonDelegateIntent, etc.) - ClaimRewardsIntent variants (AdaStakeClaimRewardsIntent, etc.) - WithdrawIntent variants (AtomWithdrawIntent, CosmosWithdrawIntent, etc.) Asset extraction: Extracts symbol from the amount field'
+      properties:
+        amount:
+          $ref: '#/components/schemas/Amount'
+      required:
+        - amount
+    BaseIntentWithRecipients:
+      title: BaseIntentWithRecipients
+      type: object
+      description: '============================================================================ REUSABLE SCHEMA FRAGMENTS FOR ASSET-CONTAINING INTENTS ============================================================================ These schemas define reusable building blocks that concrete intent schemas can compose with. They serve multiple purposes: 1. **Schema Reuse**: Concrete intents can intersect with these fragments 2. **Pattern Matching**: getAssetsFromIntent utility matches against these 3. **Type Safety**: Ensures consistency across all asset-containing intents 4. **Documentation**: Clearly shows which intents handle which asset types By using the actual RecipientEntry and TokenRecipientEntry types, we ensure these patterns exactly match the structures used in concrete intents.'
+      properties:
+        recipients:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                $ref: '#/components/schemas/Address'
+              amount:
+                $ref: '#/components/schemas/Amount'
+              data:
+                $ref: '#/components/schemas/optionalString'
+            required:
+              - address
+              - amount
+      required:
+        - recipients
+    BaseIntentWithTokenName:
+      title: BaseIntentWithTokenName
+      type: object
+      description: 'Schema fragment for intents with direct tokenName field This fragment defines a tokenName field directly on the intent object (not nested in recipients). Used by: - TokenApprovalIntent Asset extraction: Extracts tokenName'
+      properties:
+        tokenName:
+          type: string
+      required:
+        - tokenName
+    BaseIntentWithTokenRecipients:
+      title: BaseIntentWithTokenRecipients
+      type: object
+      description: 'Schema fragment for intents with token recipients This fragment defines a recipients array using TokenRecipientEntry, which extends RecipientEntry with optional tokenData containing token-specific info. Used by: - TransferTokenIntent (and variants: EthTransferTokenIntent, etc.) - ConsolidateTokenIntent (and variants: EthConsolidateTokenIntent, etc.) Asset extraction: Extracts tokenName only (the actual asset identifier) Note: tokenType, tokenContractAddress, tokenId are technical fields, not assets Note: This also matches BaseIntentWithRecipients since TokenRecipientEntry extends RecipientEntry'
+      properties:
+        recipients:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  tokenData:
+                    $ref: '#/components/schemas/TokenData'
+              - $ref: '#/components/schemas/RecipientEntry'
+      required:
+        - recipients
     BaseIntentWithoutNonce:
       title: BaseIntentWithoutNonce
       type: object
@@ -49084,8 +49213,6 @@ components:
                 - delegate
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
             relayerFee:
               type: string
             delegateVotePower:
@@ -49093,8 +49220,8 @@ components:
           required:
             - intentType
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     BscDelegationProperties:
       title: BSC Delegation Properties
       allOf:
@@ -49157,15 +49284,13 @@ components:
                 - undelegate
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
             relayerFee:
               type: string
           required:
             - intentType
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     BscUnStakingRequestPOSTBody:
       title: BSC unstake
       allOf:
@@ -49751,6 +49876,49 @@ components:
         - nextContractSequenceId
         - coin
         - walletId
+    BulkPolicyRuleAction:
+      title: BulkPolicyRuleAction
+      type: object
+      description: Action for a policy rule - simplified version of PolicyRuleAction that's Json-compatible (Original uses h.optionalized which creates intersection types incompatible with Json)
+      properties:
+        type:
+          type: string
+        userIds:
+          type: array
+          items:
+            type: string
+      required:
+        - type
+    BulkPolicyRuleUpdateResponse:
+      title: BulkPolicyRuleUpdateResponse
+      type: object
+      description: Response for bulk policy rule update
+      properties:
+        successes:
+          type: array
+          items:
+            description: Wallets that were successfully updated
+        failures:
+          type: array
+          items:
+            type: object
+            properties:
+              walletId:
+                type: string
+              error:
+                type: string
+            required:
+              - walletId
+              - error
+            description: Wallets that failed to update
+        pendingAdminApproval:
+          allOf:
+            - $ref: '#/components/schemas/PendingApproval'
+          description: Pending approval created for multi-wallet updates requiring admin approval
+        travelRulePendingApprovals:
+          type: array
+          items:
+            description: Pending approvals created for travel rule compliance
     BulkUpdateResponse:
       title: BulkUpdateResponse
       type: object
@@ -49793,6 +49961,51 @@ components:
             description: Individual approval result item
       required:
         - results
+    BulkWhitelistAddEntry:
+      title: BulkWhitelistAddEntry
+      type: object
+      description: Entry to add to the whitelist
+      properties:
+        item:
+          type: string
+        type:
+          type: string
+        metaData:
+          type: object
+          additionalProperties:
+            type: string
+      required:
+        - item
+        - type
+    BulkWhitelistCondition:
+      title: BulkWhitelistCondition
+      type: object
+      description: Condition for whitelist update - simplified version of AdvancedListRuleUpdateCondition
+      properties:
+        add:
+          $ref: '#/components/schemas/BulkWhitelistAddEntry'
+        remove:
+          $ref: '#/components/schemas/BulkWhitelistRemoveEntry'
+        verifyItems:
+          type: object
+          properties:
+            items:
+              type: array
+              items:
+                type: string
+          required:
+            - items
+    BulkWhitelistRemoveEntry:
+      title: BulkWhitelistRemoveEntry
+      type: object
+      description: Entry to remove from the whitelist
+      properties:
+        item:
+          type: string
+        type:
+          type: string
+      required:
+        - item
     Business:
       type: object
       properties:
@@ -50232,6 +50445,8 @@ components:
               type: number
             expiry:
               type: number
+            memoId:
+              type: string
           required:
             - intentType
             - contractId
@@ -51152,13 +51367,11 @@ components:
                 - delegate
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
           required:
             - intentType
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     CoreDaoStakingParams:
       type: object
       properties:
@@ -51185,13 +51398,11 @@ components:
                 - undelegate
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
           required:
             - intentType
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     CoredaoClaimRewardsRequestEntityProperties:
       title: Coredao claim rewards request entity properties
       allOf:
@@ -51522,8 +51733,6 @@ components:
                 - delegate
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
             recipients:
               type: array
               items:
@@ -51541,8 +51750,8 @@ components:
           required:
             - intentType
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     CosmosSwitchValidatorIntent:
       title: Cosmos Switch Validator Intent
       allOf:
@@ -51558,8 +51767,6 @@ components:
                 - undelegate
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
             recipients:
               type: array
               items:
@@ -51577,8 +51784,8 @@ components:
           required:
             - intentType
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     CosmosWithdrawIntent:
       title: Cosmos Withdraw Intent
       allOf:
@@ -52470,6 +52677,18 @@ components:
         - default
       description: |
         (UTXO only) The default script type to use for change for this wallet. Per transaction, you override the default with the `changeAddressType` parameter. If `default` is provided, it will clear the `changeAddressType` default on the wallet. Note that each UTXO coin has different address types available. For example, Only BTC supports `p2tr`.
+    DelegateIntent:
+      title: DelegateIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegate
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent'
     DelegationAccrual:
       type: object
       properties:
@@ -53091,6 +53310,22 @@ components:
         - documentType
         - status
       title: Document
+    DocumentCollection:
+      title: DocumentCollection
+      type: object
+      properties:
+        required:
+          type: array
+          items:
+            type: string
+            enum:
+              - wForm
+        wForm:
+          $ref: '#/components/schemas/DocumentCollectionAgreement'
+    DocumentCollectionAgreement:
+      allOf:
+        - title: DocumentCollectionAgreement
+        - $ref: '#/components/schemas/OnboardingAgreement'
     DocumentFileDetail:
       type: object
       properties:
@@ -53673,8 +53908,24 @@ components:
       allOf:
         - type: object
           properties:
+            stakingProxy:
+              type: string
+            addToStake:
+              $ref: '#/components/schemas/optionalBoolean'
+            addProxy:
+              $ref: '#/components/schemas/optionalBoolean'
+          required:
+            - stakingProxy
+        - $ref: '#/components/schemas/StakeIntent'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    DotStakingIntent1:
+      title: DOT Staking Intent
+      allOf:
+        - type: object
+          properties:
             amount:
-              $ref: '#/components/schemas/Amount'
+              $ref: '#/components/schemas/Amount1'
             stakingProxy:
               type: string
             addToStake:
@@ -53684,7 +53935,7 @@ components:
           required:
             - amount
             - stakingProxy
-        - $ref: '#/components/schemas/StakeIntent'
+        - $ref: '#/components/schemas/StakeIntent1'
         - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
     DotStakingRequest:
       title: DOT
@@ -53744,8 +53995,22 @@ components:
       allOf:
         - type: object
           properties:
+            stakingProxy:
+              type: string
+            stopStaking:
+              $ref: '#/components/schemas/optionalBoolean'
+          required:
+            - stakingProxy
+        - $ref: '#/components/schemas/UnstakeIntent'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    DotUnstakingIntent1:
+      title: DOT Unstaking Intent
+      allOf:
+        - type: object
+          properties:
             amount:
-              $ref: '#/components/schemas/Amount'
+              $ref: '#/components/schemas/Amount1'
             stakingProxy:
               type: string
             stopStaking:
@@ -53753,7 +54018,7 @@ components:
           required:
             - amount
             - stakingProxy
-        - $ref: '#/components/schemas/UnstakeIntent'
+        - $ref: '#/components/schemas/UnstakeIntent1'
         - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
     DotUnstakingTransactionProperties:
       title: DOT Unstaking Transaction Properties
@@ -54572,6 +54837,7 @@ components:
         - bankAccount
         - accessToken
         - policyBalanceChange
+        - reversal
     EnterprisesPaginatedResponse:
       title: EnterprisesPaginatedResponse
       type: object
@@ -58327,6 +58593,7 @@ components:
                 - reserved_amount
                 - utxo_message_signing
                 - pending_deposit
+                - internal_transfer
                 - staking_eth_withdrawal
                 - staking_eth_partial_withdrawal
                 - staking_eth_full_withdrawal
@@ -59956,8 +60223,11 @@ components:
         - closeAssociatedTokenAccount
         - stakeWithCallData
         - unstakeWithCallData
+        - switchValidatorWithCallData
         - feeAddressTransfer
         - tokenApproval
+        - transferStake
+        - validatorRegistration
         - goUnstake
         - createBtcDelegation
         - transferAccept
@@ -64696,6 +64966,7 @@ components:
       title: PaymentIntent
       allOf:
         - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithRecipients'
         - oneOf:
             - type: object
               properties:
@@ -64703,23 +64974,8 @@ components:
                   type: string
                   enum:
                     - payment
-                recipients:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      address:
-                        $ref: '#/components/schemas/Address'
-                      amount:
-                        $ref: '#/components/schemas/Amount'
-                      data:
-                        $ref: '#/components/schemas/optionalString'
-                    required:
-                      - address
-                      - amount
               required:
                 - intentType
-                - recipients
             - type: object
               properties:
                 intentType:
@@ -64728,24 +64984,9 @@ components:
                     - payment
                 isTestTransaction:
                   type: boolean
-                recipients:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      address:
-                        $ref: '#/components/schemas/Address'
-                      amount:
-                        $ref: '#/components/schemas/Amount'
-                      data:
-                        $ref: '#/components/schemas/optionalString'
-                    required:
-                      - address
-                      - amount
               required:
                 - intentType
                 - isTestTransaction
-                - recipients
     PaymentIntent1:
       title: PaymentIntent
       allOf:
@@ -70048,12 +70289,24 @@ components:
           properties:
             stakingAddress:
               type: string
+          required:
+            - stakingAddress
+        - $ref: '#/components/schemas/WithdrawIntent'
+        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    SolClaimIntent1:
+      title: SOL Claim Intent
+      allOf:
+        - type: object
+          properties:
+            stakingAddress:
+              type: string
             amount:
-              $ref: '#/components/schemas/Amount'
+              $ref: '#/components/schemas/Amount1'
           required:
             - stakingAddress
             - amount
-        - $ref: '#/components/schemas/WithdrawIntent'
+        - $ref: '#/components/schemas/WithdrawIntent1'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolClaimRewardsRequestPOSTBody:
       title: Solana (SOL) Claim Rewards Request
@@ -70234,8 +70487,6 @@ components:
           properties:
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
             isMarinade:
               type: boolean
               deprecated: true
@@ -70247,9 +70498,9 @@ components:
                 - JITO
           required:
             - validatorAddress
-            - amount
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     SolStakeIntent1:
       title: SOL Stake Intent
       allOf:
@@ -70710,12 +70961,10 @@ components:
               type: string
               enum:
                 - stakeClaimRewards
-            amount:
-              $ref: '#/components/schemas/Amount'
           required:
             - intentType
-            - amount
         - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     StakeGoStakingRequest:
       type: object
       required:
@@ -70795,18 +71044,16 @@ components:
               type: string
               enum:
                 - switchValidator
-            amount:
-              $ref: '#/components/schemas/Amount'
             validatorAddress:
               type: string
             destValidatorAddress:
               type: string
           required:
             - intentType
-            - amount
             - validatorAddress
             - destValidatorAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     StakeableCoins:
       type: object
       properties:
@@ -73411,6 +73658,37 @@ components:
             destinationNetuid:
               type: string
               description: The network UID (subnet) where the stake will be moved to.
+    TaoTransferStakeIntent:
+      title: Tao Transfer Stake Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - transferStake
+            originColdkey:
+              $ref: '#/components/schemas/optionalString'
+            destinationColdkey:
+              type: string
+            hotkey:
+              type: string
+            originNetuid:
+              type: string
+            destinationNetuid:
+              type: string
+            alphaAmount:
+              type: string
+          required:
+            - intentType
+            - originColdkey
+            - destinationColdkey
+            - hotkey
+            - originNetuid
+            - destinationNetuid
+            - alphaAmount
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     TaoUnStakingRequestPOSTBody:
       title: TAO unstake
       allOf:
@@ -73639,12 +73917,10 @@ components:
               type: string
               enum:
                 - tokenApproval
-            tokenName:
-              type: string
           required:
             - intentType
-            - tokenName
         - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithTokenName'
     TokenConnectionKey:
       title: TokenConnectionKey
       type: object
@@ -73708,6 +73984,7 @@ components:
     TokenTransferRecipientParams:
       title: TokenTransferRecipientParams
       type: object
+      description: Token transfer recipient params used in freeze metadata.
       properties:
         tokenType:
           type: string
@@ -73749,18 +74026,18 @@ components:
                 - delegate
             validatorAddress:
               type: string
-            amount:
-              $ref: '#/components/schemas/Amount'
             useSingleNominator:
               type: boolean
             ownerAddress:
               $ref: '#/components/schemas/optionalString'
+            tonStakingType:
+              $ref: '#/components/schemas/TonStakingType'
           required:
             - intentType
             - validatorAddress
-            - amount
             - useSingleNominator
         - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     TonDelegationProperties:
       title: TON Delegation Properties
       allOf:
@@ -73870,6 +74147,13 @@ components:
               enum:
                 - MULTI_NOMINATOR_STAKE
                 - SINGLE_NOMINATOR_STAKE
+    TonStakingType:
+      title: TonStakingType
+      type: string
+      enum:
+        - SINGLE_NOMINATOR
+        - MULTI_NOMINATOR
+        - TON_WHALES
     TonUnStakingRequestPOSTBody:
       title: TON unstake
       allOf:
@@ -73936,6 +74220,27 @@ components:
         - memoId
         - lastMemoId
         - seqno
+    TonWhalesDelegateIntent:
+      title: TON Whales Delegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegate
+            validatorAddress:
+              type: string
+            tonStakingType:
+              type: string
+              enum:
+                - TON_WHALES
+          required:
+            - intentType
+            - validatorAddress
+            - tonStakingType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     Touchpoint:
       type: object
       description: A Touchpoint. For example the Transfer from a Wallet Touchpoint.
@@ -74491,16 +74796,20 @@ components:
         - $ref: '#/components/schemas/SuiUnstakingIntent'
         - $ref: '#/components/schemas/TaoStakeIntent'
         - $ref: '#/components/schemas/TaoSwitchValidatorIntent'
+        - $ref: '#/components/schemas/TaoTransferStakeIntent'
         - $ref: '#/components/schemas/TaoUnstakeIntent'
         - $ref: '#/components/schemas/TokenApprovalIntent'
         - $ref: '#/components/schemas/TonConsolidateIntent'
         - $ref: '#/components/schemas/TonDelegateIntent'
         - $ref: '#/components/schemas/TonPaymentIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
+        - $ref: '#/components/schemas/TonWhalesDelegateIntent'
         - $ref: '#/components/schemas/VetStakingIntent'
+        - $ref: '#/components/schemas/VetDelegateIntent'
         - $ref: '#/components/schemas/VetExitDelegationIntent'
         - $ref: '#/components/schemas/VetBurnNFTIntent'
         - $ref: '#/components/schemas/VetStakeClaimRewardsIntent'
+        - $ref: '#/components/schemas/VetValidatorRegistrationIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
@@ -74906,8 +75215,8 @@ components:
         - $ref: '#/components/schemas/CosmosContractCallIntent'
         - $ref: '#/components/schemas/DOTClaimIntent'
         - $ref: '#/components/schemas/DotPaymentIntent1'
-        - $ref: '#/components/schemas/DotStakingIntent'
-        - $ref: '#/components/schemas/DotUnstakingIntent'
+        - $ref: '#/components/schemas/DotStakingIntent1'
+        - $ref: '#/components/schemas/DotUnstakingIntent1'
         - $ref: '#/components/schemas/EthAccelerationIntent'
         - $ref: '#/components/schemas/EthFillNonceIntent1'
         - $ref: '#/components/schemas/EthPaymentIntent'
@@ -74916,7 +75225,7 @@ components:
         - $ref: '#/components/schemas/NearStakeIntent1'
         - $ref: '#/components/schemas/NearUnstakeIntent1'
         - $ref: '#/components/schemas/NearWithdrawIntent1'
-        - $ref: '#/components/schemas/SolClaimIntent'
+        - $ref: '#/components/schemas/SolClaimIntent1'
         - $ref: '#/components/schemas/SolCreateAssociatedTokenAccountIntent1'
         - $ref: '#/components/schemas/SolStakeIntent1'
         - $ref: '#/components/schemas/SolUnstakeIntent1'
@@ -75908,6 +76217,7 @@ components:
             - reserved_amount
             - utxo_message_signing
             - pending_deposit
+            - internal_transfer
             - staking_eth_withdrawal
             - staking_eth_partial_withdrawal
             - staking_eth_full_withdrawal
@@ -76531,19 +76841,10 @@ components:
               type: string
               enum:
                 - transferToken
-            recipients:
-              type: array
-              items:
-                allOf:
-                  - type: object
-                    properties:
-                      tokenData:
-                        $ref: '#/components/schemas/TokenData'
-                  - $ref: '#/components/schemas/RecipientEntry'
           required:
             - intentType
-            - recipients
         - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithTokenRecipients'
     TransferTokenIntent1:
       title: Transfer Token
       allOf:
@@ -77251,6 +77552,18 @@ components:
           description: Supported unstaking sub-types with their own spendable attributes.
           items:
             $ref: '#/components/schemas/UnstakingSubTypeSpendableAttributes'
+    UndelegateIntent:
+      title: UndelegateIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent'
     UnknownDelegationProperties:
       title: Unknown Delegation Properties
       allOf:
@@ -81007,6 +81320,18 @@ components:
           properties:
             failedValidations:
               type: object
+    ValidatorRegistrationIntent:
+      title: ValidatorRegistrationIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - validatorRegistration
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent'
     VariableFee:
       title: VariableFee
       type: object
@@ -81213,21 +81538,27 @@ components:
     VetBurnNFTIntent:
       title: VET Burn NFT Intent
       allOf:
+        - $ref: '#/components/schemas/UnstakeIntent'
+        - $ref: '#/components/schemas/VetUnstakeCommonFields'
+    VetDelegateIntent:
+      title: VET Delegate Intent
+      allOf:
         - type: object
           properties:
-            intentType:
-              type: string
-              enum:
-                - unstake
             tokenId:
               type: string
-            nftContractAddress:
+              minLength: 1
+            stakingContractAddress:
               type: string
+              minLength: 1
+            validatorAddress:
+              type: string
+              minLength: 1
           required:
-            - intentType
             - tokenId
-            - nftContractAddress
-        - $ref: '#/components/schemas/BaseStakeIntent'
+            - stakingContractAddress
+            - validatorAddress
+        - $ref: '#/components/schemas/DelegateIntent'
     VetDelegationProperties:
       title: VET Delegation Properties
       allOf:
@@ -81263,57 +81594,39 @@ components:
     VetExitDelegationIntent:
       title: VET Exit Delegation Intent
       allOf:
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - undelegate
-            tokenId:
-              type: string
-            delegationContractAddress:
-              type: string
-          required:
-            - intentType
-            - tokenId
-            - delegationContractAddress
-        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/UndelegateIntent'
+        - $ref: '#/components/schemas/VetUnstakeCommonFields'
     VetStakeClaimRewardsIntent:
       title: VET Stake Claim Rewards Intent
       allOf:
         - type: object
           properties:
-            intentType:
-              type: string
-              enum:
-                - stakeClaimRewards
             tokenId:
               type: string
               minLength: 1
-            delegationContractAddress:
+            stakingContractAddress:
               type: string
               minLength: 1
           required:
-            - intentType
             - tokenId
-            - delegationContractAddress
-        - $ref: '#/components/schemas/BaseStakeIntent'
+            - stakingContractAddress
+        - $ref: '#/components/schemas/StakeClaimRewardsIntent'
     VetStakingIntent:
       title: VET Staking Intent
       allOf:
         - type: object
           properties:
-            amount:
-              $ref: '#/components/schemas/Amount'
             stakingContractAddress:
               type: string
               minLength: 1
-            nftTokenId:
-              $ref: '#/components/schemas/optionalString'
+            levelId:
+              type: string
+              minLength: 1
           required:
-            - amount
             - stakingContractAddress
+            - levelId
         - $ref: '#/components/schemas/StakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     VetStakingRequestEntityProperties:
       title: VET staking request entity properties
       allOf:
@@ -81368,6 +81681,33 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
+    VetUnstakeCommonFields:
+      title: Common VET unstake intent fields
+      type: object
+      properties:
+        tokenId:
+          type: string
+          minLength: 1
+        stakingContractAddress:
+          type: string
+          minLength: 1
+      required:
+        - tokenId
+        - stakingContractAddress
+    VetValidatorRegistrationIntent:
+      title: VET Validator Registration Intent
+      allOf:
+        - type: object
+          properties:
+            validatorAddress:
+              type: string
+              minLength: 1
+            stakingPeriod:
+              type: number
+          required:
+            - validatorAddress
+            - stakingPeriod
+        - $ref: '#/components/schemas/ValidatorRegistrationIntent'
     VetWalletStakingStateAttributes:
       type: object
       properties:
@@ -84070,6 +84410,7 @@ components:
         - contractSigned
         - kycResult
         - policyBalanceChange
+        - reversal
         - transaction_finality_on_l1
     WebhookTypeBlock:
       type: string
@@ -84627,6 +84968,28 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
+    WithdrawIntent1:
+      title: WithdrawIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - claim
+            amount:
+              type: object
+              properties:
+                symbol:
+                  type: string
+                value:
+                  type: string
+              required:
+                - symbol
+                - value
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent1'
     WithdrawIntent2:
       title: Generic claim unstake
       allOf:
