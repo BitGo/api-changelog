@@ -25728,8 +25728,6 @@ paths:
                     error:
                       currencySymbol: TUSD*
                       minQuantity: '10'
-                    currencySymbol: TUSD*
-                    minQuantity: '10'
                 required:
                   summary: Required field is missing
                   value:
@@ -26455,6 +26453,81 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarginGetNetOpenPositionsSnapshotResponse'
+  /api/prime/trading/v1/accounts/{accountId}/margin/positions/activity:
+    get:
+      summary: Get positions activity
+      description: Returns unsettled fill legs and position transfers that make up the unsettled position as of a specified historical time range.
+      operationId: trade.margin.positions.activity.get
+      tags:
+        - Margin
+      parameters:
+        - $ref: '#/components/parameters/AccountIdPathParam'
+        - name: transactionDateGte
+          in: query
+          required: false
+          description: Return activity with transactionDate greater than or equal to this timestamp.
+          schema:
+            type: string
+            format: date-time
+          example: 2025-12-01T00:00:00.000Z
+        - name: transactionDateLt
+          in: query
+          required: false
+          description: Return activity with transactionDate less than this timestamp.
+          schema:
+            type: string
+            format: date-time
+          example: 2025-12-02T00:00:00.000Z
+        - name: currency
+          in: query
+          required: false
+          explode: true
+          description: Filter by currencies. If omitted, returns activity for all currencies.
+          schema:
+            type: array
+            items:
+              type: string
+          example:
+            - BTC
+            - ETH
+        - name: type
+          in: query
+          required: false
+          explode: true
+          description: Filter by activity type.
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - fill-base-leg
+                - fill-quote-leg
+                - position-transfer
+          example:
+            - fill-base-leg
+            - position-transfer
+        - name: offset
+          in: query
+          required: false
+          description: Pagination offset.
+          schema:
+            type: integer
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          description: Number of items per page.
+          schema:
+            type: integer
+            default: 500
+            maximum: 500
+      responses:
+        '200':
+          description: Positions activity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MarginGetPositionsActivityResponse'
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositionlimits:
     get:
       summary: Get net open margin position limits
@@ -57065,43 +57138,29 @@ components:
       title: Fill Updated
       allOf:
         - $ref: '#/components/schemas/TradeBaseOrder'
-        - type: object
-          properties:
-            cumulativeQuantity:
-              type: string
-              format: decimal
-              description: The cumulative quantity of the fill
-            averagePrice:
-              type: string
-              format: decimal
-              description: The average price of the fill
-            tradeId:
-              type: string
-              description: The ID of the trade
-            fillQuantity:
-              type: string
-              format: decimal
-              description: The quantity of the fill
-            fillPrice:
-              type: string
-              format: decimal
-              description: The price of the fill
       example:
         channel: orders
-        time: '2019-04-25T01:02:03.045678Z'
-        accountId: f230fdebfa084ffebc7e00515f54603f
-        orderId: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
+        time: '2025-12-08T16:41:03.30491Z'
+        creationDate: '2025-12-08T16:41:02.802558Z'
+        scheduledDate: null
+        lastFillDate: '2025-12-08T16:41:03.419104Z'
+        completionDate: null
+        settleDate: null
+        accountId: 6598421ec862bac27d0d4f7d827fe202
+        orderId: 4f9aacc5-d8aa-4fe4-bb6d-109eee0b7270
         clientOrderId: my-order-1
-        product: TBTC-TUSD*
-        status: opened
+        product: BTC-USD
+        fundingType: funded
+        status: open
         type: market
         side: buy
-        quantity: '1.01'
-        cumulativeQuantity: '0.5'
-        averagePrice: '7090.1'
-        tradeId: a6a9ab1b-2947-41b7-b44d-4ce61fca8b92
-        fillQuantity: '0.50'
-        fillPrice: '7090.1'
+        quantity: '0.0068'
+        quantityCurrency: BTC
+        cumulativeQuantity: '0.00110034'
+        averagePrice: '89800.34'
+        tradeId: 5606d256-818f-4e55-9cf8-4b237ddd0c85
+        fillQuantity: '0.00110034'
+        fillPrice: '89800.34'
     FilteringConditions:
       type: object
       description: |
@@ -61966,6 +62025,15 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/MarginNetOpenPositionSnapshot'
+    MarginGetPositionsActivityResponse:
+      type: object
+      required:
+        - positionsActivity
+      properties:
+        positionsActivity:
+          type: array
+          items:
+            $ref: '#/components/schemas/PositionActivityEntry'
     MarginNetOpenPosition:
       type: object
       required:
@@ -63821,69 +63889,73 @@ components:
       title: Order Canceled
       allOf:
         - $ref: '#/components/schemas/TradeBaseOrder'
-        - type: object
-          properties:
-            cumulativeQuantity:
-              type: string
-              format: decimal
-              description: The cumulative quantity of the fill
-            averagePrice:
-              type: string
-              format: decimal
-              description: The average price of the fill
       example:
         channel: orders
-        time: '2019-04-25T01:02:03.045678Z'
-        accountId: f230fdebfa084ffebc7e00515f54603f
-        orderId: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
+        time: '2025-12-05T00:03:29.878861Z'
+        creationDate: '2025-12-05T00:03:28.501965Z'
+        scheduledDate: null
+        lastFillDate: null
+        completionDate: null
+        settleDate: null
+        accountId: 6598421ec862bac27d0d4f7d827fe202
+        orderId: 8857abd9-a88b-4059-a66c-9e45bfb58699
         clientOrderId: my-order-1
-        product: TBTC-TUSD*
+        product: BTC-USD
+        fundingType: funded
         status: canceled
         type: market
         side: buy
-        quantity: '1.01'
-        cumulativeQuantity: '0.50'
-        averagePrice: '7090.1'
+        quantity: '0.0068'
+        quantityCurrency: BTC
+        cumulativeQuantity: '0'
+        averagePrice: '0'
+        tradeId: ''
+        fillQuantity: ''
+        fillPrice: ''
     OrderCompleted:
       title: Order Completed
       allOf:
         - $ref: '#/components/schemas/TradeBaseOrder'
-        - type: object
-          properties:
-            cumulativeQuantity:
-              type: string
-              format: decimal
-              description: The cumulative quantity of the fill
-            averagePrice:
-              type: string
-              format: decimal
-              description: The average price of the fill
       example:
         channel: orders
-        time: '2019-04-25T01:02:03.045678Z'
-        accountId: f230fdebfa084ffebc7e00515f54603f
-        orderId: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
+        time: '2025-12-05T00:03:29.878861Z'
+        creationDate: '2025-12-05T00:03:28.501965Z'
+        scheduledDate: null
+        lastFillDate: '2025-12-05T00:03:29.091521Z'
+        completionDate: '2025-12-05T00:03:29.878861Z'
+        settleDate: null
+        accountId: 6598421ec862bac27d0d4f7d827fe202
+        orderId: 8857abd9-a88b-4059-a66c-9e45bfb58699
         clientOrderId: my-order-1
-        product: TBTC-TUSD*
+        product: BTC-USD
+        fundingType: funded
         status: completed
         type: market
         side: buy
-        quantity: '1.01'
-        cumulativeQuantity: '1.01'
-        averagePrice: '7090.1'
+        quantity: '0.0068'
+        quantityCurrency: BTC
+        cumulativeQuantity: '0.0068'
+        averagePrice: '89801.47'
+        tradeId: ''
+        fillQuantity: ''
+        fillPrice: ''
     OrderConflictError:
       required:
         - error
         - errorName
+        - reqId
       type: object
       properties:
         error:
           type: string
         errorName:
           type: string
+        reqId:
+          type: string
       example:
         error: backend:common:inUse key=clientOrderId
         errorName: backend:common:inUse
+        reqId: unk-nqo97l23l2ofpvgkbb8z
     OrderCreated:
       title: Order Created
       allOf:
@@ -63891,46 +63963,48 @@ components:
         - type: object
       example:
         channel: orders
-        time: '2019-04-25T01:02:03.045678Z'
+        time: '2025-12-08T16:41:02.802558Z'
+        creationDate: '2025-12-05T21:31:37.907912Z'
+        scheduledDate: null
+        lastFillDate": null
+        completionDate: null
+        settleDate: null
         accountId: f230fdebfa084ffebc7e00515f54603f
         orderId: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
         clientOrderId: my-order-1
-        product: TBTC-TUSD*
-        status: opened
+        product: BTC-USD
+        fundingType: funded
+        status: pending_open
         type: market
         side: buy
-        quantity: '1.01'
+        quantity: '0.0068'
+        quantityCurrency: BTC
+        cumulativeQuantity: '0'
+        averagePrice: '0'
+        tradeId: ''
+        fillQuantity: ''
+        fillPrice: ''
     OrderError:
       title: Order Error
       allOf:
         - $ref: '#/components/schemas/TradeBaseOrder'
-        - type: object
-          properties:
-            cumulativeQuantity:
-              type: string
-              format: decimal
-              description: The cumulative quantity of the fill
-            averagePrice:
-              type: string
-              format: decimal
-              description: The average price of the fill
-            message:
-              type: string
-              description: The error message
       example:
-        channel: order
+        channel: orders
         time: '2019-04-25T01:02:03.045678Z'
         accountId: f230fdebfa084ffebc7e00515f54603f
         orderId: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
-        clientOrderId: my-order-1
-        product: TBTC-TUSD*
+        product: BTC-USD
+        fundingType: funded
         status: error
-        message: insufficient fund
         type: market
         side: buy
-        quantity: '1.01'
-        cumulativeQuantity: '0.50'
-        averagePrice: '7090.1'
+        quantity: '0.0068'
+        quantityCurrency: BTC
+        cumulativeQuantity: '0.00359973'
+        averagePrice: '90431.78'
+        tradeId: ''
+        fillQuantity: ''
+        fillPrice: ''
     OrderHistoryBase:
       title: OrderHistoryBase
       type: object
@@ -67564,6 +67638,59 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/PolyxBaseIntent'
+    PositionActivityEntry:
+      type: object
+      required:
+        - type
+        - id
+        - currency
+        - quantity
+        - enterpriseId
+        - accountId
+        - transactionDate
+      properties:
+        type:
+          type: string
+          enum:
+            - fill-base-leg
+            - fill-quote-leg
+            - position-transfer
+          description: The type of activity
+          example: fill-base-leg
+        id:
+          type: string
+          description: The unique identifier of the fill or position transfer
+          example: 0d674606-431b-428f-83d1-b9199a6feb7d
+        currency:
+          type: string
+          description: The currency symbol for this activity
+          example: BTC
+        quantity:
+          type: string
+          pattern: ^-?[0-9]+(\.[0-9]+)?$
+          description: The quantity contribution to the open position. Negative values indicate short positions, positive values indicate long positions.
+          example: '-2.5'
+        enterpriseId:
+          type: string
+          description: The enterprise ID for the activity
+          example: 63925f940c259a00061853808ffea830
+        accountId:
+          type: string
+          description: The trading account ID for the activity
+          example: 669e42a3c3fa7a17bf8483e7296373e1
+        transactionDate:
+          type: string
+          format: date-time
+          description: The date and time when the activity occurred
+          example: '2025-07-29T21:13:09+00:00'
+      example:
+        type: fill-base-leg
+        id: 0d674606-431b-428f-83d1-b9199a6feb7d
+        currency: BTC
+        quantity: '-2.5'
+        enterpriseId: 63925f940c259a00061853808ffea830
+        accountId: 669e42a3c3fa7a17bf8483e7296373e1
+        transactionDate: '2025-07-29T21:13:09+00:00'
     PositiveAllocationAmount:
       title: PositiveAllocationAmount
       oneOf:
@@ -73869,33 +73996,76 @@ components:
       properties:
         channel:
           type: string
-          description: The channel you are subscribed to (e.g. "orders")
+          description: The channel you are subscribed to.
+          example: orders
         time:
+          type: string
+          format: date-time
+        creationDate:
+          type: string
+          format: date-time
+        completionDate:
+          type: string
+          format: date-time
+        settleDate:
+          type: string
+          format: date-time
+        scheduledDate:
+          $ref: '#/components/schemas/ScheduledDate'
+        lastFillDate:
           type: string
           format: date-time
         accountId:
           $ref: '#/components/schemas/AccountId'
-        orderId:
-          type: string
-          description: The ID of the order
         clientOrderId:
           $ref: '#/components/schemas/ClientOrderId'
+        orderId:
+          type: string
+          description: The ID of the order.
+          example: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
         product:
           type: string
-          description: Product name e.g. BTC-USD
+          description: Product name.
+          example: BTC-USD
+        fundingType:
+          $ref: '#/components/schemas/FundingType'
         status:
-          type: string
-          description: The status of the order (e.g. "completed")
+          $ref: '#/components/schemas/OrderStatus'
         type:
-          type: string
-          description: The type of order (e.g. "market", "limit", "twap")
+          $ref: '#/components/schemas/OrderType'
         side:
-          type: string
-          description: The side of the order (e.g. "buy", "sell")
+          $ref: '#/components/schemas/Side'
         quantity:
           type: string
           format: decimal
-          description: The specified order quantity.
+          description: The specified quantity.
+          example: 25.07
+        quantityCurrency:
+          type: string
+          description: The specified quantity currency.
+          example: USD
+        cumulativeQuantity:
+          type: string
+          format: decimal
+          description: The total base quantity filled for the order.
+        averagePrice:
+          type: string
+          format: decimal
+          description: The average price for the order's fills.
+        tradeId:
+          type: string
+          description: The ID of the trade.
+          example: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
+        fillQuantity:
+          type: string
+          format: decimal
+          description: The quantity of the fill for the trade.
+          example: 0.5
+        fillPrice:
+          type: string
+          format: decimal
+          description: The price of the fill for the trade.
+          example: 7090.1
     TradeBaseQuoteInbound:
       title: TradeBaseQuoteInbound
       oneOf:
