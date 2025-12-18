@@ -1037,7 +1037,6 @@ paths:
                           - pending_approval_update
                           - metamask_institutional
                           - crypto_compare
-                          - scim
                           - all
                     - type: array
                       items:
@@ -10260,7 +10259,7 @@ paths:
         - Market Data
       summary: Get spot prices
       description: |
-        Get historical spot prices from a specific time.
+        Get a single OHLCV (Open, High, Low, Close, Volume) price data point for a currency pair at a specific time.
         Using this endpoint requires an access token with the appropriate enterprise ID.
       operationId: marketdata.cryptocompare.spot.prices.get
       parameters:
@@ -10269,12 +10268,17 @@ paths:
         - $ref: '#/components/parameters/Interval'
         - name: timestamp
           in: query
+          required: false
+          description: |
+            The specific time to retrieve the price for (RFC 3339 format).
+            If not provided, returns the latest available price.
           schema:
             type: string
             format: date-time
+            example: '2024-12-17T15:00:00.000Z'
       responses:
         '200':
-          description: Returns a historical-price data point.
+          description: Returns a single OHLCV price data point for the specified time.
           content:
             application/json:
               schema:
@@ -43550,7 +43554,7 @@ components:
       schema:
         type: string
         format: date-time
-        example: '2019-05-02T15:27:35.773Z'
+        example: '2024-12-17T16:00:00.000Z'
     Enterprise1:
       name: enterpriseId
       in: path
@@ -43739,7 +43743,7 @@ components:
       schema:
         type: string
         format: date-time
-        example: '2019-05-02T15:27:35.773Z'
+        example: '2024-12-17T14:00:00.000Z'
     TouchpointId:
       name: touchpointId
       in: path
@@ -58988,13 +58992,13 @@ components:
           format: float
           description: The total trading volume in the quote currency during the interval.
       example:
-        time: '2014-11-07T22:19:28.578Z'
-        open: 576.0590066
-        high: 576.0590066
-        low: 575.8330204
-        close: 575.978887
-        base_volume: 296.23
-        quote_volume: 170627.62385
+        time: '2024-12-17T15:00:00.000Z'
+        open: 89750.25
+        high: 90125.5
+        low: 89500
+        close: 90050.75
+        base_volume: 1250.85
+        quote_volume: 112456780.25
     HistoricalPriceResult:
       type: object
       description: Response containing historical price data with pagination support.
@@ -59024,13 +59028,13 @@ components:
         data:
           prices:
             BTC-USD:
-              - time: '2014-11-07T22:19:28.578Z'
-                open: 576.0590066
-                high: 576.0590066
-                low: 575.8330204
-                close: 575.978887
-                base_volume: 296.23
-                quote_volume: 170627.62385
+              - time: '2024-12-17T15:00:00.000Z'
+                open: 89750.25
+                high: 90125.5
+                low: 89500
+                close: 90050.75
+                base_volume: 1250.85
+                quote_volume: 112456780.25
           nextBatchPrevId: a0dbb6aad06d9a37c9882231d8dc32ef
     HotValue:
       title: Self-managed hot wallet
