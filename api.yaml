@@ -27307,7 +27307,6 @@ paths:
                 - $ref: '#/components/schemas/SomiUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SomiClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/SomiSwitchValidatorsRequestPOSTBody'
-                - $ref: '#/components/schemas/StoryUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/StxStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/StxUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SuiStakingRequestPOSTBody'
@@ -27338,6 +27337,8 @@ paths:
                 - $ref: '#/components/schemas/WflrClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/ZetaStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/ZetaUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/StoryStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/StoryUnStakingRequestPOSTBody'
             examples:
               AdaStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/AdaStakingRequestPOSTBodyExample'
@@ -27493,8 +27494,6 @@ paths:
                 $ref: '#/components/examples/SomiClaimRewardsRequestPOSTBodyExample'
               SomiSwitchValidatorRequestPOSTBodyExample:
                 $ref: '#/components/examples/SomiSwitchValidatorRequestPOSTBodyExample'
-              StoryUnStakingRequestPOSTBodyExample:
-                $ref: '#/components/examples/StoryUnStakingRequestPOSTBodyExample'
               StxStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/StxStakingRequestPOSTBodyExample'
               StxUnStakingRequestPOSTBodyExample:
@@ -27553,6 +27552,12 @@ paths:
                 $ref: '#/components/examples/ZetaStakingRequestPOSTBodyExample'
               ZetaUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/ZetaUnStakingRequestPOSTBodyExample'
+              StoryStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/StoryStakingRequestPOSTBodyExample'
+              StoryStakingRequestPOSTBodyExampleLong:
+                $ref: '#/components/examples/StoryStakingRequestPOSTBodyExampleLong'
+              StoryUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/StoryUnStakingRequestPOSTBodyExample'
       responses:
         '202':
           description: Successful Staking Request Accepted and Needs Approval
@@ -27671,8 +27676,6 @@ paths:
                   $ref: '#/components/examples/SomiStakingRequestWithoutDelegationsExample'
                 SomiUnStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/SomiUnStakingRequestWithoutDelegationsExample'
-                StoryUnStakingRequestWithoutDelegationsExample:
-                  $ref: '#/components/examples/StoryUnStakingRequestWithoutDelegationsExample'
                 StxStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/StxStakingRequestWithoutDelegationsExample'
                 StxUnStakingRequestWithoutDelegationsExample:
@@ -27717,6 +27720,10 @@ paths:
                   $ref: '#/components/examples/ZetaStakingRequestWithoutDelegationsExample'
                 ZetaUnStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/ZetaUnStakingRequestWithoutDelegationsExample'
+                StoryStakingRequestWithoutDelegationsExample:
+                  $ref: '#/components/examples/StoryStakingRequestWithoutDelegationsExample'
+                StoryUnStakingRequestWithoutDelegationsExample:
+                  $ref: '#/components/examples/StoryUnStakingRequestWithoutDelegationsExample'
         '400':
           $ref: '#/components/responses/BadRequestError1'
         '401':
@@ -42745,6 +42752,40 @@ components:
         properties:
           walletMultisigType: onchain
           type: ETH
+    StoryStakingRequestPOSTBodyExample:
+      summary: Story Protocol Staking Request POST Body Example (Flexible)
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '1536000000000000000000'
+        type: STAKE
+        validator: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
+        stakingPeriod: FLEXIBLE
+    StoryStakingRequestPOSTBodyExampleLong:
+      summary: Story Protocol Staking Request POST Body Example (Long Lock-up)
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '2048000000000000000000'
+        type: STAKE
+        validator: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
+        stakingPeriod: LONG
+    StoryStakingRequestWithoutDelegationsExample:
+      summary: Story Protocol Staking Request Example (Flexible)
+      value:
+        id: e155adbc-66a3-4ccd-9a9d-726a05bca0cf
+        clientId: f154adbc-26a3-4acd-8a9d-726a05bca0dr
+        requestingUserId: 6092e75c451052000636831deb797bd1
+        type: STAKE
+        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
+        walletId: 63110fc78b108e00071df2d3c3879dd0
+        walletType: hot
+        withdrawalAddress: '0xf5b9becc5e7e68173a5fc1906a2a5574e884da40'
+        coin: tip
+        status: NEW
+        statusModifiedDate: 2025-11-06T14:00:00.000Z
+        createdDate: 2025-11-06T14:00:00.000Z
+        amount: '1536000000000000000000'
+        validatorAddress: '0x03a2911a2ad7158b2fe68550cfc77c608974363db76d7a368cb1ee8bbdb2d76062'
+        stakingPeriod: FLEXIBLE
     StoryUnStakingRequestPOSTBodyExample:
       summary: Story Protocol UnStaking Request POST Body Example
       value:
@@ -52848,10 +52889,10 @@ components:
         - $ref: '#/components/schemas/SuiDelegationProperties'
         - $ref: '#/components/schemas/StxDelegationProperties'
         - $ref: '#/components/schemas/SomiDelegationProperties'
-        - $ref: '#/components/schemas/StoryDelegationProperties'
         - $ref: '#/components/schemas/SolDelegationProperties'
         - $ref: '#/components/schemas/PolyxDelegationProperties'
         - $ref: '#/components/schemas/NearDelegationProperties'
+        - $ref: '#/components/schemas/StoryDelegationProperties'
         - $ref: '#/components/schemas/UnknownDelegationProperties'
     DelegationPropertiesType:
       type: string
@@ -71248,6 +71289,10 @@ components:
         minStake:
           description: Minimum amount required to stake.
           type: string
+        minStakeMore:
+          description: Minimum additional amount to add to an active stake.
+          type: string
+          nullable: true
         stakingSubTypes:
           description: Optional list of staking sub-types with their own disclaimers.
           type: array
@@ -71378,6 +71423,9 @@ components:
           type: string
         description:
           description: Optional explanation of the option.
+          type: string
+        amount:
+          description: Optional amount associated with this option (used for fixed-amount staking like VET NFT tiers).
           type: string
     StakingLicenseFee:
       type: object
@@ -71741,9 +71789,9 @@ components:
             - $ref: '#/components/schemas/WflrStakingRequestEntityProperties'
             - $ref: '#/components/schemas/WflrUnstakingRequestEntityProperties'
             - $ref: '#/components/schemas/SomiStakingRequestEntityProperties'
-            - $ref: '#/components/schemas/StoryStakingRequestEntityProperties'
             - $ref: '#/components/schemas/VetStakingRequestEntityProperties'
             - $ref: '#/components/schemas/WflrClaimRewardsRequestEntityProperties'
+            - $ref: '#/components/schemas/StoryStakingRequestEntityProperties'
       required:
         - id
         - requestingUserId
@@ -72134,6 +72182,10 @@ components:
         displayUnit:
           description: Optional custom unit (e.g., "TP" for TronPower). When provided, this unit is the derived unit of the amounts in the attributes.
           type: string
+        fixedAmountStaking:
+          description: Indicates that staking amounts are fixed per tier/option and should be auto-filled from the selected option's amount field. When true, the UI should prefill and make the amount field readonly.
+          type: boolean
+          default: false
     StakingSpendableBreakdown:
       type: object
       description: Breakdown of staking spendable amounts, including balances, fees, and limits.
@@ -72828,6 +72880,47 @@ components:
               description: BLS public key of the validator to delegate to.
           required:
             - validatorAddress
+    StoryStakingRequestPOSTBody:
+      title: STORY stake
+      description: |
+        Request to stake IP/TIP tokens on Story Protocol.
+
+        **Staking Periods:** Story supports flexible and locked staking periods:
+        - FLEXIBLE (default): No lock-up period, 14-day cooldown on unstake
+        - SHORT: 90 days lock-up
+        - MEDIUM: 360 days lock-up
+        - LONG: 540 days lock-up
+
+        Locked staking periods may offer higher rewards but tokens cannot be unstaked until the lock period expires.
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+        - type: object
+          properties:
+            amount:
+              description: Amount to stake in base units (wei for IP/TIP). Minimum 1024 IP (1024000000000000000000 wei).
+              type: string
+              example: '1536000000000000000000'
+            validator:
+              description: The validator BLS public key to delegate to.
+              type: string
+            stakingPeriod:
+              description: |
+                The staking period type determining lock-up duration.
+                - FLEXIBLE: No lock-up period (default)
+                - SHORT: 90 days lock-up
+                - MEDIUM: 360 days lock-up
+                - LONG: 540 days lock-up
+              type: string
+              enum:
+                - FLEXIBLE
+                - SHORT
+                - MEDIUM
+                - LONG
+              default: FLEXIBLE
+              example: FLEXIBLE
+          required:
+            - amount
+            - validator
     StoryUnStakingRequestPOSTBody:
       title: STORY unstake
       allOf:
