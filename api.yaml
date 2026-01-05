@@ -25643,6 +25643,14 @@ paths:
         - Accounts
       parameters:
         - $ref: '#/components/parameters/AccountIdPathParam'
+        - name: includeUnsettledInAvailable
+          in: query
+          description: Include unsettled trading balance in available balance. Withdrawals may be initiated from the unsettled available balance, but trading settlement must occur before the withdrawal can be processed. Default is false.
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: boolean
       responses:
         '200':
           description: An array of account balances
@@ -25768,7 +25776,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                oneOf:
+                  - $ref: '#/components/schemas/Error'
+                  - $ref: '#/components/schemas/ValidationError1'
               examples:
                 invalidRequest:
                   summary: Request is invalid
@@ -81477,6 +81487,35 @@ components:
           properties:
             failedValidations:
               type: object
+    ValidationError1:
+      required:
+        - error
+        - errorName
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            currencySymbol:
+              type: string
+              description: The currency symbol for the validation error
+            message:
+              type: string
+              description: Human-readable error message
+            minQuantity:
+              type: string
+              description: Minimum quantity required
+            maxQuantity:
+              type: string
+              description: Maximum quantity allowed
+        errorName:
+          type: string
+      example:
+        errorName: backend:trade:invalidQuantity
+        error:
+          currencySymbol: USD
+          message: Amount must be at least 10 USD.
+          minQuantity: '10'
     ValidatorRegistrationIntent:
       title: ValidatorRegistrationIntent
       allOf:
