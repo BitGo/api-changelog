@@ -26794,15 +26794,15 @@ paths:
                       properties:
                         currency:
                           type: string
-                          description: Symbol of the collateral asset
+                          description: Currency symbol
                         quantity:
                           type: string
-                          description: String representing the balance for the specified collateral
+                          description: Net position after the position transfer
                         balanceValue:
                           allOf:
                             - $ref: '#/components/schemas/Amount3'
                             - type: object
-                              description: Returns the value of the collateral. Has 2 fields denoting the currency used and the actual value.
+                              description: Returns the value of the margin position. Has 2 fields denoting the currency used and the actual value.
                 example:
                   balances:
                     - currency: BTC
@@ -26855,10 +26855,10 @@ paths:
                       properties:
                         currency:
                           type: string
-                          description: Symbol of the margin position asset
+                          description: Currency symbol
                         quantity:
-                          type: number
-                          description: Number representing the balance for the specified margin position
+                          type: string
+                          description: Net position after the position transfer
                         balanceValue:
                           allOf:
                             - $ref: '#/components/schemas/Amount3'
@@ -26867,7 +26867,7 @@ paths:
                 example:
                   balances:
                     - currency: BTC
-                      quantity: 2
+                      quantity: '2'
                       balanceValue:
                         quantity: '1000000'
                         currency: USD
@@ -45008,13 +45008,19 @@ components:
         name: Example Trading Wallet
     AccountBalance:
       required:
+        - currencyId
         - currency
         - balance
         - heldBalance
+        - unsettledHeldBalance
         - tradableBalance
         - withdrawableBalance
       type: object
       properties:
+        currencyId:
+          type: string
+          format: uuid
+          description: ID of the currency
         currency:
           type: string
           description: Currency symbol
@@ -45026,6 +45032,10 @@ components:
           type: string
           format: decimal
           description: The total balance reserved for some purpose, e.g. a pending withdrawal.
+        unsettledHeldBalance:
+          type: string
+          format: decimal
+          description: The total unsettled balance reserved for some purpose, e.g. a pending withdrawal.
         tradableBalance:
           type: string
           format: decimal
@@ -45039,7 +45049,9 @@ components:
         currency: BTC
         balance: '100.0'
         heldBalance: '10.0'
+        unsettledHeldBalance: '0.0'
         tradableBalance: '90.0'
+        withdrawableBalance: '90.0'
     AccountBalanceRecord:
       title: AccountBalanceRecord
       type: object
@@ -52618,6 +52630,7 @@ components:
         - id
         - name
         - symbol
+        - minIncrement
       type: object
       properties:
         id:
@@ -52630,10 +52643,15 @@ components:
         name:
           type: string
           description: Name of the currency
+        minIncrement:
+          type: string
+          format: decimal
+          description: This is the smallest amount that can be traded for the currency.
       example:
-        id: 6016e0a9-545a-45fb-8370-caab1680956a
-        symbol: BTC
-        name: Bitcoin
+        id: 519824c6-b534-49b4-a636-22dfd0ade5cf
+        symbol: USD
+        name: US Dollar
+        minIncrement: '0.01'
     Currency1:
       title: Currency
       type: object
@@ -62442,26 +62460,27 @@ components:
           type: string
           pattern: ^-?[0-9]+(\.[0-9]+)?$
           example: '-2.3242'
-          description: Number representing the current net open position for the NOP instrument in question (ex. -10 BTC). Negative means a short position and positive means a long position.
+          description: The current net open position for the NOP instrument in question (ex. -10 BTC). Negative means a short position and positive means a long position.
         netOpenPositionValue:
-          type: number
-          format: decimal
-          description: Number representing the net open position denoted in notional amount (ex 600,000 USD)
+          allOf:
+            - $ref: '#/components/schemas/Amount3'
+            - type: object
+              description: The net open position denoted in notional amount (ex 600,000 USD)
         shortMarginPositionNotionalLimit:
           allOf:
             - $ref: '#/components/schemas/Amount3'
             - type: object
-              description: Number representing the maximum open margin position that can be short in terms of the notional instrument (ex. 10,000 USD) in absolute notional terms, as the NOP is signed
+              description: The maximum open margin position that can be short in terms of the notional instrument (ex. 10,000 USD) in absolute notional terms, as the NOP is signed
         longMarginPositionNotionalLimit:
           allOf:
             - $ref: '#/components/schemas/Amount3'
             - type: object
-              description: Number representing the maximum open margin position that can be long in terms of the notional instrument (ex. 10,000 USD)
+              description: The maximum open margin position that can be long in terms of the notional instrument (ex. 10,000 USD)
         unrealizedPnL:
           allOf:
             - $ref: '#/components/schemas/Amount3'
             - type: object
-              description: Number representing the unrealized profit and loss. Difference between the NOP value at the time of creation and the NOP value as of now.
+              description: The unrealized profit and loss. Difference between the NOP value at the time of creation and the NOP value as of now.
         lastModified:
           type: string
           format: date-time
@@ -62470,15 +62489,17 @@ components:
         currency: BTC
         enterpriseId: 63925f940c259a00061853808ffea830
         netOpenPosition: '-2.3242'
-        netOpenPositionValue: -124017.22
+        netOpenPositionValue:
+          quantity: '-124017.22'
+          currency: USD
         shortMarginPositionNotionalLimit:
-          quantity: 1000000
+          quantity: '1000000.00'
           currency: USD
         longMarginPositionNotionalLimit:
-          quantity: 1000000
+          quantity: '1000000.00'
           currency: USD
         unrealizedPnL:
-          quantity: 1200
+          quantity: '1200.00'
           currency: USD
         lastModified: '2024-07-29T21:13:09.000Z'
     MarginNetOpenPositionLimit:
@@ -64040,7 +64061,7 @@ components:
         - accountId
         - enterpriseId
         - initiatedByUserId
-        - cancelledByUserId
+        - canceledByUserId
         - clientOrderId
         - time
         - creationDate
@@ -64066,7 +64087,7 @@ components:
         - limitPrice
         - duration
         - twapInterval
-        - rtid
+        - rtId
         - notes
       type: object
       properties:
@@ -64080,7 +64101,7 @@ components:
           type: string
         initiatedByUserId:
           type: string
-        cancelledByUserId:
+        canceledByUserId:
           type: string
         clientOrderId:
           $ref: '#/components/schemas/ClientOrderId'
@@ -64164,7 +64185,7 @@ components:
         twapInterval:
           type: integer
           description: Interval length of the TWAP order in minutes.
-        rtid:
+        rtId:
           type: string
           description: The request tracking ID associated with the order.
         parameters:
@@ -64191,17 +64212,22 @@ components:
         type: market
         timeInForce: null
         status: completed
+        reason: null
+        reasonDescription: null
         product: BTC-USD
         side: buy
         quantity: '1000'
         quantityCurrency: USD
         filledQuantity: '0.02457152'
         filledQuoteQuantity: '1000'
+        leavesQuantity: null
+        leavesQuoteQuantity: '0'
         averagePrice: '40697.32'
         limitPrice: null
         duration: null
         twapInterval: null
         rtId: null
+        isFinanced: false
         notes: null
     OrderBooksRequest:
       title: Order Books
@@ -64351,7 +64377,7 @@ components:
         time: '2025-12-08T16:41:02.802558Z'
         creationDate: '2025-12-05T21:31:37.907912Z'
         scheduledDate: null
-        lastFillDate": null
+        lastFillDate: null
         completionDate: null
         settleDate: null
         accountId: f230fdebfa084ffebc7e00515f54603f
