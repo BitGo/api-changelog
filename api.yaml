@@ -868,7 +868,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '202':
           description: Accepted
           content:
@@ -31949,7 +31950,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '400':
           description: Bad Request
           content:
@@ -32895,6 +32897,47 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/organization:
+    get:
+      summary: List User Organizations
+      operationId: v2.organization.list
+      tags:
+        - Organization
+      parameters:
+        - name: role
+          description: The optional user role
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/OrganizationRole'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - serviceUser
+                    - admin
+                    - member
+                    - customer
+                  example: admin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUserOrganizationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -33852,7 +33895,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '202':
           description: Accepted
           content:
@@ -33918,7 +33962,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '202':
           description: Accepted
           content:
@@ -33970,7 +34015,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '202':
           description: Accepted
           content:
@@ -34969,6 +35015,15 @@ paths:
           description: Only return reports for this report asset
           in: query
           schema: {}
+        - name: sortOrder
+          description: Sort order of returned reports based on _id.
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         '200':
           description: OK
@@ -37452,7 +37507,6 @@ paths:
         - name: sortBy
           description: Sorts by specified field, default sorting by id.
           in: query
-          required: true
           schema:
             nullable: true
             type: string
@@ -37462,7 +37516,6 @@ paths:
         - name: sortDirection
           description: Sorts order by field in specified sort direction, default ascending.
           in: query
-          required: true
           schema:
             nullable: true
             type: string
@@ -58018,7 +58071,8 @@ components:
               description: Parameters used to build the transaction
             coin:
               $ref: '#/components/schemas/CoinString'
-            coinSpecific: {}
+            coinSpecific:
+              description: Transfer fields specific to each coin type
             comment:
               nullable: true
               type: string
@@ -58464,6 +58518,15 @@ components:
                 - utxo_message_signing
                 - pending_deposit
                 - internal_transfer
+                - pending_withdrawal_offer
+                - pending_deposit_offer
+                - offer_accepted
+                - offer_rejected
+                - confirmed_deposit
+                - confirmed_withdrawal
+                - deposit_offer_expired
+                - withdrawal_offer_expired
+                - withdrawal_offer_rejected
                 - staking_eth_withdrawal
                 - staking_eth_partial_withdrawal
                 - staking_eth_full_withdrawal
@@ -58587,6 +58650,10 @@ components:
           type: string
           description: The coin name for the stuck transaction
           example: hteth
+        wallet:
+          type: string
+          description: The wallet ID for the stuck transaction
+          example: 59cd72485007a239fb00282ed480da1f
       required:
         - cause
         - message
@@ -58876,7 +58943,8 @@ components:
                         coin:
                           type: string
                           description: Coin type for the message
-                        bitgoPaillierChallenge: {}
+                        bitgoPaillierChallenge:
+                          description: BitGo's Paillier challenge for ECDSA
                         encryptedChallenge:
                           type: string
                           description: BitGo's encrypted challenge for ECDSA with Range Proofs
@@ -61378,7 +61446,8 @@ components:
                 $ref: '#/components/schemas/OrganizationIdString'
               coin:
                 $ref: '#/components/schemas/CoinString'
-              data: {}
+              data:
+                description: Properties that apply to the given audit log type
               date:
                 type: string
                 format: date-time
@@ -61917,7 +61986,8 @@ components:
                         coin:
                           type: string
                           description: Coin type for the message
-                        bitgoPaillierChallenge: {}
+                        bitgoPaillierChallenge:
+                          description: BitGo's Paillier challenge for ECDSA
                         encryptedChallenge:
                           type: string
                           description: BitGo's encrypted challenge for ECDSA with Range Proofs
@@ -61943,6 +62013,30 @@ components:
           format: uuid
       required:
         - txRequests
+    ListUserOrganizationResponse:
+      title: ListUserOrganizationResponse
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The organization ID
+              name:
+                type: string
+                description: The organization name
+              enterpriseCount:
+                type: number
+                description: The number of enterprises in the organization
+            required:
+              - id
+              - name
+              - enterpriseCount
+      required:
+        - organizations
     ListWalletShareRequestResponse:
       title: ListWalletShareRequestResponse
       type: object
@@ -65572,18 +65666,22 @@ components:
         transactionRequest:
           type: object
           properties:
-            buildParams: {}
-            coinSpecific: {}
+            buildParams:
+              description: The build parameters for the transaction
+            coinSpecific:
+              description: Coin-specific details
             comment:
               nullable: true
               type: string
               description: The comment for the transaction request
-            fee: {}
+            fee:
+              description: The fee for the transaction
             isUnsigned:
               nullable: true
               type: boolean
               description: Indicates if the transaction is unsigned
-            policyUniqueId: {}
+            policyUniqueId:
+              description: The unique ID for the policy
             recipients:
               type: array
               items:
@@ -65594,14 +65692,19 @@ components:
                     description: The address of the recipient
                     example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
                     maxLength: 250
-                  amount: {}
+                  amount:
+                    description: The amount to be transferred
+                    example: '100000'
                   data:
                     type: string
                     description: Additional data for the transaction
                 description: The recipients of the transaction
-            requestedAmount: {}
-            sourceWallet: {}
-            triggeredPolicy: {}
+            requestedAmount:
+              description: The requested amount
+            sourceWallet:
+              description: The source wallet
+            triggeredPolicy:
+              description: The triggered policy for the transaction
             validTransaction:
               type: string
               description: Indicates if the transaction is valid
@@ -74921,7 +75024,8 @@ components:
         updatedBy:
           type: string
           description: The Id of the User that last updated the TxRequest document. This is an alias for the userId field.
-        intent: {}
+        intent:
+          description: The intent of the transaction request
         intents:
           type: array
           items: {}
@@ -75176,7 +75280,8 @@ components:
                   coin:
                     type: string
                     description: Coin type for the message
-                  bitgoPaillierChallenge: {}
+                  bitgoPaillierChallenge:
+                    description: BitGo's Paillier challenge for ECDSA
                   encryptedChallenge:
                     type: string
                     description: BitGo's encrypted challenge for ECDSA with Range Proofs
@@ -76192,7 +76297,8 @@ components:
         baseValueWithoutFees:
           type: number
           description: The value (in base units) sent by this transfer excluding network fees.
-        coinSpecific: {}
+        coinSpecific:
+          description: Transfer fields specific to each coin type
         confirmations:
           type: number
           description: The number of blocks that have been confirmed since this Transfer's block was confirmed
@@ -76231,6 +76337,15 @@ components:
             - utxo_message_signing
             - pending_deposit
             - internal_transfer
+            - pending_withdrawal_offer
+            - pending_deposit_offer
+            - offer_accepted
+            - offer_rejected
+            - confirmed_deposit
+            - confirmed_withdrawal
+            - deposit_offer_expired
+            - withdrawal_offer_expired
+            - withdrawal_offer_rejected
             - staking_eth_withdrawal
             - staking_eth_partial_withdrawal
             - staking_eth_full_withdrawal
@@ -78352,7 +78467,8 @@ components:
             timezone:
               type: string
               description: The user's timezone
-            apps: {}
+            apps:
+              description: The apps the user has access to
             country:
               type: string
               description: The country of the user
@@ -78394,7 +78510,8 @@ components:
             pgpKey:
               type: string
               description: The user's PGP key
-            rateLimits: {}
+            rateLimits:
+              description: The rate limits applied to the user
             referrer:
               allOf:
                 - $ref: '#/components/schemas/Referrer'
