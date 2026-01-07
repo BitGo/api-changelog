@@ -26895,6 +26895,8 @@ paths:
                 - $ref: '#/components/schemas/MaticUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/NearStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/NearUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/OgStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/OgUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/OsmoStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/OsmoUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/OsmoClaimRewardsRequestPOSTBody'
@@ -26911,6 +26913,7 @@ paths:
                 - $ref: '#/components/schemas/SeiSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiEvmStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiEvmUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/SeiEvmSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/SolStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolClaimRewardsRequestPOSTBody'
@@ -27093,6 +27096,8 @@ paths:
                 $ref: '#/components/examples/SeiEvmStakingRequestPOSTBodyExample'
               SeiEvmUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SeiEvmUnStakingRequestPOSTBodyExample'
+              SeiEvmSwitchValidatorRequestPOSTBodyExample:
+                $ref: '#/components/examples/SeiEvmSwitchValidatorRequestPOSTBodyExample'
               SolStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SolStakingRequestPOSTBodyExample'
               SolUnStakingRequestPOSTBodyExample:
@@ -41716,6 +41721,14 @@ components:
         amount: '1000000000000000000'
         validator: seivaloper1abc123...
         type: STAKE
+    SeiEvmSwitchValidatorRequestPOSTBodyExample:
+      summary: SeiEvm Switch Validator Request POST Body Example (Partial Redelegation)
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: SWITCH_VALIDATOR
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        validator: seivaloper1newvalidator7za6nz3r0dylm0eln2clpvhtawu
+        amount: '10000000000000000000'
     SeiEvmUnStakingRequestPOSTBodyExample:
       summary: SeiEvm UnStaking Request POST Body Example
       value:
@@ -63809,6 +63822,23 @@ components:
       title: Offchain Address
       type: object
       additionalProperties: {}
+    OgStakingRequestPOSTBody:
+      title: OG stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+        - type: object
+          properties:
+            validator:
+              type: string
+              description: OG validator contract address (EVM format, 0x...)
+          required:
+            - validator
+      type: object
+    OgUnStakingRequestPOSTBody:
+      title: OG unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
     OktaOAuthSetting:
       title: OktaOAuthSetting
       allOf:
@@ -69325,6 +69355,54 @@ components:
           required:
             - validator
       type: object
+    SeiEvmSwitchValidatorsRequestPOSTBody:
+      title: SEIEVM switch validator
+      description: |
+        Request to switch staking delegation from one validator to another for SeiEVM.
+        Supports both full and partial redelegation.
+
+        **Partial Redelegation:** You can redelegate a specific amount from the source validator.
+        - Specify the exact amount to redelegate in wei (18 decimals)
+        - If partially redelegating, must leave at least the minimum stake amount (1 SEI = 1000000000000000000 wei) in the source delegation
+        - If the remaining amount would be less than minimum stake, must redelegate the full amount
+        - Source delegation remains active with the remaining balance after partial redelegation
+        - Example: To redelegate 10 SEI from a 50 SEI delegation, use amount '10000000000000000000' (leaves 40 SEI in source)
+
+        **Redelegation Constraints:** SeiEVM enforces protocol-level redelegation limits:
+        - Maximum 7 redelegations between the same validator pair within 21 days
+        - 21-day lock period on the destination validator after redelegation (cannot redelegate FROM the destination validator for 21 days)
+        - These constraints are enforced by the blockchain protocol and cannot be bypassed
+
+        **Auto-Claim Feature:** During validator switching, any pending rewards from the source validator
+        may be automatically claimed and included in the transaction. This auto-claim behavior is handled
+        transparently and will be reflected in the transaction events and delegation reward tracking.
+      allOf:
+        - $ref: '#/components/schemas/SwitchValidatorsRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          type: string
+          description: |
+            Amount to redelegate in wei (18 decimals).
+
+            For partial redelegation:
+            - Specify the amount to move from source to destination validator
+            - Must leave at least 1 SEI (1000000000000000000 wei) in the source delegation
+            - Source delegation remains active with the remaining balance
+
+            For full redelegation:
+            - Specify the entire delegated amount
+            - Source delegation becomes inactive after completion
+
+            The amount must be between the minimum stake (1 SEI) and the maximum switchable amount
+            (available balance minus pending unstake, as shown in wallet attributes).
+
+            Examples:
+            - Partial: '10000000000000000000' (10 SEI from 50 SEI delegation, leaves 40 SEI)
+            - Full: '50000000000000000000' (50 SEI, entire delegation amount)
+          example: '10000000000000000000'
+      required:
+        - amount
     SeiEvmUnStakingRequestPOSTBody:
       title: SEIEVM unstake
       description: |
