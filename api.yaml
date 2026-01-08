@@ -52745,6 +52745,7 @@ components:
         - SOMI
         - STORY
         - VET
+        - OG
         - UNKNOWN
     DelegationRequest:
       type: object
@@ -63786,18 +63787,66 @@ components:
       additionalProperties: {}
     OgStakingRequestPOSTBody:
       title: OG stake
+      description: |
+        Create an OG staking request to delegate tokens to a validator.
+
+        OG uses a share-based delegation model:
+        1. You send tokens to the validator contract
+        2. The validator issues shares representing your proportional ownership
+        3. Shares are stored in the delegation's properties
+        4. Share value increases as validator earns rewards (auto-compounding)
+
+        Transaction Details:
+        - Function: delegate(address delegatorAddress) payable
+        - Tokens sent as msg.value
+        - Shares calculated by validator: (tokensDeposited * totalShares) / totalTokens
+        - No warmup period: delegation active immediately after confirmation
       allOf:
         - $ref: '#/components/schemas/StakingRequestPOSTBody'
         - type: object
           properties:
             validator:
               type: string
-              description: OG validator contract address (EVM format, 0x...)
+              description: |
+                OG validator contract address in EVM format (0x...).
+
+                This is the validator's smart contract that manages delegations,
+                not the validator's operator address. You can get a list of
+                active validators from the /validators endpoint.
+              pattern: ^0x[a-fA-F0-9]{40}$
+              example: '0x08fC637A7802C1210Cc071c2dc65bcad26bAdBDf'
           required:
             - validator
       type: object
     OgUnStakingRequestPOSTBody:
       title: OG unstake
+      description: |
+        Create an OG unstaking request to withdraw tokens from a validator.
+
+        IMPORTANT: OG unstaking is share-based, but you specify token amounts.
+        The service calculates shares automatically:
+
+        Process:
+        1. You specify the token amount to unstake (e.g., 50 OG)
+        2. Service calculates proportional shares: (yourShares * amount) / yourDelegated
+        3. Service fetches dynamic withdrawal fee from validator contract
+        4. Transaction burns your shares and initiates withdrawal
+        5. 2-day cooldown period begins
+        6. After cooldown, tokens credited to your wallet
+
+        Transaction Details:
+        - Function: undelegate(address withdrawalAddress, uint256 shares) payable
+        - Shares calculated proportionally from amount
+        - Withdrawal fee sent as msg.value (fetched from validator)
+        - Cooldown: 2 days (172800 seconds)
+
+        Share Calculation Example:
+          Your delegation: 100 OG, 100 shares
+          Unstake amount: 30 OG
+          Shares burned: (100 * 30) / 100 = 30 shares
+
+        Note: Actual tokens received may differ slightly from requested amount
+        due to exchange rate changes during transaction confirmation.
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
       type: object
@@ -72470,6 +72519,7 @@ components:
         - VET
         - AVAXC_UNSTAKE
         - SOMI_UNSTAKE
+        - OG_UNSTAKE
         - UNKNOWN
     StakingTransactionSendRequest:
       type: object
