@@ -59139,10 +59139,6 @@ components:
         amount:
           type: string
           format: big-integer
-        stakingRequests:
-          type: array
-          items:
-            $ref: '#/components/schemas/StakingRequest'
         createdDate:
           type: string
           format: date-time
@@ -59241,28 +59237,6 @@ components:
         - refresh_token
         - authorization_code
         - oauth
-    GranularStakingRequestStatus:
-      type: string
-      enum:
-        - NEW
-        - PENDING_VALIDATORS
-        - READY
-        - PENDING_APPROVAL
-        - PENDING_BITGO_TRUST_APPROVAL
-        - PENDING
-        - FAILED
-        - FAILED_RETRIED
-        - REJECTED
-        - VALIDATOR_ACTIVATING
-        - PARTIAL_CONFIRMED
-        - CONFIRMED
-        - COOLDOWN
-        - DELAYED_COOLDOWN
-        - WARMUP
-        - DELAYED_WARMUP
-        - ETH_PARTIAL_EXITED
-        - ETH_EXITED
-        - UNSUPPORTED
     GreaterThanOrEqualToValue:
       title: Greater than or equal to
       type: object
@@ -71680,27 +71654,6 @@ components:
           description: ADA-specific. True if vote delegation is required.
           type: boolean
           nullable: true
-    StakingRequest:
-      type: object
-      required:
-        - id
-        - coin
-        - stakingRequestType
-        - createdDate
-        - stakingServiceStatus
-      properties:
-        id:
-          type: string
-          format: uuid
-        coin:
-          type: string
-        stakingRequestType:
-          $ref: '#/components/schemas/StakingRequestType'
-        createdDate:
-          type: string
-          format: date-time
-        stakingServiceStatus:
-          $ref: '#/components/schemas/GranularStakingRequestStatus'
     StakingRequest1:
       title: Staking Request
       type: object
@@ -72023,15 +71976,6 @@ components:
         - DELAYED_WARMUP
         - ETH_PARTIAL_EXITED
         - ETH_EXITED
-    StakingRequestType:
-      type: string
-      enum:
-        - STAKE
-        - UNSTAKE
-        - UNSUPPORTED
-      default: STAKE
-      description: |
-        Type of staking request. `STAKE` to delegate, `UNSTAKE` to undelegate. `UNSUPPORTED` is a fallback.
     StakingRequestType1:
       title: Staking Request Type
       description: The type of staking request.
