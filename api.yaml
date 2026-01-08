@@ -1173,7 +1173,7 @@ paths:
       tags:
         - Transaction request
       summary: Create transaction request
-      description: Allows users to create a transaction request given they have spender permissions on the wallet. Use only with MPC wallets. For multisignature wallets, use [Build a transaction](/reference/v2wallettxbuild#/).
+      description: Allows users to create a transaction request given they have spender permissions on the wallet. Use only with MPC wallets. For multisignature wallets, use [Build a transaction](/reference/v2wallettxbuild).
       operationId: v2.wallet.txrequest.create
       parameters:
         - $ref: '#/components/parameters/pathWalletId'
@@ -22369,10 +22369,10 @@ paths:
         - Wallet
       summary: \[DEPRECATED\] Add wallet (advanced only)
       description: |
-        >**Note:** This route is deprecated in favor of [Add Wallet](/reference/v2walletadd#/).
+        >**Note:** This route is deprecated in favor of [Add Wallet](/reference/v2walletadd).
 
         Add Wallet is for advanced API users. It lets you manually create and
-        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate#/)
+        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate)
         with the SDK or BitGo Express. You can also create wallets in the BitGo UI.
 
         This API creates a new wallet for the user or enterprise. The keys to
@@ -22474,7 +22474,7 @@ paths:
       summary: Add wallet (advanced only)
       description: |
         Add Wallet is for advanced API users. It lets you manually create and
-        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate#/)
+        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate)
         with the SDK or BitGo Express. You can also create wallets in the BitGo UI.
 
         This API creates a new wallet for the user or enterprise. The keys to
@@ -23555,7 +23555,7 @@ paths:
       summary: Build a transaction
       operationId: v2.wallet.tx.build
       description: |
-        Build a transaction from the wallet using provided options. Use only with multisignature wallets. For MPC wallets, use [Create transaction request](/reference/v2wallettxrequestcreate#/). If you want to build, sign, and send all in one call, use [Send transaction](/reference/expresswalletsendcoins#/).
+        Build a transaction from the wallet using provided options. Use only with multisignature wallets. For MPC wallets, use [Create transaction request](/reference/v2wallettxrequestcreate). If you want to build, sign, and send all in one call, use [Send transaction](/reference/expresswalletsendcoins).
       parameters:
         - $ref: '#/components/parameters/pathCoin'
         - $ref: '#/components/parameters/pathWalletId'
@@ -23944,19 +23944,17 @@ paths:
             default: false
             description: Include user, backup and bitgo keychains along with generated wallet
       description: |
-        This API call creates a new wallet. Under the hood, the SDK (or BitGo Express) does the following:
+        Generate a new wallet for a coin. If you want a wallet to hold tokens, generate a wallet for the native coin of the blockchain (e.g. generate an ETH wallet to hold ERC20 tokens).
 
-        1. Creates the user keychain locally on the machine, and encrypts it with the provided passphrase (skipped if userKey is provided).
-        2. Creates the backup keychain locally on the machine.
-        3. Uploads the encrypted user keychain and public backup keychain.
-        4. Creates the BitGo key (and the backup key if backupXpubProvider is set) on the service.
-        5. Creates the wallet on BitGo with the 3 public keys above.
+        Calling this endpoint does all of the following:
 
-        ⓘ Ethereum wallets can only be created under an enterprise. Pass in the id of the enterprise to associate the wallet with. Your enterprise id can be seen by clicking on the “Manage Organization” link on the enterprise dropdown. Each enterprise has a fee address which will be used to pay for transaction fees on all Ethereum wallets in that enterprise. The fee address is displayed in the dashboard of the website, please fund it before creating a wallet.
+        * Creates the user keychain locally on your machine and encrypts it with the provided passphrase (skipped if you pass a `userKey`).
+        * Creates the backup keychain locally on your machine.
+        * Uploads the encrypted user keychain and public backup keychain to BitGo.
+        * Creates the BitGo key (and the backup key if you pass `backupXpubProvider`) on the service.
+        * Creates the wallet on BitGo with the 3 public keys above.
 
-        ⓘ You cannot generate a wallet by passing in a subtoken as the coin. Subtokens share wallets with their parent coin and it is not possible to create a wallet specific to one token.
-
-        ⓘ This endpoint should be called through BitGo Express if used without the SDK, such as when using cURL.
+        ⓘ Many account-based assets, including Ethereum, require you to [Fund Gas Tanks](https://developers.bitgo.com/docs/get-started-gas-tanks) to initialize new wallets on chain. Ensure your gas tank has a sufficient balance to cover this cost before generating a new wallet.
       requestBody:
         content:
           application/json:
@@ -56082,7 +56080,7 @@ components:
             - onchain
             - tss
             - blsdkg
-          description: If absent, BitGo uses the default wallet type for the asset.
+          description: 'If absent, BitGo uses the default wallet type for the asset. This is relevant only for assets that support both multisignature (`onchain`) and MPC (`tss`) on the BitGo platform. These assets are: `arbeth`, `eth`, `opeth`, `polygon`, and `soneium`. These assets all default to `tss`.'
         type:
           type: string
           enum:
