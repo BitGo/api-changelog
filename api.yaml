@@ -868,7 +868,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '202':
           description: Accepted
           content:
@@ -4123,7 +4124,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: sortField
           description: 'The field to sort results on. Possible values: - id: Sort by allocation ID. - updatedAt: Sort by the last updated timestamp. - quantity: Sort by the allocation amount quantity. - currency: Sort by the allocation currency code. Note: A finals sort is always applied on createdAt ascending and id ascending, regardless of the specified sortField. This ensures consistent ordering for items with the same primary sort value.'
           in: query
@@ -4314,7 +4314,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: connectionIds
           description: 'Optional array of connection IDs to filter by. If provided: - Only balances for connections with these specific IDs will be returned. - Useful for monitoring specific trading relationships or connections. - Can be used to focus on particular allocation targets. If omitted, results will include data for all your connections subject to other filters.'
           in: query
@@ -4421,7 +4420,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: active
           in: query
           schema:
@@ -5422,7 +5420,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: enterpriseId
           description: The enterprise identifier of the client. This identifies the client enterprise that owns the allocation.
           in: path
@@ -5522,7 +5519,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: settlementIds
           description: Filter by specific settlement IDs. When provided, only settlements matching these IDs will be returned.
           in: query
@@ -5673,7 +5669,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: enterpriseId
           description: The enterprise identifier of the client. This identifies the client enterprise making the API request.
           in: path
@@ -6055,7 +6050,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: currencies
           description: Optional array of currencies. If provided will only return settlement transfers with those currencies.
           in: query
@@ -6231,7 +6225,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: ids
           description: Filter by specific partner IDs. When provided, only partners with these IDs will be returned.
           in: query
@@ -6531,7 +6524,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: sortField
           description: 'The field to sort results on. Possible values: - id: Sort by allocation ID. - updatedAt: Sort by the last updated timestamp. - quantity: Sort by the allocation amount quantity. Note: A final sort is always applied on createdAt ascending and id ascending, regardless of the specified sortField. This ensures consistent ordering for items with the same primary sort value.'
           in: query
@@ -6842,7 +6834,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: partnerIds
           description: 'Optional array of partner IDs to filter by. If provided: - Only balances for partners with these IDs will be returned. - Only connections to these partners will be included. - Useful when a partner has multiple partner entities and wants to filter results. If omitted, results will include data for all partners the requester has access to.'
           in: query
@@ -6965,7 +6956,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: active
           in: query
           schema:
@@ -7353,7 +7343,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: settlementExternalIds
           description: Optional array of settlement externalIds. If provided will only return disputes with a disputedSettlementId of a settlement with an externalId matching one of the provided settlementExternalIds.
           in: query
@@ -7481,7 +7470,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: settlementIds
           description: Filter by specific settlement IDs. When provided, only settlements matching these IDs will be returned.
           in: query
@@ -7881,7 +7869,6 @@ paths:
           in: query
           schema:
             type: string
-            format: integer
         - name: enterpriseId
           description: The enterprise identifier of the partner. This identifies the partner enterprise making the API request.
           in: path
@@ -9534,12 +9521,14 @@ paths:
         - name: limit
           schema:
             type: string
-          required: true
+            default: '50'
+          required: false
           in: query
         - name: offset
           schema:
             type: string
-          required: true
+            default: '0'
+          required: false
           in: query
         - name: status
           schema:
@@ -10009,12 +9998,14 @@ paths:
         - name: limit
           schema:
             type: string
-          required: true
+            default: '50'
+          required: false
           in: query
         - name: offset
           schema:
             type: string
-          required: true
+            default: '0'
+          required: false
           in: query
         - name: status
           schema:
@@ -26894,6 +26885,8 @@ paths:
                 - $ref: '#/components/schemas/MaticUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/NearStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/NearUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/OgStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/OgUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/OsmoStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/OsmoUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/OsmoClaimRewardsRequestPOSTBody'
@@ -26910,6 +26903,7 @@ paths:
                 - $ref: '#/components/schemas/SeiSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiEvmStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiEvmUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/SeiEvmSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/SolStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SolClaimRewardsRequestPOSTBody'
@@ -27092,6 +27086,8 @@ paths:
                 $ref: '#/components/examples/SeiEvmStakingRequestPOSTBodyExample'
               SeiEvmUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SeiEvmUnStakingRequestPOSTBodyExample'
+              SeiEvmSwitchValidatorRequestPOSTBodyExample:
+                $ref: '#/components/examples/SeiEvmSwitchValidatorRequestPOSTBodyExample'
               SolStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SolStakingRequestPOSTBodyExample'
               SolUnStakingRequestPOSTBodyExample:
@@ -31949,7 +31945,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '400':
           description: Bad Request
           content:
@@ -32895,6 +32892,47 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/organization:
+    get:
+      summary: List User Organizations
+      operationId: v2.organization.list
+      tags:
+        - Organization
+      parameters:
+        - name: role
+          description: The optional user role
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/OrganizationRole'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - serviceUser
+                    - admin
+                    - member
+                    - customer
+                  example: admin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUserOrganizationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -33852,7 +33890,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '202':
           description: Accepted
           content:
@@ -33918,7 +33957,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '202':
           description: Accepted
           content:
@@ -33970,7 +34010,8 @@ paths:
           description: OK
           content:
             application/json:
-              schema: {}
+              schema:
+                title: JSON
         '202':
           description: Accepted
           content:
@@ -34969,6 +35010,15 @@ paths:
           description: Only return reports for this report asset
           in: query
           schema: {}
+        - name: sortOrder
+          description: Sort order of returned reports based on _id.
+          in: query
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            default: desc
       responses:
         '200':
           description: OK
@@ -37452,7 +37502,6 @@ paths:
         - name: sortBy
           description: Sorts by specified field, default sorting by id.
           in: query
-          required: true
           schema:
             nullable: true
             type: string
@@ -37462,7 +37511,6 @@ paths:
         - name: sortDirection
           description: Sorts order by field in specified sort direction, default ascending.
           in: query
-          required: true
           schema:
             nullable: true
             type: string
@@ -41663,6 +41711,14 @@ components:
         amount: '1000000000000000000'
         validator: seivaloper1abc123...
         type: STAKE
+    SeiEvmSwitchValidatorRequestPOSTBodyExample:
+      summary: SeiEvm Switch Validator Request POST Body Example (Partial Redelegation)
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: SWITCH_VALIDATOR
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        validator: seivaloper1newvalidator7za6nz3r0dylm0eln2clpvhtawu
+        amount: '10000000000000000000'
     SeiEvmUnStakingRequestPOSTBodyExample:
       summary: SeiEvm UnStaking Request POST Body Example
       value:
@@ -57292,11 +57348,14 @@ components:
         side: buy
         quantity: '0.0068'
         quantityCurrency: BTC
-        cumulativeQuantity: '0.00110034'
-        averagePrice: '89800.34'
+        cumulativeQuantity: '0.00342566'
+        cumulativeQuoteQuantity: '310'
+        leavesQuantity: '0.0068'
+        leavesQuoteQuantity: null
+        averagePrice: '90493.51'
         tradeId: 5606d256-818f-4e55-9cf8-4b237ddd0c85
-        fillQuantity: '0.00110034'
-        fillPrice: '89800.34'
+        fillQuantity: '0.00342566'
+        fillPrice: '90493.51'
     FilteringConditions:
       type: object
       description: |
@@ -58018,7 +58077,8 @@ components:
               description: Parameters used to build the transaction
             coin:
               $ref: '#/components/schemas/CoinString'
-            coinSpecific: {}
+            coinSpecific:
+              description: Transfer fields specific to each coin type
             comment:
               nullable: true
               type: string
@@ -58464,6 +58524,15 @@ components:
                 - utxo_message_signing
                 - pending_deposit
                 - internal_transfer
+                - pending_withdrawal_offer
+                - pending_deposit_offer
+                - offer_accepted
+                - offer_rejected
+                - confirmed_deposit
+                - confirmed_withdrawal
+                - deposit_offer_expired
+                - withdrawal_offer_expired
+                - withdrawal_offer_rejected
                 - staking_eth_withdrawal
                 - staking_eth_partial_withdrawal
                 - staking_eth_full_withdrawal
@@ -58587,6 +58656,10 @@ components:
           type: string
           description: The coin name for the stuck transaction
           example: hteth
+        wallet:
+          type: string
+          description: The wallet ID for the stuck transaction
+          example: 59cd72485007a239fb00282ed480da1f
       required:
         - cause
         - message
@@ -58876,7 +58949,8 @@ components:
                         coin:
                           type: string
                           description: Coin type for the message
-                        bitgoPaillierChallenge: {}
+                        bitgoPaillierChallenge:
+                          description: BitGo's Paillier challenge for ECDSA
                         encryptedChallenge:
                           type: string
                           description: BitGo's encrypted challenge for ECDSA with Range Proofs
@@ -61378,7 +61452,8 @@ components:
                 $ref: '#/components/schemas/OrganizationIdString'
               coin:
                 $ref: '#/components/schemas/CoinString'
-              data: {}
+              data:
+                description: Properties that apply to the given audit log type
               date:
                 type: string
                 format: date-time
@@ -61917,7 +61992,8 @@ components:
                         coin:
                           type: string
                           description: Coin type for the message
-                        bitgoPaillierChallenge: {}
+                        bitgoPaillierChallenge:
+                          description: BitGo's Paillier challenge for ECDSA
                         encryptedChallenge:
                           type: string
                           description: BitGo's encrypted challenge for ECDSA with Range Proofs
@@ -61943,6 +62019,30 @@ components:
           format: uuid
       required:
         - txRequests
+    ListUserOrganizationResponse:
+      title: ListUserOrganizationResponse
+      type: object
+      properties:
+        organizations:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                description: The organization ID
+              name:
+                type: string
+                description: The organization name
+              enterpriseCount:
+                type: number
+                description: The number of enterprises in the organization
+            required:
+              - id
+              - name
+              - enterpriseCount
+      required:
+        - organizations
     ListWalletShareRequestResponse:
       title: ListWalletShareRequestResponse
       type: object
@@ -63712,6 +63812,23 @@ components:
       title: Offchain Address
       type: object
       additionalProperties: {}
+    OgStakingRequestPOSTBody:
+      title: OG stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+        - type: object
+          properties:
+            validator:
+              type: string
+              description: OG validator contract address (EVM format, 0x...)
+          required:
+            - validator
+      type: object
+    OgUnStakingRequestPOSTBody:
+      title: OG unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
+      type: object
     OktaOAuthSetting:
       title: OktaOAuthSetting
       allOf:
@@ -64104,6 +64221,9 @@ components:
         quantity: '0.0068'
         quantityCurrency: BTC
         cumulativeQuantity: '0'
+        cumulativeQuoteQuantity: '0'
+        leavesQuantity: '0.0068'
+        leavesQuoteQuantity: null
         averagePrice: '0'
         tradeId: ''
         fillQuantity: ''
@@ -64131,7 +64251,10 @@ components:
         quantity: '0.0068'
         quantityCurrency: BTC
         cumulativeQuantity: '0.0068'
-        averagePrice: '89801.47'
+        cumulativeQuoteQuantity: '615.38'
+        leavesQuantity: '0'
+        leavesQuoteQuantity: null
+        averagePrice: '90497.05'
         tradeId: ''
         fillQuantity: ''
         fillPrice: ''
@@ -64175,7 +64298,10 @@ components:
         side: buy
         quantity: '0.0068'
         quantityCurrency: BTC
-        cumulativeQuantity: '0'
+        cumulativeQuantity: '0.00110034'
+        cumulativeQuoteQuantity: '0'
+        leavesQuantity: '0.0068'
+        leavesQuoteQuantity: null
         averagePrice: '0'
         tradeId: ''
         fillQuantity: ''
@@ -64197,6 +64323,9 @@ components:
         quantity: '0.0068'
         quantityCurrency: BTC
         cumulativeQuantity: '0.00359973'
+        cumulativeQuoteQuantity: '325.53'
+        leavesQuantity: '0.00320027'
+        leavesQuoteQuantity: null
         averagePrice: '90431.78'
         tradeId: ''
         fillQuantity: ''
@@ -65572,18 +65701,22 @@ components:
         transactionRequest:
           type: object
           properties:
-            buildParams: {}
-            coinSpecific: {}
+            buildParams:
+              description: The build parameters for the transaction
+            coinSpecific:
+              description: Coin-specific details
             comment:
               nullable: true
               type: string
               description: The comment for the transaction request
-            fee: {}
+            fee:
+              description: The fee for the transaction
             isUnsigned:
               nullable: true
               type: boolean
               description: Indicates if the transaction is unsigned
-            policyUniqueId: {}
+            policyUniqueId:
+              description: The unique ID for the policy
             recipients:
               type: array
               items:
@@ -65594,14 +65727,19 @@ components:
                     description: The address of the recipient
                     example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
                     maxLength: 250
-                  amount: {}
+                  amount:
+                    description: The amount to be transferred
+                    example: '100000'
                   data:
                     type: string
                     description: Additional data for the transaction
                 description: The recipients of the transaction
-            requestedAmount: {}
-            sourceWallet: {}
-            triggeredPolicy: {}
+            requestedAmount:
+              description: The requested amount
+            sourceWallet:
+              description: The source wallet
+            triggeredPolicy:
+              description: The triggered policy for the transaction
             validTransaction:
               type: string
               description: Indicates if the transaction is valid
@@ -69207,6 +69345,54 @@ components:
           required:
             - validator
       type: object
+    SeiEvmSwitchValidatorsRequestPOSTBody:
+      title: SEIEVM switch validator
+      description: |
+        Request to switch staking delegation from one validator to another for SeiEVM.
+        Supports both full and partial redelegation.
+
+        **Partial Redelegation:** You can redelegate a specific amount from the source validator.
+        - Specify the exact amount to redelegate in wei (18 decimals)
+        - If partially redelegating, must leave at least the minimum stake amount (1 SEI = 1000000000000000000 wei) in the source delegation
+        - If the remaining amount would be less than minimum stake, must redelegate the full amount
+        - Source delegation remains active with the remaining balance after partial redelegation
+        - Example: To redelegate 10 SEI from a 50 SEI delegation, use amount '10000000000000000000' (leaves 40 SEI in source)
+
+        **Redelegation Constraints:** SeiEVM enforces protocol-level redelegation limits:
+        - Maximum 7 redelegations between the same validator pair within 21 days
+        - 21-day lock period on the destination validator after redelegation (cannot redelegate FROM the destination validator for 21 days)
+        - These constraints are enforced by the blockchain protocol and cannot be bypassed
+
+        **Auto-Claim Feature:** During validator switching, any pending rewards from the source validator
+        may be automatically claimed and included in the transaction. This auto-claim behavior is handled
+        transparently and will be reflected in the transaction events and delegation reward tracking.
+      allOf:
+        - $ref: '#/components/schemas/SwitchValidatorsRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          type: string
+          description: |
+            Amount to redelegate in wei (18 decimals).
+
+            For partial redelegation:
+            - Specify the amount to move from source to destination validator
+            - Must leave at least 1 SEI (1000000000000000000 wei) in the source delegation
+            - Source delegation remains active with the remaining balance
+
+            For full redelegation:
+            - Specify the entire delegated amount
+            - Source delegation becomes inactive after completion
+
+            The amount must be between the minimum stake (1 SEI) and the maximum switchable amount
+            (available balance minus pending unstake, as shown in wallet attributes).
+
+            Examples:
+            - Partial: '10000000000000000000' (10 SEI from 50 SEI delegation, leaves 40 SEI)
+            - Full: '50000000000000000000' (50 SEI, entire delegation amount)
+          example: '10000000000000000000'
+      required:
+        - amount
     SeiEvmUnStakingRequestPOSTBody:
       title: SEIEVM unstake
       description: |
@@ -74366,6 +74552,30 @@ components:
           type: string
           format: decimal
           description: The total base quantity filled for the order.
+          example: 0.0123
+        cumulativeQuoteQuantity:
+          type: string
+          format: decimal
+          description: The total quote quantity filled for the order.
+          example: 49.99
+        leavesQuantity:
+          type: string
+          format: decimal
+          description: |
+            For orders created with base currency, this field is set to the remaining unfilled base quantity.
+
+            - Only one of leavesQuantity or leavesQuoteQuantity will be set.
+            - This field is set to null for orders created with quote currency.
+          example: 0.0068
+        leavesQuoteQuantity:
+          type: string
+          format: decimal
+          description: |
+            For orders created with quote currency, this field is set to the remaining unfilled quote quantity.
+
+            - Only one of leavesQuantity or leavesQuoteQuantity will be set.
+            - This field is set to null for orders created with base currency.
+          example: 23.12
         averagePrice:
           type: string
           format: decimal
@@ -74921,7 +75131,8 @@ components:
         updatedBy:
           type: string
           description: The Id of the User that last updated the TxRequest document. This is an alias for the userId field.
-        intent: {}
+        intent:
+          description: The intent of the transaction request
         intents:
           type: array
           items: {}
@@ -75176,7 +75387,8 @@ components:
                   coin:
                     type: string
                     description: Coin type for the message
-                  bitgoPaillierChallenge: {}
+                  bitgoPaillierChallenge:
+                    description: BitGo's Paillier challenge for ECDSA
                   encryptedChallenge:
                     type: string
                     description: BitGo's encrypted challenge for ECDSA with Range Proofs
@@ -76192,7 +76404,8 @@ components:
         baseValueWithoutFees:
           type: number
           description: The value (in base units) sent by this transfer excluding network fees.
-        coinSpecific: {}
+        coinSpecific:
+          description: Transfer fields specific to each coin type
         confirmations:
           type: number
           description: The number of blocks that have been confirmed since this Transfer's block was confirmed
@@ -76231,6 +76444,15 @@ components:
             - utxo_message_signing
             - pending_deposit
             - internal_transfer
+            - pending_withdrawal_offer
+            - pending_deposit_offer
+            - offer_accepted
+            - offer_rejected
+            - confirmed_deposit
+            - confirmed_withdrawal
+            - deposit_offer_expired
+            - withdrawal_offer_expired
+            - withdrawal_offer_rejected
             - staking_eth_withdrawal
             - staking_eth_partial_withdrawal
             - staking_eth_full_withdrawal
@@ -78352,7 +78574,8 @@ components:
             timezone:
               type: string
               description: The user's timezone
-            apps: {}
+            apps:
+              description: The apps the user has access to
             country:
               type: string
               description: The country of the user
@@ -78394,7 +78617,8 @@ components:
             pgpKey:
               type: string
               description: The user's PGP key
-            rateLimits: {}
+            rateLimits:
+              description: The rate limits applied to the user
             referrer:
               allOf:
                 - $ref: '#/components/schemas/Referrer'
