@@ -74373,6 +74373,8 @@ components:
               type: boolean
             singleNominatorAmount:
               $ref: '#/components/schemas/Amount'
+            tonStakingType:
+              $ref: '#/components/schemas/TonStakingType'
           required:
             - intentType
             - validatorAddress
@@ -74437,6 +74439,30 @@ components:
           required:
             - intentType
             - validatorAddress
+            - tonStakingType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    TonWhalesUndelegateIntent:
+      title: TON Whales Undelegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            validatorAddress:
+              type: string
+            withdrawalAmount:
+              $ref: '#/components/schemas/Amount'
+            tonStakingType:
+              type: string
+              enum:
+                - TON_WHALES
+          required:
+            - intentType
+            - validatorAddress
+            - withdrawalAmount
             - tonStakingType
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
@@ -75027,6 +75053,7 @@ components:
         - $ref: '#/components/schemas/TonPaymentIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/TonWhalesDelegateIntent'
+        - $ref: '#/components/schemas/TonWhalesUndelegateIntent'
         - $ref: '#/components/schemas/VetStakingIntent'
         - $ref: '#/components/schemas/VetDelegateIntent'
         - $ref: '#/components/schemas/VetExitDelegationIntent'
@@ -76746,6 +76773,7 @@ components:
         - regenerated
         - replaced
         - replacing
+        - reversed
         - abandoned
     TransferAmountCondition:
       title: Amount
@@ -77065,8 +77093,9 @@ components:
         - removed
         - failed
         - replaced
+        - reversed
         - deleted
-      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
+      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `reversed`: The transfer was reversed. - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
     TransferTokenIntent:
       title: TransferTokenIntent
       allOf:
@@ -81970,10 +81999,15 @@ components:
               minLength: 1
             stakingPeriod:
               type: number
+            stakingContractAddress:
+              type: string
+              minLength: 1
           required:
             - validatorAddress
             - stakingPeriod
+            - stakingContractAddress
         - $ref: '#/components/schemas/ValidatorRegistrationIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     VetWalletStakingStateAttributes:
       type: object
       properties:
