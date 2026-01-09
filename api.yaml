@@ -1173,7 +1173,7 @@ paths:
       tags:
         - Transaction request
       summary: Create transaction request
-      description: Allows users to create a transaction request given they have spender permissions on the wallet. Use only with MPC wallets. For multisignature wallets, use [Build a transaction](/reference/v2wallettxbuild#/).
+      description: Allows users to create a transaction request given they have spender permissions on the wallet. Use only with MPC wallets. For multisignature wallets, use [Build a transaction](/reference/v2wallettxbuild).
       operationId: v2.wallet.txrequest.create
       parameters:
         - $ref: '#/components/parameters/pathWalletId'
@@ -10666,13 +10666,13 @@ paths:
                       minLength: 1
                     nameFirst:
                       type: string
-                      description: The first name
+                      description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameLast:
                       type: string
-                      description: The last name
+                      description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameMiddle:
                       type: string
-                      description: The middle name of the individual
+                      description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     notionalTradedEachMonth:
                       type: number
                       description: The estimated notional amount traded per month in USD
@@ -10766,13 +10766,13 @@ paths:
                       description: Whether the account represents a business entity (true) or individual (false)
                     nameFirst:
                       type: string
-                      description: The first name
+                      description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameLast:
                       type: string
-                      description: The last name
+                      description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameMiddle:
                       type: string
-                      description: The middle name of the individual
+                      description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     organizationId:
                       type: string
                       description: The Bitgo organization ID
@@ -10825,13 +10825,13 @@ paths:
                       minLength: 1
                     nameFirst:
                       type: string
-                      description: The first name
+                      description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameLast:
                       type: string
-                      description: The last name
+                      description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameMiddle:
                       type: string
-                      description: The middle name of the individual
+                      description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     organizationId:
                       type: string
                       description: The Bitgo organization ID
@@ -10904,13 +10904,13 @@ paths:
                       description: Whether this individual is the primary contact for the enterprise
                     nameFirst:
                       type: string
-                      description: The first name
+                      description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameLast:
                       type: string
-                      description: The last name
+                      description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameMiddle:
                       type: string
-                      description: The middle name of the individual
+                      description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     organizationId:
                       type: string
                       description: The Bitgo organization ID
@@ -11011,13 +11011,13 @@ paths:
                       minLength: 1
                     nameFirst:
                       type: string
-                      description: The first name
+                      description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameLast:
                       type: string
-                      description: The last name
+                      description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     nameMiddle:
                       type: string
-                      description: The middle name of the individual
+                      description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
                     notionalTradedEachMonth:
                       type: number
                       description: The estimated notional amount traded per month in USD
@@ -11485,9 +11485,18 @@ paths:
                     - `vid` - Voter ID
                     - `visa` - Visa
                     - `wp` - Work Permit
-                frontPhoto: {}
-                backPhoto: {}
-                proofOfResidency: {}
+                frontPhoto:
+                  description: Front photo of the identity document
+                  example: '"passport-front.jpg"'
+                  format: binary
+                backPhoto:
+                  description: Back photo of the identity document
+                  example: '"drivers-license-back.png"'
+                  format: binary
+                proofOfResidency:
+                  description: Proof of residency
+                  example: '"rental-lease.pdf"'
+                  format: binary
       responses:
         '200':
           description: OK
@@ -11604,9 +11613,18 @@ paths:
                     - `vid` - Voter ID
                     - `visa` - Visa
                     - `wp` - Work Permit
-                frontPhoto: {}
-                backPhoto: {}
-                proofOfResidency: {}
+                frontPhoto:
+                  description: Front photo of the identity document
+                  example: '"passport-front.jpg"'
+                  format: binary
+                backPhoto:
+                  description: Back photo of the identity document
+                  example: '"drivers-license-back.png"'
+                  format: binary
+                proofOfResidency:
+                  description: Proof of residency
+                  example: '"rental-lease.pdf"'
+                  format: binary
       responses:
         '200':
           description: OK
@@ -22369,10 +22387,10 @@ paths:
         - Wallet
       summary: \[DEPRECATED\] Add wallet (advanced only)
       description: |
-        >**Note:** This route is deprecated in favor of [Add Wallet](/reference/v2walletadd#/).
+        >**Note:** This route is deprecated in favor of [Add Wallet](/reference/v2walletadd).
 
         Add Wallet is for advanced API users. It lets you manually create and
-        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate#/)
+        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate)
         with the SDK or BitGo Express. You can also create wallets in the BitGo UI.
 
         This API creates a new wallet for the user or enterprise. The keys to
@@ -22474,7 +22492,7 @@ paths:
       summary: Add wallet (advanced only)
       description: |
         Add Wallet is for advanced API users. It lets you manually create and
-        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate#/)
+        specify keys. The recommended (and simpler) method is [Generate Wallet](/reference/expresswalletgenerate)
         with the SDK or BitGo Express. You can also create wallets in the BitGo UI.
 
         This API creates a new wallet for the user or enterprise. The keys to
@@ -23555,7 +23573,7 @@ paths:
       summary: Build a transaction
       operationId: v2.wallet.tx.build
       description: |
-        Build a transaction from the wallet using provided options. Use only with multisignature wallets. For MPC wallets, use [Create transaction request](/reference/v2wallettxrequestcreate#/). If you want to build, sign, and send all in one call, use [Send transaction](/reference/expresswalletsendcoins#/).
+        Build a transaction from the wallet using provided options. Use only with multisignature wallets. For MPC wallets, use [Create transaction request](/reference/v2wallettxrequestcreate). If you want to build, sign, and send all in one call, use [Send transaction](/reference/expresswalletsendcoins).
       parameters:
         - $ref: '#/components/parameters/pathCoin'
         - $ref: '#/components/parameters/pathWalletId'
@@ -23944,19 +23962,17 @@ paths:
             default: false
             description: Include user, backup and bitgo keychains along with generated wallet
       description: |
-        This API call creates a new wallet. Under the hood, the SDK (or BitGo Express) does the following:
+        Generate a new wallet for a coin. If you want a wallet to hold tokens, generate a wallet for the native coin of the blockchain (e.g. generate an ETH wallet to hold ERC20 tokens).
 
-        1. Creates the user keychain locally on the machine, and encrypts it with the provided passphrase (skipped if userKey is provided).
-        2. Creates the backup keychain locally on the machine.
-        3. Uploads the encrypted user keychain and public backup keychain.
-        4. Creates the BitGo key (and the backup key if backupXpubProvider is set) on the service.
-        5. Creates the wallet on BitGo with the 3 public keys above.
+        Calling this endpoint does all of the following:
 
-        ⓘ Ethereum wallets can only be created under an enterprise. Pass in the id of the enterprise to associate the wallet with. Your enterprise id can be seen by clicking on the “Manage Organization” link on the enterprise dropdown. Each enterprise has a fee address which will be used to pay for transaction fees on all Ethereum wallets in that enterprise. The fee address is displayed in the dashboard of the website, please fund it before creating a wallet.
+        * Creates the user keychain locally on your machine and encrypts it with the provided passphrase (skipped if you pass a `userKey`).
+        * Creates the backup keychain locally on your machine.
+        * Uploads the encrypted user keychain and public backup keychain to BitGo.
+        * Creates the BitGo key (and the backup key if you pass `backupXpubProvider`) on the service.
+        * Creates the wallet on BitGo with the 3 public keys above.
 
-        ⓘ You cannot generate a wallet by passing in a subtoken as the coin. Subtokens share wallets with their parent coin and it is not possible to create a wallet specific to one token.
-
-        ⓘ This endpoint should be called through BitGo Express if used without the SDK, such as when using cURL.
+        ⓘ Many account-based assets, including Ethereum, require you to [Fund Gas Tanks](https://developers.bitgo.com/docs/get-started-gas-tanks) to initialize new wallets on chain. Ensure your gas tank has a sufficient balance to cover this cost before generating a new wallet.
       requestBody:
         content:
           application/json:
@@ -52747,6 +52763,7 @@ components:
         - SOMI
         - STORY
         - VET
+        - OG
         - UNKNOWN
     DelegationRequest:
       type: object
@@ -56082,7 +56099,7 @@ components:
             - onchain
             - tss
             - blsdkg
-          description: If absent, BitGo uses the default wallet type for the asset.
+          description: 'If absent, BitGo uses the default wallet type for the asset. This is relevant only for assets that support both multisignature (`onchain`) and MPC (`tss`) on the BitGo platform. These assets are: `arbeth`, `eth`, `opeth`, `polygon`, and `soneium`. These assets all default to `tss`.'
         type:
           type: string
           enum:
@@ -59141,10 +59158,6 @@ components:
         amount:
           type: string
           format: big-integer
-        stakingRequests:
-          type: array
-          items:
-            $ref: '#/components/schemas/StakingRequest'
         createdDate:
           type: string
           format: date-time
@@ -59243,28 +59256,6 @@ components:
         - refresh_token
         - authorization_code
         - oauth
-    GranularStakingRequestStatus:
-      type: string
-      enum:
-        - NEW
-        - PENDING_VALIDATORS
-        - READY
-        - PENDING_APPROVAL
-        - PENDING_BITGO_TRUST_APPROVAL
-        - PENDING
-        - FAILED
-        - FAILED_RETRIED
-        - REJECTED
-        - VALIDATOR_ACTIVATING
-        - PARTIAL_CONFIRMED
-        - CONFIRMED
-        - COOLDOWN
-        - DELAYED_COOLDOWN
-        - WARMUP
-        - DELAYED_WARMUP
-        - ETH_PARTIAL_EXITED
-        - ETH_EXITED
-        - UNSUPPORTED
     GreaterThanOrEqualToValue:
       title: Greater than or equal to
       type: object
@@ -63814,18 +63805,66 @@ components:
       additionalProperties: {}
     OgStakingRequestPOSTBody:
       title: OG stake
+      description: |
+        Create an OG staking request to delegate tokens to a validator.
+
+        OG uses a share-based delegation model:
+        1. You send tokens to the validator contract
+        2. The validator issues shares representing your proportional ownership
+        3. Shares are stored in the delegation's properties
+        4. Share value increases as validator earns rewards (auto-compounding)
+
+        Transaction Details:
+        - Function: delegate(address delegatorAddress) payable
+        - Tokens sent as msg.value
+        - Shares calculated by validator: (tokensDeposited * totalShares) / totalTokens
+        - No warmup period: delegation active immediately after confirmation
       allOf:
         - $ref: '#/components/schemas/StakingRequestPOSTBody'
         - type: object
           properties:
             validator:
               type: string
-              description: OG validator contract address (EVM format, 0x...)
+              description: |
+                OG validator contract address in EVM format (0x...).
+
+                This is the validator's smart contract that manages delegations,
+                not the validator's operator address. You can get a list of
+                active validators from the /validators endpoint.
+              pattern: ^0x[a-fA-F0-9]{40}$
+              example: '0x08fC637A7802C1210Cc071c2dc65bcad26bAdBDf'
           required:
             - validator
       type: object
     OgUnStakingRequestPOSTBody:
       title: OG unstake
+      description: |
+        Create an OG unstaking request to withdraw tokens from a validator.
+
+        IMPORTANT: OG unstaking is share-based, but you specify token amounts.
+        The service calculates shares automatically:
+
+        Process:
+        1. You specify the token amount to unstake (e.g., 50 OG)
+        2. Service calculates proportional shares: (yourShares * amount) / yourDelegated
+        3. Service fetches dynamic withdrawal fee from validator contract
+        4. Transaction burns your shares and initiates withdrawal
+        5. 2-day cooldown period begins
+        6. After cooldown, tokens credited to your wallet
+
+        Transaction Details:
+        - Function: undelegate(address withdrawalAddress, uint256 shares) payable
+        - Shares calculated proportionally from amount
+        - Withdrawal fee sent as msg.value (fetched from validator)
+        - Cooldown: 2 days (172800 seconds)
+
+        Share Calculation Example:
+          Your delegation: 100 OG, 100 shares
+          Unstake amount: 30 OG
+          Shares burned: (100 * 30) / 100 = 30 shares
+
+        Note: Actual tokens received may differ slightly from requested amount
+        due to exchange rate changes during transaction confirmation.
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
       type: object
@@ -71682,27 +71721,6 @@ components:
           description: ADA-specific. True if vote delegation is required.
           type: boolean
           nullable: true
-    StakingRequest:
-      type: object
-      required:
-        - id
-        - coin
-        - stakingRequestType
-        - createdDate
-        - stakingServiceStatus
-      properties:
-        id:
-          type: string
-          format: uuid
-        coin:
-          type: string
-        stakingRequestType:
-          $ref: '#/components/schemas/StakingRequestType'
-        createdDate:
-          type: string
-          format: date-time
-        stakingServiceStatus:
-          $ref: '#/components/schemas/GranularStakingRequestStatus'
     StakingRequest1:
       title: Staking Request
       type: object
@@ -72025,15 +72043,6 @@ components:
         - DELAYED_WARMUP
         - ETH_PARTIAL_EXITED
         - ETH_EXITED
-    StakingRequestType:
-      type: string
-      enum:
-        - STAKE
-        - UNSTAKE
-        - UNSUPPORTED
-      default: STAKE
-      description: |
-        Type of staking request. `STAKE` to delegate, `UNSTAKE` to undelegate. `UNSUPPORTED` is a fallback.
     StakingRequestType1:
       title: Staking Request Type
       description: The type of staking request.
@@ -72528,6 +72537,7 @@ components:
         - VET
         - AVAXC_UNSTAKE
         - SOMI_UNSTAKE
+        - OG_UNSTAKE
         - UNKNOWN
     StakingTransactionSendRequest:
       type: object
@@ -74373,6 +74383,8 @@ components:
               type: boolean
             singleNominatorAmount:
               $ref: '#/components/schemas/Amount'
+            tonStakingType:
+              $ref: '#/components/schemas/TonStakingType'
           required:
             - intentType
             - validatorAddress
@@ -74437,6 +74449,30 @@ components:
           required:
             - intentType
             - validatorAddress
+            - tonStakingType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    TonWhalesUndelegateIntent:
+      title: TON Whales Undelegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            validatorAddress:
+              type: string
+            withdrawalAmount:
+              $ref: '#/components/schemas/Amount'
+            tonStakingType:
+              type: string
+              enum:
+                - TON_WHALES
+          required:
+            - intentType
+            - validatorAddress
+            - withdrawalAmount
             - tonStakingType
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
@@ -75027,6 +75063,7 @@ components:
         - $ref: '#/components/schemas/TonPaymentIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/TonWhalesDelegateIntent'
+        - $ref: '#/components/schemas/TonWhalesUndelegateIntent'
         - $ref: '#/components/schemas/VetStakingIntent'
         - $ref: '#/components/schemas/VetDelegateIntent'
         - $ref: '#/components/schemas/VetExitDelegationIntent'
@@ -76746,6 +76783,7 @@ components:
         - regenerated
         - replaced
         - replacing
+        - reversed
         - abandoned
     TransferAmountCondition:
       title: Amount
@@ -77065,8 +77103,9 @@ components:
         - removed
         - failed
         - replaced
+        - reversed
         - deleted
-      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
+      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `reversed`: The transfer was reversed. - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
     TransferTokenIntent:
       title: TransferTokenIntent
       allOf:
@@ -81970,10 +82009,15 @@ components:
               minLength: 1
             stakingPeriod:
               type: number
+            stakingContractAddress:
+              type: string
+              minLength: 1
           required:
             - validatorAddress
             - stakingPeriod
+            - stakingContractAddress
         - $ref: '#/components/schemas/ValidatorRegistrationIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     VetWalletStakingStateAttributes:
       type: object
       properties:
