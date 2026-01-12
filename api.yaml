@@ -26339,6 +26339,10 @@ paths:
                   - quantity
                   - balanceValue
                 properties:
+                  transferId:
+                    type: string
+                    format: uuid
+                    description: The margin transfer ID (UUID) from Trade Falcon
                   currency:
                     type: string
                     description: Symbol of the collateral asset
@@ -26351,6 +26355,7 @@ paths:
                       - type: object
                         description: Returns the value of the collateral.
                 example:
+                  transferId: 2bf68bb7-513d-40af-9fc9-249060c3c7ac
                   currency: BTC
                   quantity: '2'
                   balanceValue:
@@ -26399,6 +26404,10 @@ paths:
                         - quantity
                         - balanceValue
                       properties:
+                        transferId:
+                          type: string
+                          format: uuid
+                          description: The margin transfer ID (UUID) from Trade Falcon
                         currency:
                           type: string
                           description: Currency symbol
@@ -26412,7 +26421,8 @@ paths:
                               description: Returns the value of the margin position. Has 2 fields denoting the currency used and the actual value.
                 example:
                   balances:
-                    - currency: BTC
+                    - transferId: 3af68cc8-624e-41b0-a0ca-350171d4c8bd
+                      currency: BTC
                       quantity: '2'
                       balanceValue:
                         quantity: '1000000'
@@ -52439,7 +52449,7 @@ components:
         - id
         - name
         - symbol
-        - minIncrement
+        - increment
       type: object
       properties:
         id:
@@ -52452,7 +52462,7 @@ components:
         name:
           type: string
           description: Name of the currency
-        minIncrement:
+        increment:
           type: string
           format: decimal
           description: This is the smallest amount that can be traded for the currency.
@@ -52460,7 +52470,7 @@ components:
         id: 519824c6-b534-49b4-a636-22dfd0ade5cf
         symbol: USD
         name: US Dollar
-        minIncrement: '0.01'
+        increment: '0.01'
     Currency1:
       title: Currency
       type: object
