@@ -29763,36 +29763,6 @@ paths:
                   allOf:
                     - type: object
                       properties:
-                        fromAssetId:
-                          type: string
-                          description: Source asset identifier
-                          example: 08c1271e-b15d-4af8-8929-f75383903da4
-                          format: uuid
-                          title: uuid
-                        fromAmount:
-                          type: string
-                          description: Amount to be transferred from source asset, specified in its lowest denomination.
-                          example: '500'
-                          minLength: 1
-                        toAssetId:
-                          type: string
-                          description: Destination asset identifier
-                          example: 49ff49ea-3355-4717-bbb0-5e8f5cae2202
-                          format: uuid
-                          title: uuid
-                        toAmount:
-                          type: string
-                          description: Amount to be received in destination asset
-                          example: '5000000'
-                          minLength: 1
-                        destinationType:
-                          type: string
-                          enum:
-                            - go_account
-                            - address
-                            - wallet
-                          description: Type of destination for the order
-                          example: go_account
                         sourceWalletId:
                           type: string
                           description: Source wallet identifier for the order
@@ -29964,13 +29934,8 @@ paths:
                           example: '2025-04-04T09:55:09.136Z'
                           format: date-time
                           title: ISO Date String
-                      required:
-                        - fromAssetId
-                        - fromAmount
-                        - toAssetId
-                        - toAmount
-                        - destinationType
                     - $ref: '#/components/schemas/OrderResponseBase'
+                    - $ref: '#/components/schemas/OrderResponseRequiredFields'
         '400':
           description: Bad Request
           content:
@@ -64424,36 +64389,6 @@ components:
       allOf:
         - type: object
           properties:
-            fromAssetId:
-              type: string
-              description: Source asset identifier
-              example: 08c1271e-b15d-4af8-8929-f75383903da4
-              format: uuid
-              title: uuid
-            fromAmount:
-              type: string
-              description: Amount to be transferred from source asset, specified in its lowest denomination.
-              example: '500'
-              minLength: 1
-            toAssetId:
-              type: string
-              description: Destination asset identifier
-              example: 49ff49ea-3355-4717-bbb0-5e8f5cae2202
-              format: uuid
-              title: uuid
-            toAmount:
-              type: string
-              description: Amount to be received in destination asset
-              example: '5000000'
-              minLength: 1
-            destinationType:
-              type: string
-              enum:
-                - go_account
-                - address
-                - wallet
-              description: Type of destination for the order
-              example: go_account
             sourceWalletId:
               type: string
               description: Source wallet identifier for the order
@@ -64625,13 +64560,8 @@ components:
               example: '2025-04-04T09:55:09.136Z'
               format: date-time
               title: ISO Date String
-          required:
-            - fromAssetId
-            - fromAmount
-            - toAssetId
-            - toAmount
-            - destinationType
         - $ref: '#/components/schemas/OrderResponseBase'
+        - $ref: '#/components/schemas/OrderResponseRequiredFields'
     OrderResponseBase:
       title: OrderResponseBase
       type: object
@@ -64689,6 +64619,46 @@ components:
         - type
         - status
         - enterpriseId
+    OrderResponseRequiredFields:
+      title: OrderResponseRequiredFields
+      type: object
+      properties:
+        fromAssetId:
+          type: string
+          description: Source asset identifier
+          example: 08c1271e-b15d-4af8-8929-f75383903da4
+          format: uuid
+          title: uuid
+        fromAmount:
+          type: string
+          description: Amount to be transferred from source asset, specified in its lowest denomination.
+          example: '500'
+          minLength: 1
+        toAssetId:
+          type: string
+          description: Destination asset identifier
+          example: 49ff49ea-3355-4717-bbb0-5e8f5cae2202
+          format: uuid
+          title: uuid
+        toAmount:
+          type: string
+          description: Amount to be received in destination asset
+          example: '5000000'
+          minLength: 1
+        destinationType:
+          type: string
+          enum:
+            - go_account
+            - address
+            - wallet
+          description: Type of destination for the order
+          example: go_account
+      required:
+        - fromAssetId
+        - fromAmount
+        - toAssetId
+        - toAmount
+        - destinationType
     OrderStatus:
       type: string
       enum:
