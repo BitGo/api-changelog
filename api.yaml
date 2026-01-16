@@ -31221,7 +31221,7 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/potentialStuckTxs:
     get:
-      summary: Get list of potentially stuck transactions and their nonces for eth-like coins
+      summary: List stuck transactions
       description: |-
         Gets a list of potentially problematic transactions, their nonces, the reason they
         are stuck, and possible solutions for a given wallet.
@@ -31611,6 +31611,7 @@ paths:
               - policyBalanceChange
               - reversal
               - transaction_finality_on_l1
+              - stuckTx
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -34087,6 +34088,7 @@ paths:
               - policyBalanceChange
               - reversal
               - transaction_finality_on_l1
+              - stuckTx
         - name: prevId
           in: query
           schema:
@@ -34535,6 +34537,7 @@ paths:
               - policyBalanceChange
               - reversal
               - transaction_finality_on_l1
+              - stuckTx
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -36745,7 +36748,7 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/potentialStuckTxs:
     get:
-      summary: Get list of potentially stuck transactions across multiple wallets.
+      summary: List stuck transactions for EVM keyring
       description: |-
         This endpoint aggregates stuck transactions from a wallet and its EVM keyring derived wallets (if applicable).
 
@@ -58553,6 +58556,9 @@ components:
                 - staking_bera_withdrawal
                 - staking_bera_block_reward
               description: Transfer subtype
+              x-enumsDeprecated:
+                - staking_eth_partial_withdrawal
+                - staking_eth_full_withdrawal
             tags:
               type: array
               items:
@@ -60644,7 +60650,7 @@ components:
           type: boolean
         commonPub:
           type: string
-          description: e common public key. This value is required to be set for BLS keys when the source is either "user" or "backup". Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
+          description: The common public key. This value is required to be set for BLS keys when the source is either "user" or "backup". Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
         commonPubSig:
           type: string
         provider:
@@ -75080,6 +75086,8 @@ components:
         - $ref: '#/components/schemas/WalrusStakingIntent'
         - $ref: '#/components/schemas/WalrusUndelegateIntent'
         - $ref: '#/components/schemas/WalrusWithdrawIntent'
+        - $ref: '#/components/schemas/XdcUploadKycIntent'
+        - $ref: '#/components/schemas/XdcProposeIntent'
         - $ref: '#/components/schemas/BaseIntent'
     TransactionRequest:
       anyOf:
@@ -76499,6 +76507,9 @@ components:
             - staking_bera_withdrawal
             - staking_bera_block_reward
           description: Transfer subtype
+          x-enumsDeprecated:
+            - staking_eth_partial_withdrawal
+            - staking_eth_full_withdrawal
         txRequestId:
           type: string
           description: Associated transaction request ID
@@ -77106,7 +77117,7 @@ components:
         - replaced
         - reversed
         - deleted
-      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `reversed`: The transfer was reversed. - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
+      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `reversed`: The transfer was reversed (e.g., when a withdrawal offer is rejected in multi-step transfers). - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
     TransferTokenIntent:
       title: TransferTokenIntent
       allOf:
@@ -84742,6 +84753,7 @@ components:
         - policyBalanceChange
         - reversal
         - transaction_finality_on_l1
+        - stuckTx
     WebhookTypeBlock:
       type: string
       enum:
@@ -85418,6 +85430,42 @@ components:
         - rootAddress
         - pendingChainInitialization
         - creationFailure
+    XdcProposeIntent:
+      title: XDC Propose Intent
+      allOf:
+        - type: object
+          properties:
+            candidateAddress:
+              type: string
+              minLength: 1
+            validatorContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - candidateAddress
+            - validatorContractAddress
+        - $ref: '#/components/schemas/ValidatorRegistrationIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    XdcUploadKycIntent:
+      title: XDC Upload KYC Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - contractCall
+            ipfsHash:
+              type: string
+              minLength: 1
+            validatorContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - ipfsHash
+            - validatorContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     XlmFeeInfo:
       title: XLM
       type: object
