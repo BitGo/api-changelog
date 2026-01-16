@@ -2000,6 +2000,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/address-book/v1/connections/bulk:
+    post:
+      summary: Bulk add Go Account connections
+      description: Add connections for your Go Account to multiple other Go Accounts.
+      operationId: V1PostBulkConnectionsRoute
+      tags:
+        - Counterparties
+      parameters:
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                walletId:
+                  type: string
+                  minLength: 1
+                targetWalletIds:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+              required:
+                - walletId
+                - targetWalletIds
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1BulkConnectionsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/address-book/v1/connections/counterparties:
     get:
       summary: List counterparties
@@ -2459,11 +2540,16 @@ paths:
           in: query
           required: true
           schema:
-            type: string
-            enum:
-              - only-included
-              - included
-              - excluded
+            oneOf:
+              - type: string
+                enum:
+                  - only-included
+                  - included
+                  - excluded
+                description: filter values for the includeSavedContactsNotInDirectory query for get listing entry directories endpoint
+              - type: string
+                enum:
+                  - excluded
         - name: name
           in: query
           schema:
@@ -79287,6 +79373,29 @@ components:
             required:
               - blockedListing
           - $ref: '#/components/schemas/V1BlockListResponse'
+    V1BulkConnectionsResponse:
+      title: V1BulkConnectionsResponse
+      type: object
+      properties:
+        requestedConnections:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        rejectedConnections:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        successfulConnections:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+        - requestedConnections
+        - rejectedConnections
+        - successfulConnections
     V1ClearedAllocation:
       title: V1ClearedAllocation
       type: object
@@ -80005,8 +80114,6 @@ components:
           type: array
           items:
             allOf:
-              - type: object
-                properties: {}
               - $ref: '#/components/schemas/V1ListingEntryWithListingResponse'
               - $ref: '#/components/schemas/V1ConnectionWithOwnerAndTargetListResponse'
       required:
@@ -80375,8 +80482,6 @@ components:
     V1GlobalListingWithListingEntries:
       title: V1GlobalListingWithListingEntries
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/V1GlobalListingResponse'
         - $ref: '#/components/schemas/V1ListingEntryListResponse'
     V1ListSettlementsOkPayload:
@@ -80487,8 +80592,6 @@ components:
           type: array
           items:
             allOf:
-              - type: object
-                properties: {}
               - $ref: '#/components/schemas/V1ListingEntryWithListingResponse'
               - $ref: '#/components/schemas/V1ConnectionWithOwnerListResponse'
       required:
