@@ -10171,15 +10171,24 @@ paths:
               type: object
               required:
                 - externalId
-                - counterpartyAccountId
+                - addressBookConnectionId
+                - addressBookConnectionUpdatedAt
                 - assetTransfers
               properties:
                 externalId:
                   title: NonEmptyString
                   type: string
-                counterpartyAccountId:
-                  title: NonEmptyString
+                expireAt:
                   type: string
+                  format: date-time
+                notation:
+                  type: string
+                addressBookConnectionId:
+                  title: UUID
+                  type: string
+                addressBookConnectionUpdatedAt:
+                  type: string
+                  format: date-time
                 assetTransfers:
                   title: NonEmptyArray
                   type: array
@@ -10196,7 +10205,11 @@ paths:
                       quantity:
                         title: BigIntFromString
                         type: string
-                notation:
+                bypassCounterpartySigning:
+                  title: Boolean
+                  type: boolean
+                transactionRouteId:
+                  title: UUID
                   type: string
                 checkForDuplicates:
                   title: Boolean
