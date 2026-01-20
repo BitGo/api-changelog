@@ -1297,6 +1297,7 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - switchValidatorWithCallData
               description: If provided, only transaction requests with the specified intent types will be returned.
         - name: excludeIntentTypes
           description: If provided, transaction requests with the specified intent types will be excluded.
@@ -1343,6 +1344,7 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - switchValidatorWithCallData
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
@@ -1998,6 +2000,87 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/address-book/v1/connections/bulk:
+    post:
+      summary: Bulk add Go Account connections
+      description: Add connections for your Go Account to multiple other Go Accounts.
+      operationId: V1PostBulkConnectionsRoute
+      tags:
+        - Counterparties
+      parameters:
+        - name: enterprise-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                walletId:
+                  type: string
+                  minLength: 1
+                targetWalletIds:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+              required:
+                - walletId
+                - targetWalletIds
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1BulkConnectionsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/address-book/v1/connections/counterparties:
     get:
       summary: List counterparties
@@ -2457,11 +2540,16 @@ paths:
           in: query
           required: true
           schema:
-            type: string
-            enum:
-              - only-included
-              - included
-              - excluded
+            oneOf:
+              - type: string
+                enum:
+                  - only-included
+                  - included
+                  - excluded
+                description: filter values for the includeSavedContactsNotInDirectory query for get listing entry directories endpoint
+              - type: string
+                enum:
+                  - excluded
         - name: name
           in: query
           schema:
@@ -9543,6 +9631,12 @@ paths:
               - settled
           required: false
           in: query
+        - name: includeTotalCount
+          schema:
+            type: boolean
+          required: false
+          in: query
+          description: When true, includes totalCount in the response
         - name: accountId
           schema:
             title: NonEmptyString
@@ -9566,6 +9660,10 @@ paths:
                 required:
                   - settlementList
                 properties:
+                  totalCount:
+                    type: integer
+                    minimum: 0
+                    description: Total count of settlements matching the query (only present when includeTotalCount=true)
                   settlementList:
                     type: array
                     items:
@@ -10020,6 +10118,12 @@ paths:
               - settled
           required: false
           in: query
+        - name: includeTotalCount
+          schema:
+            type: boolean
+          required: false
+          in: query
+          description: When true, includes totalCount in the response
         - name: enterpriseId
           schema:
             title: NonEmptyString
@@ -10037,6 +10141,10 @@ paths:
                 required:
                   - settlementList
                 properties:
+                  totalCount:
+                    type: integer
+                    minimum: 0
+                    description: Total count of settlements matching the query (only present when includeTotalCount=true)
                   settlementList:
                     type: array
                     items:
@@ -10667,12 +10775,15 @@ paths:
                     nameFirst:
                       type: string
                       description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameLast:
                       type: string
                       description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameMiddle:
                       type: string
                       description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     notionalTradedEachMonth:
                       type: number
                       description: The estimated notional amount traded per month in USD
@@ -10767,12 +10878,15 @@ paths:
                     nameFirst:
                       type: string
                       description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameLast:
                       type: string
                       description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameMiddle:
                       type: string
                       description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     organizationId:
                       type: string
                       description: The Bitgo organization ID
@@ -10826,12 +10940,15 @@ paths:
                     nameFirst:
                       type: string
                       description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameLast:
                       type: string
                       description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameMiddle:
                       type: string
                       description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     organizationId:
                       type: string
                       description: The Bitgo organization ID
@@ -10905,12 +11022,15 @@ paths:
                     nameFirst:
                       type: string
                       description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameLast:
                       type: string
                       description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameMiddle:
                       type: string
                       description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     organizationId:
                       type: string
                       description: The Bitgo organization ID
@@ -11012,12 +11132,15 @@ paths:
                     nameFirst:
                       type: string
                       description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameLast:
                       type: string
                       description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     nameMiddle:
                       type: string
                       description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
                     notionalTradedEachMonth:
                       type: number
                       description: The estimated notional amount traded per month in USD
@@ -26339,6 +26462,10 @@ paths:
                   - quantity
                   - balanceValue
                 properties:
+                  transferId:
+                    type: string
+                    format: uuid
+                    description: The margin transfer ID (UUID) from Trade Falcon
                   currency:
                     type: string
                     description: Symbol of the collateral asset
@@ -26351,6 +26478,7 @@ paths:
                       - type: object
                         description: Returns the value of the collateral.
                 example:
+                  transferId: 2bf68bb7-513d-40af-9fc9-249060c3c7ac
                   currency: BTC
                   quantity: '2'
                   balanceValue:
@@ -26399,6 +26527,10 @@ paths:
                         - quantity
                         - balanceValue
                       properties:
+                        transferId:
+                          type: string
+                          format: uuid
+                          description: The margin transfer ID (UUID) from Trade Falcon
                         currency:
                           type: string
                           description: Currency symbol
@@ -26412,7 +26544,8 @@ paths:
                               description: Returns the value of the margin position. Has 2 fields denoting the currency used and the actual value.
                 example:
                   balances:
-                    - currency: BTC
+                    - transferId: 3af68cc8-624e-41b0-a0ca-350171d4c8bd
+                      currency: BTC
                       quantity: '2'
                       balanceValue:
                         quantity: '1000000'
@@ -29753,36 +29886,6 @@ paths:
                   allOf:
                     - type: object
                       properties:
-                        fromAssetId:
-                          type: string
-                          description: Source asset identifier
-                          example: 08c1271e-b15d-4af8-8929-f75383903da4
-                          format: uuid
-                          title: uuid
-                        fromAmount:
-                          type: string
-                          description: Amount to be transferred from source asset, specified in its lowest denomination.
-                          example: '500'
-                          minLength: 1
-                        toAssetId:
-                          type: string
-                          description: Destination asset identifier
-                          example: 49ff49ea-3355-4717-bbb0-5e8f5cae2202
-                          format: uuid
-                          title: uuid
-                        toAmount:
-                          type: string
-                          description: Amount to be received in destination asset
-                          example: '5000000'
-                          minLength: 1
-                        destinationType:
-                          type: string
-                          enum:
-                            - go_account
-                            - address
-                            - wallet
-                          description: Type of destination for the order
-                          example: go_account
                         sourceWalletId:
                           type: string
                           description: Source wallet identifier for the order
@@ -29954,13 +30057,8 @@ paths:
                           example: '2025-04-04T09:55:09.136Z'
                           format: date-time
                           title: ISO Date String
-                      required:
-                        - fromAssetId
-                        - fromAmount
-                        - toAssetId
-                        - toAmount
-                        - destinationType
                     - $ref: '#/components/schemas/OrderResponseBase'
+                    - $ref: '#/components/schemas/OrderResponseRequiredFields'
         '400':
           description: Bad Request
           content:
@@ -31229,7 +31327,7 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/potentialStuckTxs:
     get:
-      summary: Get list of potentially stuck transactions and their nonces for eth-like coins
+      summary: List stuck transactions
       description: |-
         Gets a list of potentially problematic transactions, their nonces, the reason they
         are stuck, and possible solutions for a given wallet.
@@ -31619,6 +31717,7 @@ paths:
               - policyBalanceChange
               - reversal
               - transaction_finality_on_l1
+              - stuckTx
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -32176,6 +32275,7 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - switchValidatorWithCallData
               description: If provided, only transaction requests with the specified intent types will be returned.
         - name: excludeIntentTypes
           description: If provided, transaction requests with the specified intent types will be excluded.
@@ -32222,6 +32322,7 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - switchValidatorWithCallData
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
@@ -32401,6 +32502,7 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - switchValidatorWithCallData
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
@@ -34092,6 +34194,7 @@ paths:
               - policyBalanceChange
               - reversal
               - transaction_finality_on_l1
+              - stuckTx
         - name: prevId
           in: query
           schema:
@@ -34540,6 +34643,7 @@ paths:
               - policyBalanceChange
               - reversal
               - transaction_finality_on_l1
+              - stuckTx
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -36750,7 +36854,7 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/potentialStuckTxs:
     get:
-      summary: Get list of potentially stuck transactions across multiple wallets.
+      summary: List stuck transactions for EVM keyring
       description: |-
         This endpoint aggregates stuck transactions from a wallet and its EVM keyring derived wallets (if applicable).
 
@@ -46445,11 +46549,11 @@ components:
           properties:
             nameFirst:
               type: string
-              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
               description: First name of the individual
             nameLast:
               type: string
-              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
               description: Last name of the individual
             birthdate:
               $ref: '#/components/schemas/Birthdate'
@@ -49935,7 +50039,7 @@ components:
           description: Business formation date (YYYY-MM-DD)
         dbaName:
           type: string
-          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
           description: DBA (Doing Business As) name
         companyWebsiteAddress:
           type: string
@@ -49955,11 +50059,11 @@ components:
           properties:
             nameFirst:
               type: string
-              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
               description: First name
             nameLast:
               type: string
-              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
               description: Last name
             emailAddress:
               type: string
@@ -49989,11 +50093,11 @@ components:
           properties:
             nameFirst:
               type: string
-              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
               description: First name
             nameLast:
               type: string
-              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
               description: Last name
             emailAddress:
               type: string
@@ -52439,7 +52543,7 @@ components:
         - id
         - name
         - symbol
-        - minIncrement
+        - increment
       type: object
       properties:
         id:
@@ -52452,7 +52556,7 @@ components:
         name:
           type: string
           description: Name of the currency
-        minIncrement:
+        increment:
           type: string
           format: decimal
           description: This is the smallest amount that can be traded for the currency.
@@ -52460,7 +52564,7 @@ components:
         id: 519824c6-b534-49b4-a636-22dfd0ade5cf
         symbol: USD
         name: US Dollar
-        minIncrement: '0.01'
+        increment: '0.01'
     Currency1:
       title: Currency
       type: object
@@ -58549,6 +58653,7 @@ components:
                 - deposit_offer_expired
                 - withdrawal_offer_expired
                 - withdrawal_offer_rejected
+                - utxo_expired
                 - staking_eth_withdrawal
                 - staking_eth_partial_withdrawal
                 - staking_eth_full_withdrawal
@@ -58557,6 +58662,9 @@ components:
                 - staking_bera_withdrawal
                 - staking_bera_block_reward
               description: Transfer subtype
+              x-enumsDeprecated:
+                - staking_eth_partial_withdrawal
+                - staking_eth_full_withdrawal
             tags:
               type: array
               items:
@@ -59907,11 +60015,11 @@ components:
       properties:
         nameFirst:
           type: string
-          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
           description: First name of the individual
         nameLast:
           type: string
-          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-]+$
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
           description: Last name of the individual
         birthdate:
           $ref: '#/components/schemas/Birthdate'
@@ -60648,7 +60756,7 @@ components:
           type: boolean
         commonPub:
           type: string
-          description: e common public key. This value is required to be set for BLS keys when the source is either "user" or "backup". Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
+          description: The common public key. This value is required to be set for BLS keys when the source is either "user" or "backup". Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
         commonPubSig:
           type: string
         provider:
@@ -64414,36 +64522,6 @@ components:
       allOf:
         - type: object
           properties:
-            fromAssetId:
-              type: string
-              description: Source asset identifier
-              example: 08c1271e-b15d-4af8-8929-f75383903da4
-              format: uuid
-              title: uuid
-            fromAmount:
-              type: string
-              description: Amount to be transferred from source asset, specified in its lowest denomination.
-              example: '500'
-              minLength: 1
-            toAssetId:
-              type: string
-              description: Destination asset identifier
-              example: 49ff49ea-3355-4717-bbb0-5e8f5cae2202
-              format: uuid
-              title: uuid
-            toAmount:
-              type: string
-              description: Amount to be received in destination asset
-              example: '5000000'
-              minLength: 1
-            destinationType:
-              type: string
-              enum:
-                - go_account
-                - address
-                - wallet
-              description: Type of destination for the order
-              example: go_account
             sourceWalletId:
               type: string
               description: Source wallet identifier for the order
@@ -64615,13 +64693,8 @@ components:
               example: '2025-04-04T09:55:09.136Z'
               format: date-time
               title: ISO Date String
-          required:
-            - fromAssetId
-            - fromAmount
-            - toAssetId
-            - toAmount
-            - destinationType
         - $ref: '#/components/schemas/OrderResponseBase'
+        - $ref: '#/components/schemas/OrderResponseRequiredFields'
     OrderResponseBase:
       title: OrderResponseBase
       type: object
@@ -64679,6 +64752,46 @@ components:
         - type
         - status
         - enterpriseId
+    OrderResponseRequiredFields:
+      title: OrderResponseRequiredFields
+      type: object
+      properties:
+        fromAssetId:
+          type: string
+          description: Source asset identifier
+          example: 08c1271e-b15d-4af8-8929-f75383903da4
+          format: uuid
+          title: uuid
+        fromAmount:
+          type: string
+          description: Amount to be transferred from source asset, specified in its lowest denomination.
+          example: '500'
+          minLength: 1
+        toAssetId:
+          type: string
+          description: Destination asset identifier
+          example: 49ff49ea-3355-4717-bbb0-5e8f5cae2202
+          format: uuid
+          title: uuid
+        toAmount:
+          type: string
+          description: Amount to be received in destination asset
+          example: '5000000'
+          minLength: 1
+        destinationType:
+          type: string
+          enum:
+            - go_account
+            - address
+            - wallet
+          description: Type of destination for the order
+          example: go_account
+      required:
+        - fromAssetId
+        - fromAmount
+        - toAssetId
+        - toAmount
+        - destinationType
     OrderStatus:
       type: string
       enum:
@@ -75079,6 +75192,8 @@ components:
         - $ref: '#/components/schemas/WalrusStakingIntent'
         - $ref: '#/components/schemas/WalrusUndelegateIntent'
         - $ref: '#/components/schemas/WalrusWithdrawIntent'
+        - $ref: '#/components/schemas/XdcUploadKycIntent'
+        - $ref: '#/components/schemas/XdcProposeIntent'
         - $ref: '#/components/schemas/BaseIntent'
     TransactionRequest:
       anyOf:
@@ -76489,6 +76604,7 @@ components:
             - deposit_offer_expired
             - withdrawal_offer_expired
             - withdrawal_offer_rejected
+            - utxo_expired
             - staking_eth_withdrawal
             - staking_eth_partial_withdrawal
             - staking_eth_full_withdrawal
@@ -76497,6 +76613,9 @@ components:
             - staking_bera_withdrawal
             - staking_bera_block_reward
           description: Transfer subtype
+          x-enumsDeprecated:
+            - staking_eth_partial_withdrawal
+            - staking_eth_full_withdrawal
         txRequestId:
           type: string
           description: Associated transaction request ID
@@ -77104,7 +77223,7 @@ components:
         - replaced
         - reversed
         - deleted
-      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `reversed`: The transfer was reversed. - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
+      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `reversed`: The transfer was reversed (e.g., when a withdrawal offer is rejected in multi-step transfers). - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
     TransferTokenIntent:
       title: TransferTokenIntent
       allOf:
@@ -79274,6 +79393,29 @@ components:
             required:
               - blockedListing
           - $ref: '#/components/schemas/V1BlockListResponse'
+    V1BulkConnectionsResponse:
+      title: V1BulkConnectionsResponse
+      type: object
+      properties:
+        requestedConnections:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        rejectedConnections:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        successfulConnections:
+          type: array
+          items:
+            type: string
+            minLength: 1
+      required:
+        - requestedConnections
+        - rejectedConnections
+        - successfulConnections
     V1ClearedAllocation:
       title: V1ClearedAllocation
       type: object
@@ -79992,8 +80134,6 @@ components:
           type: array
           items:
             allOf:
-              - type: object
-                properties: {}
               - $ref: '#/components/schemas/V1ListingEntryWithListingResponse'
               - $ref: '#/components/schemas/V1ConnectionWithOwnerAndTargetListResponse'
       required:
@@ -80362,8 +80502,6 @@ components:
     V1GlobalListingWithListingEntries:
       title: V1GlobalListingWithListingEntries
       allOf:
-        - type: object
-          properties: {}
         - $ref: '#/components/schemas/V1GlobalListingResponse'
         - $ref: '#/components/schemas/V1ListingEntryListResponse'
     V1ListSettlementsOkPayload:
@@ -80474,8 +80612,6 @@ components:
           type: array
           items:
             allOf:
-              - type: object
-                properties: {}
               - $ref: '#/components/schemas/V1ListingEntryWithListingResponse'
               - $ref: '#/components/schemas/V1ConnectionWithOwnerListResponse'
       required:
@@ -84136,6 +84272,10 @@ components:
           $ref: '#/components/schemas/WalletUpdateCoinSpecificEth'
         teth:
           $ref: '#/components/schemas/WalletUpdateCoinSpecificEth'
+        zec:
+          $ref: '#/components/schemas/WalletUpdateCoinSpecificZec'
+        tzec:
+          $ref: '#/components/schemas/WalletUpdateCoinSpecificZec'
     WalletUpdateCoinSpecificEth:
       type: object
       properties:
@@ -84143,6 +84283,12 @@ components:
           type: boolean
         flushForwardersManually:
           type: boolean
+    WalletUpdateCoinSpecificZec:
+      type: object
+      properties:
+        freezeDepositsFromShielded:
+          type: boolean
+          description: If true, deposits from orchard or sapling shielded pools will be automatically frozen.
     WalletUser:
       type: object
       properties:
@@ -84730,6 +84876,7 @@ components:
         - policyBalanceChange
         - reversal
         - transaction_finality_on_l1
+        - stuckTx
     WebhookTypeBlock:
       type: string
       enum:
@@ -85406,6 +85553,42 @@ components:
         - rootAddress
         - pendingChainInitialization
         - creationFailure
+    XdcProposeIntent:
+      title: XDC Propose Intent
+      allOf:
+        - type: object
+          properties:
+            candidateAddress:
+              type: string
+              minLength: 1
+            validatorContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - candidateAddress
+            - validatorContractAddress
+        - $ref: '#/components/schemas/ValidatorRegistrationIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    XdcUploadKycIntent:
+      title: XDC Upload KYC Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - contractCall
+            ipfsHash:
+              type: string
+              minLength: 1
+            validatorContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - ipfsHash
+            - validatorContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     XlmFeeInfo:
       title: XLM
       type: object
