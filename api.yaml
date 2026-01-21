@@ -12861,7 +12861,7 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/requests/{requestId}:
     get:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: Get staking request for Go Account
       description: Get a specific staking request for a given asset and Go Account.
       operationId: v1.goStaking.request.getById
@@ -12889,7 +12889,7 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/requests:
     get:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: List staking requests by asset for Go Account
       description: List all staking requests for a given asset and Go Account.
       operationId: v1.goStaking.request.listByCoinAndAccount
@@ -12920,7 +12920,7 @@ paths:
   /api/go-staking/v1/accounts/{accountId}/rewards:
     get:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: List staking rewards for Go Account
       description: List all staking rewards for a given Go Account.
       operationId: v1.goStaking.rewards.listByAccount
@@ -12948,7 +12948,7 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/rewards:
     get:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: List staking rewards by asset for Go Account
       description: List all staking rewards for a given asset and Go Account.
       operationId: v1.goStaking.rewards.listByAccountAndCoin
@@ -12977,7 +12977,7 @@ paths:
   /api/go-staking/v1/accounts/{accountId}/requests:
     get:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: List staking requests for Go Account
       description: List all staking requests for a given Go Account.
       operationId: v1.goStaking.request.listByAccount
@@ -13007,7 +13007,7 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/requests/preview:
     post:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: Generate staking request for Go Account
       description: Generate an unsigned staking request to preview for a given asset and Go Account. Use only for stake requests - don't use for unstaking requests.
       operationId: v1.goStaking.request.preview
@@ -13045,7 +13045,7 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/requests/finalize:
     post:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: Finalize staking request for Go Account
       description: Create a finalized staking request based on previously previewed data for a given asset and Go Account.
       operationId: v1.goStaking.request.finalize
@@ -13089,7 +13089,7 @@ paths:
   /api/go-staking/v1/accounts/{accountId}/coins:
     get:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: List staking wallets for Go Account
       description: List all staking wallets associated with a given Go Account.
       operationId: v1.goStaking.wallet.listByAccountId
@@ -13115,7 +13115,7 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/attributes:
     get:
       tags:
-        - Go Account Staking
+        - Go Account Staking (beta)
       summary: Get staking wallet attributes for Go Account
       description: Get staking wallet attributes for a given asset and Go Account.
       operationId: v1.goStaking.wallet.getAttributesByCoinAndAccount
@@ -60491,21 +60491,31 @@ components:
         - status
         - goAccountId
         - amount
-        - stakingRequests
         - createdDate
         - properties
       properties:
         id:
           type: string
           format: uuid
+        clientId:
+          type: string
         status:
           $ref: '#/components/schemas/GlobalGoStakingRequestStatus'
+        type:
+          $ref: '#/components/schemas/StakingRequestType'
+        coin:
+          type: string
         goAccountId:
+          type: string
+        error:
           type: string
         amount:
           type: string
           format: big-integer
         createdDate:
+          type: string
+          format: date-time
+        statusModifiedDate:
           type: string
           format: date-time
         properties:
@@ -73455,6 +73465,15 @@ components:
         - DELAYED_WARMUP
         - ETH_PARTIAL_EXITED
         - ETH_EXITED
+    StakingRequestType:
+      type: string
+      enum:
+        - STAKE
+        - UNSTAKE
+        - UNSUPPORTED
+      default: STAKE
+      description: |
+        Type of staking request. `STAKE` to delegate, `UNSTAKE` to undelegate. `UNSUPPORTED` is a fallback.
     StakingRequestType1:
       title: Staking Request Type
       description: The type of staking request.
