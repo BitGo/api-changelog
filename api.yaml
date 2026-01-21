@@ -28054,6 +28054,7 @@ paths:
                 - $ref: '#/components/schemas/EthStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/EthUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/EthUnStakingRequestPOSTBodyPrePectra'
+                - $ref: '#/components/schemas/FlrPStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/HashStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/HashUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveStakingRequestPOSTBody'
@@ -28213,6 +28214,8 @@ paths:
                 $ref: '#/components/examples/EthUnStakingRequestPOSTBodyExamplePrePectraSingle'
               EthUnStakingRequestPOSTBodyExamplePrePectraMultiple:
                 $ref: '#/components/examples/EthUnStakingRequestPOSTBodyExamplePrePectraMultiple'
+              FlrPStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/FlrPStakingRequestPOSTBodyExample'
               HashStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/HashStakingRequestPOSTBodyExample'
               HashUnStakingRequestPOSTBodyExample:
@@ -28417,6 +28420,8 @@ paths:
                   $ref: '#/components/examples/EthStakingRequestWithoutDelegationsExample'
                 EthUnStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/EthUnStakingRequestWithoutDelegationsExample'
+                FlrPStakingRequestWithoutDelegationsExample:
+                  $ref: '#/components/examples/FlrPStakingRequestWithoutDelegationsExample'
                 HashStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/HashStakingRequestWithoutDelegationsExample'
                 HashUnStakingRequestWithoutDelegationsExample:
@@ -29482,6 +29487,12 @@ paths:
             type: array
             items:
               $ref: '#/components/schemas/DelegationStatus'
+        - name: validatorAddress
+          in: query
+          description: Validator address to filter results by. Expect 1 item only.
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Successful Retrieving Staking Validators For A Wallet
@@ -41735,6 +41746,34 @@ components:
             isIntraJXTransfer: false
             payload: '{"coin":"ofctsol","recipients":[{"address":"BpkMFStkryPDkVYqTbEGLqWD3FLoPLCwTV4sdN1XKBPF","amount":"3000000"}],"fromAccount":"62182dc6685f820007002502234b4dfc","nonce":"2d876188-d8e7-4a32-924b-3b8ab5d7aa99","timestamp":"2025-08-12T18:43:36.210Z","feeString":"0","shortCircuitBlockchainTransfer":false,"isIntraJXTransfer":false}'
             signature: 20d491740f989049aa42f819f6f24d6d4063f168c304e61c1a7b837d532c95faac244cbb30a70f0a3b745053adb9d6f8e6db472ece4dbf39de08659180fe6eb4b3
+    FlrPStakingRequestPOSTBodyExample:
+      summary: FLRP Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '50000000000000'
+        type: STAKE
+        validator: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
+        durationSeconds: 2592000
+        rewardAddress: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+    FlrPStakingRequestWithoutDelegationsExample:
+      summary: FLRP Staking Request Example
+      value:
+        id: f1234567-89ab-4cde-9012-3456789abcde
+        clientId: h1i2j3k4-5678-90ab-cdef-1234567890ab
+        requestingUserId: 6092e75c451052000636831deb797bd1
+        type: STAKE
+        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
+        walletId: 63110fc78b108e00071df2d3c3879dd0
+        walletType: hot
+        withdrawalAddress: P-flare1q8k8ehv0yx3lkn2f0j0y5rjkx6s0tk4lp12345
+        coin: flrp
+        status: NEW
+        statusModifiedDate: 2025-09-08T14:00:00.000Z
+        createdDate: 2025-09-08T14:00:00.000Z
+        amount: '50000000000000'
+        validator: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
+        durationSeconds: 2592000
+        rewardAddress: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
     HashStakingRequestPOSTBodyExample:
       summary: Hash Staking Request POST Body Example
       value:
@@ -51917,6 +51956,7 @@ components:
         - DOT
         - EIGEN
         - ETH
+        - FLRP
         - HASH
         - INJECTIVE
         - MATIC
@@ -53872,6 +53912,7 @@ components:
         - $ref: '#/components/schemas/EigenLikeDelegationProperties'
         - $ref: '#/components/schemas/MaticLikeDelegationProperties'
         - $ref: '#/components/schemas/WflrDelegationProperties'
+        - $ref: '#/components/schemas/FlrPDelegationProperties'
         - $ref: '#/components/schemas/WctDelegationProperties'
         - $ref: '#/components/schemas/VetDelegationProperties'
         - $ref: '#/components/schemas/TrxDelegationProperties'
@@ -53909,6 +53950,7 @@ components:
         - BTC
         - WCT
         - WFLR
+        - FLRP
         - COREDAO
         - BERA
         - TAO
@@ -58702,6 +58744,127 @@ components:
           required:
             - name
         - $ref: '#/components/schemas/ActiveDateRange'
+    FlrPDelegationProperties:
+      title: FLRP Delegation Properties
+      allOf:
+        - $ref: '#/components/schemas/DelegationProperties'
+        - type: object
+          required:
+            - validator
+            - durationSeconds
+          properties:
+            validator:
+              type: string
+              description: P-Chain validator NodeID.
+            durationSeconds:
+              type: string
+              format: bigInteger
+              description: Duration of the delegation in seconds.
+            startTime:
+              type: string
+              format: bigInteger
+              description: Start time of the delegation in epoch seconds.
+            endTime:
+              type: string
+              format: bigInteger
+              description: End time of the delegation in epoch seconds.
+            rewardAddress:
+              type: string
+              description: C-Chain address where rewards are sent.
+    FlrPStakingDelegation:
+      title: FLRP Staking Delegation
+      allOf:
+        - $ref: '#/components/schemas/StakingDelegation'
+        - type: object
+          description: Flare P-Chain staking delegation.
+          properties:
+            durationSeconds:
+              type: string
+              description: Duration of the delegation in seconds (stringified bigint).
+            startTime:
+              type: string
+              description: Start time of the delegation in epoch seconds (stringified bigint).
+            endTime:
+              type: string
+              description: End time of the delegation in epoch seconds (stringified bigint).
+            unstakeable:
+              type: boolean
+              description: Indicates whether the delegation can currently be unstaked (always false for FlrP auto-unstaking).
+            permissionAttributes:
+              $ref: '#/components/schemas/WalletStakingPermissionAttributes'
+    FlrPStakingRequest:
+      title: FLRP
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest1'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/FlrPStakingDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/BaseStakingTransaction'
+        amount:
+          description: Amount to stake in base units (nanoFLR). 1 FLR = 1,000,000,000 nanoFLR. Minimum 50,000 FLR.
+          type: string
+        validator:
+          type: string
+        durationSeconds:
+          description: The staking duration in seconds.
+          type: integer
+        rewardAddress:
+          description: The C-Chain address where rewards will be sent.
+          type: string
+      required:
+        - validator
+        - durationSeconds
+    FlrPStakingRequestPOSTBody:
+      title: FLRP stake
+      description: |
+        Request to stake FLR tokens on the Flare P-Chain.
+
+        **P-Chain Staking:** FlrP uses Flare's P-Chain for delegation-based staking:
+        - Stake FLR tokens to selected P-Chain validators
+        - Duration-based staking (14-365 days)
+        - Rewards distributed to corresponding C-Chain address 
+        - Auto-unstaking at the end of staking period
+
+        **Key Features:**
+        - C-Chain to P-Chain address derivation (same public key)
+        - Configurable staking duration (14 days to 1 year)
+        - Gas fees paid in native FLR tokens
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+      properties:
+        amount:
+          description: Amount to stake in base units (nanoFLR). Minimum 50,000 FLR.
+          type: string
+          example: '50000000000000'
+        validator:
+          description: P-Chain validator NodeID to delegate to.
+          type: string
+          example: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
+        durationSeconds:
+          description: The staking duration in seconds. Must be between 14 days (1209600) and 365 days (31536000).
+          type: integer
+          minimum: 1209600
+          maximum: 31536000
+          example: 2592000
+        rewardAddress:
+          description: C-Chain address to receive staking rewards.
+          type: string
+          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+      required:
+        - amount
+        - validator
+        - durationSeconds
     Freeze:
       title: Freeze
       type: object
@@ -73220,6 +73383,7 @@ components:
         - AVAXC_UNSTAKE
         - WFLR_STAKE
         - WFLR_UNSTAKE
+        - FLRP_STAKE
         - SOMI_STAKE
         - STORY_STAKE
         - VET_STAKE
@@ -73268,6 +73432,7 @@ components:
         - $ref: '#/components/schemas/WethStakingRequest'
         - $ref: '#/components/schemas/ZetaStakingRequest'
         - $ref: '#/components/schemas/WflrStakingRequest'
+        - $ref: '#/components/schemas/FlrPStakingRequest'
     StakingRequestStatus:
       title: Staking Request Status
       description: The status of the staking request. For ETH the status will change from NEW to READY when a validator has been assigned to the wallet's address.
