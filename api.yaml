@@ -41753,7 +41753,7 @@ components:
         amount: '50000000000000'
         type: STAKE
         validator: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
-        durationSeconds: 2592000
+        duration: 30
         rewardAddress: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
     FlrPStakingRequestWithoutDelegationsExample:
       summary: FLRP Staking Request Example
@@ -41772,7 +41772,7 @@ components:
         createdDate: 2025-09-08T14:00:00.000Z
         amount: '50000000000000'
         validator: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
-        durationSeconds: 2592000
+        duration: 30
         rewardAddress: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
     HashStakingRequestPOSTBodyExample:
       summary: Hash Staking Request POST Body Example
@@ -56650,7 +56650,7 @@ components:
         operator:
           description: The operator address to be used for restaking ETH
           type: string
-          example: 0
+          example: '0x0'
         validator:
           description: The provider to use to provision ETH validators.
           type: string
@@ -58815,15 +58815,15 @@ components:
           type: string
         validator:
           type: string
-        durationSeconds:
-          description: The staking duration in seconds.
+        duration:
+          description: The staking duration in days.
           type: integer
         rewardAddress:
           description: The C-Chain address where rewards will be sent.
           type: string
       required:
         - validator
-        - durationSeconds
+        - duration
     FlrPStakingRequestPOSTBody:
       title: FLRP stake
       description: |
@@ -58851,12 +58851,12 @@ components:
           description: P-Chain validator NodeID to delegate to.
           type: string
           example: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
-        durationSeconds:
-          description: The staking duration in seconds. Must be between 14 days (1209600) and 365 days (31536000).
+        duration:
+          description: The staking duration in days. Must be between 14 and 365 days.
           type: integer
-          minimum: 1209600
-          maximum: 31536000
-          example: 2592000
+          minimum: 14
+          maximum: 365
+          example: 30
         rewardAddress:
           description: C-Chain address to receive staking rewards.
           type: string
@@ -58864,7 +58864,7 @@ components:
       required:
         - amount
         - validator
-        - durationSeconds
+        - duration
     Freeze:
       title: Freeze
       type: object
