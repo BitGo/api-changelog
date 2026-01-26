@@ -46670,7 +46670,7 @@ components:
       title: Address
       type: string
       example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
-      maxLength: 250
+      maxLength: 500
     AddressSubdocument:
       title: AddressSubdocument
       oneOf:
@@ -57185,10 +57185,12 @@ components:
         txFormat:
           $ref: '#/components/schemas/UtxoTransactionFormat'
     ExpressCreateInvoiceRequest:
+      description: Create invoice request. Provide exactly one of `valueMsat` or `valueSat`
       type: object
-      required:
-        - valueMsat
       properties:
+        valueSat:
+          type: number
+          description: The invoice amount in satoshis
         valueMsat:
           type: string
           description: The invoice amount in millisatoshis
@@ -57569,6 +57571,9 @@ components:
         valueMsat:
           type: string
           description: Amount in millisatoshis
+        valueSat:
+          type: number
+          description: Amount in satoshis
         paymentHash:
           type: string
           description: Payment hash of the invoice
@@ -69827,7 +69832,7 @@ components:
     RecipientAmount:
       oneOf:
         - type: string
-          pattern: ^(-?\d+|max)$
+          pattern: ^(-?\d+|max|invoice)$
           example: '2000000'
         - type: integer
     RecipientEntry:
