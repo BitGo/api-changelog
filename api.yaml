@@ -41759,8 +41759,7 @@ components:
         amount: '50000000000000'
         type: STAKE
         validator: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
-        duration: 30
-        rewardAddress: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
+        durationDays: 30
     FlrPStakingRequestWithoutDelegationsExample:
       summary: FLRP Staking Request Example
       value:
@@ -41778,7 +41777,7 @@ components:
         createdDate: 2025-09-08T14:00:00.000Z
         amount: '50000000000000'
         validator: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
-        duration: 30
+        durationDays: 30
         rewardAddress: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
     HashStakingRequestPOSTBodyExample:
       summary: Hash Staking Request POST Body Example
@@ -58809,34 +58808,34 @@ components:
       title: FLRP
       allOf:
         - $ref: '#/components/schemas/StakingRequest1'
-      type: object
-      properties:
-        delegations:
-          type: array
-          minItems: 1
-          maxItems: 1
-          items:
-            $ref: '#/components/schemas/FlrPStakingDelegation'
-        transactions:
-          type: array
-          minItems: 1
-          maxItems: 500
-          items:
-            $ref: '#/components/schemas/BaseStakingTransaction'
-        amount:
-          description: Amount to stake in base units (nanoFLR). 1 FLR = 1,000,000,000 nanoFLR. Minimum 50,000 FLR.
-          type: string
-        validator:
-          type: string
-        duration:
-          description: The staking duration in days.
-          type: integer
-        rewardAddress:
-          description: The C-Chain address where rewards will be sent.
-          type: string
-      required:
-        - validator
-        - duration
+        - type: object
+          properties:
+            delegations:
+              type: array
+              minItems: 1
+              maxItems: 1
+              items:
+                $ref: '#/components/schemas/FlrPStakingDelegation'
+            transactions:
+              type: array
+              minItems: 1
+              maxItems: 500
+              items:
+                $ref: '#/components/schemas/BaseStakingTransaction'
+            amount:
+              description: Amount to stake in base units (nanoFLR). 1 FLR = 1,000,000,000 nanoFLR. Minimum 50,000 FLR.
+              type: string
+            validator:
+              type: string
+            durationDays:
+              description: The staking duration in days (14-365).
+              type: integer
+            rewardAddress:
+              description: The C-Chain address where rewards will be sent.
+              type: string
+          required:
+            - validator
+            - durationDays
     FlrPStakingRequestPOSTBody:
       title: FLRP stake
       description: |
@@ -58854,30 +58853,26 @@ components:
         - Gas fees paid in native FLR tokens
       allOf:
         - $ref: '#/components/schemas/StakingRequestPOSTBody'
-      type: object
-      properties:
-        amount:
-          description: Amount to stake in base units (nanoFLR). Minimum 50,000 FLR.
-          type: string
-          example: '50000000000000'
-        validator:
-          description: P-Chain validator NodeID to delegate to.
-          type: string
-          example: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
-        duration:
-          description: The staking duration in days. Must be between 14 and 365 days.
-          type: integer
-          minimum: 14
-          maximum: 365
-          example: 30
-        rewardAddress:
-          description: C-Chain address to receive staking rewards.
-          type: string
-          example: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e'
-      required:
-        - amount
-        - validator
-        - duration
+        - type: object
+          properties:
+            amount:
+              description: Amount to stake in base units (nanoFLR). Minimum 50,000 FLR.
+              type: string
+              example: '50000000000000'
+            validator:
+              description: P-Chain validator NodeID to delegate to.
+              type: string
+              example: NodeID-9bAbQj1s9qEuC4QyF4u7ZqPzKLvr7dVW7
+            durationDays:
+              description: The staking duration in days (14-365).
+              type: integer
+              minimum: 14
+              maximum: 365
+              example: 30
+          required:
+            - amount
+            - validator
+            - durationDays
     Freeze:
       title: Freeze
       type: object
