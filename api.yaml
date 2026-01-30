@@ -30661,6 +30661,11 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: isEnabledGlobally
+          description: Filter assets by global enabled status for mint/burn operations.
+          in: query
+          schema:
+            type: boolean
       responses:
         '200':
           description: OK
@@ -30972,10 +30977,11 @@ paths:
                             type: object
                             properties:
                               txId:
+                                nullable: true
                                 type: string
+                                minLength: 1
                                 description: Transaction identifier
                                 example: 512f64d10b5f358f6dbf3303f90013cfa46006b02a03282456d6bd6432cc5daf
-                                minLength: 1
                               orderId:
                                 type: string
                                 description: Associated order identifier
@@ -31067,9 +31073,10 @@ paths:
                                 description: Timestamp when transaction was last updated
                                 example: '2025-04-04T09:26:21.600Z'
                               pendingApprovalId:
+                                nullable: true
                                 type: string
-                                description: Pending approval id
                                 minLength: 1
+                                description: Pending approval id
                             required:
                               - txId
                               - orderId
@@ -31175,6 +31182,34 @@ paths:
                   - pending
                   - fulfilled
             example: created
+        - name: groupBy
+          description: Time period grouping for time-series data. When provided, returns timeSeries array in response.
+          in: query
+          schema:
+            type: string
+            enum:
+              - hour
+              - day
+              - week
+              - month
+              - year
+            example: month
+        - name: fromDate
+          description: Start date for time-series data (inclusive). Defaults to 1 year ago if groupBy is provided.
+          in: query
+          schema:
+            type: string
+            example: '2024-01-01T00:00:00.000Z'
+            format: date-time
+            title: ISO Date String
+        - name: toDate
+          description: End date for time-series data (inclusive). Defaults to current timestamp if groupBy is provided.
+          in: query
+          schema:
+            type: string
+            example: '2024-12-31T23:59:59.999Z'
+            format: date-time
+            title: ISO Date String
         - name: enterpriseId
           description: Enterprise id
           in: path
@@ -47565,6 +47600,10 @@ components:
             description: Unique identifier for the treasury account
             example: 37c60261db7cbfdfab26b9156eabcdef
             format: uuid
+          minimumLimit:
+            type: number
+            description: Minimum limit for mints / burns
+            example: 100
         required:
           - id
           - token
@@ -59305,6 +59344,38 @@ components:
               - mint
               - burn
           description: Breakdown by individual asset keyed by token identifier
+        timeSeries:
+          type: array
+          items:
+            type: object
+            properties:
+              period:
+                type: string
+                description: ISO8601 date string representing start of period
+                example: '2024-01-01T00:00:00.000Z'
+              mintAmount:
+                type: string
+                description: Total mint amount in lowest denomination
+                example: '1000000000000000000000'
+              mintCount:
+                type: number
+                description: Number of mint orders
+                example: 5
+              burnAmount:
+                type: string
+                description: Total burn/redeem amount in lowest denomination
+                example: '500000000000000000000'
+              burnCount:
+                type: number
+                description: Number of burn/redeem orders
+                example: 3
+            required:
+              - period
+              - mintAmount
+              - mintCount
+              - burnAmount
+              - burnCount
+            description: Time-series data points. Only present when groupBy parameter is provided.
       required:
         - byAsset
     GetPaymentsResponse:
@@ -65868,10 +65939,11 @@ components:
                 type: object
                 properties:
                   txId:
+                    nullable: true
                     type: string
+                    minLength: 1
                     description: Transaction identifier
                     example: 512f64d10b5f358f6dbf3303f90013cfa46006b02a03282456d6bd6432cc5daf
-                    minLength: 1
                   orderId:
                     type: string
                     description: Associated order identifier
@@ -65963,9 +66035,10 @@ components:
                     description: Timestamp when transaction was last updated
                     example: '2025-04-04T09:26:21.600Z'
                   pendingApprovalId:
+                    nullable: true
                     type: string
-                    description: Pending approval id
                     minLength: 1
+                    description: Pending approval id
                 required:
                   - txId
                   - orderId
