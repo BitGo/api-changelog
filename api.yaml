@@ -8707,7 +8707,6 @@ paths:
           application/json:
             schema:
               type: object
-              description: Common payload properties for settlement requests.
               properties:
                 externalId:
                   type: string
@@ -8749,6 +8748,13 @@ paths:
                     A unique nonce value used for cryptographic operations.
                     This provides additional security for settlement operations.
                   minLength: 1
+                cutoffAt:
+                  type: string
+                  description: |-
+                    The date and time of the most recent trade being settled, represented
+                    in ISO 8601 format. Optional field used for v2 settlements.
+                  format: date-time
+                  title: ISO Date String
               required:
                 - externalId
                 - settlementAmounts
