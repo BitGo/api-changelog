@@ -240,7 +240,14 @@ paths:
           schema:
             type: boolean
         - name: exactConfirmedBalance
-          description: 'When set to true, the `confirmedBalance` in the response will be the exact on-chain balance without considering any unconfirmed transactions (for UTXO-based coins only). When `false`, the `confirmedBalance` will not include the outputs consumed of unconfirmed withdrawals. This may be inaccurate in certain situations Default value: false.'
+          description: |-
+            When set to true, the `confirmedBalance` in the response will be the exact on-chain balance
+            without considering any unconfirmed transactions (for UTXO-based coins only).
+
+            When `false`, the `confirmedBalance` will not include the outputs consumed of unconfirmed
+            withdrawals. This may be inaccurate in certain situations
+
+            Default value: false.
           in: query
           schema:
             type: boolean
@@ -425,12 +432,17 @@ paths:
                   description: Label of the new webhook.
                 numConfirmations:
                   type: number
-                  description: Number of confirmations before triggering the webhook. If 0 or unspecified, requests will be sent to the callback endpoint when the transfer is first seen and when it is confirmed.
+                  description: |-
+                    Number of confirmations before triggering the webhook. If 0 or unspecified,
+                    requests will be sent to the callback endpoint when the transfer is first
+                    seen and when it is confirmed.
                   example: 6
                 allToken:
                   type: boolean
                   default: false
-                  description: Triggers on coin transfers and token transfers for ETH and Stellar. Must be set to true to receive webhooks for Trade accounts.
+                  description: |-
+                    Triggers on coin transfers and token transfers for ETH and Stellar.
+                    Must be set to true to receive webhooks for Trade accounts.
                 listenToFailureStates:
                   type: boolean
                   description: Whether or not to listen to failed transactions on chain.
@@ -452,7 +464,10 @@ paths:
                       - readyToSend
                       - signed
                       - failed
-                    description: If supplied, only transaction request state changes from the provided list will trigger notifications. If not provided, all transaction request state changes will trigger notifications.
+                    description: |-
+                      If supplied, only transaction request state changes from the provided list
+                      will trigger notifications. If not provided, all transaction request state
+                      changes will trigger notifications.
                 txRequestTransactionStates:
                   type: array
                   items:
@@ -472,7 +487,10 @@ paths:
                       - delivered
                       - invalidSignature
                       - rejected
-                    description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
+                    description: |-
+                      If supplied, only transaction request transaction state changes from the provided
+                      list will trigger notifications. If not provided, all transaction request
+                      transaction state changes will trigger notifications.
                 customHttpHeaders:
                   type: object
                   additionalProperties:
@@ -782,7 +800,11 @@ paths:
                             enum:
                               - admin
                               - auditor
-                            description: 'This type represents the permissions that can be assigned to a user when adding them to an enterprise 1. ''admin'': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets 2. ''auditor'': View audit logs across the enterprise, Receive invitations to wallets'
+                            description: |-
+                              This type represents the permissions that can be assigned to a user when adding them to an enterprise
+
+                              1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
+                              2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
                     videoIdUser:
                       type: boolean
                     invite:
@@ -1010,6 +1032,7 @@ paths:
                           - user_manage
                           - enterprise_view_all
                           - enterprise_manage_all
+                          - auditlogs_view_all
                           - wallet_view
                           - wallet_view_enterprise
                           - wallet_view_all
@@ -1297,7 +1320,9 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - validatorRegistration
                 - switchValidatorWithCallData
+                - spotTransfer
               description: If provided, only transaction requests with the specified intent types will be returned.
         - name: excludeIntentTypes
           description: If provided, transaction requests with the specified intent types will be excluded.
@@ -1344,10 +1369,26 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - validatorRegistration
                 - switchValidatorWithCallData
+                - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
-          description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
+          description: |-
+            If provided, only transaction requests of the specified state will be returned.
+            - `canceled`: Canceled by a wallet spender before approval or sending.
+            - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
+            - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
+            - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
+            - `pendingApproval`: Triggered a policy that requires approval to proceed.
+            - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
+            - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
+            - `pendingUserGShare`: Ready to receive your gShare.
+            - `pendingUserRShare`: Ready to receive your rShare.
+            - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
+            - `readyToSend`: Ready send (share combination is complete).
+            - `rejected`: Rejected by an approver.
+            - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
           in: query
           schema:
             type: array
@@ -1367,7 +1408,21 @@ paths:
                 - readyToSend
                 - signed
                 - failed
-              description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
+              description: |-
+                If provided, only transaction requests of the specified state will be returned.
+                - `canceled`: Canceled by a wallet spender before approval or sending.
+                - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
+                - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
+                - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
+                - `pendingApproval`: Triggered a policy that requires approval to proceed.
+                - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
+                - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
+                - `pendingUserGShare`: Ready to receive your gShare.
+                - `pendingUserRShare`: Ready to receive your rShare.
+                - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
+                - `readyToSend`: Ready send (share combination is complete).
+                - `rejected`: Rejected by an approver.
+                - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
         - name: latest
           description: If provided, only the latest transaction request version will be returned.
           in: query
@@ -31508,7 +31563,17 @@ paths:
                   example: 1
                 forwarderVersion:
                   type: number
-                  description: (ETH only) Specify forwarder version to use in address creation. To reduce the cost of creating ETH forwarders, BitGo uses a set  of forwarder contracts that deploy as a simple proxy to a single  implementation (https://eips.ethereum.org/EIPS/eip-1167).  Additionally, forwarders deploy using opcode, CREATE2, enabling  them to deploy only when needed (https://eips.ethereum.org/EIPS/eip-1014).  These forwarders otherwise operate identically to prior ETH forwarders. Use this flag to specify the forwarder contract version when  deploying a forwarder contract. Use 0 for the older forwarder  (https://github.com/BitGo/eth-multisig-v2). Use 1 for the new fee-improved  forwarder (https://github.com/BitGo/eth-multisig-v4). Use 2 for  NFT-supported forwarders and version 2 wallets. Use 3 for MPC wallets.  Use 4 for forwarders with the same functionality as v2 but with some changes. v4 is applicable for Arbitrum, Optimism, ZkSync, and other EVM-compatible chains that we will onboard in the future. Use 5 for new MPC based wallets with wallet-version 6
+                  description: |-
+                    (ETH only) Specify forwarder version to use in address creation. To reduce the cost of creating ETH forwarders,
+                          BitGo uses a set  of forwarder contracts that deploy as a simple proxy to a single  implementation
+                          (https://eips.ethereum.org/EIPS/eip-1167).  Additionally, forwarders deploy using opcode, CREATE2, enabling  them
+                          to deploy only when needed (https://eips.ethereum.org/EIPS/eip-1014).  These forwarders otherwise operate
+                          identically to prior ETH forwarders. Use this flag to specify the forwarder contract version when  deploying a
+                          forwarder contract. Use 0 for the older forwarder  (https://github.com/BitGo/eth-multisig-v2). Use 1 for the new
+                          fee-improved  forwarder (https://github.com/BitGo/eth-multisig-v4). Use 2 for  NFT-supported forwarders and
+                          version 2 wallets. Use 3 for MPC wallets.  Use 4 for forwarders with the same functionality as v2 but with some
+                          changes. v4 is applicable for Arbitrum, Optimism, ZkSync, and other EVM-compatible chains that we will onboard in
+                          the future. Use 5 for new MPC based wallets with wallet-version 6
                   minimum: 0
                   maximum: 5
                 evmKeyRingReferenceAddress:
@@ -31530,7 +31595,9 @@ paths:
                   oneOf:
                     - type: string
                     - type: number
-                  description: Explicit gas price to use when deploying the forwarder contract (ETH only). If not given, defaults to the current estimated network gas price.
+                  description: |-
+                    Explicit gas price to use when deploying the forwarder contract (ETH only). If not given, defaults to the current
+                          estimated network gas price.
                 eip1559:
                   type: object
                   description: '(ETH forwarderVersion: 0 wallets only) Specify eip1559 fee parameters in forwarder creation transactions.'
@@ -31800,7 +31867,10 @@ paths:
                   nullable: true
                   allOf:
                     - $ref: '#/components/schemas/AddressLabelString'
-                  description: New label which should apply to this address. The caller needs admin permissions for the associated wallet if the label already has a value. Otherwise view or spend permissions are fine because the label has not been set yet. This is due to the fact that customers use address labels to associate addresses with their customers.
+                  description: |-
+                    New label which should apply to this address. The caller needs admin permissions for the associated wallet if the
+                          label already has a value. Otherwise view or spend permissions are fine because the label has not been set yet.
+                          This is due to the fact that customers use address labels to associate addresses with their customers.
       responses:
         '200':
           description: OK
@@ -32156,7 +32226,9 @@ paths:
         - Wallet
       parameters:
         - name: sourceChain
-          description: Returns unspents exported from the source chain. If not provided, returns outputs from all chains.
+          description: |-
+            Returns unspents exported from the source chain.
+            If not provided, returns outputs from all chains.
           in: query
           schema:
             type: string
@@ -33357,7 +33429,9 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - validatorRegistration
                 - switchValidatorWithCallData
+                - spotTransfer
               description: If provided, only transaction requests with the specified intent types will be returned.
         - name: excludeIntentTypes
           description: If provided, transaction requests with the specified intent types will be excluded.
@@ -33404,10 +33478,26 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - validatorRegistration
                 - switchValidatorWithCallData
+                - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
-          description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
+          description: |-
+            If provided, only transaction requests of the specified state will be returned.
+            - `canceled`: Canceled by a wallet spender before approval or sending.
+            - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
+            - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
+            - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
+            - `pendingApproval`: Triggered a policy that requires approval to proceed.
+            - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
+            - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
+            - `pendingUserGShare`: Ready to receive your gShare.
+            - `pendingUserRShare`: Ready to receive your rShare.
+            - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
+            - `readyToSend`: Ready send (share combination is complete).
+            - `rejected`: Rejected by an approver.
+            - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
           in: query
           schema:
             type: array
@@ -33427,7 +33517,21 @@ paths:
                 - readyToSend
                 - signed
                 - failed
-              description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
+              description: |-
+                If provided, only transaction requests of the specified state will be returned.
+                - `canceled`: Canceled by a wallet spender before approval or sending.
+                - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
+                - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
+                - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
+                - `pendingApproval`: Triggered a policy that requires approval to proceed.
+                - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
+                - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
+                - `pendingUserGShare`: Ready to receive your gShare.
+                - `pendingUserRShare`: Ready to receive your rShare.
+                - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
+                - `readyToSend`: Ready send (share combination is complete).
+                - `rejected`: Rejected by an approver.
+                - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
         - name: latest
           description: If provided, only the latest transaction request version will be returned.
           in: query
@@ -33516,7 +33620,9 @@ paths:
         - Transaction request
       parameters:
         - name: apiVersion
-          description: If present, filters transaction requests by the specified API version (lite or full). If not provided, returns all transaction requests regardless of API version.
+          description: |-
+            If present, filters transaction requests by the specified API version (lite or full).
+            If not provided, returns all transaction requests regardless of API version.
           in: query
           schema:
             type: string
@@ -33584,10 +33690,26 @@ paths:
                 - goUnstake
                 - stakeWithCallData
                 - unstakeWithCallData
+                - validatorRegistration
                 - switchValidatorWithCallData
+                - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
-          description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
+          description: |-
+            If provided, only transaction requests of the specified state will be returned.
+            - `canceled`: Canceled by a wallet spender before approval or sending.
+            - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
+            - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
+            - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
+            - `pendingApproval`: Triggered a policy that requires approval to proceed.
+            - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
+            - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
+            - `pendingUserGShare`: Ready to receive your gShare.
+            - `pendingUserRShare`: Ready to receive your rShare.
+            - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
+            - `readyToSend`: Ready send (share combination is complete).
+            - `rejected`: Rejected by an approver.
+            - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
           in: query
           schema:
             type: array
@@ -33607,7 +33729,21 @@ paths:
                 - readyToSend
                 - signed
                 - failed
-              description: 'If provided, only transaction requests of the specified state will be returned. - `canceled`: Canceled by a wallet spender before approval or sending. - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full". - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer). - `initialized`: First state when a transaction request is created (before any policy evaluation occurs). - `pendingApproval`: Triggered a policy that requires approval to proceed. - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full". - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states. - `pendingUserGShare`: Ready to receive your gShare. - `pendingUserRShare`: Ready to receive your rShare. - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states. - `readyToSend`: Ready send (share combination is complete). - `rejected`: Rejected by an approver. - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.'
+              description: |-
+                If provided, only transaction requests of the specified state will be returned.
+                - `canceled`: Canceled by a wallet spender before approval or sending.
+                - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
+                - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
+                - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
+                - `pendingApproval`: Triggered a policy that requires approval to proceed.
+                - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
+                - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
+                - `pendingUserGShare`: Ready to receive your gShare.
+                - `pendingUserRShare`: Ready to receive your rShare.
+                - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
+                - `readyToSend`: Ready send (share combination is complete).
+                - `rejected`: Rejected by an approver.
+                - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
         - name: walletPermissions
           description: If present, filters transaction requests by wallet permissions. If not present will default to view permissions
           in: query
@@ -34146,13 +34282,18 @@ paths:
         - Enterprise Management
       parameters:
         - name: idempotencyKey
-          description: A unique identifier used when creating the enterprise. Adding this query parameter will return the enterprise created with the given idempotency key.
+          description: |-
+            A unique identifier used when creating the enterprise. Adding this
+            query parameter will return the enterprise created with the
+            given idempotency key.
           in: query
           schema:
             type: string
             title: uuid
         - name: limit
-          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
+          description: |-
+            Maximum number of results to return. If the result set is truncated,
+            use the "nextBatchPrevId" value to get the next batch.
           in: query
           schema:
             type: string
@@ -34161,7 +34302,9 @@ paths:
             maximum: 500
             format: number
         - name: prevId
-          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
+          description: |-
+            Return the next batch of results, based on the "nextBatchPrevId" value
+            from the previous batch.
           in: query
           schema:
             type: string
@@ -34169,7 +34312,9 @@ paths:
             minLength: 1
             pattern: ^[0-9a-f]{32}$
         - name: search
-          description: Filter by enterprise name or by enterprise id. Cannot be combined with `idempotencyKey` or `prevId`.
+          description: |-
+            Filter by enterprise name or by enterprise id.
+            Cannot be combined with `idempotencyKey` or `prevId`.
           in: query
           schema:
             type: string
@@ -34220,7 +34365,9 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
     post:
       summary: Create an enterprise for an organization
-      description: Create an enterprise in the specified organization. Also create a user if it doesn't already exist.
+      description: |-
+        Create an enterprise in the specified organization. Also create a user if it doesn't already exist.
+        This endpoint is intended for creating enterprises in Crypto-as-a-Service (CaaS) organizations. For non-CaaS organizations, set isCaaS to false to skip validation.
       operationId: v2.organization.enterprise.create
       tags:
         - Enterprise Management
@@ -34241,7 +34388,10 @@ paths:
                   minLength: 1
                 idempotencyKey:
                   type: string
-                  description: A unique identifier for the enterprise creation request. Multiple enterprises with the same organizationId and idempotencyKey will not be created.
+                  description: |-
+                    A unique identifier for the enterprise creation request. Multiple
+                    enterprises with the same organizationId and idempotencyKey
+                    will not be created.
                   title: uuid
                 additionalAdmins:
                   type: array
@@ -34249,6 +34399,12 @@ paths:
                     type: string
                     minLength: 1
                     example: 59cd72485007a239fb00282ed480da1f
+                isCaaS:
+                  type: boolean
+                  default: true
+                  description: |-
+                    Indicates if this is a Crypto-as-a-Service (CaaS) organization. If set to true, validates that the organization
+                    configuration is complete before creating child enterprises.
                 accountType:
                   type: string
                   enum:
@@ -34412,7 +34568,11 @@ paths:
                     enum:
                       - admin
                       - auditor
-                    description: 'This type represents the permissions that can be assigned to a user when adding them to an enterprise 1. ''admin'': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets 2. ''auditor'': View audit logs across the enterprise, Receive invitations to wallets'
+                    description: |-
+                      This type represents the permissions that can be assigned to a user when adding them to an enterprise
+
+                      1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
+                      2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
               required:
                 - email
       responses:
@@ -34461,7 +34621,9 @@ paths:
         - Enterprise Management
       parameters:
         - name: limit
-          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
+          description: |-
+            Maximum number of results to return. If the result set is truncated,
+            use the "nextBatchPrevId" value to get the next batch.
           in: query
           schema:
             type: string
@@ -34470,7 +34632,9 @@ paths:
             maximum: 500
             format: number
         - name: prevId
-          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
+          description: |-
+            Return the next batch of results, based on the "nextBatchPrevId" value
+            from the previous batch.
           in: query
           schema:
             type: string
@@ -34478,7 +34642,9 @@ paths:
             minLength: 1
             pattern: ^[0-9a-f]{32}$
         - name: q
-          description: Filter by enterprise name or by enterprise id. Cannot be combined with `prevId`.
+          description: |-
+            Filter by enterprise name or by enterprise id.
+            Cannot be combined with `prevId`.
           in: query
           schema:
             type: string
@@ -35389,7 +35555,10 @@ paths:
                           - readyToSend
                           - signed
                           - failed
-                        description: If supplied, only transaction request state changes from the provided list will trigger notifications. If not provided, all transaction request state changes will trigger notifications.
+                        description: |-
+                          If supplied, only transaction request state changes from the provided list
+                          will trigger notifications. If not provided, all transaction request state
+                          changes will trigger notifications.
                     type:
                       type: string
                       enum:
@@ -35424,7 +35593,10 @@ paths:
                           - delivered
                           - invalidSignature
                           - rejected
-                        description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
+                        description: |-
+                          If supplied, only transaction request transaction state changes from the provided
+                          list will trigger notifications. If not provided, all transaction request
+                          transaction state changes will trigger notifications.
                     type:
                       type: string
                       enum:
@@ -35964,7 +36136,9 @@ paths:
                 bailOnError:
                   type: boolean
                   default: false
-                  description: If true, stops processing on the first error. If false (default), continues processing all items.
+                  description: |-
+                    If true, stops processing on the first error.
+                    If false (default), continues processing all items.
               required:
                 - approvals
       responses:
@@ -36024,7 +36198,9 @@ paths:
           schema:
             type: boolean
         - name: byOrganization
-          description: True, if returning counts of pending approvals by organizations that the current user is a part of.
+          description: |-
+            True, if returning counts of pending approvals by organizations that the
+            current user is a part of.
           in: query
           schema:
             type: boolean
@@ -36850,7 +37026,7 @@ paths:
   /api/v2/user/login:
     post:
       summary: Login
-      description: Creates a short-lived (1 hour) access token for use with the API. BitGo doesn't recommend using this endpoint for scripting. Instead, use the SDK or the web UI to create long-lived access tokens. However, short-lived access tokens are the only access tokens with the "user_manage" scope that enables you to programmatically add users to your enterprise using the [Add User to Enterprise](/reference/v2enterpriseuseradd#/) endpoint.
+      description: Creates a short-lived (1 hour) access token for use with the API. Requires a verified email address. BitGo doesn't recommend using this endpoint for scripting. Instead, use the SDK or the web UI to create long-lived access tokens. However, short-lived access tokens are the only access tokens with the "user_manage" scope that enables you to programmatically add users to your enterprise using the [Add User to Enterprise](/reference/v2enterpriseuseradd#/) endpoint.
       operationId: v2.user.login
       tags:
         - User
@@ -36863,7 +37039,7 @@ paths:
               properties:
                 email:
                   type: string
-                  description: The email address of the user.
+                  description: The verified email address of the user
                   example: user@email.com
                   format: email
                 extensible:
@@ -37029,7 +37205,14 @@ paths:
           schema:
             type: boolean
         - name: exactConfirmedBalance
-          description: 'When set to true, the `confirmedBalance` in the response will be the exact on-chain balance without considering any unconfirmed transactions (for UTXO-based coins only). When `false`, the `confirmedBalance` will not include the outputs consumed of unconfirmed withdrawals. This may be inaccurate in certain situations Default value: false.'
+          description: |-
+            When set to true, the `confirmedBalance` in the response will be the exact on-chain balance
+            without considering any unconfirmed transactions (for UTXO-based coins only).
+
+            When `false`, the `confirmedBalance` will not include the outputs consumed of unconfirmed
+            withdrawals. This may be inaccurate in certain situations
+
+            Default value: false.
           in: query
           schema:
             type: boolean
@@ -37089,7 +37272,10 @@ paths:
         - Address
       parameters:
         - name: includeAllChains
-          description: Include all chains in the EVM keyring, even if the address doesn't exist on them yet. When true, returns placeholder entries with empty id field and zero balances for chains where the address hasn't been created.
+          description: |-
+            Include all chains in the EVM keyring, even if the address doesn't exist on them yet.
+            When true, returns placeholder entries with empty id field and zero balances for chains
+            where the address hasn't been created.
           in: query
           schema:
             type: boolean
@@ -37506,9 +37692,13 @@ paths:
               properties:
                 valueMsat:
                   type: string
-                  description: The value of the invoice in millisatoshis
+                  description: The value of the invoice in millisatoshis. Provide exactly one of `valueMsat` or `valueSat`.
                   example: '50000000'
                   format: number
+                valueSat:
+                  type: number
+                  description: The value of the invoice in satoshis. Provide exactly one of `valueMsat` or `valueSat`.
+                  example: 50000
                 memo:
                   type: string
                   description: Optional memo or description for the invoice
@@ -37517,8 +37707,6 @@ paths:
                   type: number
                   description: Optional expiry time in seconds
                   example: 3600
-              required:
-                - valueMsat
       responses:
         '200':
           description: OK
@@ -39515,7 +39703,9 @@ paths:
               properties:
                 signature:
                   type: string
-                  description: Webhook notification signature calculated based on the payload and webhook secret. Found in the HTTP header X-Signature-SHA256 of the notification.
+                  description: |-
+                    Webhook notification signature calculated based on the payload and webhook secret.
+                    Found in the HTTP header X-Signature-SHA256 of the notification.
                   example: f34538037a1ae6f79bd7cee9d9a5552f21bee3027983d7730f424d94d9bab04a
                   pattern: ^[0-9a-f]{64}$
                 notificationPayload:
@@ -46774,7 +46964,10 @@ components:
     AddressWithBalanceQueryResult:
       title: AddressWithBalanceQueryResult
       type: object
-      description: Represents the result of a query for addresses with balances. This structure contains the details of a set of addresses, their associated balances, and pagination information about the query results.
+      description: |-
+        Represents the result of a query for addresses with balances.
+        This structure contains the details of a set of addresses, their associated balances,
+        and pagination information about the query results.
       properties:
         coin:
           type: string
@@ -48034,6 +48227,8 @@ components:
       enum:
         - bg23
         - ''
+        - bg25-inst
+        - bg25-retail
     AvaxCDelegationProperties:
       title: AVAXC Delegation Properties
       allOf:
@@ -49082,7 +49277,9 @@ components:
           description: Always use hop address for ETH transactions
         usersViewAllWallets:
           type: boolean
-          description: All users on the enterprise can view all enterprise wallets, even if they are not viewers on the wallet itself
+          description: |-
+            All users on the enterprise can view all enterprise wallets, even if they are not
+            viewers on the wallet itself
           example: true
         videoIdWaived:
           type: boolean
@@ -49302,7 +49499,11 @@ components:
                 $ref: '#/components/schemas/AggregatorSourceType'
               metadata:
                 type: object
-                description: 'The following fields: source, showBanner, readyForDistribution, showVideoIdBanner, ftxCreditorId were added for FTX insitutional distribution. Reference: https://bitgoinc.atlassian.net/browse/COPS-2695'
+                description: |-
+                  The following fields:
+                  source, showBanner, readyForDistribution, showVideoIdBanner, ftxCreditorId
+                  were added for FTX insitutional distribution.
+                  Reference: https://bitgoinc.atlassian.net/browse/COPS-2695
                 properties:
                   showBanner:
                     type: boolean
@@ -49517,7 +49718,20 @@ components:
     BaseIntentWithAmount:
       title: BaseIntentWithAmount
       type: object
-      description: 'Schema fragment for intents with direct amount field This fragment defines an amount field directly on the intent object (not nested in recipients). Common in staking, claiming, and delegation intents. Used by: - StakeIntent variants (AtomStakeIntent, SolStakeIntent, etc.) - UnstakeIntent variants (AtomUnstakeIntent, etc.) - DelegateIntent variants (BscDelegateIntent, TonDelegateIntent, etc.) - ClaimRewardsIntent variants (AdaStakeClaimRewardsIntent, etc.) - WithdrawIntent variants (AtomWithdrawIntent, CosmosWithdrawIntent, etc.) Asset extraction: Extracts symbol from the amount field'
+      description: |-
+        Schema fragment for intents with direct amount field
+
+        This fragment defines an amount field directly on the intent object
+        (not nested in recipients). Common in staking, claiming, and delegation intents.
+
+        Used by:
+        - StakeIntent variants (AtomStakeIntent, SolStakeIntent, etc.)
+        - UnstakeIntent variants (AtomUnstakeIntent, etc.)
+        - DelegateIntent variants (BscDelegateIntent, TonDelegateIntent, etc.)
+        - ClaimRewardsIntent variants (AdaStakeClaimRewardsIntent, etc.)
+        - WithdrawIntent variants (AtomWithdrawIntent, CosmosWithdrawIntent, etc.)
+
+        Asset extraction: Extracts symbol from the amount field
       properties:
         amount:
           $ref: '#/components/schemas/Amount'
@@ -49526,7 +49740,21 @@ components:
     BaseIntentWithRecipients:
       title: BaseIntentWithRecipients
       type: object
-      description: '============================================================================ REUSABLE SCHEMA FRAGMENTS FOR ASSET-CONTAINING INTENTS ============================================================================ These schemas define reusable building blocks that concrete intent schemas can compose with. They serve multiple purposes: 1. **Schema Reuse**: Concrete intents can intersect with these fragments 2. **Pattern Matching**: getAssetsFromIntent utility matches against these 3. **Type Safety**: Ensures consistency across all asset-containing intents 4. **Documentation**: Clearly shows which intents handle which asset types By using the actual RecipientEntry and TokenRecipientEntry types, we ensure these patterns exactly match the structures used in concrete intents.'
+      description: |-
+        ============================================================================
+        REUSABLE SCHEMA FRAGMENTS FOR ASSET-CONTAINING INTENTS
+        ============================================================================
+
+        These schemas define reusable building blocks that concrete intent schemas
+        can compose with. They serve multiple purposes:
+
+        1. **Schema Reuse**: Concrete intents can intersect with these fragments
+        2. **Pattern Matching**: getAssetsFromIntent utility matches against these
+        3. **Type Safety**: Ensures consistency across all asset-containing intents
+        4. **Documentation**: Clearly shows which intents handle which asset types
+
+        By using the actual RecipientEntry and TokenRecipientEntry types, we ensure
+        these patterns exactly match the structures used in concrete intents.
       properties:
         recipients:
           type: array
@@ -49547,7 +49775,16 @@ components:
     BaseIntentWithTokenName:
       title: BaseIntentWithTokenName
       type: object
-      description: 'Schema fragment for intents with direct tokenName field This fragment defines a tokenName field directly on the intent object (not nested in recipients). Used by: - TokenApprovalIntent Asset extraction: Extracts tokenName'
+      description: |-
+        Schema fragment for intents with direct tokenName field
+
+        This fragment defines a tokenName field directly on the intent object
+        (not nested in recipients).
+
+        Used by:
+        - TokenApprovalIntent
+
+        Asset extraction: Extracts tokenName
       properties:
         tokenName:
           type: string
@@ -49556,7 +49793,19 @@ components:
     BaseIntentWithTokenRecipients:
       title: BaseIntentWithTokenRecipients
       type: object
-      description: 'Schema fragment for intents with token recipients This fragment defines a recipients array using TokenRecipientEntry, which extends RecipientEntry with optional tokenData containing token-specific info. Used by: - TransferTokenIntent (and variants: EthTransferTokenIntent, etc.) - ConsolidateTokenIntent (and variants: EthConsolidateTokenIntent, etc.) Asset extraction: Extracts tokenName only (the actual asset identifier) Note: tokenType, tokenContractAddress, tokenId are technical fields, not assets Note: This also matches BaseIntentWithRecipients since TokenRecipientEntry extends RecipientEntry'
+      description: |-
+        Schema fragment for intents with token recipients
+
+        This fragment defines a recipients array using TokenRecipientEntry, which
+        extends RecipientEntry with optional tokenData containing token-specific info.
+
+        Used by:
+        - TransferTokenIntent (and variants: EthTransferTokenIntent, etc.)
+        - ConsolidateTokenIntent (and variants: EthConsolidateTokenIntent, etc.)
+
+        Asset extraction: Extracts tokenName only (the actual asset identifier)
+        Note: tokenType, tokenContractAddress, tokenId are technical fields, not assets
+        Note: This also matches BaseIntentWithRecipients since TokenRecipientEntry extends RecipientEntry
       properties:
         recipients:
           type: array
@@ -50897,7 +51146,9 @@ components:
     BulkPolicyRuleAction:
       title: BulkPolicyRuleAction
       type: object
-      description: Action for a policy rule - simplified version of PolicyRuleAction that's Json-compatible (Original uses h.optionalized which creates intersection types incompatible with Json)
+      description: |-
+        Action for a policy rule - simplified version of PolicyRuleAction that's Json-compatible
+        (Original uses h.optionalized which creates intersection types incompatible with Json)
       properties:
         type:
           type: string
@@ -55753,7 +56004,10 @@ components:
       type: string
       enum:
         - member
-      description: 'This type represents the member permission that can be assigned to a user when adding them to an enterprise 1. ''member'': Receive invitations to wallets'
+      description: |-
+        This type represents the member permission that can be assigned to a user when adding them to an enterprise
+
+        1. 'member': Receive invitations to wallets
     EnterprisePermission:
       type: string
       enum:
@@ -55957,7 +56211,11 @@ components:
       enum:
         - admin
         - auditor
-      description: 'This type represents the permissions that can be assigned to a user when adding them to an enterprise 1. ''admin'': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets 2. ''auditor'': View audit logs across the enterprise, Receive invitations to wallets'
+      description: |-
+        This type represents the permissions that can be assigned to a user when adding them to an enterprise
+
+        1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
+        2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
     EnterpriseUserRole:
       title: EnterpriseUserRole
       oneOf:
@@ -56062,7 +56320,10 @@ components:
               - $ref: '#/components/schemas/EnterpriseStub'
         nextBatchPrevId:
           type: string
-          description: When a result set is truncated, this field returns the id of the last object in the previous batch. To get the next batch of results, pass this value via the 'prevId' query parameter.
+          description: |-
+            When a result set is truncated, this field returns the id of the last object
+            in the previous batch. To get the next batch of results, pass this value
+            via the 'prevId' query parameter.
           minLength: 1
       required:
         - enterprises
@@ -59256,7 +59517,10 @@ components:
                 example: Payment for the coffee
               amtPaidMsat:
                 type: string
-                description: The number of millisats actually paid to this invoice, this may be greater than the amount requested by the invoice, since lightning allows overpaying (but not underpaying) invoices.
+                description: |-
+                  The number of millisats actually paid to this invoice, this may be greater
+                  than the amount requested by the invoice, since lightning allows overpaying
+                  (but not underpaying) invoices.
                 format: number
               invoice:
                 type: string
@@ -59268,7 +59532,7 @@ components:
                 example: 63d9ce82e09d16761a85116ed8b65407db4fb22f85d03573de09c480f2c6d175
               valueMsat:
                 type: string
-                description: The value of the invoice in satoshis
+                description: The value of the invoice in millisatoshis
                 example: '50000'
                 format: number
               expiresAt:
@@ -59574,7 +59838,10 @@ components:
                     example: 2NAUwNgXaoFj2VVnSEvNLGuez8CfdU2UCMZ
                   associatedNativeCoinAddress:
                     type: string
-                    description: The native coin receive address associated with the solana ATA address. This is currently present only for BitGo addresses. This change was done so that there is a mapping between the two addresses in the transfer entries.
+                    description: |-
+                      The native coin receive address associated with the solana ATA address.
+                      This is currently present only for BitGo addresses.
+                      This change was done so that there is a mapping between the two addresses in the transfer entries.
                   backingFeeString:
                     type: string
                     description: Backing fee represented as a string
@@ -59650,6 +59917,7 @@ components:
               type: string
               description: The coin used to pay the fee (for cross-chain transactions)
             feeString:
+              nullable: true
               type: string
               description: The Transfer's fee (in base units) represented as a String
             feeUsd:
@@ -60459,7 +60727,9 @@ components:
               - confirmations
         nextBatchPrevId:
           type: string
-          description: This is the transaction ID from the last item in the current batch. Providing this value as the prevId in the next request will return the next batch of transactions.
+          description: |-
+            This is the transaction ID from the last item in the current batch.
+            Providing this value as the prevId in the next request will return the next batch of transactions.
       required:
         - transactions
     GetTransferByApprovalIdResponse:
@@ -60494,10 +60764,14 @@ components:
                 description: String representation of the spendable in base units. Guaranteed to not lose precision. Will not be included if `excludeSpendableBalances=false`
               stakingBalanceString:
                 type: string
-                description: The staked balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+                description: |-
+                  The staked balance in base units. Guaranteed to not lose precision.
+                  The is only returned if the `includeStakingBalances` query parameter is set to `true`.
               rewardBalanceString:
                 type: string
-                description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+                description: |-
+                  The staking reward balance in base units. Guaranteed to not lose precision.
+                  The is only returned if the `includeStakingBalances` query parameter is set to `true`.
               offchain:
                 allOf:
                   - $ref: '#/components/schemas/OffChainWalletBalance'
@@ -60976,6 +61250,19 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: A hot wallet
+    HypeevmSpotTransferIntent:
+      title: Hypeevm Spot Transfer Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - spotTransfer
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithRecipients'
     ICPStakingRequestEntityProperties:
       title: ICP staking request entity properties
       allOf:
@@ -61647,6 +61934,7 @@ components:
         - tokenApproval
         - transferStake
         - validatorRegistration
+        - spotTransfer
         - goUnstake
         - createBtcDelegation
         - transferAccept
@@ -62076,16 +62364,29 @@ components:
           allOf:
             - $ref: '#/components/schemas/KeyTypeC'
           default: independent
-          description: A value from a string enum denoting what kind of key this is. Defaults to “independent” indicating an on-chain key is requested. If set to “tss” this tells us that a “tss” key is requested.
+          description: |-
+            A value from a string enum denoting what kind of key this is. Defaults to
+            “independent” indicating an on-chain key is requested. If set to “tss” this
+            tells us that a “tss” key is requested.
           example: tss
         commonKeychain:
           type: string
-          description: The commonKeychain for the key if this is a MPC key. This value is required to be set when the type is set to “tss” and when the source is either “user” or “backup”. Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key. This value is the concatenation of the common public key (32-byte) with the common chaincode (32-byte) as a hex string.
+          description: |-
+            The commonKeychain for the key if this is a MPC key. This value is required
+            to be set when the type is set to “tss” and when the source is either “user”
+            or “backup”. Setting this indicates to BitGo that the owner of the key has
+            received all key shares they needed for generating their key. This value is
+            the concatenation of the common public key (32-byte) with the common chaincode
+            (32-byte) as a hex string.
         verifiedVssProof:
           type: boolean
         commonPub:
           type: string
-          description: The common public key. This value is required to be set for BLS keys when the source is either "user" or "backup". Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
+          description: |-
+            The common public key. This value is required to be set for BLS keys when the
+            source is either "user" or "backup". Setting this indicates to BitGo that the
+            owner of the key has received all key shares they needed for generating their
+            key.
         commonPubSig:
           type: string
         provider:
@@ -62179,7 +62480,9 @@ components:
           key:
             allOf:
               - $ref: '#/components/schemas/KeyListItem'
-            description: Represents a key associated with a wallet. The key can either be a valid `Key` object or `null` if no key is associated.
+            description: |-
+              Represents a key associated with a wallet.
+              The key can either be a valid `Key` object or `null` if no key is associated.
         required:
           - walletId
     KeyPurpose:
@@ -62642,7 +62945,10 @@ components:
           example: Payment for the coffee
         amtPaidMsat:
           type: string
-          description: The number of millisats actually paid to this invoice, this may be greater than the amount requested by the invoice, since lightning allows overpaying (but not underpaying) invoices.
+          description: |-
+            The number of millisats actually paid to this invoice, this may be greater
+            than the amount requested by the invoice, since lightning allows overpaying
+            (but not underpaying) invoices.
           format: number
         invoice:
           type: string
@@ -62654,7 +62960,7 @@ components:
           example: 63d9ce82e09d16761a85116ed8b65407db4fb22f85d03573de09c480f2c6d175
         valueMsat:
           type: string
-          description: The value of the invoice in satoshis
+          description: The value of the invoice in millisatoshis
           example: '50000'
           format: number
         expiresAt:
@@ -62988,7 +63294,9 @@ components:
                     - readyToSend
                     - signed
                     - failed
-                  description: If present, only transaction request state changes from the list will trigger notifications. If not present, all transaction request state changes will trigger notifications.
+                  description: |-
+                    If present, only transaction request state changes from the list will trigger notifications.
+                    If not present, all transaction request state changes will trigger notifications.
               txRequestTransactionStates:
                 type: array
                 items:
@@ -63008,7 +63316,10 @@ components:
                     - delivered
                     - invalidSignature
                     - rejected
-                  description: If present, only transaction request transaction state changes from the list will trigger notifications. If not present, all transaction request transaction state changes will trigger notifications.
+                  description: |-
+                    If present, only transaction request transaction state changes from the list will trigger
+                    notifications. If not present, all transaction request transaction state changes will
+                    trigger notifications.
             required:
               - id
               - created
@@ -63103,7 +63414,9 @@ components:
             description: The list of notifications
         nextBatchPrevId:
           type: string
-          description: This is the ID from the last item in the current batch. Providing this value as the prevId in the next request will return the next batch of notifications.
+          description: |-
+            This is the ID from the last item in the current batch.
+            Providing this value as the prevId in the next request will return the next batch of notifications.
           minLength: 1
       required:
         - webhookNotifications
@@ -63197,7 +63510,10 @@ components:
                     - delivered
                     - invalidSignature
                     - rejected
-                  description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
+                  description: |-
+                    If supplied, only transaction request transaction state changes from the provided
+                    list will trigger notifications. If not provided, all transaction request
+                    transaction state changes will trigger notifications.
             required:
               - id
               - created
@@ -65281,7 +65597,10 @@ components:
           type: boolean
         pendingSystemInitialization:
           type: boolean
-          description: If true, this wallet is waiting for the system to finish initializing. In this state, users cannot create addresses or initiate withdrawals.
+          description: |-
+            If true, this wallet is waiting for the system to finish initializing.
+            In this state, users cannot
+            create addresses or initiate withdrawals.
       required:
         - needsKeyReshareAfterPasswordReset
     OffchainAddressSubdocument:
@@ -65403,7 +65722,10 @@ components:
     OnboardingAgreement:
       title: OnboardingAgreement
       type: object
-      description: For users doing self-service onboarding, they just need to click a checkbox to agree to the terms. we will track who & when that happened on a feature-by-feature basis.
+      description: |-
+        For users doing self-service onboarding, they
+        just need to click a checkbox to agree to the terms.
+        we will track who & when that happened on a feature-by-feature basis.
       properties:
         user:
           type: string
@@ -76532,6 +76854,7 @@ components:
         - $ref: '#/components/schemas/EthStakingIntent'
         - $ref: '#/components/schemas/EthTransferTokenIntent'
         - $ref: '#/components/schemas/FeeAddressTransferIntent'
+        - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
         - $ref: '#/components/schemas/IcpPaymentIntent'
         - $ref: '#/components/schemas/LightningPaymentIntent'
         - $ref: '#/components/schemas/MmiSignMessageIntent'
@@ -77306,7 +77629,10 @@ components:
         - delivered
         - invalidSignature
         - rejected
-      description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
+      description: |-
+        If supplied, only transaction request transaction state changes from the provided
+        list will trigger notifications. If not provided, all transaction request
+        transaction state changes will trigger notifications.
     TransactionState1:
       type: string
       enum:
@@ -77779,7 +78105,10 @@ components:
                 description: True if this entry is failed
               associatedNativeCoinAddress:
                 type: string
-                description: The native coin receive address associated with the solana ATA address. This is currently present only for BitGo addresses. This change was done so that there is a mapping between the two addresses in the transfer entries.
+                description: |-
+                  The native coin receive address associated with the solana ATA address.
+                  This is currently present only for BitGo addresses.
+                  This change was done so that there is a mapping between the two addresses in the transfer entries.
               isFee:
                 type: boolean
                 description: Indicates if this entry is a fee
@@ -77964,6 +78293,7 @@ components:
           type: string
           description: Consolidation ID if this transfer is part of a consolidation
         feeString:
+          nullable: true
           type: string
           description: The Transfer's fee (in base units) represented as a String
         feeCoin:
@@ -78623,7 +78953,18 @@ components:
         - replaced
         - reversed
         - deleted
-      description: 'The state of the transfer. Includes the following: - `confirmed`: The transfer is confirmed on chain. - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction. - `initialized`: The initial state when creating a transfer. - `pendingApproval`: The transfer requires admin approval to proceed. - `rejected`: The transfer was rejected by an admin. - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain. - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee. - `reversed`: The transfer was reversed (e.g., when a withdrawal offer is rejected in multi-step transfers). - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo. - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.'
+      description: |-
+        The state of the transfer. Includes the following:
+        - `confirmed`: The transfer is confirmed on chain.
+        - `failed`: BitGo failed to confirm the transfer on chain. You must retry the transaction.
+        - `initialized`: The initial state when creating a transfer.
+        - `pendingApproval`: The transfer requires admin approval to proceed.
+        - `rejected`: The transfer was rejected by an admin.
+        - `removed`: A network re-org occurred, causing the confirmed transfer to be removed from the blockchain.
+        - `replaced`: The transfer was stuck due to having a low fee and was replaced by a new transfer with a higher fee.
+        - `reversed`: The transfer was reversed (e.g., when a withdrawal offer is rejected in multi-step transfers).
+        - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo.
+        - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.
     TransferTokenIntent:
       title: TransferTokenIntent
       allOf:
@@ -80157,7 +80498,9 @@ components:
               example: Frozen due to suspicious activity
             freeze:
               type: object
-              description: Freeze object that will hold the start time and expiration time of a user's freeze. By default the freeze is infinite, and this field will eventually override the isFrozen boolean field
+              description: |-
+                Freeze object that will hold the start time and expiration time of a user's freeze.
+                By default the freeze is infinite, and this field will eventually override the isFrozen boolean field
               properties:
                 time:
                   type: string
@@ -80360,7 +80703,11 @@ components:
     UserRequiredFields:
       title: UserRequiredFields
       type: object
-      description: Fields that will always be populated in accordance with the defined codec If you find other fields that will provably always be populated on a given user (even for legacy users created long ago), that field can be moved to UserRequiredFields
+      description: |-
+        Fields that will always be populated in accordance with the defined codec
+        If you find other fields that will provably always be populated on
+        a given user (even for legacy users created long ago), that field can be moved
+        to UserRequiredFields
       properties:
         id:
           type: string
@@ -80388,7 +80735,11 @@ components:
                   enum:
                     - admin
                     - auditor
-                  description: 'This type represents the permissions that can be assigned to a user when adding them to an enterprise 1. ''admin'': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets 2. ''auditor'': View audit logs across the enterprise, Receive invitations to wallets'
+                  description: |-
+                    This type represents the permissions that can be assigned to a user when adding them to an enterprise
+
+                    1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
+                    2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
               id:
                 type: string
               beneficialOwner:
@@ -84492,28 +84843,51 @@ components:
           $ref: '#/components/schemas/WalletSubType'
         balanceString:
           type: string
-          description: The cleared balance of the address in base units (e.g. Satoshis). Guaranteed to not lose precision. The is only returned if the `expandBalance` query parameter is set to `true`.
+          description: |-
+            The cleared balance of the address in base units (e.g. Satoshis).
+            Guaranteed to not lose precision.
+            The is only returned if the `expandBalance` query parameter is set to `true`.
         balance:
           type: number
-          description: The cleared balance of the address in base units (e.g. Satoshis). The is only returned if the `expandBalance` query parameter is set to `true`.
+          description: |-
+            The cleared balance of the address in base units (e.g. Satoshis).
+            The is only returned if the `expandBalance` query parameter is set to `true`.
         confirmedBalanceString:
           type: string
-          description: The total balance of confirmed transactions in base units (e.g. Satoshis). The is only returned if the `expandBalance` query parameter is set to `true`. Guaranteed to not lose precision.
+          description: |-
+            The total balance of confirmed transactions in base units (e.g. Satoshis).
+            The is only returned if the `expandBalance` query parameter is set to `true`.
+            Guaranteed to not lose precision.
         confirmedBalance:
           type: number
-          description: The total balance of confirmed transactions in base units (e.g. Satoshis). The is only returned if the `expandBalance` query parameter is set to `true`.
+          description: |-
+            The total balance of confirmed transactions in base units (e.g. Satoshis).
+            The is only returned if the `expandBalance` query parameter is set to `true`.
         spendableBalanceString:
           type: string
-          description: The total balance in base units (e.g. Satoshis) which may be used as inputs for creating new transactions in string representation. Guaranteed to not lose precision. The is only returned if the `expandBalance` query parameter is set to `true`.
+          description: |-
+            The total balance in base units (e.g. Satoshis) which may
+            be used as inputs for creating new transactions in string representation.
+            Guaranteed to not lose precision.
+            The is only returned if the `expandBalance` query parameter is set to `true`.
         spendableBalance:
           type: number
-          description: The total balance in base units (e.g. Satoshis) which may be used as inputs for creating new transactions in string representation. The is only returned if the `expandBalance` query parameter is set to `true`.
+          description: |-
+            The total balance in base units (e.g. Satoshis) which may
+            be used as inputs for creating new transactions in string representation.
+            The is only returned if the `expandBalance` query parameter is set to `true`.
         stakingBalanceString:
           type: string
-          description: The staked balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+          description: |-
+            The staked balance in base units.
+            Guaranteed to not lose precision.
+            The is only returned if the `includeStakingBalances` query parameter is set to `true`.
         rewardBalanceString:
           type: string
-          description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+          description: |-
+            The staking reward balance in base units.
+            Guaranteed to not lose precision.
+            The is only returned if the `includeStakingBalances` query parameter is set to `true`.
         offchain:
           allOf:
             - $ref: '#/components/schemas/OffChainWalletBalance'
@@ -84536,7 +84910,15 @@ components:
                     - freeze
                     - trade
                     - dapp
-                  description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets 6. ''dapp'': connect to third-party dApps and provide them access to wallet operations'
+                  description: |-
+                    This type represents the permissions that can be assigned to a user when adding them to a wallet
+
+                    1. 'admin': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions
+                    2. 'spend': withdraw assets from wallet, generate new receive addresses, view all balances and transactions
+                    3. 'view': generate new receive addresses, view all balances and transactions
+                    4. 'freeze':
+                    5. 'trade': trade on a wallet - applicable only for trading wallets
+                    6. 'dapp': connect to third-party dApps and provide them access to wallet operations
               recoverable:
                 type: boolean
               user:
@@ -85444,28 +85826,51 @@ components:
                 $ref: '#/components/schemas/WalletSubType'
               balanceString:
                 type: string
-                description: The cleared balance of the address in base units (e.g. Satoshis). Guaranteed to not lose precision. The is only returned if the `expandBalance` query parameter is set to `true`.
+                description: |-
+                  The cleared balance of the address in base units (e.g. Satoshis).
+                  Guaranteed to not lose precision.
+                  The is only returned if the `expandBalance` query parameter is set to `true`.
               balance:
                 type: number
-                description: The cleared balance of the address in base units (e.g. Satoshis). The is only returned if the `expandBalance` query parameter is set to `true`.
+                description: |-
+                  The cleared balance of the address in base units (e.g. Satoshis).
+                  The is only returned if the `expandBalance` query parameter is set to `true`.
               confirmedBalanceString:
                 type: string
-                description: The total balance of confirmed transactions in base units (e.g. Satoshis). The is only returned if the `expandBalance` query parameter is set to `true`. Guaranteed to not lose precision.
+                description: |-
+                  The total balance of confirmed transactions in base units (e.g. Satoshis).
+                  The is only returned if the `expandBalance` query parameter is set to `true`.
+                  Guaranteed to not lose precision.
               confirmedBalance:
                 type: number
-                description: The total balance of confirmed transactions in base units (e.g. Satoshis). The is only returned if the `expandBalance` query parameter is set to `true`.
+                description: |-
+                  The total balance of confirmed transactions in base units (e.g. Satoshis).
+                  The is only returned if the `expandBalance` query parameter is set to `true`.
               spendableBalanceString:
                 type: string
-                description: The total balance in base units (e.g. Satoshis) which may be used as inputs for creating new transactions in string representation. Guaranteed to not lose precision. The is only returned if the `expandBalance` query parameter is set to `true`.
+                description: |-
+                  The total balance in base units (e.g. Satoshis) which may
+                  be used as inputs for creating new transactions in string representation.
+                  Guaranteed to not lose precision.
+                  The is only returned if the `expandBalance` query parameter is set to `true`.
               spendableBalance:
                 type: number
-                description: The total balance in base units (e.g. Satoshis) which may be used as inputs for creating new transactions in string representation. The is only returned if the `expandBalance` query parameter is set to `true`.
+                description: |-
+                  The total balance in base units (e.g. Satoshis) which may
+                  be used as inputs for creating new transactions in string representation.
+                  The is only returned if the `expandBalance` query parameter is set to `true`.
               stakingBalanceString:
                 type: string
-                description: The staked balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+                description: |-
+                  The staked balance in base units.
+                  Guaranteed to not lose precision.
+                  The is only returned if the `includeStakingBalances` query parameter is set to `true`.
               rewardBalanceString:
                 type: string
-                description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+                description: |-
+                  The staking reward balance in base units.
+                  Guaranteed to not lose precision.
+                  The is only returned if the `includeStakingBalances` query parameter is set to `true`.
               offchain:
                 allOf:
                   - $ref: '#/components/schemas/OffChainWalletBalance'
@@ -85488,7 +85893,15 @@ components:
                           - freeze
                           - trade
                           - dapp
-                        description: 'This type represents the permissions that can be assigned to a user when adding them to a wallet 1. ''admin'': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions 2. ''spend'': withdraw assets from wallet, generate new receive addresses, view all balances and transactions 3. ''view'': generate new receive addresses, view all balances and transactions 4. ''freeze'': 5. ''trade'': trade on a wallet - applicable only for trading wallets 6. ''dapp'': connect to third-party dApps and provide them access to wallet operations'
+                        description: |-
+                          This type represents the permissions that can be assigned to a user when adding them to a wallet
+
+                          1. 'admin': add/remove wallet policies, add/remove wallet users, approve/reject wallet pending approvals, withdraw assets from wallet, generate new receive addresses, view all balances and transactions
+                          2. 'spend': withdraw assets from wallet, generate new receive addresses, view all balances and transactions
+                          3. 'view': generate new receive addresses, view all balances and transactions
+                          4. 'freeze':
+                          5. 'trade': trade on a wallet - applicable only for trading wallets
+                          6. 'dapp': connect to third-party dApps and provide them access to wallet operations
                     recoverable:
                       type: boolean
                     user:
@@ -85523,7 +85936,10 @@ components:
               - startDate
         nextBatchPrevId:
           type: string
-          description: When a result set is truncated, this field returns the id of the last object in the previous batch. To get the next batch of results, pass this value via the "prevId" query parameter.
+          description: |-
+            When a result set is truncated, this field returns the id of the last object in the
+            previous batch. To get the next batch of results, pass this value via the "prevId"
+            query parameter.
           example: 585951a5df8380e0e3063e9f
           format: uuid
         totalCount:
@@ -86429,6 +86845,7 @@ components:
         - circuitBreaker
         - lowFeeAddressBalance
         - transaction_finality_on_l1
+        - stuckTx
     WalletsResponse:
       type: object
       properties:
@@ -86748,7 +87165,10 @@ components:
               - delivered
               - invalidSignature
               - rejected
-            description: If supplied, only transaction request transaction state changes from the provided list will trigger notifications. If not provided, all transaction request transaction state changes will trigger notifications.
+            description: |-
+              If supplied, only transaction request transaction state changes from the provided
+              list will trigger notifications. If not provided, all transaction request
+              transaction state changes will trigger notifications.
       required:
         - id
         - created
@@ -86917,7 +87337,9 @@ components:
       enum:
         - active
         - suspended
-      description: If 'active', indicates the webhook can trigger and send to the URL. If 'suspended', indicates the webhook can't trigger.
+      description: |-
+        If 'active', indicates the webhook can trigger and send to the URL.
+        If 'suspended', indicates the webhook can't trigger.
       example: active
     WebhookType:
       title: WebhookType
@@ -87763,10 +88185,14 @@ components:
           description: String representation of the total balance of all wallets containing the given coin which may be used as inputs for creating new transactions. Guaranteed to not lose precision.
         stakingBalanceString:
           type: string
-          description: The staked balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+          description: |-
+            The staked balance in base units. Guaranteed to not lose precision.
+            The is only returned if the `includeStakingBalances` query parameter is set to `true`.
         rewardBalanceString:
           type: string
-          description: The staking reward balance in base units. Guaranteed to not lose precision. The is only returned if the `includeStakingBalances` query parameter is set to `true`.
+          description: |-
+            The staking reward balance in base units. Guaranteed to not lose precision.
+            The is only returned if the `includeStakingBalances` query parameter is set to `true`.
       required:
         - balanceString
         - confirmedBalanceString
