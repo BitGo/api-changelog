@@ -29554,6 +29554,12 @@ paths:
           required: false
           schema:
             type: string
+        - name: subType
+          in: query
+          description: The delegation staking sub type to filter by (e.g., LIDO, MARINADE, JITO for liquid staking variants).
+          required: false
+          schema:
+            type: string
       responses:
         '200':
           description: Successful Retrieving Staking Validators For A Wallet
@@ -39042,6 +39048,7 @@ paths:
                     - tfiatusd
                     - tfiateuro
                     - tfiatgbp
+                    - tfiatinr
                     - tfiataed
                     - tfiatsgd
                     - fiatusd
@@ -39129,6 +39136,7 @@ paths:
                 - tfiatusd
                 - tfiateuro
                 - tfiatgbp
+                - tfiatinr
                 - tfiataed
                 - tfiatsgd
                 - fiatusd
@@ -47848,6 +47856,7 @@ components:
         status:
           type: string
           enum:
+            - missingLocation
             - missingRequirements
             - readyForSubmission
             - inReview
@@ -49152,6 +49161,19 @@ components:
         - customers_cubix_api
         - customers_sftp
         - lead
+    BaseBridgeFundsIntent:
+      title: Bridge Funds Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - bridgeFunds
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     BaseDelegation:
       title: Base Delegation
       allOf:
@@ -51749,6 +51771,8 @@ components:
                 - transferAccept
             txRequestId:
               type: string
+            token:
+              type: string
           required:
             - intentType
             - txRequestId
@@ -51774,6 +51798,8 @@ components:
               type: number
             memoId:
               type: string
+            token:
+              type: string
           required:
             - intentType
             - contractId
@@ -51792,6 +51818,8 @@ components:
               enum:
                 - transferReject
             txRequestId:
+              type: string
+            token:
               type: string
           required:
             - intentType
@@ -57675,9 +57703,9 @@ components:
         walletVersion:
           type: integer
           default: 1
-          description: (ETH only) Specify the wallet creation contract version used when creating a wallet contract. Use 0 for the old wallet creation, 1 for the new wallet creation, where it is only deployed upon receiving funds. 2 for wallets with the same functionality as v1 but with NFT support. 3 for MPC wallets.
+          description: (ETH only) Specify the wallet creation contract version used when creating a wallet contract. Use 0 for the old wallet creation, 1 for the new wallet creation, where it is only deployed upon receiving funds. 2 for wallets with the same functionality as v1 but with NFT support. 3 for MPC wallets. 4 is same as v2 but with some changes related to network identifier and encoding of tx data. v4 is applicable for Arbitrum, Optimism, ZkSync, and other EVM-compatible chains that we will onboard in the future. 5 for MPC MPCv2 wallets. 6 for EVM MPCv2 wallets with receive addresses.
           minimum: 0
-          maximum: 3
+          maximum: 6
         isDistributedCustody:
           type: boolean
           description: True, if the wallet type is a distributed-custodial. If passed, you must also pass the 'enterprise' parameter.
@@ -61250,6 +61278,16 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: A hot wallet
+    HypeevmBridgeFundsIntent:
+      title: Hypeevm Bridge Funds Intent
+      allOf:
+        - type: object
+          properties:
+            feeOptions:
+              oneOf:
+                - $ref: '#/components/schemas/FeeOption'
+                - $ref: '#/components/schemas/EIP1559FeeOptions'
+        - $ref: '#/components/schemas/BaseBridgeFundsIntent'
     HypeevmSpotTransferIntent:
       title: Hypeevm Spot Transfer Intent
       allOf:
@@ -61935,6 +61973,7 @@ components:
         - transferStake
         - validatorRegistration
         - spotTransfer
+        - bridgeFunds
         - goUnstake
         - createBtcDelegation
         - transferAccept
@@ -76854,6 +76893,7 @@ components:
         - $ref: '#/components/schemas/EthStakingIntent'
         - $ref: '#/components/schemas/EthTransferTokenIntent'
         - $ref: '#/components/schemas/FeeAddressTransferIntent'
+        - $ref: '#/components/schemas/HypeevmBridgeFundsIntent'
         - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
         - $ref: '#/components/schemas/IcpPaymentIntent'
         - $ref: '#/components/schemas/LightningPaymentIntent'
