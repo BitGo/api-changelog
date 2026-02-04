@@ -39048,6 +39048,7 @@ paths:
                     - tfiatusd
                     - tfiateuro
                     - tfiatgbp
+                    - tfiatinr
                     - tfiataed
                     - tfiatsgd
                     - fiatusd
@@ -39135,6 +39136,7 @@ paths:
                 - tfiatusd
                 - tfiateuro
                 - tfiatgbp
+                - tfiatinr
                 - tfiataed
                 - tfiatsgd
                 - fiatusd
@@ -49158,6 +49160,19 @@ components:
         - customers_cubix_api
         - customers_sftp
         - lead
+    BaseBridgeFundsIntent:
+      title: Bridge Funds Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - bridgeFunds
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     BaseDelegation:
       title: Base Delegation
       allOf:
@@ -51755,6 +51770,8 @@ components:
                 - transferAccept
             txRequestId:
               type: string
+            token:
+              type: string
           required:
             - intentType
             - txRequestId
@@ -51780,6 +51797,8 @@ components:
               type: number
             memoId:
               type: string
+            token:
+              type: string
           required:
             - intentType
             - contractId
@@ -51798,6 +51817,8 @@ components:
               enum:
                 - transferReject
             txRequestId:
+              type: string
+            token:
               type: string
           required:
             - intentType
@@ -61256,6 +61277,16 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: A hot wallet
+    HypeevmBridgeFundsIntent:
+      title: Hypeevm Bridge Funds Intent
+      allOf:
+        - type: object
+          properties:
+            feeOptions:
+              oneOf:
+                - $ref: '#/components/schemas/FeeOption'
+                - $ref: '#/components/schemas/EIP1559FeeOptions'
+        - $ref: '#/components/schemas/BaseBridgeFundsIntent'
     HypeevmSpotTransferIntent:
       title: Hypeevm Spot Transfer Intent
       allOf:
@@ -61941,6 +61972,7 @@ components:
         - transferStake
         - validatorRegistration
         - spotTransfer
+        - bridgeFunds
         - goUnstake
         - createBtcDelegation
         - transferAccept
@@ -76860,6 +76892,7 @@ components:
         - $ref: '#/components/schemas/EthStakingIntent'
         - $ref: '#/components/schemas/EthTransferTokenIntent'
         - $ref: '#/components/schemas/FeeAddressTransferIntent'
+        - $ref: '#/components/schemas/HypeevmBridgeFundsIntent'
         - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
         - $ref: '#/components/schemas/IcpPaymentIntent'
         - $ref: '#/components/schemas/LightningPaymentIntent'
