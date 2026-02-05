@@ -2601,7 +2601,9 @@ paths:
                   - only-included
                   - included
                   - excluded
-                description: filter values for the includeSavedContactsNotInDirectory query for get listing entry directories endpoint
+                description: |-
+                  filter values for the includeSavedContactsNotInDirectory query
+                  for get listing entry directories endpoint
               - type: string
                 enum:
                   - excluded
@@ -28076,6 +28078,8 @@ paths:
                 - $ref: '#/components/schemas/AptUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AsiStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AsiUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/KavaStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/KavaUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AtomStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AtomUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/AtomClaimRewardsRequestPOSTBody'
@@ -28197,6 +28201,10 @@ paths:
                 $ref: '#/components/examples/AsiStakingRequestPOSTBodyExample'
               AsiUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/AsiUnStakingRequestPOSTBodyExample'
+              KavaStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/KavaStakingRequestPOSTBodyExample'
+              KavaUnStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/KavaUnStakingRequestPOSTBodyExample'
               AtomStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/AtomStakingRequestPOSTBodyExample'
               AtomUnStakingRequestPOSTBodyExample:
@@ -28423,6 +28431,10 @@ paths:
                   $ref: '#/components/examples/AsiStakingRequestWithoutDelegationsExample'
                 AsiUnStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/AsiUnStakingRequestWithoutDelegationsExample'
+                KavaStakingRequestWithoutDelegationsExample:
+                  $ref: '#/components/examples/KavaStakingRequestWithoutDelegationsExample'
+                KavaUnStakingRequestWithoutDelegationsExample:
+                  $ref: '#/components/examples/KavaUnStakingRequestWithoutDelegationsExample'
                 AtomStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/AtomStakingRequestWithoutDelegationsExample'
                 AtomUnStakingRequestWithoutDelegationsExample:
@@ -42150,6 +42162,51 @@ components:
         statusModifiedDate: 2022-01-10T14:32:28.000Z
         status: NEW
         amount: '10012000000'
+    KavaStakingRequestPOSTBodyExample:
+      summary: Kava Staking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '10000000000'
+        type: STAKE
+    KavaStakingRequestWithoutDelegationsExample:
+      summary: Kava Staking Request Example
+      value:
+        id: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        clientId: f054adbc-26a3-4acd-8a9d-726a05bca0dr
+        requestUserId: 6092e75c451052000636831deb797bd1
+        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
+        walletId: 63110fc78b108e00071df2d3c3879dd0
+        withdrawalAddress: kava1abcdefabcdefabcdefabcdefabcdefabcdef
+        walletType: custodial
+        type: STAKE
+        coin: kava
+        createdDate: 2022-01-10T14:32:28.000Z
+        statusModifiedDate: 2022-01-10T14:32:28.000Z
+        status: NEW
+        amount: '10000000000'
+    KavaUnStakingRequestPOSTBodyExample:
+      summary: Kava UnStaking Request POST Body Example
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
+        amount: '10000000000'
+    KavaUnStakingRequestWithoutDelegationsExample:
+      summary: Kava UnStaking Request Example
+      value:
+        id: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        clientId: f054adbc-26a3-4acd-8a9d-726a05bca0dr
+        requestUserId: 6092e75c451052000636831deb797bd1
+        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
+        walletId: 63110fc78b108e00071df2d3c3879dd0
+        withdrawalAddress: kava1abcdefabcdefabcdefabcdefabcdefabcdef
+        walletType: custodial
+        type: UNSTAKE
+        coin: kava
+        createdDate: 2022-01-10T14:32:28.000Z
+        statusModifiedDate: 2022-01-10T14:32:28.000Z
+        status: NEW
+        amount: '10012000000'
     LicenseResultsExample:
       summary: Staking License Result Example
       value:
@@ -45201,6 +45258,7 @@ components:
       description: Return transfers with a `date` that is greater than or equal to the given timestamp
       schema:
         type: string
+        example: 2025-01-01T00:00:00.000Z
         format: date-time
     dateLt:
       name: dateLt
@@ -45208,6 +45266,7 @@ components:
       description: Return transfers with a `date` that is less than the given timestamp
       schema:
         type: string
+        example: 2025-03-28T00:00:00.000Z
         format: date-time
     destinationTag:
       name: destinationTag
@@ -52264,6 +52323,7 @@ components:
         - ADA
         - APT
         - ASI
+        - KAVA
         - ATOM
         - AVAXC
         - AVAXP
@@ -62343,6 +62403,37 @@ components:
       type: string
       format: ipv4
       example: 127.0.0.1
+    KavaStakingRequest:
+      title: KAVA
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest1'
+      type: object
+      properties:
+        delegations:
+          type: array
+          minItems: 1
+          maxItems: 1
+          items:
+            $ref: '#/components/schemas/BaseDelegation'
+        transactions:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: '#/components/schemas/BaseStakingTransaction'
+        amount:
+          description: Amount to stake in base units.
+          type: string
+    KavaStakingRequestPOSTBody:
+      title: KAVA stake
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+      type: object
+    KavaUnStakingRequestPOSTBody:
+      title: KAVA unstake
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
+      type: object
     Key:
       title: Multisig
       allOf:
@@ -73846,6 +73937,7 @@ components:
         - $ref: '#/components/schemas/AdaStakingRequest'
         - $ref: '#/components/schemas/AptStakingRequest'
         - $ref: '#/components/schemas/AsiStakingRequest'
+        - $ref: '#/components/schemas/KavaStakingRequest'
         - $ref: '#/components/schemas/AtomStakingRequest'
         - $ref: '#/components/schemas/AvaxCStakingRequest'
         - $ref: '#/components/schemas/AvaxPStakingRequest'
