@@ -32890,6 +32890,7 @@ paths:
               - reversal
               - transaction_finality_on_l1
               - stuckTx
+              - tradeOrder
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -35461,6 +35462,7 @@ paths:
               - reversal
               - transaction_finality_on_l1
               - stuckTx
+              - tradeOrder
         - name: prevId
           in: query
           schema:
@@ -35916,6 +35918,7 @@ paths:
               - reversal
               - transaction_finality_on_l1
               - stuckTx
+              - tradeOrder
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -35999,7 +36002,7 @@ paths:
             schema:
               oneOf:
                 - type: object
-                  description: Simulate Organization Webhook Types
+                  title: Transfer
                   properties:
                     transferId:
                       type: string
@@ -36008,12 +36011,14 @@ paths:
                   required:
                     - transferId
                 - type: object
+                  title: Transaction Request
                   properties:
                     txRequestId:
                       $ref: '#/components/schemas/TransactionRequestId'
                   required:
                     - txRequestId
                 - type: object
+                  title: Pending Approval
                   properties:
                     pendingApprovalId:
                       type: string
@@ -36022,12 +36027,14 @@ paths:
                   required:
                     - pendingApprovalId
                 - type: object
+                  title: Bank Account
                   properties:
                     bankAccountId:
                       type: string
                   required:
                     - bankAccountId
                 - type: object
+                  title: Enterprise KYC State
                   properties:
                     enterpriseId:
                       type: string
@@ -36039,6 +36046,7 @@ paths:
                     - enterpriseId
                     - kycState
                 - type: object
+                  title: User KYC State
                   properties:
                     kycState:
                       $ref: '#/components/schemas/VerifiedKycState1'
@@ -36050,6 +36058,7 @@ paths:
                     - kycState
                     - userId
                 - type: object
+                  title: Identity Status
                   properties:
                     identityId:
                       type: string
@@ -36060,6 +36069,7 @@ paths:
                     - identityId
                     - identityStatus
                 - type: object
+                  title: Reversal
                   properties:
                     transferId:
                       type: string
@@ -87503,6 +87513,7 @@ components:
         - reversal
         - transaction_finality_on_l1
         - stuckTx
+        - tradeOrder
     WebhookTypeBlock:
       type: string
       enum:
