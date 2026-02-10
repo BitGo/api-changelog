@@ -47971,6 +47971,37 @@ components:
               description: Country of residence (ISO 3166-1 alpha-3)
             govIdCountryOfIssuance:
               description: Country where government ID was issued (ISO 3166-1 alpha-3)
+            govIdClass:
+              type: string
+              enum:
+                - cct
+                - cid
+                - dl
+                - foid
+                - hic
+                - id
+                - ipp
+                - keyp
+                - ltpass
+                - munid
+                - myn
+                - nbi
+                - nric
+                - ofw
+                - rp
+                - pan
+                - pid
+                - pp
+                - ppc
+                - pr
+                - sss
+                - td
+                - tribalid
+                - umid
+                - vid
+                - visa
+                - wp
+              description: Class of government ID (e.g., dl=driver license, pp=passport, id=ID card)
             address:
               type: object
               properties:
@@ -48017,6 +48048,11 @@ components:
           items:
             $ref: '#/components/schemas/MissingRequirement'
           description: List of missing requirements for the associated person
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/Document'
+          description: Documents associated with the associated person
       required:
         - identityId
         - role
@@ -51805,6 +51841,20 @@ components:
           allOf:
             - $ref: '#/components/schemas/AddressString3'
           description: Required for CSPR. The validator address used to delegate or undelegate.
+    CaaSBitGoProduct:
+      type: string
+      enum:
+        - Trade
+        - Instant Fee Wallets
+        - Hot Self-Custody
+        - Cold Self-Custody
+        - Custody
+        - DeFi
+        - Staking
+        - Go Account
+        - ACH Debits
+      title: CaaSBitGoProduct
+      description: BitGo products available via KYB API
     CannotRemoveAdmin:
       title: Can't remove admin
       allOf:
@@ -53396,28 +53446,15 @@ components:
               name:
                 type: string
                 enum:
+                  - Trade
                   - Instant Fee Wallets
+                  - Hot Self-Custody
+                  - Cold Self-Custody
+                  - Custody
+                  - DeFi
+                  - Staking
                   - Go Account
                   - ACH Debits
-                  - Settlement
-                  - Tax
-                  - Trade API
-                  - Margin Trading
-                  - Elliptic
-                  - CryptoCompare
-                  - MetaMask
-                  - Custody
-                  - Borrowing
-                  - Lending
-                  - DeFi
-                  - Cold Self-Custody
-                  - Go Network
-                  - Staking
-                  - Trade
-                  - Hot Self-Custody
-                  - Escrow
-                  - Escrow - Triparty
-                  - Distributed Custody
                 description: Name of the BitGo product
               bitgoOrg:
                 type: string
@@ -53521,28 +53558,15 @@ components:
               name:
                 type: string
                 enum:
+                  - Trade
                   - Instant Fee Wallets
+                  - Hot Self-Custody
+                  - Cold Self-Custody
+                  - Custody
+                  - DeFi
+                  - Staking
                   - Go Account
                   - ACH Debits
-                  - Settlement
-                  - Tax
-                  - Trade API
-                  - Margin Trading
-                  - Elliptic
-                  - CryptoCompare
-                  - MetaMask
-                  - Custody
-                  - Borrowing
-                  - Lending
-                  - DeFi
-                  - Cold Self-Custody
-                  - Go Network
-                  - Staking
-                  - Trade
-                  - Hot Self-Custody
-                  - Escrow
-                  - Escrow - Triparty
-                  - Distributed Custody
                 description: Name of the BitGo product
               bitgoOrg:
                 type: string
@@ -61780,6 +61804,37 @@ components:
           description: Country of residence (ISO 3166-1 alpha-3)
         govIdCountryOfIssuance:
           description: Country where government ID was issued (ISO 3166-1 alpha-3)
+        govIdClass:
+          type: string
+          enum:
+            - cct
+            - cid
+            - dl
+            - foid
+            - hic
+            - id
+            - ipp
+            - keyp
+            - ltpass
+            - munid
+            - myn
+            - nbi
+            - nric
+            - ofw
+            - rp
+            - pan
+            - pid
+            - pp
+            - ppc
+            - pr
+            - sss
+            - td
+            - tribalid
+            - umid
+            - vid
+            - visa
+            - wp
+          description: Class of government ID (e.g., dl=driver license, pp=passport, id=ID card)
         address:
           type: object
           properties:
@@ -80369,7 +80424,7 @@ components:
             type: object
             properties:
               name:
-                $ref: '#/components/schemas/WPBitGoProduct'
+                $ref: '#/components/schemas/CaaSBitGoProduct'
               bitgoOrg:
                 $ref: '#/components/schemas/WPBitgoOrg'
               country:
