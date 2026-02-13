@@ -37609,6 +37609,15 @@ paths:
               - BitGo Custody MENA FZE
               - BitGo India
               - BitGo Sister Trust 1
+        - name: frozen
+          description: |-
+            Filter derived wallets by freeze status.
+            - true: Return only frozen wallets (freeze.expires >= current time)
+            - false: Return only non-frozen wallets (no freeze or freeze expired)
+            If not specified, returns all derived wallets regardless of freeze status.
+          in: query
+          schema:
+            type: boolean
         - name: walletId
           description: The wallet ID - can be either a parent wallet ID or a child wallet ID
           in: path
@@ -54177,6 +54186,7 @@ components:
       enum:
         - custodialCold
         - custodialHot
+        - lightningCustody
     CustodyServiceAgreement:
       title: Custody Service Agreement
       allOf:
