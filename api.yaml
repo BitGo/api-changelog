@@ -26132,6 +26132,8 @@ paths:
               examples:
                 example:
                   $ref: '#/components/examples/InactivePolicyRuleExample'
+        '400':
+          $ref: '#/components/responses/BadRequest'
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -26240,6 +26242,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/scopes:
@@ -45187,10 +45191,13 @@ components:
       schema:
         type: string
         enum:
+          - PENDING
           - ACTIVE
           - INACTIVE
+          - INACTIVE_HIDDEN
           - DENIED
           - PENDING_APPROVAL
+          - UNLOCK_PENDING
     PolicyRuleVersion:
       name: version
       in: query
@@ -53744,7 +53751,6 @@ components:
       description: Create or Update policy rule Request.
       required:
         - name
-        - adminOnly
         - clauses
         - filteringConditions
       properties:
@@ -53778,6 +53784,7 @@ components:
                     - $ref: '#/components/schemas/TransferDestinationTypeConditionRequest'
                     - $ref: '#/components/schemas/TransferInitiatorsConditionRequest'
                     - $ref: '#/components/schemas/TransferWebhookConditionRequest'
+                    - $ref: '#/components/schemas/TransferNotInitiatedByConditionRequest'
               actions:
                 type: array
                 items:
@@ -53791,6 +53798,9 @@ components:
                     - $ref: '#/components/schemas/LivenessVerificationFromRequestorActionRequest'
                     - $ref: '#/components/schemas/LivenessVerificationFromEnterpriseUsersActionRequest'
                     - $ref: '#/components/schemas/NoneActionRequest'
+                    - $ref: '#/components/schemas/VideoApprovalActionRequest'
+                    - $ref: '#/components/schemas/IdVerificationActionRequest'
+                    - $ref: '#/components/schemas/OrganizationAdminActionRequest'
         filteringConditions:
           type: array
           description: List of Filtering Conditions that must trigger for the policy rule to be Evaluated.
@@ -53800,6 +53810,7 @@ components:
               - $ref: '#/components/schemas/WalletTypeFilteringCondition'
               - $ref: '#/components/schemas/WalletAllFilteringCondition'
               - $ref: '#/components/schemas/RuleAllFilteringCondition'
+              - $ref: '#/components/schemas/WalletMultipleIdsFilteringCondition'
         lockType:
           type: string
           description: |
@@ -53807,9 +53818,11 @@ components:
 
             * `LOCK_AFTER_DATE` - Will lock after the lockDate set on the policy rule.
             * `PERMANENT` - Is permanently locked.
+            * `NEVER` - Is never locked.
           enum:
             - LOCK_AFTER_DATE
             - PERMANENT
+            - NEVER
           example: PERMANENT
         lockDate:
           type: string
@@ -61495,6 +61508,31 @@ components:
       example:
         - 585951a5df8380e0e3063e9f
         - 585951a5df8380e0e304a553
+    IdVerificationActionRequest:
+      title: BitGo ID Verification
+      type: object
+      description: Require BitGo ID verification.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.bitgo.idVerification
+          example: approvals.bitgo.idVerification
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+          properties:
+            isFallback:
+              type: boolean
+              description: Whether this is a fallback action.
+              example: false
+              default: false
+        operator:
+          $ref: '#/components/schemas/OperatorType'
     Identity:
       title: Identity
       type: object
@@ -66817,6 +66855,32 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Order'
+    OrganizationAdminActionRequest:
+      title: Organization Admin Approval
+      type: object
+      description: Require approval from organization admins.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.customer.organizationAdmin
+          example: approvals.customer.organizationAdmin
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+          required:
+            - minRequired
+          properties:
+            minRequired:
+              type: string
+              description: Minimum required number of approvers
+              example: '1'
+        operator:
+          $ref: '#/components/schemas/OperatorType'
     OrganizationIdString:
       title: OrganizationIdString
       type: string
@@ -69641,6 +69705,8 @@ components:
               - $ref: '#/components/schemas/WalletTypeFilteringCondition'
               - $ref: '#/components/schemas/WalletIdsFilteringCondition'
               - $ref: '#/components/schemas/WalletAllFilteringCondition'
+              - $ref: '#/components/schemas/RuleAllFilteringCondition'
+              - $ref: '#/components/schemas/WalletMultipleIdsFilteringCondition'
         locked:
           type: boolean
           description: true, if the Policy Rule is locked, false otherwise.
@@ -79035,6 +79101,7 @@ components:
           enum:
             - whitelistedAddress
             - nonWhitelistedAddress
+            - outsideEnterprise
           description: The type of destination this condition will match.
           example: whitelistedAddress
         coin:
@@ -79175,6 +79242,35 @@ components:
           type: boolean
           description: true, if multiple values can be provided, i.e. as a list of values. When false only one value can be provided, i.e. a list with more than one element will be rejected.
           example: 'true'
+    TransferNotInitiatedByConditionRequest:
+      title: Transfer Not Initiated By
+      type: object
+      description: Condition that checks if transfer was not initiated by specific users.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the associated Condition.
+          enum:
+            - transfer.notInitiatedBy
+          example: transfer.notInitiatedBy
+        parameters:
+          type: object
+          description: Required data needed to evaluate the Condition.
+          required:
+            - userIds
+          properties:
+            userIds:
+              type: array
+              items:
+                type: string
+              description: List of user IDs
+              example:
+                - 6941488084accb8c933550111d2661cb
+        operator:
+          $ref: '#/components/schemas/OperatorType'
     TransferState:
       type: string
       description: |
@@ -84849,6 +84945,25 @@ components:
           $ref: '#/components/schemas/WalletStakingPermissionAttributes'
         disclaimerAttributes:
           $ref: '#/components/schemas/WalletStakingDisclaimerAttributes'
+    VideoApprovalActionRequest:
+      title: BitGo Video Approval
+      type: object
+      description: Require BitGo video approval.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.bitgo.videoApproval
+          example: approvals.bitgo.videoApproval
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+        operator:
+          $ref: '#/components/schemas/OperatorType'
     VideoApprovers:
       type: array
       items:
@@ -86228,6 +86343,31 @@ components:
         maximumSpendable:
           type: string
           example: '19948310'
+    WalletMultipleIdsFilteringCondition:
+      title: Wallet Multiple IDs
+      type: object
+      description: Filter by multiple wallet IDs.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the condition.
+          enum:
+            - wallet.multiple.ids
+          example: wallet.multiple.ids
+        parameters:
+          type: object
+          description: Required data needed to evaluate the Filtering Condition.
+          required:
+            - walletId
+          properties:
+            walletId:
+              type: array
+              items:
+                type: string
+                description: The Wallet Ids this Filtering Condition will match.
     WalletMultisigType:
       type: string
       enum:
@@ -86908,6 +87048,7 @@ components:
                 enum:
                   - hot
                   - custodial
+                  - trading
     WalletTypeParameter:
       type: object
       description: The Wallet Type parameter determines on what type of Wallet this condition will trigger.
