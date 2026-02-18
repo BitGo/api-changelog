@@ -37771,7 +37771,9 @@ paths:
               properties:
                 valueMsat:
                   type: string
-                  description: The value of the invoice in millisatoshis. Provide exactly one of `valueMsat` or `valueSat`.
+                  description: |-
+                    The value of the invoice in millisatoshis. Provide exactly one of `valueMsat` or `valueSat`.
+                    This field is not supported for Go wallets.
                   example: '50000000'
                   format: number
                 valueSat:
@@ -37784,7 +37786,9 @@ paths:
                   example: Payment for services
                 expiry:
                   type: number
-                  description: Optional expiry time in seconds
+                  description: |-
+                    Optional expiry time in seconds. By default, the invoice will expire in 72 hours.
+                    This field is not supported for Go wallets - it is automatically set to the default.
                   example: 3600
       responses:
         '200':
@@ -52051,15 +52055,18 @@ components:
               - approval_completed
               - approval_required
               - bank_accounts_and_fiat_operations
+              - bank_and_trust
               - financing
               - go_network
               - identity
               - oes
               - reports
+              - staking_rewards
               - trade
               - trust
               - ums
               - wallet_notifications
+              - transaction_monitoring
               - treasury_management
     CbitAccountResponseProps:
       title: CbitAccountResponseProps
@@ -60422,6 +60429,7 @@ components:
                 - ofc_fee
                 - ofc_other
                 - ofc_unstake
+                - ofc_financing_liquidation
                 - receive_from_gastank
                 - reserved_amount
                 - utxo_message_signing
@@ -78647,6 +78655,7 @@ components:
             - ofc_fee
             - ofc_other
             - ofc_unstake
+            - ofc_financing_liquidation
             - receive_from_gastank
             - reserved_amount
             - utxo_message_signing
@@ -80954,15 +80963,18 @@ components:
             - approval_completed
             - approval_required
             - bank_accounts_and_fiat_operations
+            - bank_and_trust
             - financing
             - go_network
             - identity
             - oes
             - reports
+            - staking_rewards
             - trade
             - trust
             - ums
             - wallet_notifications
+            - transaction_monitoring
             - treasury_management
         isSubscribed:
           type: boolean
