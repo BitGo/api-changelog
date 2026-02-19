@@ -68061,7 +68061,11 @@ components:
       type: string
       enum:
         - GTC
-      description: Time in force policy for the order. GTC (Good Till Cancelled) is the only allowed value.
+        - IOC
+      description: |
+        Time in force policy for the order.
+        - GTC (Good Till Cancelled): Order remains active until filled or cancelled.
+        - IOC (Immediate or Cancel): Order must be filled immediately, any unfilled portion is cancelled.
     TimeRange:
       type: string
       description: The time range for the data, either hourly or daily.
@@ -70187,6 +70191,11 @@ components:
         replacedBy:
           type: array
           description: Transaction IDs that replace this transfer.
+          items:
+            type: string
+        riskIndicators:
+          type: array
+          description: Optional risk monitoring tags applied to this transfer. These tags are informational and do not affect transaction processing.
           items:
             type: string
       required:
@@ -79671,6 +79680,7 @@ components:
         - circuitBreaker
         - transaction_finality_on_l1
         - lowFeeAddressBalance
+        - stuckTx
       example: transfer
       description: Event type to listen to.
     WethStakingRequest:
