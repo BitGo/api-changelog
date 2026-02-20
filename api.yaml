@@ -20083,6 +20083,7 @@ paths:
                 - $ref: '#/components/schemas/WflrStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/WflrUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/WflrClaimRewardsRequestPOSTBody'
+                - $ref: '#/components/schemas/XdcStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/ZetaStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/ZetaUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/StoryStakingRequestPOSTBody'
@@ -44344,6 +44345,7 @@ components:
         - WETH
         - WCT
         - WFLR
+        - XDC
         - ZETA
     CoinConditionParameter:
       title: Coin
@@ -66332,6 +66334,20 @@ components:
           type: string
           format: decimal
           nullable: true
+        stakeWarmupPeriodDesc:
+          description: Optional description of the staking warmup period for this sub-type.
+          type: string
+          nullable: true
+        rewardPercentageRate:
+          description: Optional reward percentage rate for this sub-type.
+          type: string
+          format: decimal
+          nullable: true
+        apyMarginOfError:
+          description: Optional margin of error for the APY rate for this sub-type.
+          type: string
+          format: decimal
+          nullable: true
     StakingSubTypeSpendableAttributes:
       type: object
       properties:
@@ -66502,6 +66518,7 @@ components:
         - $ref: '#/components/schemas/AvaxcStakingTransactionProperties'
         - $ref: '#/components/schemas/AvaxcUnstakingTransactionProperties'
         - $ref: '#/components/schemas/VetStakingTransactionProperties'
+        - $ref: '#/components/schemas/XdcStakingTransactionProperties'
     StakingTransactionPropertiesType:
       type: string
       enum:
@@ -66565,6 +66582,7 @@ components:
         - AVAXC_UNSTAKE
         - SOMI_UNSTAKE
         - OG_UNSTAKE
+        - XDC
         - UNKNOWN
     StakingTransactionSendRequest:
       type: object
@@ -72248,17 +72266,33 @@ components:
         unstakeable:
           $ref: '#/components/schemas/UnstakingUnstakeableBreakdown'
     UnstakingSubTypeDisclaimerAttributes:
+      allOf:
+        - $ref: '#/components/schemas/BaseDisclaimer'
       type: object
       description: Disclaimer information for a specific unstaking sub-type.
       properties:
         name:
-          description: Sub-type name.
+          description: Sub-type display name.
           type: string
         type:
           description: Sub-type identifier.
           type: string
         maxUnstake:
           description: Optional maximum unstakeable amount for this sub-type.
+          type: string
+          nullable: true
+        unStakeCooldownPeriodDesc:
+          description: Optional human-readable description of the cooldown period for this sub-type.
+          type: string
+          nullable: true
+        period:
+          $ref: '#/components/schemas/EstimationPeriodAttributes'
+        url:
+          description: Optional URL for more information about this unstaking sub-type.
+          type: string
+          nullable: true
+        iconName:
+          description: Optional icon name for UI representation.
           type: string
           nullable: true
     UnstakingSubTypeSpendableAttributes:
@@ -80350,6 +80384,68 @@ components:
             - validatorContractAddress
         - $ref: '#/components/schemas/ValidatorRegistrationIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+    XdcStakingRequestPOSTBody:
+      title: XDC stake
+      description: |
+        Create an XDC staking request to register a masternode.
+
+        XDC masternode registration uses two sequential transactions:
+        1. AUTHORIZE (uploadKYC) - uploads the KYC hash to the validator contract
+        2. DELEGATE (propose) - registers the masternode with the required 10M XDC stake
+
+        Requirements:
+        - Minimum stake: 10,000,000 XDC (10M XDC)
+        - KYC hash: IPFS hash of the KYC document required for masternode registration
+        - Validator: The masternode candidate contract address
+
+        Transaction Details:
+        - First tx: uploadKYC(string) - uploads KYC hash to validator contract
+        - Second tx: propose(address) payable - registers masternode with 10M XDC stake
+        - No configurable commission: XDC masternodes receive protocol-level rewards
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestPOSTBody'
+        - type: object
+          properties:
+            validator:
+              type: string
+              description: |
+                XDC masternode candidate contract address in EVM format (0x...).
+                This is the address of the masternode you are registering.
+              pattern: ^0x[a-fA-F0-9]{40}$
+              example: '0x1234567890abcdef1234567890abcdef12345678'
+            kycHash:
+              type: string
+              description: |
+                IPFS hash of the KYC document required for masternode registration.
+                This hash is uploaded to the validator contract in the AUTHORIZE
+                transaction before the DELEGATE transaction.
+              example: QmT5NvUtoM5nWFfrQdVrFtvGfKFmG7AHE8P34isapyhCxX
+          required:
+            - validator
+            - kycHash
+      type: object
+    XdcStakingTransactionProperties:
+      title: XDC Staking Transaction Properties
+      description: |
+        Transaction properties for XDC masternode staking operations.
+        XDC uses a two-transaction flow: AUTHORIZE (uploadKYC) followed by
+        DELEGATE (propose). The kycHash field is present in the AUTHORIZE
+        transaction.
+      allOf:
+        - $ref: '#/components/schemas/StakingTransactionProperties'
+        - type: object
+          properties:
+            amount:
+              type: string
+              format: bigInteger
+              description: Amount of XDC tokens (in base units) for the staking transaction.
+              example: '10000000000000000000000000'
+            kycHash:
+              type: string
+              description: |
+                IPFS hash of the KYC document. Present in the AUTHORIZE transaction,
+                null for the DELEGATE transaction.
+              example: QmT5NvUtoM5nWFfrQdVrFtvGfKFmG7AHE8P34isapyhCxX
     XdcUploadKycIntent:
       title: XDC Upload KYC Intent
       allOf:
