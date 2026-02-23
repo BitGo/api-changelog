@@ -27663,6 +27663,21 @@ paths:
                   required:
                     - type
                     - url
+                - type: object
+                  title: Trade Order
+                  properties:
+                    label:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - tradeOrder
+                    url:
+                      type: string
+                      minLength: 1
+                  required:
+                    - type
+                    - url
       responses:
         '200':
           description: OK
@@ -27979,6 +27994,15 @@ paths:
                       pattern: ^[0-9a-f]{32}$
                   required:
                     - transferId
+                - type: object
+                  title: Trade Order
+                  properties:
+                    orderId:
+                      type: string
+                      example: 550e8400-e29b-41d4-a716-446655440000
+                      format: UUID
+                  required:
+                    - orderId
       responses:
         '200':
           description: OK
@@ -29473,12 +29497,11 @@ paths:
               - BitGo Custody MENA FZE
               - BitGo India
               - BitGo Sister Trust 1
+        - name: hasSendManyTokens
+          in: query
+          schema:
+            type: boolean
         - name: frozen
-          description: |-
-            Filter derived wallets by freeze status.
-            - true: Return only frozen wallets (freeze.expires >= current time)
-            - false: Return only non-frozen wallets (no freeze or freeze expired)
-            If not specified, returns all derived wallets regardless of freeze status.
           in: query
           schema:
             type: boolean
@@ -43847,6 +43870,23 @@ components:
             - amount
             - expiry
         - $ref: '#/components/schemas/BaseIntent'
+    CantonTransferOfferWithdrawnIntent:
+      title: Canton Transfer Offer Withdrawn Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - transferOfferWithdrawn
+            transferId:
+              type: string
+            token:
+              type: string
+          required:
+            - intentType
+            - transferId
+        - $ref: '#/components/schemas/BaseIntent'
     CantonTransferRejectIntent:
       title: Canton Transfer Reject Intent
       allOf:
@@ -52192,6 +52232,13 @@ components:
               description: The time this transfer started replacing another
               format: date-time
               title: ISO Date String
+            riskIndicators:
+              type: array
+              items:
+                type: string
+                enum:
+                  - SELFDESTRUCT
+                description: Risk indicators for flagged transfers (e.g. SELFDESTRUCT opcode).
             sendAccounting:
               type: array
               items:
@@ -54072,6 +54119,7 @@ components:
         - transferAccept
         - transferReject
         - transferAcknowledge
+        - transferOfferWithdrawn
     IntentType1:
       title: IntentType
       type: string
@@ -68312,6 +68360,47 @@ components:
             stakedTonObjectId:
               type: string
               nullable: true
+    TonMultiNominatorDelegateIntent:
+      title: TON Multi Nominator Delegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegate
+            validatorAddress:
+              type: string
+            tonStakingType:
+              type: string
+              enum:
+                - MULTI_NOMINATOR
+          required:
+            - intentType
+            - validatorAddress
+            - tonStakingType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    TonMultiNominatorUndelegateIntent:
+      title: TON Multi Nominator Undelegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            validatorAddress:
+              type: string
+            tonStakingType:
+              type: string
+              enum:
+                - MULTI_NOMINATOR
+          required:
+            - intentType
+            - validatorAddress
+            - tonStakingType
+        - $ref: '#/components/schemas/BaseIntent'
     TonPaymentIntent:
       title: TON Payment Intent
       allOf:
@@ -68320,6 +68409,51 @@ components:
             memo:
               $ref: '#/components/schemas/optionalString'
         - $ref: '#/components/schemas/PaymentIntent'
+    TonSingleNominatorDelegateIntent:
+      title: TON Single Nominator Delegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegate
+            validatorAddress:
+              type: string
+            ownerAddress:
+              type: string
+            tonStakingType:
+              type: string
+              enum:
+                - SINGLE_NOMINATOR
+          required:
+            - intentType
+            - validatorAddress
+            - ownerAddress
+            - tonStakingType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    TonSingleNominatorUndelegateIntent:
+      title: TON Single Nominator Undelegate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            validatorAddress:
+              type: string
+            tonStakingType:
+              type: string
+              enum:
+                - SINGLE_NOMINATOR
+          required:
+            - intentType
+            - validatorAddress
+            - tonStakingType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     TonStakingDelegation:
       title: TON Staking Delegation
       allOf:
@@ -69049,6 +69183,7 @@ components:
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
         - $ref: '#/components/schemas/CantonTransferAcceptIntent'
         - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
+        - $ref: '#/components/schemas/CantonTransferOfferWithdrawnIntent'
         - $ref: '#/components/schemas/CantonTransferRejectIntent'
         - $ref: '#/components/schemas/CosmosPaymentIntent'
         - $ref: '#/components/schemas/CosmosStakeIntent'
@@ -69111,7 +69246,11 @@ components:
         - $ref: '#/components/schemas/TokenApprovalIntent'
         - $ref: '#/components/schemas/TonConsolidateIntent'
         - $ref: '#/components/schemas/TonDelegateIntent'
+        - $ref: '#/components/schemas/TonMultiNominatorDelegateIntent'
+        - $ref: '#/components/schemas/TonMultiNominatorUndelegateIntent'
         - $ref: '#/components/schemas/TonPaymentIntent'
+        - $ref: '#/components/schemas/TonSingleNominatorDelegateIntent'
+        - $ref: '#/components/schemas/TonSingleNominatorUndelegateIntent'
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/TonWhalesDelegateIntent'
         - $ref: '#/components/schemas/TonWhalesUndelegateIntent'
@@ -69133,6 +69272,8 @@ components:
         - $ref: '#/components/schemas/WalrusWithdrawIntent'
         - $ref: '#/components/schemas/XdcUploadKycIntent'
         - $ref: '#/components/schemas/XdcProposeIntent'
+        - $ref: '#/components/schemas/XdcResignIntent'
+        - $ref: '#/components/schemas/XdcWithdrawIntent'
         - $ref: '#/components/schemas/BaseIntent'
     TransactionRequest:
       anyOf:
@@ -70499,6 +70640,13 @@ components:
           items:
             type: string
             description: Transaction IDs that replace this transfer.
+        riskIndicators:
+          type: array
+          items:
+            type: string
+            enum:
+              - SELFDESTRUCT
+            description: Risk indicators for flagged transfers (e.g. SELFDESTRUCT opcode).
         baseValueWithoutFeesString:
           type: string
           description: The value (in base units) sent by this transfer, excluding network fees, represented as a string
@@ -80384,6 +80532,26 @@ components:
             - validatorContractAddress
         - $ref: '#/components/schemas/ValidatorRegistrationIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+    XdcResignIntent:
+      title: XDC Resign Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegate
+            candidateAddress:
+              type: string
+              minLength: 1
+            validatorContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - candidateAddress
+            - validatorContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     XdcStakingRequestPOSTBody:
       title: XDC stake
       description: |
@@ -80466,6 +80634,31 @@ components:
             - ipfsHash
             - validatorContractAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
+    XdcWithdrawIntent:
+      title: XDC Withdraw Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - unstake
+            blockNumber:
+              type: string
+              minLength: 1
+            index:
+              type: string
+              minLength: 1
+            validatorContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - blockNumber
+            - index
+            - validatorContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     XlmFeeInfo:
       title: XLM
       type: object
