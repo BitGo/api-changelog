@@ -20084,6 +20084,7 @@ paths:
                 - $ref: '#/components/schemas/WflrUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/WflrClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/XdcStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/XdcUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/ZetaStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/ZetaUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/StoryStakingRequestPOSTBody'
@@ -66434,6 +66435,10 @@ components:
           type: string
           format: decimal
           nullable: true
+        rewardCycle:
+          description: Optional time in seconds between reward distributions for this staking subtype. When present, this value overrides the base-level nextRewards.rewardCycle for this specific staking method.
+          type: integer
+          nullable: true
     StakingSubTypeSpendableAttributes:
       type: object
       properties:
@@ -66605,6 +66610,8 @@ components:
         - $ref: '#/components/schemas/AvaxcUnstakingTransactionProperties'
         - $ref: '#/components/schemas/VetStakingTransactionProperties'
         - $ref: '#/components/schemas/XdcStakingTransactionProperties'
+        - $ref: '#/components/schemas/XdcUndelegateTransactionProperties'
+        - $ref: '#/components/schemas/XdcWithdrawTransactionProperties'
     StakingTransactionPropertiesType:
       type: string
       enum:
@@ -66669,6 +66676,8 @@ components:
         - SOMI_UNSTAKE
         - OG_UNSTAKE
         - XDC
+        - XDC_UNDELEGATE
+        - XDC_WITHDRAW
         - UNKNOWN
     StakingTransactionSendRequest:
       type: object
@@ -80665,6 +80674,56 @@ components:
                 IPFS hash of the KYC document. Present in the AUTHORIZE transaction,
                 null for the DELEGATE transaction.
               example: QmT5NvUtoM5nWFfrQdVrFtvGfKFmG7AHE8P34isapyhCxX
+    XdcUnStakingRequestPOSTBody:
+      title: XDC unstake
+      description: |
+        Create an XDC unstaking request to resign a masternode.
+
+        XDC masternode unstaking uses two sequential transactions:
+        1. UNDELEGATE (resign) - removes the masternode from the active validator set
+        2. WITHDRAW_UNDELEGATED (withdraw) - reclaims 10M XDC after cooldown (~30 days)
+
+        Requirements:
+        - Amount must equal the full delegated balance (10M XDC, no partial unstaking)
+        - Delegation ID of the active masternode delegation
+
+        Transaction Details:
+        - First tx: resign(address) - removes masternode from active set (0-value TX)
+        - Second tx: withdraw(uint256, uint256) - reclaims 10M XDC after cooldown
+        - Cooldown: ~1,296,000 blocks (~30 days at 2s block time)
+      allOf:
+        - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
+      type: object
+    XdcUndelegateTransactionProperties:
+      title: XDC Undelegate (Resign) Transaction Properties
+      description: |
+        Transaction properties for the XDC resign operation.
+        Resign removes a masternode from the active validator set and starts the cooldown period.
+        Function: resign(address _candidate), selector 0xae6e43f5.
+        This is always a 0-value transaction.
+      allOf:
+        - $ref: '#/components/schemas/StakingTransactionProperties'
+        - type: object
+          properties:
+            amount:
+              type: string
+              format: bigInteger
+              description: Always zero for resign transactions.
+              example: '0'
+            candidateAddress:
+              type: string
+              description: The masternode candidate address being resigned.
+              pattern: ^0x[a-fA-F0-9]{40}$
+              example: '0x1234567890abcdef1234567890abcdef12345678'
+            withdrawalBlockHeight:
+              type: integer
+              format: int64
+              nullable: true
+              description: Block number from the Resigned event. Populated after resign confirms.
+            withdrawalIndex:
+              type: integer
+              nullable: true
+              description: Withdrawal index from the Resigned event. Populated after resign confirms.
     XdcUploadKycIntent:
       title: XDC Upload KYC Intent
       allOf:
@@ -80710,6 +80769,29 @@ components:
             - validatorContractAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+    XdcWithdrawTransactionProperties:
+      title: XDC Withdraw Transaction Properties
+      description: |
+        Transaction properties for the XDC withdraw operation.
+        Withdraw reclaims the 10M XDC stake after the cooldown period (~1,296,000 blocks / ~30 days).
+        Function: withdraw(uint256 _blockNumber, uint256 _index), selector 0x441a3e70.
+        This is a 0-value transaction (the contract sends 10M XDC back to the owner).
+      allOf:
+        - $ref: '#/components/schemas/StakingTransactionProperties'
+        - type: object
+          properties:
+            amount:
+              type: string
+              format: bigInteger
+              description: Amount of XDC to be withdrawn (10M XDC in base units).
+              example: '10000000000000000000000000'
+            blockNumber:
+              type: integer
+              format: int64
+              description: Block number from the resign transaction's Resigned event.
+            index:
+              type: integer
+              description: Withdrawal index from the resign transaction's Resigned event.
     XlmFeeInfo:
       title: XLM
       type: object
