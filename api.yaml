@@ -29326,6 +29326,32 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/bridgableBalance:
+    get:
+      summary: Get wallet bridgable balance for the root address
+      description: This balance can be used for bridging funds between l1 and l2 chain.
+      operationId: v2.wallet.bridgableBalance
+      tags:
+        - Wallet
+      parameters:
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletBridgableBalance'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/derivedwallets:
     get:
       summary: List derived wallets for an EVM keyring
@@ -29497,11 +29523,20 @@ paths:
               - BitGo Custody MENA FZE
               - BitGo India
               - BitGo Sister Trust 1
-        - name: hasSendManyTokens
+        - name: frozen
+          description: |-
+            Filter derived wallets by freeze status.
+            - true: Return only frozen wallets (freeze.expires >= current time)
+            - false: Return only non-frozen wallets (no freeze or freeze expired)
+            If not specified, returns all derived wallets regardless of freeze status.
           in: query
           schema:
             type: boolean
-        - name: frozen
+        - name: hasSendManyTokens
+          description: |-
+            When true, return only derived wallets that have at least one token in the sendManyTokens array
+            on at least one chain (includes both pending and active token states).
+            When false or not specified, returns all derived wallets.
           in: query
           schema:
             type: boolean
@@ -56241,6 +56276,9 @@ components:
             - wallet_view_all
           items:
             type: string
+        token_id:
+          type: string
+          description: The public ID of the access token — used as the bearer token for v4 auth
         token_type:
           type: string
         grant_type:
@@ -77657,6 +77695,19 @@ components:
           enum:
             - wallet.all
           example: wallet.all
+    WalletBridgableBalance:
+      title: WalletBridgableBalance
+      type: object
+      additionalProperties:
+        type: object
+        properties:
+          balance:
+            type: string
+            description: String representation of the balance
+            example: '500000'
+        required:
+          - balance
+      description: Balance of wallet that can be bridged to the l1 chain
     WalletBuildDefaults:
       type: object
       properties:
