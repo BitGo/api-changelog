@@ -37500,6 +37500,7 @@ components:
       name: walletId
       in: path
       required: true
+      description: The wallet ID.
       schema:
         $ref: '#/components/schemas/Id'
     pathWalletId1:
@@ -46233,6 +46234,7 @@ components:
     DefaultChangeAddressType:
       type: string
       example: p2wsh
+      nullable: true
       enum:
         - p2sh
         - p2shP2wsh
@@ -77760,6 +77762,13 @@ components:
             - psbt-lite
           description: |
             (UTXO only) The default transaction format to use for this wallet. Per transaction, you can override the default with the `txFormat` parameter.
+        autoReserveUnspentsOnBuildMins:
+          type: number
+          minimum: 1
+          nullable: true
+          example: 60
+          description: |
+            (UTXO only) Automatically reserve unspents when building a transaction.
     WalletCoinSpecific:
       oneOf:
         - title: Wallet
