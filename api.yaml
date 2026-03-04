@@ -11860,9 +11860,10 @@ paths:
                     identificationNumber:
                       type: string
                       description: |-
-                        The Social Security Number (SSN) for US citizens
-
-                        Use this field only to submit the SSN for US citizens. For non-US citizens or for submitting other identification documents (e.g., passport, driver's license), use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint after creating the KYC identity
+                        Tax identification number for US individuals. Required for US citizens and US residents:
+                        - US citizens: Submit SSN (Social Security Number)
+                        - US residents (non-citizens): Submit SSN or ITIN (Individual Taxpayer Identification Number)
+                        - Non-US individuals: Do not use this field. Instead, use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint to upload government-issued identification documents after creating the KYC identity
                       example: 123-45-6789
                       minLength: 1
                     nameFirst:
@@ -12217,9 +12218,10 @@ paths:
                     identificationNumber:
                       type: string
                       description: |-
-                        The Social Security Number (SSN) for US citizens
-
-                        Use this field only to submit the SSN for US citizens. For non-US citizens or for submitting other identification documents (e.g., passport, driver's license), use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint after creating the KYC identity
+                        Tax identification number for US individuals. Required for US citizens and US residents:
+                        - US citizens: Submit SSN (Social Security Number)
+                        - US residents (non-citizens): Submit SSN or ITIN (Individual Taxpayer Identification Number)
+                        - Non-US individuals: Do not use this field. Instead, use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint to upload government-issued identification documents after creating the KYC identity
                       example: 123-45-6789
                       minLength: 1
                     nameFirst:
@@ -12276,6 +12278,242 @@ paths:
                     - organizationId
                     - phoneNumber
                     - politicallyExposedPerson
+                    - transactionType
+                    - userId
+                - type: object
+                  title: EU Individual
+                  properties:
+                    addressCity:
+                      type: string
+                      description: The city of the address
+                      minLength: 1
+                    addressPostalCode:
+                      type: string
+                      description: The postal or ZIP code
+                      minLength: 1
+                    addressStreet1:
+                      type: string
+                      description: The street address line 1
+                      minLength: 1
+                    addressStreet2:
+                      type: string
+                      description: The street address line 2
+                      minLength: 1
+                    cityOfBirth:
+                      type: string
+                      description: The city of birth
+                      minLength: 1
+                    countryOfBirth:
+                      type: string
+                      description: The country of birth (ISO Alpha-2 or Alpha-3 country code)
+                      example: DE
+                      minLength: 1
+                    countryOfCitizenship:
+                      type: string
+                      description: The country of citizenship (ISO Alpha-2 or Alpha-3 country code)
+                      example: DE
+                      minLength: 1
+                    countryOfResidence:
+                      type: string
+                      description: The country of residence (ISO Alpha-2 or Alpha-3 country code)
+                      example: DE
+                      minLength: 1
+                    countryOfTaxResidence:
+                      type: string
+                      description: The country of tax residence (ISO Alpha-2 or Alpha-3 country code)
+                      example: DE
+                      minLength: 1
+                    dateOfBirth:
+                      type: object
+                      description: The date of birth of the individual
+                      properties:
+                        day:
+                          type: string
+                          example: '25'
+                          format: DD
+                        month:
+                          type: string
+                          example: '12'
+                          format: MM
+                        year:
+                          type: string
+                          example: '2024'
+                          format: YYYY
+                      required:
+                        - day
+                        - month
+                        - year
+                    debugFailureReason:
+                      type: string
+                      description: Debug failure reason to provide additional context when simulating verification failure in the test environment
+                      minLength: 1
+                    debugStatus:
+                      type: string
+                      enum:
+                        - passed
+                        - failed
+                      description: Debug status for simulating verification failure or success in the test environment - passes by default
+                    email:
+                      type: string
+                      description: The email address of the individual
+                      minLength: 1
+                    employmentStatus:
+                      allOf:
+                        - $ref: '#/components/schemas/EuEmploymentStatus'
+                      description: The employment status of the individual
+                    enterpriseId:
+                      type: string
+                      description: The BitGo enterprise ID
+                      minLength: 1
+                    externalUserId:
+                      type: string
+                      description: The external user identifier from the EU CaaS client
+                      minLength: 1
+                    govIdCountryOfIssuance:
+                      type: string
+                      description: The country of issuance of the government ID (ISO Alpha-2 or Alpha-3 country code)
+                      example: DE
+                      minLength: 1
+                    govIdExpiry:
+                      type: object
+                      description: The expiry date of the government-issued ID
+                      properties:
+                        day:
+                          type: string
+                          example: '25'
+                          format: DD
+                        month:
+                          type: string
+                          example: '12'
+                          format: MM
+                        year:
+                          type: string
+                          example: '2024'
+                          format: YYYY
+                      required:
+                        - day
+                        - month
+                        - year
+                    govIdNumber:
+                      type: string
+                      description: The government-issued ID document number
+                      minLength: 1
+                    govIdType:
+                      type: string
+                      enum:
+                        - pp
+                        - ppc
+                        - rp
+                        - pr
+                        - id
+                      description: The type of government-issued ID document
+                    idvPerformed:
+                      type: boolean
+                      description: Whether identity verification has been performed by the EU CaaS client
+                    industry:
+                      allOf:
+                        - $ref: '#/components/schemas/EuIndustry'
+                      description: The industry classification of the individual
+                    initialKycCompletionDate:
+                      type: object
+                      description: The date of initial KYC completion
+                      properties:
+                        day:
+                          type: string
+                          example: '25'
+                          format: DD
+                        month:
+                          type: string
+                          example: '12'
+                          format: MM
+                        year:
+                          type: string
+                          example: '2024'
+                          format: YYYY
+                      required:
+                        - day
+                        - month
+                        - year
+                    lastKycCompletionDate:
+                      type: object
+                      description: The date of last KYC completion
+                      properties:
+                        day:
+                          type: string
+                          example: '25'
+                          format: DD
+                        month:
+                          type: string
+                          example: '12'
+                          format: MM
+                        year:
+                          type: string
+                          example: '2024'
+                          format: YYYY
+                      required:
+                        - day
+                        - month
+                        - year
+                    nameFirst:
+                      type: string
+                      description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+                    nameLast:
+                      type: string
+                      description: The last name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+                    nameMiddle:
+                      type: string
+                      description: The middle name (Latin letters, spaces, hyphens, apostrophes, and periods)
+                      pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+                    organizationId:
+                      type: string
+                      description: The Bitgo organization ID
+                      minLength: 1
+                    politicallyExposedPerson:
+                      type: boolean
+                      description: Whether the individual is a Politically Exposed Person (PEP)
+                    sourceOfFunds:
+                      allOf:
+                        - $ref: '#/components/schemas/EuSourceOfFunds'
+                      description: The source of funds for the individual
+                    taxId:
+                      type: string
+                      description: The tax identification number
+                      minLength: 1
+                    transactionType:
+                      type: string
+                      enum:
+                        - euIndividual
+                      description: The type of KYC identity being created
+                    userId:
+                      type: string
+                      description: The BitGo user ID
+                      minLength: 1
+                  required:
+                    - addressCity
+                    - addressPostalCode
+                    - addressStreet1
+                    - cityOfBirth
+                    - countryOfBirth
+                    - countryOfCitizenship
+                    - countryOfResidence
+                    - countryOfTaxResidence
+                    - dateOfBirth
+                    - email
+                    - employmentStatus
+                    - enterpriseId
+                    - externalUserId
+                    - idvPerformed
+                    - industry
+                    - initialKycCompletionDate
+                    - lastKycCompletionDate
+                    - nameFirst
+                    - nameLast
+                    - organizationId
+                    - politicallyExposedPerson
+                    - sourceOfFunds
+                    - taxId
                     - transactionType
                     - userId
       responses:
@@ -12541,6 +12779,33 @@ paths:
                   example: 2000-12-25T00:00:00.000Z
                   format: date
                   title: ISO Date String
+                dateOfBirth:
+                  type: object
+                  description: The date of birth of the individual
+                  properties:
+                    day:
+                      type: string
+                      example: '25'
+                      format: DD
+                    month:
+                      type: string
+                      example: '12'
+                      format: MM
+                    year:
+                      type: string
+                      example: '2024'
+                      format: YYYY
+                  required:
+                    - day
+                    - month
+                    - year
+                taxId:
+                  type: string
+                  description: The tax identification number
+                  minLength: 1
+                idvPerformed:
+                  type: boolean
+                  description: Whether identity verification has been performed by the EU CaaS client
       responses:
         '200':
           description: OK
@@ -49379,6 +49644,74 @@ components:
         - flushForwardersManually
         - enableMMI
         - enableNFT
+    EuEmploymentStatus:
+      title: EuEmploymentStatus
+      type: string
+      enum:
+        - Civil servant
+        - Employee
+        - Student
+        - Retirees / Pensioners
+        - Public service
+        - Self-employed
+        - Unemployed
+    EuIndustry:
+      title: EuIndustry
+      type: string
+      enum:
+        - MiCAR/EEA Regulated CASP
+        - Banking & Credit Institutions
+        - Insurance & Pension
+        - Legal, Notary, and Fiduciary Services
+        - Accounting & Audit
+        - Business Consulting & Agency
+        - Software & IT Services
+        - Hardware & Electronics
+        - Telecommunications
+        - Media & Entertainment
+        - Retail & Wholesale Trade
+        - Manufacturing & Industrial
+        - Construction & Infrastructure
+        - Agriculture & Food
+        - Hospitality & Travel
+        - Education & Research
+        - Healthcare & Life Sciences
+        - Employed / Self-Employed
+        - Retired
+        - Non-EEA Regulated VASP
+        - Token Issuers & Web3 Projects
+        - Investment & Asset Mgmt
+        - Brokerage & Trading (Fiat)
+        - Precious Goods Dealers
+        - Energy & Extractives
+        - Real Estate Development & Broking
+        - Trust & Company Service Providers
+        - Transportation & Logistics
+        - Government & Public Admin
+        - Non-Profit / NGO / Charity
+        - Student
+        - Unemployed
+        - Unregulated / Offshore VASP
+        - DeFi / DAO / Unhosted
+        - Mining & Staking Providers
+        - Proprietary Trading / Market Maker
+        - Payment Services & MSBs
+        - Gambling & Gaming
+        - Arms & Defense
+        - Adult & Restricted Entertainment
+        - High-profile Government
+        - High Net Worth (HNWI)
+    EuSourceOfFunds:
+      title: EuSourceOfFunds
+      type: string
+      enum:
+        - Income from Employment
+        - Pension
+        - Income from Renting and Leasing
+        - Income from Self-Employment
+        - Inheritance / Gift
+        - Crypto
+        - Other Financial Support
     EvaluatedPolicyActionStatus:
       title: EvaluatedPolicyActionStatus
       type: string
@@ -54950,7 +55283,7 @@ components:
       type: string
       description: |-
         The status of the KYC identity:
-        `initiating`, `awaiting document upload`, `input error`, `ssn error`, `in review`, `incomplete verifications`, `awaiting signature`, `records uploaded`, `approved`, `declined`
+        `initiating`, `awaiting document upload`, `input error`, `ssn error`, `taxid error`, `in review`, `incomplete verifications`, `awaiting signature`, `records uploaded`, `approved`, `declined`
       minLength: 1
     KycOngoingScreening:
       title: KycOngoingScreening
