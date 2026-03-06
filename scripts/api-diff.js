@@ -1,8 +1,12 @@
 const fs = require('fs');
 
-// Read the JSON files
-const previousSpec = JSON.parse(fs.readFileSync('previous.json', 'utf8'));
-const currentSpec = JSON.parse(fs.readFileSync('current.json', 'utf8'));
+// Read the JSON files (paths configurable via CLI args)
+const previousPath = process.argv[2] || 'previous.json';
+const currentPath = process.argv[3] || 'current.json';
+const outputPath = process.argv[4] || 'release-description.md';
+
+const previousSpec = JSON.parse(fs.readFileSync(previousPath, 'utf8'));
+const currentSpec = JSON.parse(fs.readFileSync(currentPath, 'utf8'));
 
 // Initialize change tracking
 const changes = {
@@ -491,4 +495,4 @@ detectRenamedEndpoints();
 const releaseDescription = generateReleaseNotes();
 
 // Write release notes to markdown file
-fs.writeFileSync('release-description.md', releaseDescription);
+fs.writeFileSync(outputPath, releaseDescription);

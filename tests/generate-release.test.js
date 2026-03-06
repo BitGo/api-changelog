@@ -11,9 +11,11 @@ describe('Generate Release Description', async () => {
 
   beforeEach(() => {
     // Clean up any existing output files
-    if (fs.existsSync('release-description.md')) {
-      fs.unlinkSync('release-description.md');
-    }
+    ['release-description.md', 'custom-output.md', 'previous.json', 'current.json'].forEach(file => {
+      if (fs.existsSync(file)) {
+        fs.unlinkSync(file);
+      }
+    });
   });
 
   scenarios.forEach(scenario => {
@@ -43,9 +45,26 @@ describe('Generate Release Description', async () => {
     });
   });
 
+  it('supports custom file paths via CLI args', () => {
+    const scenarioDir = path.join(FIXTURES_DIR, 'new-route-and-method');
+
+    // Run the script with custom input/output paths
+    execSync(
+      `node scripts/api-diff.js ${path.join(scenarioDir, 'previous.json')} ${path.join(scenarioDir, 'current.json')} custom-output.md`
+    );
+
+    const actual = fs.readFileSync('custom-output.md', 'utf8').trim();
+    const expected = fs.readFileSync(
+      path.join(scenarioDir, 'expected.md'),
+      'utf8'
+    ).trim();
+
+    assert.strictEqual(actual, expected);
+  });
+
   afterEach(() => {
     // Clean up test files
-    ['previous.json', 'current.json', 'release-description.md'].forEach(file => {
+    ['previous.json', 'current.json', 'release-description.md', 'custom-output.md'].forEach(file => {
       if (fs.existsSync(file)) {
         fs.unlinkSync(file);
       }

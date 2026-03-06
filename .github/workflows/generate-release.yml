@@ -6,6 +6,7 @@ on:
       - master
     paths:
       - 'api.yaml'
+      - 'express-api.yaml'
 
 jobs:
   generate-release:
@@ -24,17 +25,61 @@ jobs:
         with:
           node-version-file: .nvmrc
 
-      - name: Get API specs and generate JSON files
+      - name: Get Platform API specs and generate JSON files
         run: |
           PREVIOUS_MERGE=$(git rev-list --merges master | head -n 2 | tail -n 1)
           git show $PREVIOUS_MERGE:api.yaml > previous.yaml || echo "v0.0.0" > previous.yaml
-          yq -o=json previous.yaml > previous.json
-          
-          yq -o=json api.yaml > current.json
+          yq -o=json previous.yaml > previous-platform.json
+
+          yq -o=json api.yaml > current-platform.json
           rm previous.yaml
 
-      - name: Run API diff
-        run: node scripts/api-diff.js
+      - name: Get Express API specs and generate JSON files
+        run: |
+          PREVIOUS_MERGE=$(git rev-list --merges master | head -n 2 | tail -n 1)
+          git show $PREVIOUS_MERGE:express-api.yaml > previous-express.yaml || echo "v0.0.0" > previous-express.yaml
+          yq -o=json previous-express.yaml > previous-express.json
+
+          if [ -f express-api.yaml ]; then
+            yq -o=json express-api.yaml > current-express.json
+          else
+            echo "{}" > current-express.json
+          fi
+          rm -f previous-express.yaml
+
+      - name: Run Platform API diff
+        run: node scripts/api-diff.js previous-platform.json current-platform.json platform-release.md
+
+      - name: Run Express API diff
+        run: node scripts/api-diff.js previous-express.json current-express.json express-release.md
+
+      - name: Combine release descriptions
+        run: |
+          PLATFORM_HAS_CONTENT=false
+          EXPRESS_HAS_CONTENT=false
+
+          if [ -s platform-release.md ]; then
+            PLATFORM_HAS_CONTENT=true
+          fi
+          if [ -s express-release.md ]; then
+            EXPRESS_HAS_CONTENT=true
+          fi
+
+          # Clear output
+          > release-description.md
+
+          if [ "$PLATFORM_HAS_CONTENT" = true ] && [ "$EXPRESS_HAS_CONTENT" = true ]; then
+            # Both have content — nest under headers
+            echo "## Platform API" >> release-description.md
+            sed 's/^## /### /' platform-release.md >> release-description.md
+            echo "" >> release-description.md
+            echo "## Express API" >> release-description.md
+            sed 's/^## /### /' express-release.md >> release-description.md
+          elif [ "$PLATFORM_HAS_CONTENT" = true ]; then
+            cat platform-release.md >> release-description.md
+          elif [ "$EXPRESS_HAS_CONTENT" = true ]; then
+            cat express-release.md >> release-description.md
+          fi
 
       - name: Determine version
         id: version
@@ -43,11 +88,11 @@ jobs:
           YEAR=$(date +%Y)
           MONTH=$(date +%m)
           DAY=$(date +%d)
-          
+
           # Get the latest tag for current year.month.day
           CURRENT_VERSION=$(git describe --tags --abbrev=0 2>/dev/null || echo "v$YEAR.$MONTH.$DAY.0")
           echo "Current version: $CURRENT_VERSION"
-          
+
           # Extract version number
           if [[ $CURRENT_VERSION == v$YEAR.$MONTH.$DAY.* ]]; then
             # If we already have a tag for today, increment its number
@@ -57,7 +102,7 @@ jobs:
             # If this is the first tag for today, start at .1
             NEW_VERSION="v$YEAR.$MONTH.$DAY.1"
           fi
-          
+
           echo "New version: $NEW_VERSION"
           echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
 
@@ -76,7 +121,7 @@ jobs:
             echo "Release summary is empty, skipping release creation"
             exit 0
           fi
-          
+
           # Create GitHub Release
           gh release create ${{ steps.version.outputs.new_version }} \
             --title "${{ steps.version.outputs.new_version }}" \
