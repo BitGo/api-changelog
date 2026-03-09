@@ -21294,11 +21294,15 @@ paths:
                     - gousd
                     - usd1
                     - sofid
+                    - cusd
+                    - fyusd
               - type: string
                 enum:
                   - gousd
                   - usd1
                   - sofid
+                  - cusd
+                  - fyusd
             example: usd1
         - name: chain
           description: Blockchain network identifier to filter summary
@@ -38000,6 +38004,8 @@ components:
               - gousd
               - usd1
               - sofid
+              - cusd
+              - fyusd
               - usd
             description: Base asset for the token
             example: usd1
@@ -38020,8 +38026,19 @@ components:
             format: uuid
           minimumLimit:
             type: number
-            description: Minimum limit for mints / burns
+            deprecated: true
+            description: Minimum order amount for mint and burn orders, in full units (deprecated, use minimumMintAmount and minimumBurnAmount)
             example: 100
+          minimumMintAmount:
+            type: string
+            description: Minimum order amount for mint orders, in base units
+            example: '''10000'''
+            minLength: 1
+          minimumBurnAmount:
+            type: string
+            description: Minimum order amount for burn orders, in base units
+            example: '''10000'''
+            minLength: 1
         required:
           - id
           - token
