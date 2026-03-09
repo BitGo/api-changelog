@@ -1,6 +1,6 @@
 openapi: 3.0.3
 info:
-  title: Platform Temp
+  title: BitGo API
   version: 1.0.0
 servers:
   - url: ''
@@ -13243,6 +13243,8 @@ paths:
               - BitGo Korea
               - BitGo Mena Fze
               - BitGo Custody MENA FZE
+              - BitGo India
+              - BitGo Sister Trust 1
               - BitGo Inc
             title: WPBitgoOrg
         - name: accountType
@@ -21292,11 +21294,15 @@ paths:
                     - gousd
                     - usd1
                     - sofid
+                    - cusd
+                    - fyusd
               - type: string
                 enum:
                   - gousd
                   - usd1
                   - sofid
+                  - cusd
+                  - fyusd
             example: usd1
         - name: chain
           description: Blockchain network identifier to filter summary
@@ -37568,6 +37574,25 @@ components:
           enum:
             - approvals.always.deny
           example: approvals.always.deny
+    AmlAttestation:
+      type: object
+      properties:
+        userId:
+          type: string
+          description: User ID of the person performing the attestation
+        attestationDate:
+          type: string
+          format: date-time
+          description: ISO 8601 date of the attestation
+        attested:
+          type: boolean
+          description: Whether the AML attestation was affirmed
+      required:
+        - userId
+        - attestationDate
+        - attested
+      title: AmlAttestation
+      description: AML attestation data (who attested, when, and the yes/no answer)
     Amount:
       title: Amount
       type: object
@@ -37979,6 +38004,8 @@ components:
               - gousd
               - usd1
               - sofid
+              - cusd
+              - fyusd
               - usd
             description: Base asset for the token
             example: usd1
@@ -37999,8 +38026,19 @@ components:
             format: uuid
           minimumLimit:
             type: number
-            description: Minimum limit for mints / burns
+            deprecated: true
+            description: Minimum order amount for mint and burn orders, in full units (deprecated, use minimumMintAmount and minimumBurnAmount)
             example: 100
+          minimumMintAmount:
+            type: string
+            description: Minimum order amount for mint orders, in base units
+            example: '''10000'''
+            minLength: 1
+          minimumBurnAmount:
+            type: string
+            description: Minimum order amount for burn orders, in base units
+            example: '''10000'''
+            minLength: 1
         required:
           - id
           - token
@@ -41637,9 +41675,6 @@ components:
           description: Official company website
         primaryBusinessType:
           $ref: '#/components/schemas/PrimaryBusinessType'
-        primaryBusinessTypeInstitutional:
-          type: boolean
-          description: Whether the business is institutional
         descriptionBusinessActivities:
           type: string
           pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
@@ -41728,9 +41763,7 @@ components:
           pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
           description: List of active exchanges
         diligenceRetailInstitutional:
-          type: string
-          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
-          description: Diligence level required (retail or institutional)
+          $ref: '#/components/schemas/DiligenceRetailInstitutional'
         customerBaseLocations:
           type: string
           pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
@@ -41751,10 +41784,28 @@ components:
         diligenceCounselName:
           type: string
           pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          nullable: true
           description: Name of legal counsel (if applicable)
         walletAddress:
           type: string
           description: Business wallet address
+        isRegulated:
+          type: boolean
+          description: Whether the business is regulated
+        regulatorCountryCode:
+          description: Country of regulator (ISO 3166-1 alpha-3)
+          nullable: true
+        regulatorName:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          nullable: true
+          description: Name of the regulator
+        regulatoryRegistrationNumber:
+          type: string
+          nullable: true
+          description: Regulatory registration number
+        amlAttestation:
+          $ref: '#/components/schemas/AmlAttestation'
       title: Business
     BusinessIdentityResponse:
       type: object
@@ -41944,6 +41995,7 @@ components:
         - Staking
         - Go Account
         - ACH Debits
+        - Distributed Custody
       title: CaaSBitGoProduct
       description: BitGo products available via KYB API
     CannotRemoveAdmin:
@@ -43568,6 +43620,7 @@ components:
                   - Staking
                   - Go Account
                   - ACH Debits
+                  - Distributed Custody
                 description: Name of the BitGo product
               bitgoOrg:
                 type: string
@@ -43582,6 +43635,8 @@ components:
                   - BitGo Korea
                   - BitGo Mena Fze
                   - BitGo Custody MENA FZE
+                  - BitGo India
+                  - BitGo Sister Trust 1
                   - BitGo Inc
                 description: The BitGo entity identifier
             required:
@@ -43680,6 +43735,7 @@ components:
                   - Staking
                   - Go Account
                   - ACH Debits
+                  - Distributed Custody
                 description: Name of the BitGo product
               bitgoOrg:
                 type: string
@@ -43694,6 +43750,8 @@ components:
                   - BitGo Korea
                   - BitGo Mena Fze
                   - BitGo Custody MENA FZE
+                  - BitGo India
+                  - BitGo Sister Trust 1
                   - BitGo Inc
                 description: The BitGo entity identifier
             required:
@@ -44739,6 +44797,15 @@ components:
             anyOf:
               - $ref: '#/components/schemas/WhitelistedAddressValue'
               - $ref: '#/components/schemas/NonWhitelistedAddressValue'
+    DiligenceRetailInstitutional:
+      type: string
+      enum:
+        - retail0To25
+        - retail25To50
+        - retail50To75
+        - retail75To100
+      title: DiligenceRetailInstitutional
+      description: Percentage breakdown of retail vs institutional customer base
     DisclaimerAttributes:
       type: object
       properties:
@@ -59879,6 +59946,8 @@ components:
             - BitGo Korea
             - BitGo Mena Fze
             - BitGo Custody MENA FZE
+            - BitGo India
+            - BitGo Sister Trust 1
             - BitGo Inc
           description: The BitGo entity identifier
         country:
@@ -67220,9 +67289,11 @@ components:
             type: string
         riskIndicators:
           type: array
-          description: Optional risk monitoring tags applied to this transfer. These tags are informational and do not affect transaction processing.
+          description: Risk indicators detected on this transfer (e.g. SELFDESTRUCT opcode). Transfers with risk indicators will not trigger webhook or email notifications.
           items:
             type: string
+            enum:
+              - SELFDESTRUCT
       required:
         - id
         - coin
@@ -73928,6 +73999,8 @@ components:
         - BitGo Korea
         - BitGo Mena Fze
         - BitGo Custody MENA FZE
+        - BitGo India
+        - BitGo Sister Trust 1
         - BitGo Inc
       title: WPBitgoOrg
       description: BitGo organization types
