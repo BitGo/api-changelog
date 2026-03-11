@@ -1298,6 +1298,7 @@ paths:
                 - stakeWithCallData
                 - unstakeWithCallData
                 - validatorRegistration
+                - increaseStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, only transaction requests with the specified intent types will be returned.
@@ -1347,6 +1348,7 @@ paths:
                 - stakeWithCallData
                 - unstakeWithCallData
                 - validatorRegistration
+                - increaseStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
@@ -22578,6 +22580,61 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/getAccountResources:
+    get:
+      summary: Get account resources
+      description: Retrieves bandwidth and energy resource information for TRON addresses
+      operationId: v2.wallet.getAccountResources
+      tags:
+        - Wallet
+      parameters:
+        - name: addresses
+          description: List of TRON addresses to retrieve resource information for
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              description: List of TRON addresses to retrieve resource information for
+        - name: destinationAddress
+          description: Optional destination address for resource deficit calculation
+          in: query
+          schema:
+            type: string
+        - name: coin
+          description: Coin or token identifier (e.g. trx, ttrx:usdt)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: Wallet ID to retrieve account resources for
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAccountResourcesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/potentialStuckTxs:
     get:
       summary: List stuck transactions
@@ -23530,6 +23587,7 @@ paths:
                 - stakeWithCallData
                 - unstakeWithCallData
                 - validatorRegistration
+                - increaseStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, only transaction requests with the specified intent types will be returned.
@@ -23579,6 +23637,7 @@ paths:
                 - stakeWithCallData
                 - unstakeWithCallData
                 - validatorRegistration
+                - increaseStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
@@ -23791,6 +23850,7 @@ paths:
                 - stakeWithCallData
                 - unstakeWithCallData
                 - validatorRegistration
+                - increaseStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
@@ -27702,6 +27762,12 @@ paths:
               - BitGo Custody MENA FZE
               - BitGo India
               - BitGo Sister Trust 1
+        - name: skipUnsupportedCoins
+          description: Skip unsupported coins instead of returning an error
+          in: query
+          schema:
+            type: boolean
+            default: false
         - name: frozen
           description: |-
             Filter derived wallets by freeze status.
@@ -27719,6 +27785,16 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: coinContains
+          description: Filter by coin or display name (case-insensitive substring). E.g. "bsc", "Polygon", "Arbitrum".
+          in: query
+          schema:
+            type: string
+        - name: sendManyTokenContains
+          description: Filter to wallets that have a sendMany token matching this string (case-insensitive). E.g. "usdc", "busd", "link".
+          in: query
+          schema:
+            type: string
         - name: walletId
           description: The wallet ID - can be either a parent wallet ID or a child wallet ID
           in: path
@@ -29693,6 +29769,12 @@ paths:
               - BitGo Custody MENA FZE
               - BitGo India
               - BitGo Sister Trust 1
+        - name: skipUnsupportedCoins
+          description: Skip unsupported coins instead of returning an error
+          in: query
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: OK
@@ -38065,9 +38147,9 @@ components:
           description: Role of the associated person
         percentageOwnership:
           type: number
-          minimum: 0
+          minimum: 10
           maximum: 100
-          description: Percentage of ownership (only for beneficialOwner)
+          description: Percentage of ownership (only for beneficialOwner, minimum 10%)
         identityId:
           type: string
           description: Identity ID of the person
@@ -39661,6 +39743,10 @@ components:
           description: Indicates which type of KYC process the enterprise has to complete
         businessModel:
           $ref: '#/components/schemas/BusinessModel'
+        complianceModel:
+          allOf:
+            - $ref: '#/components/schemas/ComplianceModel'
+          description: Regulatory compliance model for EU CaaS clients
         salesforceAccountId:
           type: string
           description: Opportunity ID from Salesforce
@@ -39739,6 +39825,11 @@ components:
         ellipticHotWallets:
           type: boolean
           description: Hot wallet transactions on this enterprise are monitored in Elliptic
+        restrictedDvp:
+          type: array
+          items:
+            type: string
+            description: DVP (Delivery versus Payment) restriction identifiers for this enterprise
         vaspId:
           type: string
         bitgoVaspId:
@@ -39949,6 +40040,7 @@ components:
               - Advanced Wallets
               - Stablecoins
               - Loans against Go Account
+              - Auto Liquidation
               - ACH Debits
               - Go Lightning
             description: Requested BitGo Products
@@ -41784,6 +41876,7 @@ components:
         firmAuditor:
           type: string
           pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,]+$
+          nullable: true
           description: Name of audit firm (if applicable)
         hasLegalCounsel:
           type: boolean
@@ -42066,7 +42159,8 @@ components:
             updateId:
               type: string
             amount:
-              type: number
+              type: string
+              format: number
             expiry:
               type: number
             memoId:
@@ -42090,13 +42184,13 @@ components:
               type: string
               enum:
                 - transferOfferWithdrawn
-            transferId:
+            transferOfferId:
               type: string
             token:
               type: string
           required:
             - intentType
-            - transferId
+            - transferOfferId
         - $ref: '#/components/schemas/BaseIntent'
     CantonTransferRejectIntent:
       title: Canton Transfer Reject Intent
@@ -42801,6 +42895,12 @@ components:
       enum:
         - commitment
       example: commitment
+    ComplianceModel:
+      title: ComplianceModel
+      type: string
+      enum:
+        - EURegulated
+        - EUNonRegulated
     Condition:
       title: Condition
       oneOf:
@@ -48424,6 +48524,56 @@ components:
         country:
           type: string
           description: ISO 3166-1 Alpha-3 country code
+    GetAccountResourcesResponse:
+      title: GetAccountResourcesResponse
+      type: object
+      properties:
+        resources:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+              free_bandwidth_available:
+                type: number
+              free_bandwidth_used:
+                type: number
+              staked_bandwidth_available:
+                type: number
+              staked_bandwidth_used:
+                type: number
+              energy_available:
+                type: number
+              energy_used:
+                type: number
+              resourceDeficitForAssetTransfer:
+                $ref: '#/components/schemas/TronResourceDeficit'
+              maxResourcesDelegatable:
+                $ref: '#/components/schemas/MaxResourcesDelegatable'
+            required:
+              - address
+              - free_bandwidth_available
+              - free_bandwidth_used
+              - staked_bandwidth_available
+              - staked_bandwidth_used
+              - energy_available
+              - energy_used
+        failedAddresses:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+              error:
+                type: string
+            required:
+              - address
+              - error
+      required:
+        - resources
+        - failedAddresses
     GetDocumentResponse:
       type: object
       properties:
@@ -49298,6 +49448,8 @@ components:
                 - withdrawal_offer_expired
                 - withdrawal_offer_rejected
                 - utxo_expired
+                - offer_cancelled
+                - cancel_withdrawal_offer
                 - staking_eth_withdrawal
                 - staking_eth_partial_withdrawal
                 - staking_eth_full_withdrawal
@@ -51091,6 +51243,7 @@ components:
         - tokenApproval
         - transferStake
         - validatorRegistration
+        - increaseStake
         - spotTransfer
         - bridgeFunds
         - goUnstake
@@ -51463,6 +51616,69 @@ components:
       type: string
       format: ipv4
       example: 127.0.0.1
+    IrysCommitmentParams:
+      title: IrysCommitmentParams
+      type: object
+      description: |-
+        Parameters for Irys commitment transactions.
+        These values originate from the Irys pricing APIs called by staking-service.
+      properties:
+        commitmentFee:
+          type: string
+          description: Commitment fee as a bigint string (wei), from Irys price API.
+        commitmentValue:
+          type: string
+          description: Commitment value as a bigint string (wei), from Irys price API.
+        signerAddress:
+          type: string
+          description: 0x-prefixed hex Ethereum address of the signer.
+        chainId:
+          type: number
+          description: 'Irys chain ID: 1270 (testnet) or 3282 (mainnet).'
+      required:
+        - commitmentFee
+        - commitmentValue
+        - signerAddress
+        - chainId
+    IrysPledgeCommitmentParams:
+      title: IrysPledgeCommitmentParams
+      allOf:
+        - type: object
+          properties:
+            pledgeCount:
+              type: number
+              description: Number of partitions to pledge (each is 16TB).
+          required:
+            - pledgeCount
+        - $ref: '#/components/schemas/IrysCommitmentParams'
+      description: |-
+        Extended commitment parameters for Irys PLEDGE transactions.
+        Includes pledgeCount (number of partitions to pledge).
+    IrysPledgeIntent:
+      title: Irys Pledge Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - pledge
+            commitmentParams:
+              $ref: '#/components/schemas/IrysPledgeCommitmentParams'
+          required:
+            - intentType
+            - commitmentParams
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    IrysStakeIntent:
+      title: Irys Stake Intent
+      allOf:
+        - type: object
+          properties:
+            commitmentParams:
+              $ref: '#/components/schemas/IrysCommitmentParams'
+          required:
+            - commitmentParams
+        - $ref: '#/components/schemas/StakeIntent'
     KavacosmosStakingRequest:
       title: KAVACOSMOS
       allOf:
@@ -51532,6 +51748,7 @@ components:
             - institutional
             - nitro
             - SDTrustNitro
+            - awsKms
           description: The type of HSM that owns this key.
           example: institutional
         isBitGo:
@@ -53609,6 +53826,17 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithGasPrice'
       type: object
+    MaxResourcesDelegatable:
+      title: MaxResourcesDelegatable
+      type: object
+      properties:
+        bandwidthWeight:
+          type: string
+        energyWeight:
+          type: string
+      required:
+        - bandwidthWeight
+        - energyWeight
     MemoObject:
       type: object
       properties:
@@ -58425,8 +58653,10 @@ components:
       type: object
       properties:
         minRequired:
-          type: string
-          minLength: 1
+          oneOf:
+            - type: string
+              minLength: 1
+            - type: number
         userIds:
           type: array
           items:
@@ -66155,6 +66385,8 @@ components:
         - $ref: '#/components/schemas/HypeevmBridgeFundsIntent'
         - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
         - $ref: '#/components/schemas/IcpPaymentIntent'
+        - $ref: '#/components/schemas/IrysPledgeIntent'
+        - $ref: '#/components/schemas/IrysStakeIntent'
         - $ref: '#/components/schemas/LightningPaymentIntent'
         - $ref: '#/components/schemas/MmiSignMessageIntent'
         - $ref: '#/components/schemas/MmiSignTransactionIntent'
@@ -66208,6 +66440,7 @@ components:
         - $ref: '#/components/schemas/VetBurnNFTIntent'
         - $ref: '#/components/schemas/VetStakeClaimRewardsIntent'
         - $ref: '#/components/schemas/VetValidatorRegistrationIntent'
+        - $ref: '#/components/schemas/VetIncreaseStakeIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
@@ -67655,6 +67888,8 @@ components:
             - withdrawal_offer_expired
             - withdrawal_offer_rejected
             - utxo_expired
+            - offer_cancelled
+            - cancel_withdrawal_offer
             - staking_eth_withdrawal
             - staking_eth_partial_withdrawal
             - staking_eth_full_withdrawal
@@ -68666,6 +68901,21 @@ components:
           type: string
       required:
         - rootPub
+    TronResourceDeficit:
+      title: TronResourceDeficit
+      type: object
+      properties:
+        bandwidthDeficit:
+          type: number
+        bandwidthSunRequired:
+          type: string
+        energyDeficit:
+          type: number
+        energySunRequired:
+          type: string
+      required:
+        - bandwidthDeficit
+        - bandwidthSunRequired
     TronWallet:
       title: Tron Wallet
       type: object
@@ -73781,6 +74031,27 @@ components:
       allOf:
         - $ref: '#/components/schemas/UndelegateIntent'
         - $ref: '#/components/schemas/VetUnstakeCommonFields'
+    VetIncreaseStakeIntent:
+      title: VET Increase Stake Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - increaseStake
+            validatorAddress:
+              type: string
+              minLength: 1
+            stakingContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - validatorAddress
+            - stakingContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     VetStakeClaimRewardsIntent:
       title: VET Stake Claim Rewards Intent
       allOf:
@@ -74067,6 +74338,17 @@ components:
               description: (UTXO only) Wallet-level minimum fee rate that must be greater than or equal to the default of 1000 satoshis/kvByte. Per transaction, you can override "minFeeRate" with the "feeRate" parameter.
               example: 12000
               minimum: 1000
+            maxFeeRate:
+              type: number
+            feeMultiplier:
+              nullable: true
+              type: number
+            changeAddressType:
+              nullable: true
+              type: string
+            autoReserveUnspentsOnBuildMins:
+              nullable: true
+              type: number
         clientFlags:
           type: array
           items:
@@ -74116,6 +74398,14 @@ components:
           items:
             type: string
             description: Array of enabled child chain names for parent EVM keyring wallets
+        archivedChildChains:
+          type: array
+          example:
+            - tbsc
+            - tpolygon
+          items:
+            type: string
+            description: Array of archived child chain names for parent EVM keyring wallets (per-user)
         organization:
           type: string
         bitgoOrg:
@@ -75070,6 +75360,17 @@ components:
                     description: (UTXO only) Wallet-level minimum fee rate that must be greater than or equal to the default of 1000 satoshis/kvByte. Per transaction, you can override "minFeeRate" with the "feeRate" parameter.
                     example: 12000
                     minimum: 1000
+                  maxFeeRate:
+                    type: number
+                  feeMultiplier:
+                    nullable: true
+                    type: number
+                  changeAddressType:
+                    nullable: true
+                    type: string
+                  autoReserveUnspentsOnBuildMins:
+                    nullable: true
+                    type: number
               clientFlags:
                 type: array
                 items:
@@ -75119,6 +75420,14 @@ components:
                 items:
                   type: string
                   description: Array of enabled child chain names for parent EVM keyring wallets
+              archivedChildChains:
+                type: array
+                example:
+                  - tbsc
+                  - tpolygon
+                items:
+                  type: string
+                  description: Array of archived child chain names for parent EVM keyring wallets (per-user)
               organization:
                 type: string
               bitgoOrg:
