@@ -17240,7 +17240,7 @@ paths:
                 properties:
                   availableCurrencies:
                     type: array
-                    description: Returns a Currency object that consists of the ID, Name and Symbol for the instrument
+                    description: Returns a Currency object that consists of the ID, Name, Symbol, Increment, and PlatformSymbol for the instrument
                     items:
                       $ref: '#/components/schemas/Currency'
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/transferred:
@@ -20798,6 +20798,13 @@ paths:
           schema:
             type: string
             example: eth
+            minLength: 1
+        - name: baseAsset
+          description: Base asset type to filter by.
+          in: query
+          schema:
+            type: string
+            example: usd1
             minLength: 1
         - name: isIssuedByBitgo
           description: Flag to filter assets based on whether they were issued by BitGo.
@@ -59202,6 +59209,8 @@ components:
         - quantity
         - fundingType
         - settled
+        - accountId
+        - enterpriseId
       type: object
       properties:
         id:
@@ -60107,6 +60116,7 @@ components:
       type: object
       required:
         - goAccountId
+        - coin
         - amount
         - rewardType
         - period
@@ -60114,6 +60124,9 @@ components:
       properties:
         goAccountId:
           type: string
+        coin:
+          type: string
+          description: The coin symbol for this reward (e.g. "ofcsol", "ofcsui")
         amount:
           type: string
           format: big-integer
