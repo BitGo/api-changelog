@@ -21630,6 +21630,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/activedelegations:
+    get:
+      summary: Get active resource delegations
+      description: Retrieves outgoing and incoming resource delegation information for a TRON wallet
+      operationId: v2.wallet.getActiveDelegations
+      tags:
+        - Wallet
+      parameters:
+        - name: type
+          description: 'Filter by delegation type: ''owner'' for outgoing, ''receiver'' for incoming'
+          in: query
+          schema:
+            type: string
+            enum:
+              - owner
+              - receiver
+        - name: resourceType
+          description: Filter by resource type
+          in: query
+          schema:
+            type: string
+            enum:
+              - ENERGY
+              - BANDWIDTH
+        - name: limit
+          description: Maximum number of results to return
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: nextBatchPrevId
+          description: Pagination cursor from previous response
+          in: query
+          schema:
+            type: string
+        - name: coin
+          description: Coin or token identifier (e.g. trx, ttrx)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: Wallet ID to retrieve active delegations for
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetActiveDelegationsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/address:
     post:
       summary: Create address
@@ -24659,6 +24727,7 @@ paths:
                     - custody-sa
                     - staking-sa
                     - master-agreement
+                    - distributed-custody-mic
                 signedDate:
                   type: string
               required:
@@ -39708,6 +39777,8 @@ components:
           $ref: '#/components/schemas/OnboardingAgreement'
         custodyServicesAgreement:
           $ref: '#/components/schemas/CustodyServiceAgreement'
+        distributedCustodyMicAgreement:
+          $ref: '#/components/schemas/OnboardingAgreement'
         stablecoinAgreement:
           type: array
           items:
@@ -48574,6 +48645,90 @@ components:
       required:
         - resources
         - failedAddresses
+    GetActiveDelegationsResponse:
+      title: GetActiveDelegationsResponse
+      type: object
+      properties:
+        address:
+          type: string
+        coin:
+          type: string
+        delegations:
+          type: object
+          properties:
+            outgoing:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  coin:
+                    type: string
+                  ownerAddress:
+                    type: string
+                  receiverAddress:
+                    type: string
+                  resourceType:
+                    type: string
+                    enum:
+                      - ENERGY
+                      - BANDWIDTH
+                  balance:
+                    type: string
+                  blockHeight:
+                    type: number
+                  date:
+                    type: string
+                required:
+                  - id
+                  - coin
+                  - ownerAddress
+                  - receiverAddress
+                  - resourceType
+                  - balance
+                  - blockHeight
+                  - date
+            incoming:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  coin:
+                    type: string
+                  ownerAddress:
+                    type: string
+                  receiverAddress:
+                    type: string
+                  resourceType:
+                    type: string
+                    enum:
+                      - ENERGY
+                      - BANDWIDTH
+                  balance:
+                    type: string
+                  blockHeight:
+                    type: number
+                  date:
+                    type: string
+                required:
+                  - id
+                  - coin
+                  - ownerAddress
+                  - receiverAddress
+                  - resourceType
+                  - balance
+                  - blockHeight
+                  - date
+          required:
+            - outgoing
+            - incoming
+      required:
+        - address
+        - coin
+        - delegations
     GetDocumentResponse:
       type: object
       properties:
