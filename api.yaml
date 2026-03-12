@@ -3993,8 +3993,133 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/connections/{connectionId}/allocations/signing:
     get:
       summary: Get Signing Payload for Client Allocations
-      description: This API call allows clients to get the client allocations payload for signing.
+      description: |-
+        This API call allows clients to get the client allocations payload for signing.
+        If your HTTP client doesn't support sending a request body on a get request, use the v1ClientAllocationsSigningPostRoute
       operationId: v1ClientAllocationsSigningGetRoute
+      tags:
+        - Client Allocations & Deallocations
+      parameters:
+        - name: connectionId
+          description: |-
+            The unique identifier of the connection you want to allocate funds to.
+
+            This connection:
+            - Must be a valid, established connection between your enterprise and a partner.
+            - Determines where the allocated funds will be available for use.
+            - Should be pre-established before attempting to allocate funds.
+          in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+        - name: enterpriseId
+          description: |-
+            The unique identifier of your enterprise.
+
+            This identifier:
+            - Represents your organization within the BitGo system.
+            - Is used to validate you have permission to perform this action.
+            - Must match the enterprise associated with your API credentials.
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  allOf:
+                    - $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  description: |-
+                    The amount to allocate in base units.
+                    Contains both the currency identifier and the quantity in the currency's base units.
+                    The exact base units depend on the currency (e.g., satoshis for BTC, wei for ETH).
+                clientExternalId:
+                  type: string
+                  description: |-
+                    A unique external identifier for the allocation.
+
+                    This identifier:
+                    - Must be unique for each distinct allocation request.
+                    - Is used for idempotence to prevent duplicate allocations.
+                    - Allows clients to correlate allocations with their own systems.
+                    - Should be stored by the client for tracking and reconciliation.
+                  minLength: 1
+                nonce:
+                  type: string
+                  description: |-
+                    Unique nonce to prevent replay attacks.
+
+                    This value:
+                    - Must be unique for each request requiring a nonce.
+                    - Should be a cryptographically strong random value.
+                    - Is used as part of the request signing process.
+                    - Helps ensure the signature can only be used once.
+                  minLength: 1
+                notes:
+                  type: string
+                  description: |-
+                    Optional notes to attach to the allocation.
+
+                    These notes:
+                    - Can provide additional context about the purpose of the allocation.
+                    - Are stored with the allocation record.
+                    - May be useful for auditing, record-keeping, or operational purposes.
+                    - Are visible to both client and partner.
+                  minLength: 1
+              required:
+                - amount
+                - clientExternalId
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ClientAllocationsSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+    post:
+      summary: Get Signing Payload for Client Allocations (Post variant)
+      description: |-
+        This API call allows clients to get the client allocations payload for signing.
+        This endpoint is effectively the same as the GET endpoint, but is helpful if your HTTP client doesn't support sending a request body on a get request.
+      operationId: v1ClientAllocationsSigningPostRoute
       tags:
         - Client Allocations & Deallocations
       parameters:
@@ -4285,6 +4410,8 @@ paths:
         The returned payload should be cryptographically signed by the client and included
         in the subsequent deallocation request.
 
+        If your HTTP client doesn't support sending a request body on a get request, use the V1ClientDeallocationsSigningPostRoute
+
         Error scenarios:
         - 400: Invalid Request Error
         - Occurs when the request parameters are invalid or malformed.
@@ -4409,11 +4536,142 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorPayload'
+    post:
+      summary: Get Signing Payload for Client Deallocations (Post variant)
+      description: |-
+        This API call allows clients to get the client deallocations payload for signing.
+        This endpoint is effectively the same as the GET endpoint, but is helpful if your HTTP client doesn't support sending a request body on a get request.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed.
+        - Examples: Invalid UUID format for connectionId, malformed request body.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized.
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified connection cannot be found.
+        - Examples: Connection ID doesn't exist, connection doesn't belong to this client.
+
+        - 422: Unprocessable Entity Error
+        - Occurs when the request is valid but cannot be processed due to business rules.
+        - Examples: Connection is inactive, requested currency not supported.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues.
+      operationId: V1ClientDeallocationsSigningPostRoute
+      tags:
+        - Client Allocations & Deallocations
+      parameters:
+        - name: enterpriseId
+          description: |-
+            The enterprise identifier of the client.
+            This identifies the client enterprise that owns the connection.
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: connectionId
+          description: |-
+            The unique identifier of the connection to deallocate from.
+            This UUID uniquely identifies the connection between a client and a partner.
+          in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                amount:
+                  allOf:
+                    - $ref: '#/components/schemas/PositiveBNCurrencyAmount'
+                  description: |-
+                    The amount to deallocate from the connection.
+                    Contains both the currency identifier and the quantity in base units.
+                clientExternalId:
+                  type: string
+                  description: |-
+                    External identifier provided by the client.
+                    Used for idempotence and correlation with client systems.
+                  minLength: 1
+                nonce:
+                  type: string
+                  description: |-
+                    A unique nonce value used for cryptographic operations.
+                    This provides additional security for deallocation operations.
+                  minLength: 1
+                notes:
+                  type: string
+                  description: |-
+                    Optional notes provided by the client when creating the deallocation.
+                    Can contain additional context or information about the purpose of the deallocation.
+                  minLength: 1
+              required:
+                - amount
+                - clientExternalId
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ClientDeallocationsSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/clients/connections/signing:
     get:
       summary: Get Signing Payload for Client Connections
       description: |-
         This API call allows clients to get the client connections payload for signing.
+        If your HTTP client doesn't support sending a request body on a get request, use the V1ClientConnectionsSigningPostRoute
 
         Error scenarios:
         - 400: Invalid Request Error
@@ -4436,6 +4694,108 @@ paths:
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues. Transient network errors.
       operationId: V1ClientConnectionsSigningGetRoute
+      tags:
+        - Client Activation
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                partnerId:
+                  type: string
+                  title: uuid
+                name:
+                  type: string
+                  minLength: 1
+                connectionKey:
+                  $ref: '#/components/schemas/ConnectionKey'
+                nonce:
+                  type: string
+                  minLength: 1
+              required:
+                - partnerId
+                - name
+                - connectionKey
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ClientConnectionsSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+    post:
+      summary: Get Signing Payload for Client Connections (Post variant)
+      description: |-
+        This API call allows clients to get the client connections payload for signing.
+        This endpoint is effectively the same as the GET endpoint, but is helpful if your HTTP client doesn't support sending a request body on a get request.
+
+        Error scenarios:
+        - 400: Invalid Request Error
+        - Occurs when the request parameters are invalid or malformed
+        - Examples: Empty string provided for entepriseId, missing required fields in request body.
+
+        - 401: Authentication Error
+        - Occurs when the request is not authorized
+        - Examples: Caller is not a member of the enterprise.
+
+        - 403: Permission Denied Error
+        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Examples: Enterprise does not have OES license.
+
+        - 404: Not Found Error
+        - Occurs when the specified resources cannot be found.
+        - Examples: Enterprise ID doesn't exist, specified partner ID doesn't exist.
+
+        - 500: Internal Server Error
+        - Occurs when there's an unexpected server error processing the request.
+        - Examples: Database connection issues. Transient network errors.
+      operationId: V1ClientConnectionsSigningPostRoute
       tags:
         - Client Activation
       parameters:
@@ -7495,7 +7855,121 @@ paths:
         This API call allows partners to get the partner settlement payload for signing.
         The returned payload should be cryptographically signed by the partner and included
         in the subsequent settlement creation request.
+        If your HTTP client doesn't support sending a request body on a get request, use the V1PartnerSettlementsSigningPostRoute
       operationId: v1PartnerSettlementSigningGetRoute
+      tags:
+        - Partner Settlements & Transfers
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                externalId:
+                  type: string
+                  description: |-
+                    External identifier for the settlement request.
+                    This should be unique for each settlement request and is used for idempotence
+                    and correlation with partner systems.
+                  minLength: 1
+                notes:
+                  type: string
+                  description: |-
+                    Optional notes about the settlement.
+                    Can contain additional context or information about the purpose of the settlement.
+                  minLength: 1
+                settlementAmounts:
+                  allOf:
+                    - $ref: '#/components/schemas/SettlementAmountsRecord'
+                  description: |-
+                    Contains instructions for the settlement. 
+                    There are two options for the settlementAmounts record:
+                    - Connection liabilities
+                     - Expresses amounts owed to connections and owed by connections.
+                     - Structured as a Record<ConnectionId, Record<Currency, Amount>>.
+                       - Amount is either base units integer string or full units decimal string depending on
+                       partners configuration.  
+                       - (+ amount for connection gain, - amount for connection loss)
+                     - Can be used by broker partners or exchange partners, 
+                     however for broker partners the amounts for each currency must net to 0 (spread not yet supported).
+                    - Connection to connection liabilities
+                     - Expresses amounts each connection owes to one another.
+                     - Structured as a Record<ConnectionId, Record<ConnectionId, Record<Currency, Amount>>>
+                       - Amount is either base units integer string or full units decimal string depending on
+                       partners configuration.
+                       - (+ amount for connection gain, - amount for connection loss)
+                    This allows the API to handle both settlement patterns with a single type.
+                nonce:
+                  type: string
+                  description: |-
+                    A unique nonce value used for cryptographic operations.
+                    This provides additional security for settlement operations.
+                  minLength: 1
+                cutoffAt:
+                  type: string
+                  description: |-
+                    The date and time of the most recent trade being settled, represented
+                    in ISO 8601 format. Optional field used for v2 settlements.
+                  format: date-time
+                  title: ISO Date String
+              required:
+                - externalId
+                - settlementAmounts
+                - nonce
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PartnerSettlementsSigningGetPayload'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload'
+    post:
+      summary: Get Signing Payload for Partner Settlement (Post variant)
+      description: |-
+        This API call allows partners to get the partner settlements payload for signing.
+        The returned payload should be cryptographically signed by the partner and included
+        in the subsequent settlement creation request.
+        This endpoint is effectively the same as the GET endpoint, but is helpful if your HTTP client doesn't support 
+        sending a request body on a get request.
+      operationId: v1PartnerSettlementsSigningPostRoute
       tags:
         - Partner Settlements & Transfers
       parameters:
