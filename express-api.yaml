@@ -1262,12 +1262,188 @@ paths:
                 required:
                   - error
                   - details
+  /express/api/v1/wallets/simplecreate:
+    post:
+      summary: Create Wallet with Keychains
+      description: |-
+        Creates a new 2-of-3 multisignature wallet along with all three required keychains in a single
+        operation. This is a convenience method that handles the entire wallet setup process.
+
+        **WARNING: BE SURE TO BACKUP! NOT DOING SO CAN RESULT IN LOSS OF FUNDS!**
+
+        **Workflow:**
+        1. Creates the user keychain locally and encrypts it with the provided passphrase
+        2. Handles backup keychain based on parameters (see Backup Keychain Strategies below)
+        3. Uploads the encrypted user keychain and backup keychain xpub to BitGo
+        4. Creates the BitGo-managed keychain on the service
+        5. Creates the 2-of-3 multisig wallet on BitGo with all three public keys
+
+        **Backup Keychain Strategies:**
+        - **KRS Provider (Recommended)**: Set backupXpubProvider to use a Key Recovery Service (e.g., "keyternal")
+        - Creates instant-capable wallets
+        - Professional key management
+        - Cannot be combined with backupXpub
+        - **External Xpub (Recommended)**: Provide backupXpub generated on a separate, secure machine
+        - Maximum security (keys never on same machine)
+        - You control the backup key
+        - Cannot be combined with backupXpubProvider
+        - **Local Generation (NOT RECOMMENDED)**: If neither backupXpub nor backupXpubProvider provided
+        - Creates backup key on same machine as user key (security risk)
+        - Response includes warning message and unencrypted backup xprv
+        - You MUST back up the backup keychain yourself
+
+        **Response:** Returns wallet object and all three keychains. If backup keychain was created
+        locally, response includes warning message and the backup keychain will contain xprv (which
+        you must securely back up). Otherwise, backup keychain only contains xpub.
+      operationId: express.v1.wallet.simplecreate
+      tags:
+        - Express
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Wallet creation parameters including passphrase, label, and backup key configuration
+              properties:
+                passphrase:
+                  type: string
+                  description: Wallet passphrase to encrypt user and backup keys with (required)
+                label:
+                  type: string
+                  description: Wallet label shown in BitGo UI
+                backupXpub:
+                  type: string
+                  description: Backup keychain xpub generated on a separate machine (HIGHLY RECOMMENDED for security - cannot be used with backupXpubProvider)
+                backupXpubProvider:
+                  type: string
+                  description: Key Recovery Service provider for backup key, e.g. "keyternal" (creates instant-capable wallet - cannot be used with backupXpub)
+                enterprise:
+                  type: string
+                  description: Enterprise ID to create wallet under
+                passcodeEncryptionCode:
+                  type: string
+                  description: Code used to encrypt the wallet passcode for the recovery process
+                disableTransactionNotifications:
+                  type: boolean
+                  description: Disable transaction notifications for this wallet
+                disableKRSEmail:
+                  type: boolean
+                  description: Disable KRS email notifications (only applicable when using backupXpubProvider)
+              required:
+                - passphrase
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimpleCreateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BitgoExpressError'
+  /express/api/v1/walletshare/{shareId}/acceptShare:
+    post:
+      summary: Accept a Wallet Share
+      description: |-
+        Accepts a wallet share invitation from another user, granting access to the shared wallet
+        according to the permissions specified by the sharing user.
+
+        ## Wallet Share Permissions
+        - **View**: Read-only access to wallet information and transactions
+        - **Spend**: Ability to create and sign transactions
+        - **Admin**: Full control including user management and settings
+
+        ## Acceptance Workflow
+
+        The acceptance process varies based on the share type:
+
+        ### 1. View-Only Shares
+        No encryption processing needed. The share is accepted immediately without requiring userPassword.
+
+        ### 2. Spend/Admin Shares with Keychain (Standard Path)
+        Uses ECDH (Elliptic Curve Diffie-Hellman) key sharing:
+        - Requires `userPassword` to decrypt your ECDH keychain
+        - Derives a shared secret between you and the sharing user
+        - Decrypts the shared wallet keys using this secret
+        - Re-encrypts the keys with `newWalletPassphrase` (or `userPassword` if not specified)
+        - Stores the encrypted keys for future wallet operations
+
+        ### 3. Override Path (Out-of-Band Key Exchange)
+        When `overrideEncryptedXprv` is provided:
+        - Bypasses the ECDH key derivation process
+        - Uses the pre-encrypted xprv directly
+        - No password required (keys are already encrypted)
+
+        ## Security Notes
+        - `userPassword` must match your BitGo account password
+        - `newWalletPassphrase` should be strong and securely stored
+        - The ECDH key exchange ensures only the intended recipient can decrypt the wallet keys
+        - `overrideEncryptedXprv` should only be used for keys received through a separate secure channel
+      operationId: express.v1.wallet.acceptShare
+      tags:
+        - Express
+      parameters:
+        - name: shareId
+          description: ID of the wallet share to accept
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Credentials and configuration for accepting the wallet share
+              properties:
+                userPassword:
+                  type: string
+                  description: |-
+                    User's password for authentication.
+                    Required when accepting shares with spend/admin permissions that include encrypted keychains,
+                    unless overrideEncryptedXprv is provided. Used to decrypt the user's ECDH keychain
+                    for deriving the shared secret that decrypts the shared wallet keys.
+                newWalletPassphrase:
+                  type: string
+                  description: |-
+                    New passphrase to encrypt the shared wallet keys with.
+                    If not provided, defaults to userPassword. This passphrase will be required
+                    for future wallet operations that need to decrypt the wallet keys.
+                    Only applicable when accepting shares with encrypted keychains.
+                overrideEncryptedXprv:
+                  type: string
+                  description: |-
+                    Pre-encrypted wallet xprv received through an out-of-band secure channel.
+                    When provided, bypasses the ECDH key derivation and decryption process.
+                    Use this only if you received the encrypted key separately from the share invitation.
+                    The xprv must already be encrypted with your desired passphrase.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/AcceptShareResponse'
+                description: Successfully accepted wallet share
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/BitgoExpressError'
+                description: Error response
   /api/v2/pingexpress:
     get:
       tags:
         - Express
       summary: Ping BitGo Express
-      operationId: express.ping
+      operationId: express.ping1
       description: |
         Ping bitgo express to ensure that it is still running. Unlike /ping, this does not try connecting to bitgo.com.
       responses:
@@ -2383,6 +2559,26 @@ components:
             - intentType
             - txid
         - $ref: '#/components/schemas/BaseIntent'
+    AcceptShareResponse:
+      title: AcceptShareResponse
+      type: object
+      description: Response from accepting a wallet share
+      properties:
+        changed:
+          type: boolean
+          description: |-
+            Indicates whether the share state was changed by this operation.
+            true: The share was successfully accepted (state changed from pending to accepted).
+            false: The share was already in the target state (already accepted).
+        state:
+          type: string
+          description: |-
+            Current state of the wallet share after the operation.
+            Possible values: 'accepted', 'rejected', 'active', 'pendingapproval', 'canceled'
+            Should be 'accepted' after a successful acceptance.
+      required:
+        - changed
+        - state
     AccountBaseBuildOptions:
       title: AccountBaseBuildOptions
       type: object
@@ -2772,6 +2968,23 @@ components:
         - btc
         - tbtc4
       description: This route is only available for Bitcoin.
+    BitgoExpressError:
+      title: BitgoExpressError
+      type: object
+      properties:
+        message:
+          type: string
+        name:
+          type: string
+        bitgoJsVersion:
+          type: string
+        bitgoExpressVersion:
+          type: string
+      required:
+        - message
+        - name
+        - bitgoJsVersion
+        - bitgoExpressVersion
     BitgoKeychainType:
       title: BitgoKeychainType
       type: object
@@ -6394,6 +6607,34 @@ components:
         - from
         - to
         - share
+    SimpleCreateResponse:
+      title: SimpleCreateResponse
+      type: object
+      properties:
+        wallet:
+          type: object
+          additionalProperties: {}
+          description: Newly created wallet model object with balance, label, keychains array, and other wallet properties
+        userKeychain:
+          type: object
+          additionalProperties: {}
+          description: User keychain with xpub and encryptedXprv (encrypted with passphrase, stored on BitGo)
+        backupKeychain:
+          type: object
+          additionalProperties: {}
+          description: Backup keychain with xpub (and xprv if created locally - must be backed up immediately)
+        bitgoKeychain:
+          type: object
+          additionalProperties: {}
+          description: BitGo-managed keychain with xpub (BitGo holds this key)
+        warning:
+          type: string
+          description: Warning message present only when backup keychain was created locally (has xprv) - reminds you to back it up
+      required:
+        - wallet
+        - userKeychain
+        - backupKeychain
+        - bitgoKeychain
     SolBuildOptions:
       title: SolBuildOptions
       allOf:
