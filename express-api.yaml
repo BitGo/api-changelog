@@ -1438,12 +1438,83 @@ paths:
                 allOf:
                   - $ref: '#/components/schemas/BitgoExpressError'
                 description: Error response
+  /express/api/v2/{coin}/verifyaddress:
+    post:
+      summary: Verify address for a given coin
+      description: |-
+        Returns whether the address is valid for the specified coin.
+        For UTXO coins, an optional legacy script hash flag can be provided to allow previous script hash versions.
+      operationId: express.verifycoinaddress
+      tags:
+        - Express
+      parameters:
+        - name: coin
+          description: Coin ticker / chain identifier
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body for coin-specific address verification.
+              properties:
+                address:
+                  type: string
+                  description: Address which should be verified for correct format
+                supportOldScriptHashVersion:
+                  type: boolean
+                  description: Accept legacy script hash version for applicable UTXO coins (optional).
+              required:
+                - address
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  isValid:
+                    type: boolean
+                required:
+                  - isValid
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BitgoExpressError'
+  /express/api/v2/ping:
+    get:
+      summary: Ping
+      description: Health check endpoint that returns 200 when the Express server is running.
+      operationId: express.v2.ping
+      tags:
+        - Express
+      parameters: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BitgoExpressError'
   /api/v2/pingexpress:
     get:
       tags:
         - Express
       summary: Ping BitGo Express
-      operationId: express.ping1
+      operationId: express.ping
       description: |
         Ping bitgo express to ensure that it is still running. Unlike /ping, this does not try connecting to bitgo.com.
       responses:
@@ -2010,7 +2081,7 @@ paths:
       tags:
         - Express
       summary: Verify address
-      operationId: express.verifycoinaddress
+      operationId: express.verifycoinaddress1
       description: Verify address for a given coin
       parameters:
         - $ref: '#/components/parameters/pathCoin'
