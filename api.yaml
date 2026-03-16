@@ -9013,1643 +9013,1385 @@ paths:
                 $ref: '#/components/schemas/V1ErrorPayload'
   /api/clearing/v1/enterprise/{enterpriseId}/account-settings/{accountId}:
     get:
-      summary: Get settlement Go Account settings
+      summary: Get settlement settings for a Go Account.
       operationId: V1AccountSettingsGetRoute
       tags:
         - Settlement Onboarding
-      description: Get settlement settings for a Go Account.
       parameters:
-        - name: accountId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
-          in: path
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
       responses:
         '200':
-          description: ''
+          description: OK
           content:
             application/json:
               schema:
-                title: TradingAccountSettingsResponse
-                type: object
-                required:
-                  - accountId
-                  - affirmationExpirationTime
-                  - referralCode
-                properties:
-                  accountId:
-                    type: string
-                  affirmationExpirationTime:
-                    type: number
-                  feeRates:
-                    title: FeeRate
-                    type: object
-                    required:
-                      - settlement
-                    properties:
-                      settlement:
-                        title: PositiveIntConfig
-                        oneOf:
-                          - title: string
-                            type: string
-                          - title: number
-                            type: number
-                  referralCode:
-                    type: string
+                $ref: '#/components/schemas/TradingAccountSettingsResponse'
         '400':
-          description: ''
+          description: Bad Request
           content:
             application/json:
               schema:
                 type: object
                 properties: {}
         '401':
-          description: ''
+          description: Unauthorized
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '500':
-          description: ''
+          description: Internal Server Error
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
+                $ref: '#/components/schemas/V1ErrorPayload1'
+  /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/account-settings:
+    put:
+      summary: Update account settings for a Go Account.
+      operationId: V1AccountSettingsPutRoute
+      tags:
+        - Settlement Onboarding
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: user-agent
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-forwarded-for
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: token-scope
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: origin
+          in: header
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                queueAutomationEnabled:
+                  type: boolean
+              required:
+                - queueAutomationEnabled
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TradingAccountSettingsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
                 type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
   /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/approval-requests/{approvalRequestId}:
     put:
-      summary: Update settlement approval request
+      summary: Update an approval request for a settlement.
       operationId: V1ApprovalRequestPutRoute
       tags:
         - Approval Requests
-      description: Update an approval request for a settlement.
       parameters:
-        - name: accountId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
-          in: path
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
         - name: approvalRequestId
-          schema:
-            title: UUID
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: user-agent
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-forwarded-for
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: token-scope
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: origin
+          in: header
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  $ref: '#/components/schemas/ApprovalRequestUpdateStatus'
+              required:
+                - status
       responses:
         '200':
-          description: ''
+          description: OK
           content:
             application/json:
               schema:
-                title: ApprovalRequestResponse
-                type: object
-                required:
-                  - settlementId
-                  - createdAt
-                  - updatedAt
-                  - id
-                  - accountId
-                  - status
-                  - payload
-                properties:
-                  settlementId:
-                    title: NonEmptyString
-                    type: string
-                  approvedAt:
-                    type: string
-                    format: date
-                  createdAt:
-                    type: string
-                    format: date
-                  updatedAt:
-                    type: string
-                    format: date
-                  id:
-                    title: NonEmptyString
-                    type: string
-                  accountId:
-                    title: NonEmptyString
-                    type: string
-                  status:
-                    title: ApprovalRequestStatus
-                    type: string
-                    enum:
-                      - acknowledged
-                      - canceled
-                      - rejected
-                      - approved
-                      - pending
-                      - failed
-                      - overdue
-                      - expired
-                  payload:
-                    title: NonEmptyString
-                    type: string
-                  signature:
-                    title: NonEmptyString
-                    type: string
+                $ref: '#/components/schemas/ApprovalRequestResponse'
         '400':
-          description: ''
+          description: Bad Request
           content:
             application/json:
               schema:
                 type: object
                 properties: {}
         '401':
-          description: ''
+          description: Unauthorized
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '500':
-          description: ''
+          description: Internal Server Error
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
+                $ref: '#/components/schemas/V1ErrorPayload1'
+  /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/balances:
+    get:
+      summary: Get account balances in Lumina-compatible format.
+      operationId: V1AccountBalancesGetRoute
+      tags:
+        - Account Balances
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAccountBalancesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
                 type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              required:
-                - status
-              properties:
-                status:
-                  title: ApprovalRequestUpdateStatus
-                  type: string
-                  enum:
-                    - acknowledged
-                    - canceled
-                    - rejected
-        required: true
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
   /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/settlement:
     post:
-      summary: Create settlement
+      summary: Creates a settlement.
       operationId: V1EnterpriseAccountSettlementPostRoute
       tags:
         - Settlements
-      description: Creates a settlement.
       parameters:
-        - name: accountId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
-          in: path
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                title: SettlementResponse
-                type: object
-                required:
-                  - approvalRequests
-                  - settlementTransfers
-                  - requesterAccountName
-                  - createdAt
-                  - updatedAt
-                  - id
-                  - externalId
-                  - requesterAccountId
-                  - status
-                  - type
-                properties:
-                  approvalRequests:
-                    type: array
-                    items:
-                      title: ApprovalRequestResponseForSettlement
-                      type: object
-                      required:
-                        - createdAt
-                        - updatedAt
-                        - id
-                        - accountId
-                        - status
-                        - payload
-                      properties:
-                        approvedAt:
-                          type: string
-                          format: date
-                        createdAt:
-                          type: string
-                          format: date
-                        updatedAt:
-                          type: string
-                          format: date
-                        id:
-                          title: NonEmptyString
-                          type: string
-                        accountId:
-                          title: NonEmptyString
-                          type: string
-                        status:
-                          title: ApprovalRequestStatus
-                          type: string
-                          enum:
-                            - acknowledged
-                            - canceled
-                            - rejected
-                            - approved
-                            - pending
-                            - failed
-                            - overdue
-                            - expired
-                        payload:
-                          title: NonEmptyString
-                          type: string
-                        signature:
-                          title: NonEmptyString
-                          type: string
-                  settlementTransfers:
-                    type: array
-                    items:
-                      title: SettlementTransferResponse
-                      type: object
-                      required:
-                        - createdAt
-                        - updatedAt
-                        - id
-                        - sourceTradingAccountId
-                        - destinationTradingAccountId
-                        - currency
-                        - quantity
-                      properties:
-                        createdAt:
-                          type: string
-                          format: date
-                        updatedAt:
-                          type: string
-                          format: date
-                        id:
-                          title: UUID
-                          type: string
-                        sourceTradingAccountId:
-                          title: NonEmptyString
-                          type: string
-                        destinationTradingAccountId:
-                          title: NonEmptyString
-                          type: string
-                        currency:
-                          title: SupportedCurrency
-                          type: string
-                        quantity:
-                          title: PositiveBigIntFromString
-                          type: string
-                        txIds:
-                          type: array
-                          items:
-                            title: NonEmptyString
-                            type: string
-                  requesterAccountName:
-                    title: NonEmptyString
-                    type: string
-                  finalizedAt:
-                    type: string
-                    format: date
-                  createdAt:
-                    type: string
-                    format: date
-                  updatedAt:
-                    type: string
-                    format: date
-                  id:
-                    title: NonEmptyString
-                    type: string
-                  externalId:
-                    title: NonEmptyString
-                    type: string
-                  notation:
-                    type: string
-                  requesterAccountId:
-                    title: NonEmptyString
-                    type: string
-                  status:
-                    title: SettlementStatus
-                    type: string
-                    enum:
-                      - canceled
-                      - rejected
-                      - pending
-                      - failed
-                      - expired
-                      - settled
-                  type:
-                    type: string
-                    enum:
-                      - direct
-        '400':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
-        '401':
-          description: ''
-          content:
-            application/json:
-              schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
-        '409':
-          description: ''
-          content:
-            application/json:
-              schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
-        '500':
-          description: ''
-          content:
-            application/json:
-              schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: user-agent
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-forwarded-for
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: token-scope
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: origin
+          in: header
+          schema:
+            type: string
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              properties:
+                externalId:
+                  type: string
+                  minLength: 1
+                expireAt:
+                  type: string
+                  format: date-time
+                  title: ISO Date String
+                notation:
+                  type: string
+                addressBookConnectionId:
+                  type: string
+                  title: uuid
+                addressBookConnectionUpdatedAt:
+                  type: string
+                  format: date-time
+                  title: ISO Date String
+                assetTransfers:
+                  type: array
+                  items:
+                    type: object
+                    description: Describes an asset transfer by its currency and amount
+                    properties:
+                      currency:
+                        $ref: '#/components/schemas/SupportedCurrency'
+                      quantity:
+                        type: string
+                        format: number
+                    required:
+                      - currency
+                      - quantity
+                bypassCounterpartySigning:
+                  type: boolean
+                transactionRouteId:
+                  type: string
+                  title: uuid
+                checkForDuplicates:
+                  type: boolean
+                  description: HTTP specific codec for create multi-currency settlement
               required:
                 - externalId
                 - addressBookConnectionId
                 - addressBookConnectionUpdatedAt
                 - assetTransfers
-              properties:
-                externalId:
-                  title: NonEmptyString
-                  type: string
-                expireAt:
-                  type: string
-                  format: date-time
-                notation:
-                  type: string
-                addressBookConnectionId:
-                  title: UUID
-                  type: string
-                addressBookConnectionUpdatedAt:
-                  type: string
-                  format: date-time
-                assetTransfers:
-                  title: NonEmptyArray
-                  type: array
-                  items:
-                    title: AssetTransfer
-                    type: object
-                    required:
-                      - currency
-                      - quantity
-                    properties:
-                      currency:
-                        title: SupportedCurrency
-                        type: string
-                      quantity:
-                        title: BigIntFromString
-                        type: string
-                bypassCounterpartySigning:
-                  title: Boolean
-                  type: boolean
-                transactionRouteId:
-                  title: UUID
-                  type: string
-                checkForDuplicates:
-                  title: Boolean
-                  type: boolean
-        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SettlementResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
   /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/settlement/{settlementId}:
     get:
       summary: Get settlement by ID.
       operationId: V1GetSettlementByIdRoute
       tags:
         - Settlements
-      description: Get settlement by ID.
       parameters:
-        - name: accountId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
-          in: path
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
         - name: settlementId
-          schema:
-            title: UUID
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
       responses:
         '200':
-          description: ''
+          description: OK
           content:
             application/json:
               schema:
-                title: SettlementResponse
-                type: object
-                required:
-                  - approvalRequests
-                  - settlementTransfers
-                  - requesterAccountName
-                  - createdAt
-                  - updatedAt
-                  - id
-                  - externalId
-                  - requesterAccountId
-                  - status
-                  - type
-                properties:
-                  approvalRequests:
-                    type: array
-                    items:
-                      title: ApprovalRequestResponseForSettlement
-                      type: object
-                      required:
-                        - createdAt
-                        - updatedAt
-                        - id
-                        - accountId
-                        - status
-                        - payload
-                      properties:
-                        approvedAt:
-                          type: string
-                          format: date
-                        createdAt:
-                          type: string
-                          format: date
-                        updatedAt:
-                          type: string
-                          format: date
-                        id:
-                          title: NonEmptyString
-                          type: string
-                        accountId:
-                          title: NonEmptyString
-                          type: string
-                        status:
-                          title: ApprovalRequestStatus
-                          type: string
-                          enum:
-                            - acknowledged
-                            - canceled
-                            - rejected
-                            - approved
-                            - pending
-                            - failed
-                            - overdue
-                            - expired
-                        payload:
-                          title: NonEmptyString
-                          type: string
-                        signature:
-                          title: NonEmptyString
-                          type: string
-                  settlementTransfers:
-                    type: array
-                    items:
-                      title: SettlementTransferResponse
-                      type: object
-                      required:
-                        - createdAt
-                        - updatedAt
-                        - id
-                        - sourceTradingAccountId
-                        - destinationTradingAccountId
-                        - currency
-                        - quantity
-                      properties:
-                        createdAt:
-                          type: string
-                          format: date
-                        updatedAt:
-                          type: string
-                          format: date
-                        id:
-                          title: UUID
-                          type: string
-                        sourceTradingAccountId:
-                          title: NonEmptyString
-                          type: string
-                        destinationTradingAccountId:
-                          title: NonEmptyString
-                          type: string
-                        currency:
-                          title: SupportedCurrency
-                          type: string
-                        quantity:
-                          title: PositiveBigIntFromString
-                          type: string
-                        txIds:
-                          type: array
-                          items:
-                            title: NonEmptyString
-                            type: string
-                  requesterAccountName:
-                    title: NonEmptyString
-                    type: string
-                  finalizedAt:
-                    type: string
-                    format: date
-                  createdAt:
-                    type: string
-                    format: date
-                  updatedAt:
-                    type: string
-                    format: date
-                  id:
-                    title: NonEmptyString
-                    type: string
-                  externalId:
-                    title: NonEmptyString
-                    type: string
-                  notation:
-                    type: string
-                  requesterAccountId:
-                    title: NonEmptyString
-                    type: string
-                  status:
-                    title: SettlementStatus
-                    type: string
-                    enum:
-                      - canceled
-                      - rejected
-                      - pending
-                      - failed
-                      - expired
-                      - settled
-                  type:
-                    type: string
-                    enum:
-                      - direct
+                $ref: '#/components/schemas/SettlementResponse'
         '400':
-          description: ''
+          description: Bad Request
           content:
             application/json:
               schema:
                 type: object
                 properties: {}
         '401':
-          description: ''
+          description: Unauthorized
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '500':
-          description: ''
+          description: Internal Server Error
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
   /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/settlement/{settlementId}/signing:
     get:
-      summary: Get settlement signing
+      summary: Get settlement signing.
       operationId: V1GetSettlementSigningRoute
       tags:
         - Settlement Signing
-      description: Get settlement signing.
       parameters:
-        - name: accountId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
-          in: path
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
         - name: settlementId
-          schema:
-            title: UUID
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            title: uuid
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: ''
+          description: OK
           content:
             application/json:
               schema:
-                title: TradePayloadResponse
-                type: object
-                required:
-                  - payload
-                properties:
-                  payload:
-                    type: string
+                $ref: '#/components/schemas/TradePayloadResponse'
         '400':
-          description: ''
+          description: Bad Request
           content:
             application/json:
               schema:
                 type: object
                 properties: {}
         '401':
-          description: ''
+          description: Unauthorized
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '500':
-          description: ''
+          description: Internal Server Error
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
     post:
-      summary: Sign settlement
+      summary: Signs a Settlement.
       operationId: V1PostSettlementSigningRoute
       tags:
         - Settlement Signing
-      description: Signs a Settlement.
       parameters:
-        - name: accountId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
-          in: path
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
         - name: settlementId
-          schema:
-            title: UUID
-            type: string
-          required: true
           in: path
-      responses:
-        '200':
-          description: ''
-          content:
-            application/json:
-              schema:
-                title: ApprovalRequestResponse
-                type: object
-                required:
-                  - settlementId
-                  - createdAt
-                  - updatedAt
-                  - id
-                  - accountId
-                  - status
-                  - payload
-                properties:
-                  settlementId:
-                    title: NonEmptyString
-                    type: string
-                  approvedAt:
-                    type: string
-                    format: date
-                  createdAt:
-                    type: string
-                    format: date
-                  updatedAt:
-                    type: string
-                    format: date
-                  id:
-                    title: NonEmptyString
-                    type: string
-                  accountId:
-                    title: NonEmptyString
-                    type: string
-                  status:
-                    title: ApprovalRequestStatus
-                    type: string
-                    enum:
-                      - acknowledged
-                      - canceled
-                      - rejected
-                      - approved
-                      - pending
-                      - failed
-                      - overdue
-                      - expired
-                  payload:
-                    title: NonEmptyString
-                    type: string
-                  signature:
-                    title: NonEmptyString
-                    type: string
-        '400':
-          description: ''
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
-        '401':
-          description: ''
-          content:
-            application/json:
-              schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
-        '500':
-          description: ''
-          content:
-            application/json:
-              schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+          required: true
+          schema:
+            type: string
+            title: uuid
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: user-agent
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-forwarded-for
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: token-scope
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: origin
+          in: header
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
             schema:
               type: object
+              properties:
+                payload:
+                  type: string
+                  minLength: 1
+                signature:
+                  type: string
+                  minLength: 1
               required:
                 - payload
                 - signature
-              properties:
-                payload:
-                  title: NonEmptyString
-                  type: string
-                signature:
-                  title: NonEmptyString
-                  type: string
-        required: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequestResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
   /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/settlements:
     get:
-      summary: List settlements by account
+      summary: List settlements by Go Account.
       operationId: V1ListSettlementsByAccountRoute
       tags:
         - Settlements
-      description: List settlements by Go Account.
       parameters:
         - name: limit
-          schema:
-            type: string
-            default: '50'
-          required: false
           in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
         - name: offset
-          schema:
-            type: string
-            default: '0'
-          required: false
           in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
         - name: status
-          schema:
-            title: SettlementStatus
-            type: string
-            enum:
-              - canceled
-              - rejected
-              - pending
-              - failed
-              - expired
-              - settled
-          required: false
           in: query
-        - name: includeTotalCount
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/SettlementStatus'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - canceled
+                    - pending
+                    - rejected
+                    - settled
+                    - expired
+                    - pending-acknowledgement
+        - name: counterpartyAccountIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: dateInitiatedOnOrAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: dateInitiatedBefore
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: omitRequesterAccountName
+          in: query
           schema:
             type: boolean
-          required: false
+        - name: requiresSigning
           in: query
-          description: When true, includes totalCount in the response
-        - name: accountId
           schema:
-            title: NonEmptyString
+            type: boolean
+        - name: types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - direct
+                - agency
+                - disbursement
+        - name: batchId
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+        - name: externalIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: externalIdPrefix
+          in: query
+          schema:
             type: string
-          required: true
-          in: path
+            minLength: 1
+        - name: includeTotalCount
+          in: query
+          schema:
+            type: boolean
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
       responses:
         '200':
-          description: ''
+          description: OK
           content:
             application/json:
               schema:
-                title: SettlementListResponse
-                type: object
-                required:
-                  - settlementList
-                properties:
-                  totalCount:
-                    type: integer
-                    minimum: 0
-                    description: Total count of settlements matching the query (only present when includeTotalCount=true)
-                  settlementList:
-                    type: array
-                    items:
-                      title: SettlementResponse
-                      type: object
-                      required:
-                        - approvalRequests
-                        - settlementTransfers
-                        - requesterAccountName
-                        - createdAt
-                        - updatedAt
-                        - id
-                        - externalId
-                        - requesterAccountId
-                        - status
-                        - type
-                      properties:
-                        approvalRequests:
-                          type: array
-                          items:
-                            title: ApprovalRequestResponseForSettlement
-                            type: object
-                            required:
-                              - createdAt
-                              - updatedAt
-                              - id
-                              - accountId
-                              - status
-                              - payload
-                            properties:
-                              approvedAt:
-                                type: string
-                                format: date
-                              createdAt:
-                                type: string
-                                format: date
-                              updatedAt:
-                                type: string
-                                format: date
-                              id:
-                                title: NonEmptyString
-                                type: string
-                              accountId:
-                                title: NonEmptyString
-                                type: string
-                              status:
-                                title: ApprovalRequestStatus
-                                type: string
-                                enum:
-                                  - acknowledged
-                                  - canceled
-                                  - rejected
-                                  - approved
-                                  - pending
-                                  - failed
-                                  - overdue
-                                  - expired
-                              payload:
-                                title: NonEmptyString
-                                type: string
-                              signature:
-                                title: NonEmptyString
-                                type: string
-                        settlementTransfers:
-                          type: array
-                          items:
-                            title: SettlementTransferResponse
-                            type: object
-                            required:
-                              - createdAt
-                              - updatedAt
-                              - id
-                              - sourceTradingAccountId
-                              - destinationTradingAccountId
-                              - currency
-                              - quantity
-                            properties:
-                              createdAt:
-                                type: string
-                                format: date
-                              updatedAt:
-                                type: string
-                                format: date
-                              id:
-                                title: UUID
-                                type: string
-                              sourceTradingAccountId:
-                                title: NonEmptyString
-                                type: string
-                              destinationTradingAccountId:
-                                title: NonEmptyString
-                                type: string
-                              currency:
-                                title: SupportedCurrency
-                                type: string
-                              quantity:
-                                title: PositiveBigIntFromString
-                                type: string
-                              txIds:
-                                type: array
-                                items:
-                                  title: NonEmptyString
-                                  type: string
-                        requesterAccountName:
-                          title: NonEmptyString
-                          type: string
-                        finalizedAt:
-                          type: string
-                          format: date
-                        createdAt:
-                          type: string
-                          format: date
-                        updatedAt:
-                          type: string
-                          format: date
-                        id:
-                          title: NonEmptyString
-                          type: string
-                        externalId:
-                          title: NonEmptyString
-                          type: string
-                        notation:
-                          type: string
-                        requesterAccountId:
-                          title: NonEmptyString
-                          type: string
-                        status:
-                          title: SettlementStatus
-                          type: string
-                          enum:
-                            - canceled
-                            - rejected
-                            - pending
-                            - failed
-                            - expired
-                            - settled
-                        type:
-                          type: string
-                          enum:
-                            - direct
+                $ref: '#/components/schemas/SettlementListResponse'
         '400':
-          description: ''
+          description: Bad Request
           content:
             application/json:
               schema:
                 type: object
                 properties: {}
         '401':
-          description: ''
+          description: Unauthorized
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '404':
-          description: ''
+          description: Not Found
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '500':
-          description: ''
+          description: Internal Server Error
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
-  /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/trading-partner:
-    post:
-      summary: Create settlement trading partner
-      operationId: V1TradingPartnerPostRoute
+                $ref: '#/components/schemas/V1ErrorPayload1'
+  /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/settlements/batch-signing/payload:
+    get:
+      summary: Get batch signing payload
+      operationId: V1GetBatchSigningRoute
       tags:
-        - Settlement Onboarding
-      description: Creates a trading partner (counterparty) for a Go Account.
+        - Settlements
       parameters:
-        - name: accountId
+        - name: settlementIds
+          in: query
           schema:
-            title: NonEmptyString
+            type: array
+            items:
+              type: string
+              title: uuid
+        - name: batchId
+          in: query
+          schema:
             type: string
-          required: true
-          in: path
+            title: uuid
+        - name: excludedSettlementIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: user-agent
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-forwarded-for
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: token-scope
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: origin
+          in: header
+          schema:
+            type: string
       responses:
         '200':
-          description: ''
+          description: OK
           content:
             application/json:
               schema:
-                title: TradingPartnerListResponse
-                type: object
-                required:
-                  - tradingPartnerList
-                properties:
-                  tradingPartnerList:
-                    type: array
-                    items:
-                      title: TradingPartnerResponse
-                      type: object
-                      required:
-                        - id
-                        - primaryAccountId
-                        - primaryEnterpriseName
-                        - secondaryAccountId
-                        - secondaryEnterpriseName
-                        - status
-                        - updatedAt
-                      properties:
-                        id:
-                          type: string
-                        primaryAccountId:
-                          type: string
-                        primaryEnterpriseName:
-                          type: string
-                        secondaryAccountId:
-                          type: string
-                        secondaryEnterpriseName:
-                          type: string
-                        status:
-                          title: TradingPartnerStatuses
-                          type: string
-                          enum:
-                            - accepted
-                            - rejected
-                            - canceled
-                            - pending
-                        updatedAt:
-                          type: string
-                          format: date
+                $ref: '#/components/schemas/GetBatchSigningResponse'
         '400':
-          description: ''
+          description: Bad Request
           content:
             application/json:
               schema:
                 type: object
                 properties: {}
         '401':
-          description: ''
+          description: Unauthorized
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '500':
-          description: ''
+          description: Internal Server Error
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+  /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/settlements/bulk-terminate:
+    post:
+      summary: Bulk terminate settlements.
+      operationId: V1PostBulkTerminateRoute
+      tags:
+        - Settlements
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: user-agent
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-forwarded-for
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: token-scope
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: origin
+          in: header
+          schema:
+            type: string
       requestBody:
         content:
           application/json:
             schema:
               type: object
-              required:
-                - referralCode
               properties:
-                referralCode:
-                  title: NonEmptyString
-                  type: string
-        required: true
+                settlementIds:
+                  type: array
+                  items:
+                    type: string
+                    title: uuid
+              required:
+                - settlementIds
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkTerminateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+  /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/settlements/queue/process/payload:
+    get:
+      summary: Get Process Queue Payload
+      operationId: V1GetProcessQueuePayloadRoute
+      tags:
+        - Settlement Queue
+      parameters:
+        - name: queueIds
+          in: query
+          required: true
+          schema:
+            type: array
+            items:
+              type: string
+              format: number
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: user-agent
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: x-forwarded-for
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: token-scope
+          in: header
+          required: true
+          schema:
+            type: string
+        - name: origin
+          in: header
+          schema:
+            type: string
+        - name: authorization
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetProcessQueuePayloadResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
   /api/clearing/v1/enterprise/{enterpriseId}/account/{accountId}/trading-partners:
     get:
-      summary: List settlement trading partners
+      summary: List trading partners (counterparties) for a Go Account.
       operationId: V1ListTradingPartnersByAccountRoute
       tags:
         - Settlement Onboarding
-      description: List trading partners (counterparties) for a Go Account.
       parameters:
         - name: status
-          schema:
-            title: TradingPartnerStatuses
-            type: string
-            enum:
-              - accepted
-              - rejected
-              - canceled
-              - pending
-          required: false
           in: query
-        - name: accountId
           schema:
-            title: NonEmptyString
-            type: string
-          required: true
-          in: path
+            oneOf:
+              - $ref: '#/components/schemas/TradingPartnerUpdateStatus'
+              - type: string
+                enum:
+                  - pending
         - name: enterpriseId
-          schema:
-            title: NonEmptyString
-            type: string
-          required: true
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: accountId
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
       responses:
         '200':
-          description: ''
+          description: OK
           content:
             application/json:
               schema:
-                title: TradingPartnerListResponse
-                type: object
-                required:
-                  - tradingPartnerList
-                properties:
-                  tradingPartnerList:
-                    type: array
-                    items:
-                      title: TradingPartnerResponse
-                      type: object
-                      required:
-                        - id
-                        - primaryAccountId
-                        - primaryEnterpriseName
-                        - secondaryAccountId
-                        - secondaryEnterpriseName
-                        - status
-                        - updatedAt
-                      properties:
-                        id:
-                          type: string
-                        primaryAccountId:
-                          type: string
-                        primaryEnterpriseName:
-                          type: string
-                        secondaryAccountId:
-                          type: string
-                        secondaryEnterpriseName:
-                          type: string
-                        status:
-                          title: TradingPartnerStatuses
-                          type: string
-                          enum:
-                            - accepted
-                            - rejected
-                            - canceled
-                            - pending
-                        updatedAt:
-                          type: string
-                          format: date
+                $ref: '#/components/schemas/TradingPartnerListResponse'
         '400':
-          description: ''
+          description: Bad Request
           content:
             application/json:
               schema:
                 type: object
                 properties: {}
         '401':
-          description: ''
+          description: Unauthorized
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '500':
-          description: ''
+          description: Internal Server Error
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
   /api/clearing/v1/enterprise/{enterpriseId}/settlements:
     get:
-      summary: List settlements by enterprise
+      summary: List settlements by enterprise.
       operationId: V1ListSettlementsByEnterpriseRoute
       tags:
         - Settlements
-      description: List settlements by enterprise.
       parameters:
         - name: limit
-          schema:
-            type: string
-            default: '50'
-          required: false
           in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
         - name: offset
-          schema:
-            type: string
-            default: '0'
-          required: false
           in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
         - name: status
-          schema:
-            title: SettlementStatus
-            type: string
-            enum:
-              - canceled
-              - rejected
-              - pending
-              - failed
-              - expired
-              - settled
-          required: false
           in: query
-        - name: includeTotalCount
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/SettlementStatus'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - canceled
+                    - pending
+                    - rejected
+                    - settled
+                    - expired
+                    - pending-acknowledgement
+        - name: counterpartyAccountIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: dateInitiatedOnOrAfter
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: dateInitiatedBefore
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: omitRequesterAccountName
+          in: query
           schema:
             type: boolean
-          required: false
+        - name: requiresSigning
           in: query
-          description: When true, includes totalCount in the response
-        - name: enterpriseId
           schema:
-            title: NonEmptyString
+            type: boolean
+        - name: types
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - direct
+                - agency
+                - disbursement
+        - name: batchId
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+        - name: externalIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+        - name: externalIdPrefix
+          in: query
+          schema:
             type: string
-          required: true
+            minLength: 1
+        - name: includeTotalCount
+          in: query
+          schema:
+            type: boolean
+        - name: enterpriseId
           in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
       responses:
         '200':
-          description: ''
+          description: OK
           content:
             application/json:
               schema:
-                title: SettlementListResponse
-                type: object
-                required:
-                  - settlementList
-                properties:
-                  totalCount:
-                    type: integer
-                    minimum: 0
-                    description: Total count of settlements matching the query (only present when includeTotalCount=true)
-                  settlementList:
-                    type: array
-                    items:
-                      title: SettlementResponse
-                      type: object
-                      required:
-                        - approvalRequests
-                        - settlementTransfers
-                        - requesterAccountName
-                        - createdAt
-                        - updatedAt
-                        - id
-                        - externalId
-                        - requesterAccountId
-                        - status
-                        - type
-                      properties:
-                        approvalRequests:
-                          type: array
-                          items:
-                            title: ApprovalRequestResponseForSettlement
-                            type: object
-                            required:
-                              - createdAt
-                              - updatedAt
-                              - id
-                              - accountId
-                              - status
-                              - payload
-                            properties:
-                              approvedAt:
-                                type: string
-                                format: date
-                              createdAt:
-                                type: string
-                                format: date
-                              updatedAt:
-                                type: string
-                                format: date
-                              id:
-                                title: NonEmptyString
-                                type: string
-                              accountId:
-                                title: NonEmptyString
-                                type: string
-                              status:
-                                title: ApprovalRequestStatus
-                                type: string
-                                enum:
-                                  - acknowledged
-                                  - canceled
-                                  - rejected
-                                  - approved
-                                  - pending
-                                  - failed
-                                  - overdue
-                                  - expired
-                              payload:
-                                title: NonEmptyString
-                                type: string
-                              signature:
-                                title: NonEmptyString
-                                type: string
-                        settlementTransfers:
-                          type: array
-                          items:
-                            title: SettlementTransferResponse
-                            type: object
-                            required:
-                              - createdAt
-                              - updatedAt
-                              - id
-                              - sourceTradingAccountId
-                              - destinationTradingAccountId
-                              - currency
-                              - quantity
-                            properties:
-                              createdAt:
-                                type: string
-                                format: date
-                              updatedAt:
-                                type: string
-                                format: date
-                              id:
-                                title: UUID
-                                type: string
-                              sourceTradingAccountId:
-                                title: NonEmptyString
-                                type: string
-                              destinationTradingAccountId:
-                                title: NonEmptyString
-                                type: string
-                              currency:
-                                title: SupportedCurrency
-                                type: string
-                              quantity:
-                                title: PositiveBigIntFromString
-                                type: string
-                              txIds:
-                                type: array
-                                items:
-                                  title: NonEmptyString
-                                  type: string
-                        requesterAccountName:
-                          title: NonEmptyString
-                          type: string
-                        finalizedAt:
-                          type: string
-                          format: date
-                        createdAt:
-                          type: string
-                          format: date
-                        updatedAt:
-                          type: string
-                          format: date
-                        id:
-                          title: NonEmptyString
-                          type: string
-                        externalId:
-                          title: NonEmptyString
-                          type: string
-                        notation:
-                          type: string
-                        requesterAccountId:
-                          title: NonEmptyString
-                          type: string
-                        status:
-                          title: SettlementStatus
-                          type: string
-                          enum:
-                            - canceled
-                            - rejected
-                            - pending
-                            - failed
-                            - expired
-                            - settled
-                        type:
-                          type: string
-                          enum:
-                            - direct
+                $ref: '#/components/schemas/SettlementListResponse'
         '400':
-          description: ''
+          description: Bad Request
           content:
             application/json:
               schema:
                 type: object
                 properties: {}
         '401':
-          description: ''
+          description: Unauthorized
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '404':
-          description: ''
+          description: Not Found
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
-                type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                $ref: '#/components/schemas/V1ErrorPayload1'
         '500':
-          description: ''
+          description: Internal Server Error
           content:
             application/json:
               schema:
-                title: V1ErrorPayload
+                $ref: '#/components/schemas/V1ErrorPayload1'
+  /api/clearing/v1/settlement/count:
+    get:
+      summary: Get approval request count per enterprise for a user.
+      operationId: V1ApprovalRequestCountGetRoute
+      tags:
+        - Approval Requests
+      parameters:
+        - name: enterpriseIds
+          description: Comma-separated list of enterprise IDs to filter approval request counts by
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: Comma-separated list of enterprise IDs to filter approval request counts by
+        - name: user-id
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequestCountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
                 type: object
-                required:
-                  - error
-                  - errorName
-                properties:
-                  error:
-                    type: string
-                  errorName:
-                    type: string
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorPayload1'
   /api/v1/marketdata/cryptocompare/historical/prices:
     get:
       tags:
@@ -38486,6 +38228,112 @@ components:
         - approved
         - rejected
       description: Status type for approval actions
+    ApprovalRequestCount:
+      title: ApprovalRequestCount
+      type: object
+      additionalProperties:
+        type: number
+    ApprovalRequestCountResponse:
+      title: ApprovalRequestCountResponse
+      type: object
+      properties:
+        enterprises:
+          $ref: '#/components/schemas/ApprovalRequestCount'
+      required:
+        - enterprises
+    ApprovalRequestResponse:
+      title: ApprovalRequestResponse
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        accountId:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/ApprovalRequestStatus'
+        payload:
+          type: string
+          minLength: 1
+        signature:
+          type: string
+          minLength: 1
+        policyDetailId:
+          type: string
+          title: uuid
+        policyDetail:
+          type: object
+          properties:
+            id:
+              type: string
+              minLength: 1
+            resolutionTime:
+              type: string
+              format: date-time
+              title: ISO Date String
+            resolvedBy:
+              type: array
+              items:
+                type: string
+                minLength: 1
+          required:
+            - id
+            - resolutionTime
+            - resolvedBy
+        signedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        signedBy:
+          type: string
+          minLength: 1
+        approvedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        settlementId:
+          type: string
+          minLength: 1
+      required:
+        - id
+        - accountId
+        - status
+        - payload
+        - createdAt
+        - updatedAt
+        - settlementId
+    ApprovalRequestStatus:
+      title: ApprovalRequestStatus
+      type: string
+      enum:
+        - acknowledged
+        - canceled
+        - rejected
+        - approved
+        - pending
+        - failed
+        - overdue
+        - expired
+        - initialized
+        - signed
+        - signing
+        - pending-acknowledgement
+    ApprovalRequestUpdateStatus:
+      title: ApprovalRequestUpdateStatus
+      type: string
+      enum:
+        - acknowledged
+        - canceled
+        - rejected
     ApprovalsRequired:
       type: integer
       minimum: 1
@@ -42104,6 +41952,17 @@ components:
           type: array
           items:
             description: Pending approvals created for travel rule compliance
+    BulkTerminateResponse:
+      title: BulkTerminateResponse
+      type: object
+      properties:
+        settlementIds:
+          type: array
+          items:
+            type: string
+            title: uuid
+      required:
+        - settlementIds
     BulkUpdateResponse:
       title: BulkUpdateResponse
       type: object
@@ -49081,6 +48940,35 @@ components:
         country:
           type: string
           description: ISO 3166-1 Alpha-3 country code
+    GetAccountBalancesResponse:
+      title: GetAccountBalancesResponse
+      type: object
+      description: Response containing array of account balances
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            description: Account balance for a single currency
+            properties:
+              currency:
+                type: string
+              balance:
+                type: string
+              marketPrice:
+                type: number
+              heldBalance:
+                type: string
+              availableBalance:
+                type: string
+            required:
+              - currency
+              - balance
+              - marketPrice
+              - heldBalance
+              - availableBalance
+      required:
+        - data
     GetAccountResourcesResponse:
       title: GetAccountResourcesResponse
       type: object
@@ -49215,6 +49103,15 @@ components:
         - address
         - coin
         - delegations
+    GetBatchSigningResponse:
+      title: GetBatchSigningResponse
+      type: object
+      properties:
+        payload:
+          type: string
+          minLength: 1
+      required:
+        - payload
     GetDocumentResponse:
       type: object
       properties:
@@ -50253,6 +50150,15 @@ components:
           type: boolean
       required:
         - txId
+    GetProcessQueuePayloadResponse:
+      title: GetProcessQueuePayloadResponse
+      type: object
+      properties:
+        payload:
+          type: string
+          minLength: 1
+      required:
+        - payload
     GetSequenceIdsResponse:
       title: GetSequenceIdsResponse
       type: object
@@ -61559,6 +61465,368 @@ components:
       oneOf:
         - $ref: '#/components/schemas/PartySettlementAmountsRecord'
         - $ref: '#/components/schemas/CounterpartyPartySettlementAmountsRecord'
+    SettlementClearingMethod:
+      title: SettlementClearingMethod
+      type: string
+      enum:
+        - manual
+        - manual-netting
+        - automated-netting
+    SettlementListResponse:
+      title: SettlementListResponse
+      type: object
+      properties:
+        settlementList:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              externalId:
+                type: string
+                minLength: 1
+              expireAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              notation:
+                type: string
+              requesterAccountId:
+                type: string
+                minLength: 1
+              status:
+                $ref: '#/components/schemas/SettlementStatus'
+              type:
+                $ref: '#/components/schemas/SettlementType'
+              bypassCounterpartySigning:
+                type: boolean
+              routedTransactionId:
+                type: string
+                title: uuid
+              clearingMethod:
+                $ref: '#/components/schemas/SettlementClearingMethod'
+              approvalRequests:
+                type: array
+                items:
+                  type: object
+                  description: ApprovalRequestResponse with settlementId not required
+                  properties:
+                    id:
+                      type: string
+                      minLength: 1
+                    accountId:
+                      type: string
+                      minLength: 1
+                    status:
+                      $ref: '#/components/schemas/ApprovalRequestStatus'
+                    payload:
+                      type: string
+                      minLength: 1
+                    signature:
+                      type: string
+                      minLength: 1
+                    policyDetailId:
+                      type: string
+                      title: uuid
+                    policyDetail:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          minLength: 1
+                        resolutionTime:
+                          type: string
+                          format: date-time
+                          title: ISO Date String
+                        resolvedBy:
+                          type: array
+                          items:
+                            type: string
+                            minLength: 1
+                      required:
+                        - id
+                        - resolutionTime
+                        - resolvedBy
+                    signedAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    signedBy:
+                      type: string
+                      minLength: 1
+                    approvedAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    createdAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    updatedAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                  required:
+                    - id
+                    - accountId
+                    - status
+                    - payload
+                    - createdAt
+                    - updatedAt
+              settlementTransfers:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    id:
+                      type: string
+                      title: uuid
+                    sourceTradingAccountId:
+                      type: string
+                      minLength: 1
+                    destinationTradingAccountId:
+                      type: string
+                      minLength: 1
+                    currency:
+                      $ref: '#/components/schemas/SupportedCurrency'
+                    quantity:
+                      type: string
+                    txIds:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    estimatedFeeInNativeToken:
+                      type: string
+                    estimatedFeeInUSD:
+                      type: string
+                    createdAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    updatedAt:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                  required:
+                    - id
+                    - sourceTradingAccountId
+                    - destinationTradingAccountId
+                    - currency
+                    - quantity
+                    - createdAt
+                    - updatedAt
+              requesterAccountName:
+                type: string
+                minLength: 1
+              finalizedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              createdAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              unlockDate:
+                type: string
+            required:
+              - id
+              - externalId
+              - requesterAccountId
+              - status
+              - type
+              - approvalRequests
+              - settlementTransfers
+              - createdAt
+              - updatedAt
+        totalCount:
+          type: number
+      required:
+        - settlementList
+    SettlementResponse:
+      title: SettlementResponse
+      type: object
+      properties:
+        id:
+          type: string
+          minLength: 1
+        externalId:
+          type: string
+          minLength: 1
+        expireAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        notation:
+          type: string
+        requesterAccountId:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/SettlementStatus'
+        type:
+          $ref: '#/components/schemas/SettlementType'
+        bypassCounterpartySigning:
+          type: boolean
+        routedTransactionId:
+          type: string
+          title: uuid
+        clearingMethod:
+          $ref: '#/components/schemas/SettlementClearingMethod'
+        approvalRequests:
+          type: array
+          items:
+            type: object
+            description: ApprovalRequestResponse with settlementId not required
+            properties:
+              id:
+                type: string
+                minLength: 1
+              accountId:
+                type: string
+                minLength: 1
+              status:
+                $ref: '#/components/schemas/ApprovalRequestStatus'
+              payload:
+                type: string
+                minLength: 1
+              signature:
+                type: string
+                minLength: 1
+              policyDetailId:
+                type: string
+                title: uuid
+              policyDetail:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    minLength: 1
+                  resolutionTime:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  resolvedBy:
+                    type: array
+                    items:
+                      type: string
+                      minLength: 1
+                required:
+                  - id
+                  - resolutionTime
+                  - resolvedBy
+              signedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              signedBy:
+                type: string
+                minLength: 1
+              approvedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              createdAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+            required:
+              - id
+              - accountId
+              - status
+              - payload
+              - createdAt
+              - updatedAt
+        settlementTransfers:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                title: uuid
+              sourceTradingAccountId:
+                type: string
+                minLength: 1
+              destinationTradingAccountId:
+                type: string
+                minLength: 1
+              currency:
+                $ref: '#/components/schemas/SupportedCurrency'
+              quantity:
+                type: string
+              txIds:
+                type: array
+                items:
+                  type: string
+                  minLength: 1
+              estimatedFeeInNativeToken:
+                type: string
+              estimatedFeeInUSD:
+                type: string
+              createdAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+            required:
+              - id
+              - sourceTradingAccountId
+              - destinationTradingAccountId
+              - currency
+              - quantity
+              - createdAt
+              - updatedAt
+        requesterAccountName:
+          type: string
+          minLength: 1
+        finalizedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        unlockDate:
+          type: string
+      required:
+        - id
+        - externalId
+        - requesterAccountId
+        - status
+        - type
+        - approvalRequests
+        - settlementTransfers
+        - createdAt
+        - updatedAt
+    SettlementStatus:
+      title: SettlementStatus
+      type: string
+      enum:
+        - canceled
+        - pending
+        - rejected
+        - settled
+        - expired
+        - pending-acknowledgement
     SettlementStatuses:
       title: SettlementStatuses
       type: string
@@ -61580,6 +61848,13 @@ components:
         - rejected
         - disputed
         - pending_settlement_assignment
+    SettlementType:
+      title: SettlementType
+      type: string
+      enum:
+        - direct
+        - agency
+        - disbursement
     SettlementTypes:
       title: SettlementTypes
       type: string
@@ -65428,6 +65703,10 @@ components:
       enum:
         - cashaddr
         - base58
+    SupportedCurrency:
+      title: SupportedCurrency
+      type: string
+      minLength: 1
     SupportedTokenRecipientEntryItem:
       title: SupportedTokenRecipientEntryItem
       type: object
@@ -66738,6 +67017,14 @@ components:
         - $ref: '#/components/schemas/OrderCompleted'
         - $ref: '#/components/schemas/OrderCanceled'
         - $ref: '#/components/schemas/OrderError'
+    TradePayloadResponse:
+      title: TradePayloadResponse
+      type: object
+      properties:
+        payload:
+          type: string
+      required:
+        - payload
     TradeUser:
       required:
         - email
@@ -66793,6 +67080,94 @@ components:
       type: string
       enum:
         - ach-us
+    TradingAccountSettingsResponse:
+      title: TradingAccountSettingsResponse
+      type: object
+      properties:
+        accountId:
+          type: string
+        affirmationExpirationTime:
+          type: number
+        feeRates:
+          type: object
+          properties:
+            settlement:
+              oneOf:
+                - type: number
+                  maximum: 1
+                - type: string
+          required:
+            - settlement
+        referralCode:
+          type: string
+        queueAutomationEnabled:
+          type: boolean
+        queueAutomationTransactionRouteId:
+          type: string
+        queueLastProcessed:
+          type: string
+          format: date-time
+          title: ISO Date String
+      required:
+        - accountId
+        - affirmationExpirationTime
+        - referralCode
+        - queueAutomationEnabled
+    TradingPartnerListResponse:
+      title: TradingPartnerListResponse
+      type: object
+      properties:
+        tradingPartnerList:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+              primaryAccountId:
+                type: string
+              primaryEnterpriseName:
+                type: string
+              secondaryAccountId:
+                type: string
+              secondaryEnterpriseName:
+                type: string
+              status:
+                $ref: '#/components/schemas/TradingPartnerStatuses'
+              addressBookConnectionId:
+                type: string
+              addressBookConnectionUpdatedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+            required:
+              - id
+              - primaryAccountId
+              - primaryEnterpriseName
+              - secondaryAccountId
+              - secondaryEnterpriseName
+              - status
+              - updatedAt
+      required:
+        - tradingPartnerList
+    TradingPartnerStatuses:
+      title: TradingPartnerStatuses
+      oneOf:
+        - $ref: '#/components/schemas/TradingPartnerUpdateStatus'
+        - type: string
+          enum:
+            - pending
+    TradingPartnerUpdateStatus:
+      title: TradingPartnerUpdateStatus
+      type: string
+      enum:
+        - accepted
+        - rejected
+        - canceled
     TradingValue:
       title: Go Account
       type: object
@@ -72542,6 +72917,17 @@ components:
           type: string
       required:
         - error
+    V1ErrorPayload1:
+      title: V1ErrorPayload
+      type: object
+      properties:
+        error:
+          type: string
+        errorName:
+          type: string
+      required:
+        - error
+        - errorName
     V1ErrorResponse:
       title: V1ErrorResponse
       type: object
