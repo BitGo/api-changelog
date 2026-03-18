@@ -24722,7 +24722,7 @@ paths:
             schema:
               oneOf:
                 - type: object
-                  description: Simulate Enterprise Webhook Types
+                  title: Bank Account
                   properties:
                     bankAccountId:
                       type: string
@@ -24731,6 +24731,7 @@ paths:
                   required:
                     - bankAccountId
                 - type: object
+                  title: Access Token
                   properties:
                     accessTokenId:
                       type: string
@@ -24739,6 +24740,7 @@ paths:
                   required:
                     - accessTokenId
                 - type: object
+                  title: Policy Balance Change
                   properties:
                     enterpriseId:
                       type: string
@@ -24747,6 +24749,7 @@ paths:
                   required:
                     - enterpriseId
                 - type: object
+                  title: Reversal
                   properties:
                     transferId:
                       type: string
@@ -26132,32 +26135,16 @@ paths:
           schema:
             type: string
             enum:
-              - txRequest
-              - txRequestTransaction
               - transfer
-              - transaction
-              - transactionRemoved
-              - transactionExpire
+              - txRequest
               - pendingapproval
-              - block
-              - admin
-              - address_confirmation
-              - lowFee
-              - circuitBreaker
-              - lowFeeAddressBalance
-              - wallet_confirmation
+              - txRequestTransaction
               - bankAccount
+              - identityStatus
               - userKycState
               - enterpriseKycState
-              - identityStatus
               - accessToken
-              - accountCreated
-              - contractSigned
-              - kycResult
-              - policyBalanceChange
               - reversal
-              - transaction_finality_on_l1
-              - stuckTx
               - tradeOrder
         - name: prevId
           in: query
@@ -28833,7 +28820,10 @@ paths:
   /api/v2/wallet/{walletId}/msgrequests:
     post:
       summary: Create message-based transaction request
-      description: Create a transaction request for signing a message with the wallet keys.
+      description: |-
+        Create a transaction request for signing a message with the wallet keys.
+        Wallet requirement: Only multi-party computation (MPC) wallets are supported.
+        Supported chains: EVM-compatible chains (ETH, BSC, Polygon, etc.), Solana, and Cardano. UTXO-based chains (Bitcoin, Litecoin, etc.) are not supported.
       operationId: v2.wallet.msgrequests.create
       tags:
         - Wallet
@@ -39184,6 +39174,7 @@ components:
         - ''
         - bg25-inst
         - bg25-retail
+        - kintsugi
     AvaxCDelegationProperties:
       title: AVAXC Delegation Properties
       allOf:
