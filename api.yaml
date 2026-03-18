@@ -16954,6 +16954,157 @@ paths:
           $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/policy/v1/enterprises/{enterpriseId}/webhooks/keys/{keyId}:
+    delete:
+      tags:
+        - Webhook Keys
+      summary: Revoke a webhook signing key
+      description: |
+        Revokes a webhook signing key for an enterprise. This is a soft delete — the key
+        row is preserved for audit purposes but marked as REVOKED.
+
+        Revoked keys cannot be used for webhook signature verification.
+        Revocation is irreversible — a new key must be registered to restore access.
+
+        **Authorization:** Caller must be an admin of the specified enterprise.
+      operationId: v1.enterprise.webhooks.keys.revoke
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          description: The enterprise ID.
+          schema:
+            type: string
+        - name: keyId
+          in: path
+          required: true
+          description: The customer-provided key identifier.
+          schema:
+            type: string
+          example: customer-prod-key-2026
+        - $ref: '#/components/parameters/OtpRequired'
+      responses:
+        '200':
+          description: Key successfully revoked.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RevokeWebhookKeyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/policy/v1/enterprises/{enterpriseId}/webhooks/keys:
+    post:
+      tags:
+        - Webhook Keys
+      summary: Register a webhook signing key
+      description: |
+        Registers a new webhook signing key for an enterprise. The key can be provided
+        inline via a JWKS payload or referenced via a JWKS URI.
+
+        **Authorization:** Caller must be an admin of the specified enterprise.
+      operationId: v1.enterprise.webhooks.keys.register
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          description: The enterprise ID.
+          schema:
+            type: string
+        - $ref: '#/components/parameters/OtpRequired'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterWebhookKeyRequest'
+      responses:
+        '201':
+          description: Key successfully registered.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegisterWebhookKeyResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    get:
+      tags:
+        - Webhook Keys
+      summary: List webhook signing keys
+      description: |
+        Lists all webhook signing keys registered for an enterprise.
+
+        **Authorization:** Caller must be an admin of the specified enterprise.
+
+        Returns key metadata only — actual public key material and JWK data are not included in the response.
+      operationId: v1.enterprise.webhooks.keys.list
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          description: The enterprise ID.
+          schema:
+            type: string
+        - name: status
+          in: query
+          required: false
+          description: Filter by key status.
+          schema:
+            type: string
+            enum:
+              - ACTIVE
+              - REVOKED
+        - name: limit
+          in: query
+          required: false
+          description: Maximum number of results per page. Default 50, maximum 100.
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 100
+          example: 50
+        - name: prevId
+          in: query
+          required: false
+          description: Pagination offset. Default 0.
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+          example: 0
+      responses:
+        '200':
+          description: A paginated list of webhook signing keys.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWebhookKeysResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /api/prime/trading/v1/user/current:
     get:
       summary: Get Current User
@@ -24722,7 +24873,7 @@ paths:
             schema:
               oneOf:
                 - type: object
-                  description: Simulate Enterprise Webhook Types
+                  title: Bank Account
                   properties:
                     bankAccountId:
                       type: string
@@ -24731,6 +24882,7 @@ paths:
                   required:
                     - bankAccountId
                 - type: object
+                  title: Access Token
                   properties:
                     accessTokenId:
                       type: string
@@ -24739,6 +24891,7 @@ paths:
                   required:
                     - accessTokenId
                 - type: object
+                  title: Policy Balance Change
                   properties:
                     enterpriseId:
                       type: string
@@ -24747,6 +24900,7 @@ paths:
                   required:
                     - enterpriseId
                 - type: object
+                  title: Reversal
                   properties:
                     transferId:
                       type: string
@@ -26132,32 +26286,16 @@ paths:
           schema:
             type: string
             enum:
-              - txRequest
-              - txRequestTransaction
               - transfer
-              - transaction
-              - transactionRemoved
-              - transactionExpire
+              - txRequest
               - pendingapproval
-              - block
-              - admin
-              - address_confirmation
-              - lowFee
-              - circuitBreaker
-              - lowFeeAddressBalance
-              - wallet_confirmation
+              - txRequestTransaction
               - bankAccount
+              - identityStatus
               - userKycState
               - enterpriseKycState
-              - identityStatus
               - accessToken
-              - accountCreated
-              - contractSigned
-              - kycResult
-              - policyBalanceChange
               - reversal
-              - transaction_finality_on_l1
-              - stuckTx
               - tradeOrder
         - name: prevId
           in: query
@@ -28833,7 +28971,10 @@ paths:
   /api/v2/wallet/{walletId}/msgrequests:
     post:
       summary: Create message-based transaction request
-      description: Create a transaction request for signing a message with the wallet keys.
+      description: |-
+        Create a transaction request for signing a message with the wallet keys.
+        Wallet requirement: Only multi-party computation (MPC) wallets are supported.
+        Supported chains: EVM-compatible chains (ETH, BSC, Polygon, etc.), Solana, and Cardano. UTXO-based chains (Bitcoin, Litecoin, etc.) are not supported.
       operationId: v2.wallet.msgrequests.create
       tags:
         - Wallet
@@ -35896,6 +36037,14 @@ components:
       schema:
         type: string
         example: 63ff9f4c0c01fcd7162c28fc901ad915
+    OtpRequired:
+      name: X-BitGo-OTP
+      in: header
+      required: true
+      description: OTP code for verification. Required for webhook key management operations.
+      schema:
+        type: string
+      example: '123456'
     PolicyRuleId:
       name: id
       in: path
@@ -39184,6 +39333,7 @@ components:
         - ''
         - bg25-inst
         - bg25-retail
+        - kintsugi
     AvaxCDelegationProperties:
       title: AVAXC Delegation Properties
       allOf:
@@ -53877,6 +54027,32 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WalletShare1'
+    ListWebhookKeysResponse:
+      type: object
+      description: Paginated list of webhook signing keys for an enterprise.
+      required:
+        - keys
+        - total
+        - limit
+        - prevId
+      properties:
+        keys:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookKeyInfo'
+        total:
+          type: integer
+          format: int64
+          description: Total number of keys matching the query.
+          example: 1
+        limit:
+          type: integer
+          description: Maximum results per page.
+          example: 50
+        prevId:
+          type: integer
+          description: The pagination offset used in this request.
+          example: 0
     LivenessVerificationFromEnterpriseAdminActionRequest:
       title: Liveness Verification From Enterprise Admins
       type: object
@@ -60406,6 +60582,70 @@ components:
         - custody
         - lending
         - borrowing
+    RegisterWebhookKeyRequest:
+      type: object
+      description: Request to register a new webhook signing key.
+      properties:
+        jwks:
+          type: object
+          description: Inline JWKS payload containing the public key(s). Mutually exclusive with jwksUri.
+          properties:
+            keys:
+              type: array
+              description: Array of JWK objects.
+              items:
+                type: object
+                additionalProperties: true
+          required:
+            - keys
+        jwksUri:
+          type: string
+          description: URI pointing to a hosted JWKS endpoint. Mutually exclusive with jwks.
+          example: https://example.com/.well-known/jwks.json
+        keyName:
+          type: string
+          description: Human-readable name for the key.
+          example: Production Webhook Key
+    RegisterWebhookKeyResponse:
+      type: object
+      description: Response after successfully registering a webhook signing key.
+      required:
+        - id
+        - keyId
+        - status
+        - createdDate
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Internal UUID of the registered key.
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        keyId:
+          type: string
+          description: The derived key identifier.
+          example: customer-prod-key-2026
+        algorithm:
+          type: string
+          nullable: true
+          description: The signing algorithm (EdDSA or ECDSA). Null for JWKS URI registrations.
+          enum:
+            - EdDSA
+            - ECDSA
+          example: EdDSA
+        jwksUri:
+          type: string
+          nullable: true
+          description: The JWKS URI if the key was registered via URI.
+          example: https://example.com/.well-known/jwks.json
+        status:
+          type: string
+          description: Status of the newly registered key.
+          example: ACTIVE
+        createdDate:
+          type: string
+          format: date-time
+          description: When the key was registered.
+          example: 2026-01-12T10:30:00.000Z
     RejectReshare:
       type: object
       properties:
@@ -60990,6 +61230,32 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithGasPrice'
       type: object
+    RevokeWebhookKeyResponse:
+      type: object
+      description: Response after successfully revoking a webhook signing key.
+      required:
+        - success
+        - keyId
+        - revokedAt
+        - revokedBy
+      properties:
+        success:
+          type: boolean
+          description: Whether the revocation was successful.
+          example: true
+        keyId:
+          type: string
+          description: The customer-provided key identifier that was revoked.
+          example: customer-prod-key-2026
+        revokedAt:
+          type: string
+          format: date-time
+          description: When the key was revoked.
+          example: 2026-01-12T15:00:00.000Z
+        revokedBy:
+          type: string
+          description: User who revoked the key.
+          example: admin@example.com
     Reward:
       type: object
       required:
@@ -77389,6 +77655,54 @@ components:
           description: 'If present, only enterprise kyc state changes from the list will trigger notifications. If not present, all kyc state changes will trigger notifications.      '
       required:
         - url
+    WebhookKeyInfo:
+      type: object
+      description: Metadata about a registered webhook signing key.
+      required:
+        - id
+        - keyId
+        - keyName
+        - status
+        - createdDate
+        - createdBy
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Internal UUID of the key.
+          example: f47ac10b-58cc-4372-a567-0e02b2c3d479
+        keyId:
+          type: string
+          description: Customer-provided key identifier.
+          example: customer-prod-key-2026
+        keyName:
+          type: string
+          description: Human-readable name for the key.
+          example: Production Webhook Key
+        algorithm:
+          type: string
+          nullable: true
+          description: The signing algorithm (EdDSA or ECDSA). Null for JWKS URI registrations.
+          enum:
+            - EdDSA
+            - ECDSA
+          example: EdDSA
+        status:
+          type: string
+          description: Current status of the key.
+          enum:
+            - ACTIVE
+            - REVOKED
+          example: ACTIVE
+        createdDate:
+          type: string
+          format: date-time
+          description: When the key was registered.
+          example: 2026-01-12T10:30:00.000Z
+        createdBy:
+          type: string
+          description: User who registered the key.
+          example: user@example.com
     WebhookNotification:
       type: object
       properties:
