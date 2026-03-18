@@ -22087,6 +22087,12 @@ paths:
       tags:
         - Stablecoin
       parameters:
+        - name: useCached
+          description: Whether to return a cached response. Defaults to true (cached data). Set to false to force live data from the blockchain.
+          in: query
+          schema:
+            type: boolean
+            example: true
         - name: token
           description: Token symbol or identifier for the stablecoin to get total supply for.
           in: path
@@ -38372,7 +38378,9 @@ components:
       properties:
         userId:
           type: string
-          description: User ID of the person performing the attestation
+          minLength: 32
+          maxLength: 32
+          description: BitGo user ID of the person performing the attestation
         attestationDate:
           type: string
           format: date-time
@@ -41935,7 +41943,7 @@ components:
         type:
           type: string
           description: |
-            Required for transactions from MPC wallets. "acceleration" speeds up transactions with a certain nonce by adjusting the gas setting. "accountSet" is for XRP AccountSet transactions. "enabletoken" is for SOL. "stakingLock" and "stakingUnlock" are for Stacks delegations. "transfer" is for native-asset transfers. "trustline" is for Stellar trustline transactions. Possible types include: [acceleration, accountSet, enabletoken, stakingLock, stakingUnlock, transfer, transfertoken, trustline]
+            Required for transactions from MPC wallets. "acceleration" speeds up transactions with a certain nonce by adjusting the gas setting. "accountSet" is for XRP AccountSet transactions. "consolidate" combines multiple UTXO inputs into fewer outputs. "enabletoken" is for SOL. "fanout" splits UTXO inputs into many smaller outputs (UTXO coins only). "stakingLock" and "stakingUnlock" are for Stacks delegations. "transfer" is for native-asset transfers. "trustline" is for Stellar trustline transactions. Possible types include: [acceleration, accountSet, consolidate, enabletoken, fanout, stakingLock, stakingUnlock, transfer, transfertoken, trustline]
 
             For AVAX, possible types include: `addValidator`, `export`, and `import`.
 
@@ -42357,7 +42365,7 @@ components:
           description: EIN/TIN of the business
         otherEntityId:
           type: string
-          description: Any additional entity identifier
+          description: Any additional entity identifier (e.g. company registration name or official registry ID)
         physicalBusinessAddress:
           type: object
           properties:
@@ -47058,6 +47066,7 @@ components:
         - bg23
         - bg25-inst
         - bg25-retail
+        - kintsugi
     EnterpriseContract:
       title: EnterpriseContract
       type: object
