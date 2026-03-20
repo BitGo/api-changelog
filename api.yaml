@@ -1035,6 +1035,7 @@ paths:
                           - portfolio_view
                           - trade_view
                           - trade_trade
+                          - trade_fix
                           - pending_approval_update
                           - metamask_institutional
                           - crypto_compare
@@ -1058,6 +1059,7 @@ paths:
                     - `settlement_network_write` - Update your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners.
                     - `trade_trade` - Initiate trades.
                     - `trade_view` - View trades.
+                    - `trade_fix` - Access the Trade FIX API gateway.
                     - `wallet_approve` - Approve policies and transactions for a wallet where the user is a wallet admin.
                     - `wallet_approve_all` - Approve transactions for any wallet where the user is a wallet admin within any enterprise to which the user belongs.
                     - `wallet_approve_enterprise` - Approve transactions for any wallet where the user is a wallet admin within a single enterprise.
@@ -23946,95 +23948,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/admin/organization/{organizationId}/webhook/{webhookId}/notification:
-    get:
-      summary: Admin List webhook notification for an organization
-      description: List all webhook notifications for the specified organization.
-      operationId: v2.admin.organization.webhook.listnotifications
-      tags:
-        - Organization
-      parameters:
-        - name: type
-          description: The webhook type
-          in: query
-          schema:
-            type: string
-            enum:
-              - txRequest
-              - txRequestTransaction
-              - transfer
-              - transaction
-              - transactionRemoved
-              - transactionExpire
-              - pendingapproval
-              - block
-              - admin
-              - address_confirmation
-              - lowFee
-              - circuitBreaker
-              - lowFeeAddressBalance
-              - wallet_confirmation
-              - bankAccount
-              - userKycState
-              - enterpriseKycState
-              - identityStatus
-              - accessToken
-              - accountCreated
-              - contractSigned
-              - fundsDeposited
-              - kycResult
-              - policyBalanceChange
-              - reversal
-              - transaction_finality_on_l1
-              - stuckTx
-              - tradeOrder
-            example: transfer
-        - name: prevId
-          description: The ID of the item to start at
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: limit
-          description: The maximum number of items to return
-          in: query
-          schema:
-            type: string
-            format: number
-        - name: organizationId
-          description: ''
-          in: path
-          required: true
-          schema:
-            type: string
-            example: 59cd72485007a239fb00282ed480da1f
-            minLength: 1
-            pattern: ^[0-9a-f]{32}$
-        - name: webhookId
-          in: path
-          required: true
-          schema:
-            type: string
-            minLength: 1
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListOrganizationWebhookNotificationResponseC'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/auditlog:
     get:
       summary: List audit logs
@@ -25359,7 +25272,7 @@ paths:
       summary: List User Organizations
       operationId: v2.organization.list
       tags:
-        - Organization
+        - User Management
       parameters:
         - name: role
           description: The optional user role
@@ -26982,11 +26895,11 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/webhook/{webhookId}/notification:
     get:
-      summary: Admin List webhook notification for an organization
+      summary: List webhook notification for an organization
       description: List all webhook notifications for the specified organization.
       operationId: v2.organization.webhook.listnotifications
       tags:
-        - Organization
+        - Organization Webhooks
       parameters:
         - name: type
           description: The webhook type
@@ -41079,6 +40992,7 @@ components:
               - Auto Liquidation
               - ACH Debits
               - Go Lightning
+              - Trade FIX API
             description: Requested BitGo Products
         isContractedClient:
           type: boolean
@@ -79325,7 +79239,6 @@ x-tagGroups:
       - Onboarding
       - Order Book
       - Orders
-      - Organization
       - Enterprise Management
       - Organization Webhooks
       - Partner Activation
