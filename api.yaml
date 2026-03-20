@@ -20505,8 +20505,9 @@ paths:
       summary: Initiate ACH deposit
       description: Initiate an ACH deposit transaction from a linked bank account.
       operationId: fiat.ach.deposit
+      deprecated: true
       tags:
-        - Fiat
+        - ACH Debits
       requestBody:
         content:
           application/json:
@@ -20579,7 +20580,7 @@ paths:
       description: List the transfer limits for an enterprise based on currency, transfer type, and direction.
       operationId: tradfi.v1.enterprise.transfer.limits
       tags:
-        - Fiat
+        - ACH Debits
       parameters:
         - name: enterpriseId
           in: path
@@ -20665,13 +20666,104 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/bank-transfers:
+    post:
+      summary: Create a bank transfer
+      description: Creates a new bank transfer using the `walletId` and `bankAccountId` as counterparties. Most details are inferred from `bankAccountId`. The `walletId` and `bankAccountId` must be owned by the same `enterpriseId`.
+      operationId: tradfi.v1.bank-transfers.create
+      tags:
+        - ACH Debits
+      requestBody:
+        required: true
+        description: Bank transfer details including amount, direction, and counterparties
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBankTransferRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankTransferResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/bank-transfers/{id}:
+    get:
+      summary: Get a bank transfer
+      description: Gets a bank transfer by its `id` or `txid`. Either identifier may be used interchangeably.
+      operationId: tradfi.v1.bank-transfers.get
+      tags:
+        - ACH Debits
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The transfer's primary key (`id`) or transaction ID (`txid`)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankTransferResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/fiat/v1/transaction/ach-debit/agreement:
     get:
       summary: Get ACH agreement
       description: Get the ACH agreement for a specific bank account.
       operationId: fiat.ach.agreement
+      deprecated: true
       tags:
-        - Fiat
+        - ACH Debits
       parameters:
         - name: bankId
           in: query
@@ -20764,7 +20856,7 @@ paths:
   /api/accounts/v1/address:
     get:
       tags:
-        - Fiat
+        - Bank Accounts
       operationId: fiat.address.info
       summary: Get address format information
       description: |
@@ -20845,7 +20937,7 @@ paths:
   /api/tradfi/v1/banks/{bankType}/{routingNumber}:
     get:
       tags:
-        - Fiat
+        - Bank Accounts
       summary: Verify routing number by bank type
       description: Endpoint for routing number verification.
       operationId: V1GetBankAccountsRoutingNumberRoute
@@ -20900,10 +20992,166 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/plaid/link/token:
+    post:
+      summary: Create Plaid Link token
+      description: |
+        Creates a Plaid Link token for initiating the Plaid Link flow.
+        The token is used to open Plaid Link in the client application, allowing
+        users to connect their bank accounts. After the user completes the Plaid
+        Link flow, use the `/api/tradfi/v1/plaid/link/token/exchange` endpoint
+        with the returned `token` (as `linkToken`) and the `publicToken` received
+        from Plaid Link to complete the bank account linking process.
+      operationId: tradfi.v1.plaid.link.token.create
+      tags:
+        - Plaid
+      requestBody:
+        required: true
+        description: Enterprise identification for the Plaid Link token request
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enterpriseId:
+                  type: string
+                  description: The ID of the enterprise
+                  minLength: 1
+                androidPackageName:
+                  type: string
+                  description: |
+                    The Android package name for OAuth redirect flows. Required when initializing Plaid Link on Android.
+                redirectUri:
+                  type: string
+                  description: The OAuth redirect URI for mobile and web flows.
+              required:
+                - enterpriseId
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: The Plaid Link token to use in the client
+                      expiration:
+                        type: string
+                        format: date-time
+                        description: The expiration time of the link token
+                    required:
+                      - token
+                      - expiration
+                required:
+                  - data
+        '404':
+          description: Not Found - Enterprise not found or user does not have access
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '424':
+          description: Failed Dependency - Plaid service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '428':
+          description: Precondition Required - Plaid is not configured for this account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/plaid/link/token/exchange:
+    post:
+      summary: Exchange Plaid Public Token
+      description: |
+        Exchanges a public token received from Plaid Link for secure storage.
+        After a user completes the Plaid Link flow, the client receives a public
+        token which must be exchanged using this endpoint to complete the bank
+        account linking process.
+      operationId: tradfi.v1.plaid.link.token.exchange
+      tags:
+        - Plaid
+      requestBody:
+        required: true
+        description: Tokens required to complete the Plaid Link exchange
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enterpriseId:
+                  type: string
+                  description: The ID of the enterprise
+                  minLength: 1
+                publicToken:
+                  type: string
+                  description: The public token received from the Plaid Link Widget
+                  minLength: 1
+                linkToken:
+                  type: string
+                  description: The link token used to initiate the Plaid Link flow
+                  minLength: 1
+              required:
+                - enterpriseId
+                - publicToken
+                - linkToken
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      publicToken:
+                        type: string
+                        description: The public token that was exchanged
+                      linkToken:
+                        type: string
+                        description: The link token associated with this exchange
+                    required:
+                      - publicToken
+                      - linkToken
+                required:
+                  - data
+        '400':
+          description: Bad Request - Missing required parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found - Enterprise or link token not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/v2/bankaccounts:
     get:
       tags:
-        - Fiat
+        - Bank Accounts
       summary: List bank accounts
       description: List all bank accounts associated with a BitGo enterprise.
       operationId: v2.bankaccount.list
@@ -21009,7 +21257,7 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
     post:
       tags:
-        - Fiat
+        - Bank Accounts
       summary: Add bank account
       description: |
         Add a bank account to a BitGo enterprise so you can deposit and withdraw fiat. 
@@ -21062,7 +21310,7 @@ paths:
   /api/v2/bankaccounts/{bankAccountId}:
     delete:
       tags:
-        - Fiat
+        - Bank Accounts
       summary: Delete bank account
       description: Delete a bank account associated with a BitGo enterprise.
       operationId: v2.bankaccount.delete
@@ -21118,7 +21366,7 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
     get:
       tags:
-        - Fiat
+        - Bank Accounts
       summary: Get bank account
       description: Get a bank account associated with a BitGo enterprise by its ID.
       operationId: v2.bankaccount.get
@@ -21162,7 +21410,7 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
     put:
       tags:
-        - Fiat
+        - Bank Accounts
       summary: Update bank account
       description: Update a bank account associated with a BitGo enterprise.
       operationId: v2.bankaccount.update
@@ -21314,7 +21562,7 @@ paths:
   /api/v2/bankaccounts/deposit/info:
     get:
       tags:
-        - Fiat
+        - Bank Accounts
       summary: Get deposit info
       description: Get BitGo's bank account information so you can deposit fiat into a Go Account.
       operationId: fiat.get.deposit.info
@@ -40063,6 +40311,8 @@ components:
         - $ref: '#/components/schemas/AchBankAccountResponse'
         - $ref: '#/components/schemas/SepaBankAccountResponse'
         - $ref: '#/components/schemas/BlincBankAccountResponse'
+        - $ref: '#/components/schemas/IpiFtsBankAccountResponse'
+        - $ref: '#/components/schemas/FastBankAccountResponse'
     BankAccountResponseProps:
       title: BankAccountResponseProps
       type: object
@@ -40265,6 +40515,77 @@ components:
         - customers_cubix_api
         - customers_sftp
         - lead
+    BankTransferResponse:
+      title: BankTransferResponse
+      type: object
+      properties:
+        amount:
+          type: string
+          description: The absolute value of the total amount of funds to be transferred to or from the related bank. This value should include decimal places where applicable and is not an integer base value.
+        applyInstantCredit:
+          type: boolean
+          description: Whether to apply "instant credit" to the transfer. This allows funds to be made available to customer from the CaaS reserve account if they are available.
+        bankAccountId:
+          type: string
+          description: The bank account used for the transfer. This also determines the bank rails used for the transfer.
+        createdAt:
+          type: string
+          format: date-time
+          description: When the transfer was created/initiated.
+        enterpriseId:
+          type: string
+          description: The enterprise related to the transfer. Determined automatically by the walletId.
+        estimatedEffectiveOn:
+          type: string
+          format: date
+          nullable: true
+          description: The date when the transfer is expected to become "effective" or "posted" by the related bank. Without instant credit this will usually be either T+1 or T+4 depending on risk profile of the related enterprise and bank account. Null when not yet determined.
+        id:
+          type: string
+          description: The ID of the transfer. This should be generated by the client (prefer v4, v5, or v7) because it also serves as the idempotency key. Using an automatically generated ID provides no idempotency guarantees.
+        instantCreditLiability:
+          type: boolean
+          description: Whether the current transfer counts against the CaaS reserve for instant credit. Only applies to transfers that opted for applyInstantCredit and have not yet settled. Once settled, transitions to false.
+        memoId:
+          type: string
+          description: An automatically generated memo used for matching with bank transfers. Informational only.
+        settledAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: When the transfer was settled (posted by the bank). Null until status is settled.
+        status:
+          $ref: '#/components/schemas/TransferStatus'
+        transferDirection:
+          allOf:
+            - $ref: '#/components/schemas/TradfyTransferDirection'
+          description: The direction of the transfer. `in` is a deposit (funds from bank to wallet), `out` is a withdrawal (funds from wallet to bank).
+        transferType:
+          allOf:
+            - $ref: '#/components/schemas/TradfyTransferType'
+          description: The bank rails being used by the transfer. Inferred from the bankAccountId.
+        txid:
+          type: string
+          description: The transaction ID correlated with wallet platform. Can also be used in GET requests as an identifier.
+        walletId:
+          type: string
+          description: The wallet (Go Account) used as counterparty to the transfer. Also determines the related enterprise.
+      required:
+        - amount
+        - applyInstantCredit
+        - bankAccountId
+        - createdAt
+        - enterpriseId
+        - estimatedEffectiveOn
+        - id
+        - instantCreditLiability
+        - memoId
+        - settledAt
+        - status
+        - transferDirection
+        - transferType
+        - txid
+        - walletId
     BaseBridgeFundsIntent:
       title: Bridge Funds Intent
       allOf:
@@ -44351,6 +44672,40 @@ components:
         - $ref: '#/components/schemas/SepaBankAccountRequest'
         - $ref: '#/components/schemas/CbitBankAccountRequest'
         - $ref: '#/components/schemas/BlincBankAccountRequest'
+        - $ref: '#/components/schemas/IpiFtsBankAccountRequest'
+        - $ref: '#/components/schemas/FastBankAccountRequest'
+    CreateBankTransferRequest:
+      title: CreateBankTransferRequest
+      type: object
+      properties:
+        amount:
+          type: string
+          minLength: 1
+          description: The absolute value of the total amount of funds to be transferred. Include decimal places where applicable.
+        applyInstantCredit:
+          type: boolean
+          default: false
+          description: Whether to apply instant credit to the transfer.
+        bankAccountId:
+          type: string
+          description: The bank account to use. Determines the bank rails. Presently, only ACH accounts are supported.
+        id:
+          type: string
+          description: Client-generated transfer ID. Serves as the idempotency key. Prefer UUID v4, v5, or v7.
+        transferDirection:
+          allOf:
+            - $ref: '#/components/schemas/TradfyTransferDirection'
+          description: The direction of the transfer. Only `in` is currently supported.
+        walletId:
+          type: string
+          minLength: 1
+          description: The Go Account wallet to use as counterparty.
+      required:
+        - amount
+        - bankAccountId
+        - id
+        - transferDirection
+        - walletId
     CreateBitgoChallengeResponse:
       title: CreateBitgoChallengeResponse
       type: object
@@ -48576,6 +48931,47 @@ components:
           - createdAt
           - updatedAt
           - externalSettlementId
+    FastAccountResponseProps:
+      title: FastAccountResponseProps
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - fast
+        swiftCode:
+          $ref: '#/components/schemas/SwiftCodeType'
+        accountType:
+          $ref: '#/components/schemas/OptionalAccountType'
+      required:
+        - type
+        - swiftCode
+        - accountType
+    FastBankAccountRequest:
+      title: FastBankAccountRequest
+      description: Request schema for creating a FAST bank account.
+      allOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - fast
+              description: Must be 'fast' for FAST accounts
+            swiftCode:
+              type: string
+              description: SWIFT/BIC code for the FAST account
+          required:
+            - type
+            - swiftCode
+        - $ref: '#/components/schemas/BankAccountRequest1'
+    FastBankAccountResponse:
+      title: FastBankAccountResponse
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/FastAccountResponseProps'
+        - $ref: '#/components/schemas/BankAccountResponseProps'
     FederationError:
       type: object
       properties:
@@ -52423,6 +52819,47 @@ components:
       type: string
       format: ipv4
       example: 127.0.0.1
+    IpiFtsAccountResponseProps:
+      title: IpiFtsAccountResponseProps
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - ipi-fts
+        swiftCode:
+          $ref: '#/components/schemas/SwiftCodeType'
+        accountType:
+          $ref: '#/components/schemas/OptionalAccountType'
+      required:
+        - type
+        - swiftCode
+        - accountType
+    IpiFtsBankAccountRequest:
+      title: IpiFtsBankAccountRequest
+      description: Request schema for creating an IPI-FTS bank account.
+      allOf:
+        - type: object
+          properties:
+            type:
+              type: string
+              enum:
+                - ipi-fts
+              description: Must be 'ipi-fts' for IPI-FTS accounts
+            swiftCode:
+              type: string
+              description: SWIFT/BIC code for the IPI-FTS account
+          required:
+            - type
+            - swiftCode
+        - $ref: '#/components/schemas/BankAccountRequest1'
+    IpiFtsBankAccountResponse:
+      title: IpiFtsBankAccountResponse
+      allOf:
+        - type: object
+          properties: {}
+        - $ref: '#/components/schemas/IpiFtsAccountResponseProps'
+        - $ref: '#/components/schemas/BankAccountResponseProps'
     IrysCommitmentParams:
       title: IrysCommitmentParams
       type: object
@@ -69486,6 +69923,16 @@ components:
         - `reversed`: The transfer was reversed (e.g., when a withdrawal offer is rejected in multi-step transfers).
         - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo.
         - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.
+    TransferStatus:
+      title: TransferStatus
+      type: string
+      enum:
+        - initiated
+        - processing
+        - settled
+        - reversed
+        - failed
+      description: The status of a transfer. `initiated` means newly created and not yet completed processing. `processing` means currently processing with bank providers with funds in flight. `settled` means funds successfully processed and no longer flagged as instantCreditLiability. `reversed` means a previously settled transfer was reversed by the processor. `failed` means an unrecoverable error occurred before settlement.
     TransferTokenIntent:
       title: TransferTokenIntent
       allOf:
