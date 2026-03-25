@@ -21714,6 +21714,78 @@ paths:
               schema:
                 type: object
                 properties: {}
+  /api/stablecoin/v1/enterprise/{enterpriseId}/agreement:
+    put:
+      summary: Accept Stablecoin Agreement
+      description: Accepts a stablecoin agreement for a given enterprise and user.
+      operationId: stablecoin.v1.enterprise.agreement.put
+      tags:
+        - Stablecoin
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Enterprise identifier
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 6437d9ae435d8b0007635c3f0db52154
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Agreement acceptance details
+              properties:
+                version:
+                  type: number
+                  description: Agreement version to accept
+                  example: 1
+              required:
+                - version
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AcceptStablecoinAgreementResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /api/stablecoin/v1/enterprise/{enterpriseId}/order:
     post:
       summary: Create stablecoin order
@@ -21834,6 +21906,30 @@ paths:
             type: string
             example: d1c27189-764c-4197-af06-e2623658f410
             minLength: 1
+        - name: baseAsset
+          description: Base asset type(s) to filter orders across all chains
+          in: query
+          schema:
+            oneOf:
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - gousd
+                    - usd1
+                    - sofid
+                    - cusd
+                    - fyusd
+                    - usd
+              - type: string
+                enum:
+                  - gousd
+                  - usd1
+                  - sofid
+                  - cusd
+                  - fyusd
+                  - usd
+            example: usd1
         - name: type
           description: Order type
           in: query
@@ -37133,6 +37229,23 @@ components:
             - intentType
             - txid
         - $ref: '#/components/schemas/BaseIntent'
+    AcceptStablecoinAgreementResponse:
+      title: AcceptStablecoinAgreementResponse
+      type: object
+      description: Response from accepting a stablecoin agreement
+      properties:
+        enterpriseId:
+          type: string
+          description: Enterprise ID that accepted the agreement
+          example: 6437d9ae435d8b0007635c3f0db52154
+          minLength: 1
+        version:
+          type: number
+          description: Agreement version that was accepted
+          example: 1
+      required:
+        - enterpriseId
+        - version
     AccessTokenResponse:
       title: AccessTokenResponse
       type: object
@@ -39001,6 +39114,20 @@ components:
             description: Minimum order amount for burn orders, in base units
             example: '''10000'''
             minLength: 1
+          burnFeeBps:
+            type: number
+            description: |-
+              Resolved burn fee rate in basis points for this enterprise using the
+              enterprise → org → base_asset hierarchy. Defaults to 0 when no fee hierarchy
+              row exists in the DB for this base asset.
+            example: 25
+          mintFeeBps:
+            type: number
+            description: |-
+              Resolved mint fee rate in basis points for this enterprise using the
+              enterprise → org → base_asset hierarchy. Defaults to 0 when no fee hierarchy
+              row exists in the DB for this base asset.
+            example: 0
         required:
           - id
           - token
