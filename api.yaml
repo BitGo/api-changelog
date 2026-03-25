@@ -1301,6 +1301,9 @@ paths:
                 - unstakeWithCallData
                 - validatorRegistration
                 - increaseStake
+                - decreaseStake
+                - signalExit
+                - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, only transaction requests with the specified intent types will be returned.
@@ -1351,6 +1354,9 @@ paths:
                 - unstakeWithCallData
                 - validatorRegistration
                 - increaseStake
+                - decreaseStake
+                - signalExit
+                - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
@@ -24556,6 +24562,9 @@ paths:
                 - unstakeWithCallData
                 - validatorRegistration
                 - increaseStake
+                - decreaseStake
+                - signalExit
+                - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, only transaction requests with the specified intent types will be returned.
@@ -24606,6 +24615,9 @@ paths:
                 - unstakeWithCallData
                 - validatorRegistration
                 - increaseStake
+                - decreaseStake
+                - signalExit
+                - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
@@ -24819,6 +24831,9 @@ paths:
                 - unstakeWithCallData
                 - validatorRegistration
                 - increaseStake
+                - decreaseStake
+                - signalExit
+                - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
               description: If provided, transaction requests with the specified intent types will be excluded.
@@ -50328,6 +50343,7 @@ components:
                       - walletInitialization
                       - addressInitialization
                       - importedOutput
+                      - onchainidWalletLinked
                   value:
                     type: number
                     description: The change (in base units) in the address' balance
@@ -52488,6 +52504,9 @@ components:
         - transferStake
         - validatorRegistration
         - increaseStake
+        - decreaseStake
+        - signalExit
+        - withdrawStake
         - spotTransfer
         - bridgeFunds
         - goUnstake
@@ -52529,6 +52548,54 @@ components:
         - deactivate
         - customTx
         - closeAssociatedTokenAccount
+    IntentType11:
+      title: IntentType1
+      type: string
+      enum:
+        - payment
+        - consolidate
+        - consolidateToken
+        - fanout
+        - vote
+        - createAccount
+        - updateAccount
+        - addTrustLine
+        - removeTrustLine
+        - signMessage
+        - signTypedStructuredData
+        - enableToken
+        - acceleration
+        - transferToken
+        - fillNonce
+        - walletRecovery
+        - contractCall
+        - customTx
+        - closeAssociatedTokenAccount
+        - transferAcknowledge
+        - transferAccept
+        - transferReject
+        - stake
+        - unstake
+        - delegate
+        - undelegate
+        - switchValidator
+        - claim
+        - stakeClaimRewards
+        - pledge
+        - voteDelegation
+        - authorize
+        - deactivate
+        - createBtcDelegation
+        - goUnstake
+        - stakeWithCallData
+        - unstakeWithCallData
+        - validatorRegistration
+        - increaseStake
+        - decreaseStake
+        - signalExit
+        - withdrawStake
+        - switchValidatorWithCallData
+        - spotTransfer
     InternationalWireAccountResponseProps:
       title: InternationalWireAccountResponseProps
       type: object
@@ -54155,6 +54222,10 @@ components:
                     - readyToSend
                     - signed
                     - failed
+                  description: |-
+                    If supplied, only transaction request state changes from the provided list
+                    will trigger notifications. If not provided, all transaction request state
+                    changes will trigger notifications.
               txRequestTransactionStates:
                 type: array
                 items:
@@ -55238,7 +55309,7 @@ components:
         messageRaw:
           type: string
         intentType:
-          $ref: '#/components/schemas/IntentType'
+          $ref: '#/components/schemas/IntentType11'
         custodianMessageId:
           type: string
         isTss:
@@ -67848,6 +67919,9 @@ components:
         - $ref: '#/components/schemas/VetStakeClaimRewardsIntent'
         - $ref: '#/components/schemas/VetValidatorRegistrationIntent'
         - $ref: '#/components/schemas/VetIncreaseStakeIntent'
+        - $ref: '#/components/schemas/VetDecreaseStakeIntent'
+        - $ref: '#/components/schemas/VetSignalExitIntent'
+        - $ref: '#/components/schemas/VetWithdrawStakeIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
@@ -69045,6 +69119,7 @@ components:
                   - walletInitialization
                   - addressInitialization
                   - importedOutput
+                  - onchainidWalletLinked
               isPayGo:
                 type: boolean
                 description: True if this address is the BitGo PayGo wallet
@@ -75403,6 +75478,27 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnstakeIntent'
         - $ref: '#/components/schemas/VetUnstakeCommonFields'
+    VetDecreaseStakeIntent:
+      title: VET Decrease Stake Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - decreaseStake
+            validatorAddress:
+              type: string
+              minLength: 1
+            stakingContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - validatorAddress
+            - stakingContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     VetDelegateIntent:
       title: VET Delegate Intent
       allOf:
@@ -75480,6 +75576,26 @@ components:
             - stakingContractAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+    VetSignalExitIntent:
+      title: VET Signal Exit Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - signalExit
+            validatorAddress:
+              type: string
+              minLength: 1
+            stakingContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - validatorAddress
+            - stakingContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     VetStakeClaimRewardsIntent:
       title: VET Stake Claim Rewards Intent
       allOf:
@@ -75606,6 +75722,26 @@ components:
           $ref: '#/components/schemas/WalletStakingPermissionAttributes'
         disclaimerAttributes:
           $ref: '#/components/schemas/WalletStakingDisclaimerAttributes'
+    VetWithdrawStakeIntent:
+      title: VET Withdraw Stake Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - withdrawStake
+            validatorAddress:
+              type: string
+              minLength: 1
+            stakingContractAddress:
+              type: string
+              minLength: 1
+          required:
+            - intentType
+            - validatorAddress
+            - stakingContractAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
     VideoApprovalActionRequest:
       title: BitGo Video Approval
       type: object
@@ -77992,44 +78128,63 @@ components:
       properties:
         id:
           type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
         created:
           type: string
+          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
+        coin:
+          type: string
+          description: A cryptocurrency or token ticker symbol.
+          example: btc
         url:
           type: string
+          example: https://your.server.com/webhook
+          format: uri
         version:
           type: number
+          description: 2 for coins running on API v2.
+          example: 2
         scope:
           $ref: '#/components/schemas/WebhookScope'
         state:
           $ref: '#/components/schemas/WebhookState'
         successiveFailedAttempts:
           type: number
+          example: 0
         listenToFailureStates:
           type: boolean
-        coin:
-          type: string
+          description: Whether or not to listen to failed transactions on chain.
         label:
           type: string
+          description: Label of the new webhook.
         walletId:
           type: string
         enterpriseId:
           type: string
         organizationId:
           type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
         userId:
           type: string
         type:
-          $ref: '#/components/schemas/WebhookType'
+          allOf:
+            - $ref: '#/components/schemas/WebhookType'
+          description: Event type to listen to.
         numConfirmations:
           type: number
+          example: 6
         lastAttempt:
           type: string
+          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
         failingSince:
           type: string
+          example: 2021-01-01T00:00:00.000Z
           format: date-time
           title: ISO Date String
         allToken:
@@ -78052,6 +78207,9 @@ components:
               - readyToSend
               - signed
               - failed
+            description: |-
+              If present, only transaction request state changes from the list will trigger notifications.
+              If not present, all transaction request state changes will trigger notifications.
         txRequestTransactionStates:
           type: array
           items:
@@ -78072,12 +78230,13 @@ components:
               - invalidSignature
               - rejected
             description: |-
-              If supplied, only transaction request transaction state changes from the provided
-              list will trigger notifications. If not provided, all transaction request
-              transaction state changes will trigger notifications.
+              If present, only transaction request transaction state changes from the list will trigger
+              notifications. If not present, all transaction request transaction state changes will
+              trigger notifications.
       required:
         - id
         - created
+        - coin
         - url
         - version
         - scope
