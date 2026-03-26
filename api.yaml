@@ -13931,6 +13931,35 @@ paths:
             application/json:
               schema:
                 type: object
+  /api/notifications/v1/mute/wallets:
+    put:
+      tags:
+        - User Management Notification
+      summary: Update muted wallets list
+      description: Replaces the entire muted wallets list for the authenticated user. Pass an empty list to unmute all wallets.
+      operationId: updateMutedWallets
+      parameters:
+        - name: request-id
+          in: header
+          description: Optional idempotency key for the request
+          required: false
+          schema:
+            type: string
+      requestBody:
+        description: The new muted wallets list. Replaces the existing list entirely.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMutedWalletsRequest'
+        required: true
+      responses:
+        '200':
+          description: Muted wallets list updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteResponse'
+      x-internal: false
   /api/notifications/v1/mute/wallet:
     put:
       tags:
@@ -52742,6 +52771,7 @@ components:
               - transaction_monitoring
               - staking_rewards
               - treasury_management
+              - stuck_transaction_notification
     CbitAccountResponseProps:
       title: CbitAccountResponseProps
       type: object
@@ -80738,6 +80768,17 @@ components:
             $ref: '#/components/schemas/Document'
           description: List of documents to update
       title: UpdateIdentityBody
+    UpdateMutedWalletsRequest:
+      type: object
+      properties:
+        walletIds:
+          maxItems: 1000
+          minItems: 0
+          type: array
+          items:
+            maxLength: 100
+            minLength: 0
+            type: string
     UpdatePinnedWalletsResponse:
       title: UpdatePinnedWalletsResponse
       type: object
@@ -81102,6 +81143,7 @@ components:
             - transaction_monitoring
             - staking_rewards
             - treasury_management
+            - stuck_transaction_notification
         isSubscribed:
           type: boolean
         isMandatory:
