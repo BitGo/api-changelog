@@ -46647,10 +46647,27 @@ components:
                 - acceleration
             txid:
               type: string
+            senderAddress:
+              type: string
           required:
             - intentType
             - txid
         - $ref: '#/components/schemas/BaseIntent'
+    AccelerationIntent1:
+      title: AccelerationIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - acceleration
+            txid:
+              type: string
+          required:
+            - intentType
+            - txid
+        - $ref: '#/components/schemas/BaseIntent1'
     AcceptStablecoinAgreementResponse:
       title: AcceptStablecoinAgreementResponse
       type: object
@@ -50752,6 +50769,18 @@ components:
           $ref: '#/components/schemas/optionalString'
       required:
         - intentType
+    BaseIntentWithoutNonce1:
+      title: BaseIntentWithoutNonce
+      type: object
+      properties:
+        intentType:
+          $ref: '#/components/schemas/IntentType1'
+        sequenceId:
+          $ref: '#/components/schemas/optionalString'
+        comment:
+          $ref: '#/components/schemas/optionalString'
+      required:
+        - intentType
     BaseOAuthSetting:
       title: BaseOAuthSetting
       type: object
@@ -52625,6 +52654,14 @@ components:
           required:
             - context
             - name
+    CantonPaymentIntent:
+      title: CANTON Payment Intent
+      allOf:
+        - type: object
+          properties:
+            memo:
+              $ref: '#/components/schemas/optionalString'
+        - $ref: '#/components/schemas/PaymentIntent'
     CantonTransferAcceptIntent:
       title: Canton Transfer Accept Intent
       allOf:
@@ -55058,6 +55095,42 @@ components:
         - default
       description: |
         (UTXO only) The default script type to use for change for this wallet. Per transaction, you override the default with the `changeAddressType` parameter. If `default` is provided, it will clear the `changeAddressType` default on the wallet. Note that each UTXO coin has different address types available. For example, Only BTC supports `p2tr`.
+    DefiDepositIntent:
+      title: DefiDepositIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - defi-deposit
+            protocol:
+              type: string
+            amount:
+              type: string
+          required:
+            - intentType
+            - protocol
+            - amount
+        - $ref: '#/components/schemas/BaseIntent'
+    DefiRedeemIntent:
+      title: DefiRedeemIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - defi-redeem
+            protocol:
+              type: string
+            amount:
+              type: string
+          required:
+            - intentType
+            - protocol
+            - amount
+        - $ref: '#/components/schemas/BaseIntent'
     DelegateIntent:
       title: DelegateIntent
       allOf:
@@ -57553,6 +57626,19 @@ components:
             - feeOptions
         - $ref: '#/components/schemas/AccelerationIntent'
         - $ref: '#/components/schemas/EthBuildOptionsWithoutFeeOptions'
+    EthAccelerationIntent1:
+      title: ETH Acceleration Intent
+      allOf:
+        - type: object
+          properties:
+            feeOptions:
+              oneOf:
+                - $ref: '#/components/schemas/FeeOption'
+                - $ref: '#/components/schemas/EIP1559FeeOptions'
+          required:
+            - feeOptions
+        - $ref: '#/components/schemas/AccelerationIntent1'
+        - $ref: '#/components/schemas/EthBuildOptionsWithoutFeeOptions'
     EthAuthorizeValidatorTransactionProperties:
       title: ETH Authorize Validator Transaction Properties
       allOf:
@@ -57720,7 +57806,7 @@ components:
       allOf:
         - type: object
           properties: {}
-        - $ref: '#/components/schemas/FillNonceIntent'
+        - $ref: '#/components/schemas/FillNonceIntent1'
         - $ref: '#/components/schemas/EthFillNonceBuildOptions'
     EthLikeStakeIntent:
       title: EthLike Stake Intent
@@ -58598,10 +58684,29 @@ components:
               oneOf:
                 - type: string
                 - type: number
+            senderAddress:
+              type: string
           required:
             - intentType
             - nonce
         - $ref: '#/components/schemas/BaseIntentWithoutNonce'
+    FillNonceIntent1:
+      title: FillNonceIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - fillNonce
+            nonce:
+              oneOf:
+                - type: string
+                - type: number
+          required:
+            - intentType
+            - nonce
+        - $ref: '#/components/schemas/BaseIntentWithoutNonce1'
     FillUpdated:
       title: Fill Updated
       allOf:
@@ -61923,6 +62028,8 @@ components:
         - transferReject
         - transferAcknowledge
         - transferOfferWithdrawn
+        - defi-deposit
+        - defi-redeem
     IntentType1:
       title: IntentType
       type: string
@@ -64620,13 +64727,13 @@ components:
       title: MaxResourcesDelegatable
       type: object
       properties:
-        bandwidthWeight:
+        bandwidthSun:
           type: string
-        energyWeight:
+        energySun:
           type: string
       required:
-        - bandwidthWeight
-        - energyWeight
+        - bandwidthSun
+        - energySun
     MemoObject:
       type: object
       properties:
@@ -77245,6 +77352,7 @@ components:
         - $ref: '#/components/schemas/BscDelegateIntent'
         - $ref: '#/components/schemas/BscUnDelegateIntent'
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
+        - $ref: '#/components/schemas/CantonPaymentIntent'
         - $ref: '#/components/schemas/CantonTransferAcceptIntent'
         - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
         - $ref: '#/components/schemas/CantonTransferOfferWithdrawnIntent'
@@ -77254,6 +77362,8 @@ components:
         - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
         - $ref: '#/components/schemas/CosmosUnstakeIntent'
         - $ref: '#/components/schemas/CosmosWithdrawIntent'
+        - $ref: '#/components/schemas/DefiDepositIntent'
+        - $ref: '#/components/schemas/DefiRedeemIntent'
         - $ref: '#/components/schemas/DotConsolidateIntent'
         - $ref: '#/components/schemas/DotCreateAccountIntent'
         - $ref: '#/components/schemas/DotPaymentIntent'
@@ -77743,7 +77853,7 @@ components:
         - $ref: '#/components/schemas/DotPaymentIntent1'
         - $ref: '#/components/schemas/DotStakingIntent1'
         - $ref: '#/components/schemas/DotUnstakingIntent1'
-        - $ref: '#/components/schemas/EthAccelerationIntent'
+        - $ref: '#/components/schemas/EthAccelerationIntent1'
         - $ref: '#/components/schemas/EthFillNonceIntent1'
         - $ref: '#/components/schemas/EthPaymentIntent'
         - $ref: '#/components/schemas/ETHSignMessageIntent'
