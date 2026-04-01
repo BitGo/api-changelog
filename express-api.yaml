@@ -3671,10 +3671,29 @@ components:
           type: string
         reqId:
           type: string
+        context:
+          $ref: '#/components/schemas/ErrorContext'
       example:
         error: invalid permission
         errorName: backend:common:forbidden
         reqId: unk-nqo97l23l2ofpvgkbb8z
+    ErrorContext:
+      type: object
+      description: |
+        Optional structured metadata for REST validation failures.
+        The schema is fixed for client contract stability.
+      required:
+        - errorName
+      properties:
+        errorName:
+          type: string
+          description: Same value as the top-level errorName.
+        field:
+          type: string
+          description: Request field associated with the validation failure.
+        message:
+          type: string
+          description: Human-readable field-level validation message.
     ErrorResponse:
       title: ErrorResponse
       type: object

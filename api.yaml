@@ -26722,6 +26722,26 @@ paths:
                     error: backend:common:invalidArgument key=type
                     errorName: backend:common:invalidArgument
                     reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidArgumentWithFieldMessage:
+                  summary: Parameter validation with structured field and message (subOrderSize)
+                  value:
+                    error: backend:common:invalidArgument key=subOrderSize
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                    context:
+                      errorName: backend:common:invalidArgument
+                      field: subOrderSize
+                      message: Sub-order size must be smaller than the total order quantity.
+                invalidLimitPricePrecisionWithContext:
+                  summary: Limit price exceeds quote precision (structured field and message)
+                  value:
+                    error: backend:trade:invalidLimitPrice key=limitPrice
+                    errorName: backend:trade:invalidLimitPrice
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                    context:
+                      errorName: backend:trade:invalidLimitPrice
+                      field: limitPrice
+                      message: limitPrice exceeds maximum decimal precision of 2
                 invalidQuantity:
                   summary: Invalid quantity specified (e.g., below minimum or above maximum order size). For marketable limit orders (where the limit price would execute immediately), the message includes additional context explaining that validation is performed at the current market price.
                   value:
@@ -57434,10 +57454,29 @@ components:
           type: string
         reqId:
           type: string
+        context:
+          $ref: '#/components/schemas/ErrorContext'
       example:
         error: invalid permission
         errorName: backend:common:forbidden
         reqId: unk-nqo97l23l2ofpvgkbb8z
+    ErrorContext:
+      type: object
+      description: |
+        Optional structured metadata for REST validation failures.
+        The schema is fixed for client contract stability.
+      required:
+        - errorName
+      properties:
+        errorName:
+          type: string
+          description: Same value as the top-level errorName.
+        field:
+          type: string
+          description: Request field associated with the validation failure.
+        message:
+          type: string
+          description: Human-readable field-level validation message.
     EstimateTransactionFees:
       title: Bitcoin
       type: object
