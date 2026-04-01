@@ -54475,7 +54475,7 @@ components:
           example: false
         commonPub:
           type: string
-          description: The commonPub for the key. This value is necessary for BLS keys when the source is either “user” or “backup”. Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
+          description: The commonPub for the key. This value is necessary for MPC keys when the source is either “user” or “backup”. Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
         commonKeychain:
           type: string
           description: The commonKeychain for the key if this is a MPC key. This value is required to be set when the type is set to “tss” and when the source is either “user” or “backup”. Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key. This value is the common pub concatenated with the common chaincode.
@@ -62657,7 +62657,7 @@ components:
         commonPub:
           type: string
           description: |-
-            The common public key. This value is required to be set for BLS keys when the
+            The common public key. This value is required to be set for MPC keys when the
             source is either "user" or "backup". Setting this indicates to BitGo that the
             owner of the key has received all key shares they needed for generating their
             key.
@@ -62837,7 +62837,7 @@ components:
               description: The commonKeychain for the key if this is a MPC key. This value is required to be set when the type is set to “tss” and when the source is either “user” or “backup”. Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key. This value is the concatenation of the common public key (32-byte) with the common chaincode (32-byte) as a hex string.
             commonPub:
               type: string
-              description: The common public key. This value is required to be set for BLS keys when the source is either "user" or "backup". Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
+              description: The common public key. This value is required to be set for MPC keys when the source is either "user" or "backup". Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
       required:
         - id
         - type
@@ -62871,7 +62871,6 @@ components:
       enum:
         - tss
         - independent
-        - blsdkg
       default: independent
       description: A value from a string enum denoting what kind of key this is. Defaults to “independent” indicating an on-chain key is requested. If set to “tss” this tells us that a “tss” key is requested.
       example: tss
@@ -64955,7 +64954,6 @@ components:
       enum:
         - onchain
         - tss
-        - blsdkg
     MultiWalletStuckTxsResponse:
       title: Multi-Wallet Stuck Transactions Response
       type: object
@@ -86760,7 +86758,6 @@ components:
       enum:
         - onchain
         - tss
-        - blsdkg
     WalletPermission:
       type: string
       description: |
@@ -87003,7 +87000,7 @@ components:
       description: Key passed to the receiving user, included if the wallet was shared with spend permission
       properties:
         pub:
-          description: One of wallet pub (onchain), commonPub (BLS) or commonKeychain (MPC)
+          description: One of wallet pub (onchain) or commonKeychain (MPC)
           type: string
         encryptedPrv:
           description: Private key of the user sharing the wallet encrypted under their wallet passphrase
