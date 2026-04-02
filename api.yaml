@@ -29936,6 +29936,65 @@ paths:
           $ref: '#/components/responses/NotFoundError1'
         '500':
           $ref: '#/components/responses/InternalServerError1'
+  /api/staking/v1/{coin}/wallets/{walletId}/kyc/upload:
+    post:
+      tags:
+        - Staking Request
+      summary: Upload KYC document and get IPFS hash
+      description: |
+        Accepts a KYC PDF document, uploads it to the XinFin MasterNode IPFS API,
+        and returns the authoritative IPFS hash assigned by the network.
+        Only supported for XDC and TXDC coins.
+
+        The returned hash must be included in the subsequent XDC stake request as `kycHash`.
+        It is submitted to the validator contract in the AUTHORIZE (uploadKYC) transaction.
+      operationId: xdc.kyc.upload
+      x-internal: false
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: Must be xdc or txdc.
+          schema:
+            type: string
+            enum:
+              - xdc
+              - txdc
+        - name: walletId
+          in: path
+          required: true
+          description: The wallet ID of the wallet used for staking.
+          schema:
+            $ref: '#/components/schemas/WalletId'
+      requestBody:
+        required: true
+        description: The request body for uploading KYC.
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The KYC PDF document to upload (max 5MB).
+      responses:
+        '200':
+          description: IPFS hash computed successfully.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/XdcKycUploadResponse'
+        '400':
+          $ref: '#/components/responses/BadRequestError1'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError2'
+        '403':
+          $ref: '#/components/responses/ForbiddenError2'
+        '500':
+          $ref: '#/components/responses/InternalServerError1'
   /api/fiat/v1/transaction/ach-debit:
     post:
       summary: Initiate ACH deposit
@@ -45341,6 +45400,7 @@ components:
         nftTier: DAWN
         validator: '0xae99cb89767a09d53e589a40cb4016974aba4b94'
         type: STAKE
+        subType: STAKE
     VetUnStakingRequestPOSTBodyExample:
       summary: VET UnStaking Request POST Body Example
       value:
@@ -80341,6 +80401,11 @@ components:
           description: Whether multiple delegation IDs must be specified for the unstaking request.
           type: boolean
           default: false
+        fields:
+          description: Dynamic form fields for the unstaking request (e.g., resource type selection).
+          type: array
+          items:
+            $ref: '#/components/schemas/StakingField'
         unstakingSubTypes:
           type: array
           description: Supported unstaking sub-types with their own spendable attributes.
@@ -85213,11 +85278,22 @@ components:
           properties:
             nftTier:
               type: string
-              description: The NFT tier selected for staking (e.g., DAWN, LIGHTNING, FLASH).
+              nullable: true
+              description: The NFT tier selected for staking (e.g., DAWN, LIGHTNING, FLASH). Present for regular staking, null for validator registration.
             validatorAddress:
               type: string
               nullable: true
-              description: The validator address to delegate to.
+              description: The validator address to delegate to or the validator address being registered.
+            stakingType:
+              type: string
+              description: The staking type - VET_STAKE for regular staking, VET_VALIDATOR_REGISTRATION for validator registration.
+              enum:
+                - VET_STAKE
+                - VET_VALIDATOR_REGISTRATION
+            beneficiaryAddress:
+              type: string
+              nullable: true
+              description: The beneficiary address that receives validator rewards. Present only for validator registration.
           required:
             - nftTier
     VetStakingRequestPOSTBody:
@@ -85227,16 +85303,24 @@ components:
         - type: object
           properties:
             nftTier:
-              description: The NFT tier to stake for VET PoS. Amount will be auto-populated based on the selected tier. Options are dynamically populated from the wallet attributes endpoint based on user balance.
+              description: The NFT tier to stake for VET PoS. Amount will be auto-populated based on the selected tier. Options are dynamically populated from the wallet attributes endpoint based on user balance. Required for subType=STAKE.
               type: string
               example: DAWN
             validator:
-              description: The validator address to delegate the NFT to.
+              description: The validator address. For regular staking (subType=STAKE), this is the validator to delegate the NFT to. For validator registration (subType=VET_VALIDATOR_REGISTRATION), this is the validator address being registered.
               type: string
               example: '0xae99cb89767a09d53e589a40cb4016974aba4b94'
-          required:
-            - nftTier
-            - validator
+            beneficiaryAddress:
+              description: The beneficiary address that will receive validator rewards. Required for subType=VET_VALIDATOR_REGISTRATION.
+              type: string
+              example: '0x1234567890123456789012345678901234567890'
+            subType:
+              description: The staking sub-type. STAKE for regular NFT-based staking, VET_VALIDATOR_REGISTRATION for registering as a validator.
+              type: string
+              enum:
+                - STAKE
+                - VET_VALIDATOR_REGISTRATION
+              example: STAKE
       type: object
     VetStakingTransactionProperties:
       title: VET Staking Transaction Properties
@@ -88739,6 +88823,20 @@ components:
         - rootAddress
         - pendingChainInitialization
         - creationFailure
+    XdcKycUploadResponse:
+      title: XDC KYC Upload Response
+      description: Response containing the IPFS CIDv0 hash of the uploaded KYC document.
+      type: object
+      required:
+        - hash
+      properties:
+        hash:
+          type: string
+          description: |
+            IPFS CIDv0 hash of the uploaded KYC document.
+            Must be included as `kycHash` in the subsequent XDC stake request.
+          pattern: ^Qm[1-9A-HJ-NP-Za-km-z]{44}$
+          example: QmT5NvUtoM5nWFfrQdVrFtvGfKFmG7AHE8P34isapyhCxX
     XdcProposeIntent:
       title: XDC Propose Intent
       allOf:
