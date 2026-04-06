@@ -581,6 +581,25 @@ paths:
                   type: string
                   description: |
                     Payload for key rotation verification (deprecated).
+                webauthnInfo:
+                  type: object
+                  description: |
+                    Passkey PRF wallet encryption data. When provided alongside encryptedPrv
+                    on a hot wallet, attaches the passkey device metadata to the user key.
+                  required:
+                    - prfSalt
+                    - otpDeviceId
+                    - encryptedPrv
+                  properties:
+                    prfSalt:
+                      type: string
+                      description: PRF salt used for key derivation.
+                    otpDeviceId:
+                      type: string
+                      description: The passkey OTP device ID.
+                    encryptedPrv:
+                      type: string
+                      description: Private key encrypted with the PRF-derived key.
               required:
                 - state
       responses:
@@ -25038,6 +25057,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
+  /api/v2/{coin}/wallet/{walletId}/webhooks/notifications:
+    x-internal: false
+    get:
+      tags:
+        - Webhook
+      summary: List wallet webhook notifications
+      description: |
+        List webhook notifications for a wallet. Returns notifications
+        that were triggered by webhooks on the specified wallet.
+      operationId: v2.wallet.listwebhooknotifications
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          description: A cryptocurrency or token ticker symbol.
+          schema:
+            $ref: '#/components/schemas/Coin'
+        - $ref: '#/components/parameters/pathWalletId'
+        - $ref: '#/components/parameters/prevId'
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            example: 25
+          description: Maximum number of results to return.
+        - name: hash
+          in: query
+          schema:
+            type: string
+          description: Filter notifications by transaction hash.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  webhookNotifications:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WebhookNotification'
+                  nextBatchPrevId:
+                    $ref: '#/components/schemas/Id'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError3'
+                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/webhooks/{webhookId}/simulate:
     post:
       tags:
