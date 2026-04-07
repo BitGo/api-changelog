@@ -58900,6 +58900,7 @@ components:
         product: BTC-USD
         fundingType: funded
         status: open
+        execType: F
         type: market
         side: buy
         quantity: '0.0068'
@@ -66532,6 +66533,7 @@ components:
         product: BTC-USD
         fundingType: funded
         status: canceled
+        execType: '4'
         type: market
         side: buy
         quantity: '0.0068'
@@ -66562,6 +66564,7 @@ components:
         product: BTC-USD
         fundingType: funded
         status: completed
+        execType: I
         type: market
         side: buy
         quantity: '0.0068'
@@ -66610,6 +66613,7 @@ components:
         product: BTC-USD
         fundingType: funded
         status: pending_open
+        execType: A
         type: market
         side: buy
         quantity: '0.0068'
@@ -66634,6 +66638,7 @@ components:
         product: BTC-USD
         fundingType: funded
         status: error
+        execType: '8'
         type: market
         side: buy
         quantity: '0.0068'
@@ -77105,6 +77110,20 @@ components:
           $ref: '#/components/schemas/FundingType'
         status:
           $ref: '#/components/schemas/OrderStatus'
+        execType:
+          type: string
+          description: |
+            The type of update, using FIX 4.4 ExecType (tag 150) values.
+            Use this field to distinguish order status updates from fill events.
+
+            - `F` (Trade) — a fill occurred; check `tradeId`, `fillQuantity`, `fillPrice` for fill details
+            - `0` (New) — order accepted by the exchange
+            - `A` (Pending New) — order submitted, awaiting acceptance
+            - `6` (Pending Cancel) — cancel request sent
+            - `4` (Canceled) — order canceled
+            - `8` (Rejected) — order rejected or internal failure
+            - `I` (Order Status) — terminal status summary (e.g. completed)
+          example: F
         type:
           $ref: '#/components/schemas/OrderType'
         side:
