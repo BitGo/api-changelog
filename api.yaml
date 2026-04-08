@@ -32172,74 +32172,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/{coin}/wallet/{walletId}/activedelegations:
-    get:
-      summary: Get active resource delegations
-      description: Retrieves outgoing and incoming resource delegation information for a TRON wallet
-      operationId: v2.wallet.getActiveDelegations
-      tags:
-        - Wallet
-      parameters:
-        - name: type
-          description: 'Filter by delegation type: ''owner'' for outgoing, ''receiver'' for incoming'
-          in: query
-          schema:
-            type: string
-            enum:
-              - owner
-              - receiver
-        - name: resourceType
-          description: Filter by resource type
-          in: query
-          schema:
-            type: string
-            enum:
-              - ENERGY
-              - BANDWIDTH
-        - name: limit
-          description: Maximum number of results to return
-          in: query
-          schema:
-            type: string
-            format: number
-        - name: nextBatchPrevId
-          description: Pagination cursor from previous response
-          in: query
-          schema:
-            type: string
-        - name: coin
-          description: Coin or token identifier (e.g. trx, ttrx)
-          in: path
-          required: true
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/CoinNonEmptyString'
-        - name: walletId
-          description: Wallet ID to retrieve active delegations for
-          in: path
-          required: true
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/WalletIdNonEmptyString'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetActiveDelegationsResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/address:
     post:
       summary: Create address
@@ -33191,27 +33123,14 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/getAccountResources:
-    get:
+    post:
       summary: Get account resources
       description: Retrieves bandwidth and energy resource information for TRON addresses
       operationId: v2.wallet.getAccountResources
       tags:
         - Wallet
+      x-internal: false
       parameters:
-        - name: addresses
-          description: List of TRON addresses to retrieve resource information for
-          in: query
-          required: true
-          schema:
-            type: array
-            items:
-              type: string
-              description: List of TRON addresses to retrieve resource information for
-        - name: destinationAddress
-          description: Optional destination address for resource deficit calculation
-          in: query
-          schema:
-            type: string
         - name: coin
           description: Coin or token identifier (e.g. trx, ttrx:usdt)
           in: path
@@ -33226,6 +33145,24 @@ paths:
           schema:
             allOf:
               - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: List of TRON addresses to retrieve resource information for
+              title: GetAccountResourcesBody
+              properties:
+                addresses:
+                  type: array
+                  items:
+                    type: string
+                    description: List of TRON addresses to retrieve resource information for
+                destinationAddress:
+                  type: string
+                  description: Optional destination address for resource deficit calculation
+              required:
+                - addresses
       responses:
         '200':
           description: OK
@@ -33285,6 +33222,72 @@ paths:
                 $ref: '#/components/schemas/GetPotentialStuckTxsResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/resourcedelegations:
+    get:
+      summary: Get resource delegations
+      description: Retrieves outgoing and incoming resource delegation information for a TRON wallet
+      operationId: v2.wallet.getResourceDelegations
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: type
+          description: 'Filter by delegation direction: ''outgoing'' for delegations from this address, ''incoming'' for delegations to this address; omit to fetch both'
+          in: query
+          schema:
+            type: string
+            enum:
+              - outgoing
+              - incoming
+        - name: resource
+          description: 'Filter by resource type (case-insensitive: ENERGY, energy, BANDWIDTH, bandwidth)'
+          in: query
+          schema:
+            type: string
+        - name: limit
+          description: Maximum number of results to return
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: nextBatchPrevId
+          description: Pagination cursor from previous response
+          in: query
+          schema:
+            type: string
+        - name: coin
+          description: Coin or token identifier (e.g. trx, ttrx)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: Wallet ID to retrieve active delegations for
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetResourceDelegationsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
           content:
             application/json:
               schema:
@@ -53091,6 +53094,7 @@ components:
         - unlock
         - bulkUnlock
         - bulkArchive
+        - duplicate
     ClaimRewardsDisclaimerAttributes:
       allOf:
         - $ref: '#/components/schemas/BaseDisclaimer'
@@ -59438,90 +59442,6 @@ components:
       required:
         - resources
         - failedAddresses
-    GetActiveDelegationsResponse:
-      title: GetActiveDelegationsResponse
-      type: object
-      properties:
-        address:
-          type: string
-        coin:
-          type: string
-        delegations:
-          type: object
-          properties:
-            outgoing:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  coin:
-                    type: string
-                  ownerAddress:
-                    type: string
-                  receiverAddress:
-                    type: string
-                  resourceType:
-                    type: string
-                    enum:
-                      - ENERGY
-                      - BANDWIDTH
-                  balance:
-                    type: string
-                  blockHeight:
-                    type: number
-                  date:
-                    type: string
-                required:
-                  - id
-                  - coin
-                  - ownerAddress
-                  - receiverAddress
-                  - resourceType
-                  - balance
-                  - blockHeight
-                  - date
-            incoming:
-              type: array
-              items:
-                type: object
-                properties:
-                  id:
-                    type: string
-                  coin:
-                    type: string
-                  ownerAddress:
-                    type: string
-                  receiverAddress:
-                    type: string
-                  resourceType:
-                    type: string
-                    enum:
-                      - ENERGY
-                      - BANDWIDTH
-                  balance:
-                    type: string
-                  blockHeight:
-                    type: number
-                  date:
-                    type: string
-                required:
-                  - id
-                  - coin
-                  - ownerAddress
-                  - receiverAddress
-                  - resourceType
-                  - balance
-                  - blockHeight
-                  - date
-          required:
-            - outgoing
-            - incoming
-      required:
-        - address
-        - coin
-        - delegations
     GetDocumentResponse:
       type: object
       properties:
@@ -60561,6 +60481,86 @@ components:
           type: boolean
       required:
         - txId
+    GetResourceDelegationsResponse:
+      title: GetResourceDelegationsResponse
+      type: object
+      properties:
+        address:
+          type: string
+        coin:
+          type: string
+        delegations:
+          type: object
+          properties:
+            outgoing:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  coin:
+                    type: string
+                  ownerAddress:
+                    type: string
+                  receiverAddress:
+                    type: string
+                  resource:
+                    type: string
+                    enum:
+                      - ENERGY
+                      - BANDWIDTH
+                  balance:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - coin
+                  - ownerAddress
+                  - receiverAddress
+                  - resource
+                  - balance
+                  - updatedAt
+            incoming:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                  coin:
+                    type: string
+                  ownerAddress:
+                    type: string
+                  receiverAddress:
+                    type: string
+                  resource:
+                    type: string
+                    enum:
+                      - ENERGY
+                      - BANDWIDTH
+                  balance:
+                    type: string
+                  updatedAt:
+                    type: string
+                required:
+                  - id
+                  - coin
+                  - ownerAddress
+                  - receiverAddress
+                  - resource
+                  - balance
+                  - updatedAt
+            nextBatchPrevId:
+              type: string
+          required:
+            - outgoing
+            - incoming
+      required:
+        - address
+        - coin
+        - delegations
     GetSequenceIdsResponse:
       title: GetSequenceIdsResponse
       type: object
