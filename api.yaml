@@ -37731,6 +37731,250 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/user/accesstokentemplate:
+    get:
+      summary: List access token templates
+      description: |-
+        Returns all access token templates belonging to the authenticated user.
+        Results are paginated using cursor-based pagination. Use the `prevId` query parameter
+        with the `nextBatchPrevId` value from the previous response to fetch the next page.
+        Defaults to 25 results per page; maximum is 100.
+      operationId: v2.accesstokentemplate.list
+      tags:
+        - User
+      x-internal: false
+      parameters:
+        - name: limit
+          description: 'Maximum number of results to return (default: 25, max: 100)'
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: prevId
+          description: Cursor for pagination; use the `nextBatchPrevId` value from the previous response
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accessTokenTemplates:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        name:
+                          type: string
+                        userId:
+                          type: string
+                        enterpriseId:
+                          type: string
+                        tokenScopes:
+                          type: array
+                          items:
+                            type: string
+                        allowedIPs:
+                          type: array
+                          items:
+                            type: string
+                        tokenLimits:
+                          $ref: '#/components/schemas/TokenLimits'
+                        createdAt:
+                          type: string
+                          format: date-time
+                          title: ISO Date String
+                        updatedAt:
+                          type: string
+                          format: date-time
+                          title: ISO Date String
+                      required:
+                        - id
+                        - name
+                        - userId
+                  nextBatchPrevId:
+                    type: string
+                required:
+                  - accessTokenTemplates
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Create access token template
+      description: Creates a reusable access token template for the authenticated user.
+      operationId: v2.accesstokentemplate.create
+      tags:
+        - User
+      x-internal: false
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for creating an access token template.
+                Defines a reusable configuration including spending limits and optional enterprise scope
+                that can be applied when creating access tokens.
+              properties:
+                name:
+                  type: string
+                  description: Display name for the template (must be unique per user)
+                enterpriseId:
+                  type: string
+                  description: Scope the template to a specific enterprise; user must be a member of the enterprise
+                tokenScopes:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - openid
+                      - openid_enterprises
+                      - profile
+                      - user_manage
+                      - enterprise_view_all
+                      - enterprise_manage_all
+                      - auditlogs_view_all
+                      - wallet_view
+                      - wallet_view_enterprise
+                      - wallet_view_all
+                      - wallet_create
+                      - wallet_freeze
+                      - wallet_freeze_all
+                      - wallet_manage
+                      - wallet_manage_all
+                      - wallet_approve
+                      - wallet_approve_all
+                      - wallet_spend
+                      - wallet_spend_all
+                      - wallet_edit
+                      - wallet_edit_all
+                      - wallet_stake
+                      - wallet_stake_all
+                      - wallet_edit_enterprise
+                      - wallet_spend_enterprise
+                      - wallet_approve_enterprise
+                      - wallet_manage_enterprise
+                      - settlement_network_read
+                      - settlement_network_write
+                      - portfolio_view
+                      - trade_view
+                      - trade_trade
+                      - trade_fix
+                      - pending_approval_update
+                      - metamask_institutional
+                      - crypto_compare
+                      - third_party_user_lookup
+                      - private_verify_email
+                      - scim
+                      - all
+                    description: OAuth scopes to grant when tokens are created from this template
+                allowedIPs:
+                  type: array
+                  items:
+                    type: string
+                    description: IP addresses allowed to use tokens created from this template
+                tokenLimits:
+                  type: object
+                  description: Spending limits to apply when tokens are created from this template
+                  properties:
+                    allErc20TokensLimit:
+                      $ref: '#/components/schemas/AllErc20TokensTemplateLimit'
+                    spendingLimits:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          coin:
+                            type: string
+                          maxLimit:
+                            type: boolean
+                          txValueLimit:
+                            type: string
+                        required:
+                          - coin
+              required:
+                - name
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenTemplateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/user/accesstokentemplate/{id}:
+    get:
+      summary: Get access token template
+      description: Returns a single access token template belonging to the authenticated user.
+      operationId: v2.accesstokentemplate.get
+      tags:
+        - User
+      x-internal: false
+      parameters:
+        - name: id
+          description: The access token template ID
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenTemplateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/user/freeze:
     post:
       summary: Freeze User
@@ -46951,6 +47195,40 @@ components:
       required:
         - id
         - isExtensible
+    AccessTokenTemplateResponse:
+      title: AccessTokenTemplateResponse
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        userId:
+          type: string
+        enterpriseId:
+          type: string
+        tokenScopes:
+          type: array
+          items:
+            type: string
+        allowedIPs:
+          type: array
+          items:
+            type: string
+        tokenLimits:
+          $ref: '#/components/schemas/TokenLimits'
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+      required:
+        - id
+        - name
+        - userId
     Account:
       required:
         - id
@@ -48147,6 +48425,16 @@ components:
         - enabled
         - txCount
         - txValue
+    AllErc20TokensTemplateLimit:
+      title: AllErc20TokensTemplateLimit
+      type: object
+      properties:
+        enabled:
+          type: boolean
+        txValueLimit:
+          type: string
+        maxLimit:
+          type: boolean
     AllWalletsScope:
       type: object
       description: |
@@ -50723,6 +51011,7 @@ components:
               - ACH Debits
               - Go Lightning
               - Trade FIX API
+              - Go Staking
             description: Requested BitGo Products
         isContractedClient:
           type: boolean
@@ -59410,17 +59699,17 @@ components:
             properties:
               address:
                 type: string
-              free_bandwidth_available:
+              freeBandwidthAvailable:
                 type: number
-              free_bandwidth_used:
+              freeBandwidthUsed:
                 type: number
-              staked_bandwidth_available:
+              stakedBandwidthAvailable:
                 type: number
-              staked_bandwidth_used:
+              stakedBandwidthUsed:
                 type: number
-              energy_available:
+              energyAvailable:
                 type: number
-              energy_used:
+              energyUsed:
                 type: number
               resourceDeficitForAssetTransfer:
                 $ref: '#/components/schemas/TronResourceDeficit'
@@ -59428,12 +59717,12 @@ components:
                 $ref: '#/components/schemas/MaxResourcesDelegatable'
             required:
               - address
-              - free_bandwidth_available
-              - free_bandwidth_used
-              - staked_bandwidth_available
-              - staked_bandwidth_used
-              - energy_available
-              - energy_used
+              - freeBandwidthAvailable
+              - freeBandwidthUsed
+              - stakedBandwidthAvailable
+              - stakedBandwidthUsed
+              - energyAvailable
+              - energyUsed
         failedAddresses:
           type: array
           items:
@@ -76638,6 +76927,25 @@ components:
           type: number
           description: Number of decimal places the token uses (for fungible tokens unsupported in WP).
           example: 18
+    TokenLimits:
+      title: TokenLimits
+      type: object
+      properties:
+        spendingLimits:
+          type: array
+          items:
+            type: object
+            properties:
+              coin:
+                type: string
+              txValueLimit:
+                type: string
+              maxLimit:
+                type: boolean
+            required:
+              - coin
+        allErc20TokensLimit:
+          $ref: '#/components/schemas/AllErc20TokensTemplateLimit'
     TokenRecipientEntryItem:
       title: TokenRecipientEntryItem
       type: object
