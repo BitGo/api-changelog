@@ -1150,7 +1150,15 @@ paths:
                         - type: number
                 accessTokenTemplateId:
                   type: string
-                  description: ID of the AccessTokenTemplate whose settings will be set in the created token.
+                  description: |-
+                    ID of the AccessTokenTemplate to use as defaults for this token.
+
+                    Template fields act as defaults — they are used when the corresponding field is absent from the
+                    request body. Any value you provide in the request, including an empty array, takes precedence.
+
+                    For example, if the template has `scope: ['spend', 'transfer']` and you send `scope: ['read']`,
+                    the created token will have `scope: ['read']`. If you omit `scope` entirely, the token gets
+                    `scope: ['spend', 'transfer']` from the template.
               required:
                 - label
                 - otp
@@ -33218,6 +33226,19 @@ paths:
           schema:
             type: string
             minLength: 1
+        - name: unspentIds
+          description: |-
+            Canton: filter to specific IMS unspent contract ids (repeat param or comma-separated).
+            Ignored for other chains that use this route.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              description: |-
+                Canton: filter to specific IMS unspent contract ids (repeat param or comma-separated).
+                Ignored for other chains that use this route.
         - name: coin
           in: path
           required: true
@@ -50620,6 +50641,11 @@ components:
                 type: number
           required:
             - enterpriseWallets
+        walletTypeCounts:
+          type: object
+          additionalProperties:
+            type: number
+          description: Wallet type distribution (hot/cold/custodial/etc.)
         activePricingType:
           nullable: true
           allOf:
@@ -52933,6 +52959,10 @@ components:
           properties:
             memo:
               $ref: '#/components/schemas/optionalString'
+            unspents:
+              $ref: '#/components/schemas/optionalStringArray'
+          required:
+            - unspents
         - $ref: '#/components/schemas/PaymentIntent'
     CantonTransferAcceptIntent:
       title: Canton Transfer Accept Intent
@@ -52947,6 +52977,8 @@ components:
               type: string
             token:
               type: string
+            expiry:
+              type: number
           required:
             - intentType
             - txRequestId
@@ -53013,6 +53045,8 @@ components:
               type: string
             token:
               type: string
+            expiry:
+              type: number
           required:
             - intentType
             - txRequestId
@@ -64565,6 +64599,7 @@ components:
         - transactionInitiator
         - walletAdmins
         - videoIdUsers
+        - enterpriseAdmin
     LockedSession:
       type: object
       properties:
