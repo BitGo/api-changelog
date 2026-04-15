@@ -37657,6 +37657,47 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/user/accesstokentemplate/{id}:
+    delete:
+      summary: Delete access token template
+      description: |-
+        Permanently deletes an access token template owned by the authenticated user.
+        Any access tokens that were created from this template will have their
+        `accessTokenTemplateId` reference cleared but will otherwise remain intact.
+      operationId: v2.accesstokentemplate.delete
+      tags:
+        - User
+      x-internal: false
+      parameters:
+        - name: id
+          description: The public ID of the template to delete
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                required:
+                  - id
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
     get:
       summary: Get access token template
       description: Returns a single access token template belonging to the authenticated user.
@@ -37692,6 +37733,136 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    patch:
+      summary: Update access token template
+      description: |-
+        Partially updates an access token template owned by the authenticated user.
+        Only the fields provided in the request body will be updated.
+      operationId: v2.accesstokentemplate.update
+      tags:
+        - User
+      x-internal: false
+      parameters:
+        - name: id
+          description: The public ID of the template to update
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for partially updating an access token template.
+                Only the fields provided will be updated; omitted fields remain unchanged.
+              properties:
+                name:
+                  type: string
+                  description: New display name for the template (must be unique per user)
+                tokenScopes:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - openid
+                      - openid_enterprises
+                      - profile
+                      - user_manage
+                      - enterprise_view_all
+                      - enterprise_manage_all
+                      - auditlogs_view_all
+                      - wallet_view
+                      - wallet_view_enterprise
+                      - wallet_view_all
+                      - wallet_create
+                      - wallet_freeze
+                      - wallet_freeze_all
+                      - wallet_manage
+                      - wallet_manage_all
+                      - wallet_approve
+                      - wallet_approve_all
+                      - wallet_spend
+                      - wallet_spend_all
+                      - wallet_edit
+                      - wallet_edit_all
+                      - wallet_stake
+                      - wallet_stake_all
+                      - wallet_edit_enterprise
+                      - wallet_spend_enterprise
+                      - wallet_approve_enterprise
+                      - wallet_manage_enterprise
+                      - settlement_network_read
+                      - settlement_network_write
+                      - portfolio_view
+                      - trade_view
+                      - trade_trade
+                      - trade_fix
+                      - pending_approval_update
+                      - metamask_institutional
+                      - crypto_compare
+                      - third_party_user_lookup
+                      - private_verify_email
+                      - scim
+                      - all
+                    description: Updated OAuth scopes
+                allowedIPs:
+                  type: array
+                  maxItems: 100
+                  items:
+                    type: string
+                    description: Updated IP allowlist. Each entry must be a valid IPv4, IPv6, or CIDR block.
+                tokenLimits:
+                  type: object
+                  description: Updated spending limits configuration
+                  properties:
+                    allErc20TokensLimit:
+                      $ref: '#/components/schemas/AllErc20TokensTemplateLimit'
+                    spendingLimits:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          coin:
+                            type: string
+                          maxLimit:
+                            type: boolean
+                          txValueLimit:
+                            type: string
+                        required:
+                          - coin
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenTemplateResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -82014,6 +82185,8 @@ components:
                     type: string
                   isPasskey:
                     type: boolean
+                  credentialId:
+                    type: string
                 required:
                   - createDate
                   - id
