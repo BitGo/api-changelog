@@ -27051,6 +27051,15 @@ paths:
           explode: false
           schema:
             type: string
+        - name: includeCumulative
+          in: query
+          required: false
+          description: |
+            Include `cumulative size` in each price level, which is the running total of `size` from the top of that side through the level.
+            When `true`, each level is `[price, size, cumulativeSize]` instead of `[price, size]`.
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: A Level2OrderBookSnapshot
@@ -27058,6 +27067,43 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Level2OrderBookSnapshot'
+              examples:
+                levelsPriceAndSize:
+                  summary: Default — each level is [price, size]
+                  description: Returned when default parameters are used.
+                  value:
+                    time: '2020-01-01T09:35:26.465Z'
+                    product: TBTC-TUSD*
+                    bids:
+                      - - '7001.10'
+                        - '1.5084'
+                      - - '7000.50'
+                        - '0.8000'
+                    asks:
+                      - - '7002.55'
+                        - '2.7524'
+                      - - '7003.00'
+                        - '1.2000'
+                levelsWithCumulativeSize:
+                  summary: With cumulative — each level is [price, size, cumulativeSize]
+                  description: Returned when `includeCumulative` is true.
+                  value:
+                    time: '2020-01-01T09:35:26.465Z'
+                    product: TBTC-TUSD*
+                    bids:
+                      - - '7001.10'
+                        - '1.5084'
+                        - '1.5084'
+                      - - '7000.50'
+                        - '0.8000'
+                        - '2.3084'
+                    asks:
+                      - - '7002.55'
+                        - '2.7524'
+                        - '2.7524'
+                      - - '7003.00'
+                        - '1.2000'
+                        - '3.9524'
         default:
           description: unexpected error
           content:
@@ -27905,6 +27951,43 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/OrderBooksResponse'
                   - $ref: '#/components/schemas/TradeOrdersResponse'
+              examples:
+                level2SnapshotPriceAndSize:
+                  summary: Level2 snapshot — [price, size] per level
+                  description: Order book snapshot when `includeCumulative` is false or omitted on the subscription.
+                  value:
+                    channel: level2
+                    type: snapshot
+                    product: TBTC-TUSD*
+                    time: '2020-01-01T09:35:26.465Z'
+                    bids:
+                      - - '7001.10'
+                        - '1.5084'
+                    asks:
+                      - - '7002.55'
+                        - '2.7524'
+                level2SnapshotWithCumulative:
+                  summary: Level2 snapshot — [price, size, cumulativeSize] per level
+                  description: Order book snapshot when `includeCumulative` is true on the subscription.
+                  value:
+                    channel: level2
+                    type: snapshot
+                    product: TBTC-TUSD*
+                    time: '2020-01-01T09:35:26.465Z'
+                    bids:
+                      - - '7001.10'
+                        - '1.5084'
+                        - '1.5084'
+                      - - '7000.50'
+                        - '0.8000'
+                        - '2.3084'
+                    asks:
+                      - - '7002.55'
+                        - '2.7524'
+                        - '2.7524'
+                      - - '7003.00'
+                        - '1.2000'
+                        - '3.9524'
         '403':
           $ref: '#/components/responses/ForbiddenError1'
   /api/staking/v1/{coin}/wallets/{walletId}/requests/{stakingRequestId}:
@@ -63703,31 +63786,33 @@ components:
           type: array
           description: |
             An array of bid price levels. Each level is an array in the format [price, size], ordered from highest price to lowest price.
-            `price' is the bid price in the quote currency and 'size' is the quantity of the base asset at that price level.
+            `price` is the bid price in the quote currency and `size` is the quantity of the base asset at that price level.
+            With `includeCumulative=true`, each level is `[price, size, cumulativeSize]` where `cumulativeSize` is the running total of `size` from the top of that side through the level.
           items:
-            type: string
-            format: decimal
+            type: array
+            items:
+              type: string
+              format: decimal
         asks:
           type: array
           description: |
             An array of ask price levels. Each level is an array in the format [price, size], ordered from lowest price to highest price.
-            `price' is the ask price in the quote currency and 'size' is the quantity of the base asset at that price level.
+            `price` is the ask price in the quote currency and `size` is the quantity of the base asset at that price level.
+            With `includeCumulative=true`, each level is `[price, size, cumulativeSize]` where `cumulativeSize` is the running total of `size` from the top of that side through the level.
           items:
-            type: string
-            format: decimal
+            type: array
+            items:
+              type: string
+              format: decimal
       example:
-        time: '2025-11-27T18:48:51.383577451Z'
-        product: BTC-USD
+        time: '2020-01-01T09:35:26.465Z'
+        product: TBTC-TUSD*
         bids:
-          - - '90814.34'
-            - '0.4'
-          - - '90810.62'
-            - '0.2'
+          - - '7001.10'
+            - '1.5084'
         asks:
-          - - '92653.49'
-            - '1'
-          - - '92653.5'
-            - '0.4'
+          - - '7002.55'
+            - '2.7524'
     LightningBackupResponse:
       type: object
       properties:
@@ -66849,6 +66934,12 @@ components:
         productId:
           type: string
           description: The ID of product. (e.g. "TBTC-TUSD*")
+        includeCumulative:
+          type: boolean
+          description: |
+            Include cumulative size in each price level. When `true`, each level is `[price, size, cumulativeSize]` instead of `[price, size]`.
+            `cumulativeSize` is the running total of `size` from the top of that side through the level.
+          default: false
       example:
         type: subscribe
         channel: level2
@@ -66873,14 +66964,18 @@ components:
           description: The timestamp of the snapshot.
         bids:
           type: array
-          description: An array of bid levels [price, size].
+          description: |
+            An array of bid levels `[price, size]` or `[price, size, cumulativeSize]` when `includeCumulative` is true.
+            `cumulativeSize` is the running total of `size` from the top of that side through the level.
           items:
             type: array
             items:
               type: string
         asks:
           type: array
-          description: An array of ask levels [price, size].
+          description: |
+            An array of ask levels `[price, size]` or `[price, size, cumulativeSize]` when `includeCumulative` is true.
+            `cumulativeSize` is the running total of `size` from the top of that side through the level.
           items:
             type: array
             items:
