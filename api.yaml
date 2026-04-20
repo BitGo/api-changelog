@@ -13715,6 +13715,35 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MuteResponse'
+  /api/notifications/v1/mute/enterprises:
+    put:
+      tags:
+        - User Management Notification
+      summary: Update muted enterprises list
+      description: Replaces the entire muted enterprises list for the authenticated user. Pass an empty list to unmute all enterprises.
+      operationId: updateMutedEnterprises
+      parameters:
+        - name: request-id
+          in: header
+          description: Optional idempotency key for the request
+          required: false
+          schema:
+            type: string
+      requestBody:
+        description: The new muted enterprises list. Replaces the existing list entirely.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMutedEnterprisesRequest'
+        required: true
+      responses:
+        '200':
+          description: Muted enterprises list updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteResponse'
+      x-internal: false
   /api/notifications/v1/mute/enterprise:
     put:
       tags:
@@ -82100,6 +82129,17 @@ components:
             $ref: '#/components/schemas/Document'
           description: List of documents to update
       title: UpdateIdentityBody
+    UpdateMutedEnterprisesRequest:
+      type: object
+      properties:
+        enterpriseIds:
+          maxItems: 500
+          minItems: 0
+          type: array
+          items:
+            maxLength: 100
+            minLength: 0
+            type: string
     UpdateMutedWalletsRequest:
       type: object
       properties:
