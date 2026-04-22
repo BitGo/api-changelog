@@ -27973,13 +27973,18 @@ paths:
               $ref: '#/components/schemas/WebSocketSubscription'
       responses:
         '101':
-          description: Switching Protocols
+          description: |
+            Switching Protocols. Once connected, the server may send:
+            - `OrderBooksResponse` — level2 order book snapshot/updates
+            - `TradeOrdersResponse` — order events and subscription confirmations
+            - `SubscriptionResponse` — confirmation after every subscribe/unsubscribe request
           content:
             application/json:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/OrderBooksResponse'
                   - $ref: '#/components/schemas/TradeOrdersResponse'
+                  - $ref: '#/components/schemas/SubscriptionResponse'
               examples:
                 level2SnapshotPriceAndSize:
                   summary: Level2 snapshot — [price, size] per level
@@ -76572,6 +76577,54 @@ components:
                 - STACK
                 - SELF_STACK
                 - UNSTACK
+    SubscriptionResponse:
+      title: Subscription Response
+      description: |
+        Sent by the server after every subscribe or unsubscribe request to confirm the outcome.
+        Clients should handle this message type to detect whether a subscription was accepted,
+        already active, or released.
+      type: object
+      required:
+        - type
+        - channel
+        - status
+      properties:
+        type:
+          type: string
+          description: Always "subscription_response".
+          enum:
+            - subscription_response
+        channel:
+          type: string
+          description: The channel the subscription applies to ("orders" or "level2").
+          enum:
+            - orders
+            - level2
+        status:
+          type: string
+          description: |
+            Outcome of the subscribe/unsubscribe request:
+            - `subscribed` — subscription was accepted and is now active.
+            - `already_subscribed` — (orders channel only) a subscription for this accountId was already active; no duplicate was created. For the level2 channel, duplicate subscribe requests return an error instead, because `includeCumulative` is fixed for the lifetime of a subscription and cannot be changed without unsubscribing first.
+            - `unsubscribed` — subscription was successfully removed.
+          enum:
+            - subscribed
+            - already_subscribed
+            - unsubscribed
+        accountId:
+          $ref: '#/components/schemas/AccountId'
+        productId:
+          type: string
+          description: The product ID, present for level2 subscriptions.
+          example: TBTC-TUSD*
+        session_id:
+          type: string
+          description: The session ID for this WebSocket connection.
+      example:
+        type: subscription_response
+        channel: orders
+        status: subscribed
+        accountId: f230fdebfa084ffebc7e00515f54603f
     SubstrateAccountBaseBuildOptions:
       title: SubstrateAccountBaseBuildOptions
       allOf:
@@ -78202,6 +78255,16 @@ components:
         - quantity
     TradeOrdersRequest:
       title: Trade Orders
+      description: |
+        Subscribe or unsubscribe to order events for a specific account.
+
+        Multiple subscriptions are supported on a single connection — send separate subscribe
+        messages for each accountId. Each subscribe/unsubscribe triggers a `subscription_response`
+        message confirming the outcome.
+
+        **Behavior changes (previously silent, now explicit):**
+        - Subscribing to an already-subscribed accountId returns status `already_subscribed` instead of being silently ignored.
+        - Unsubscribing from an accountId that is not currently subscribed returns an error message instead of being silently ignored.
       required:
         - type
         - channel
@@ -78210,10 +78273,15 @@ components:
       properties:
         type:
           type: string
-          description: The event type (e.g. "subscribe" or "unsubscribe")
+          description: The event type ("subscribe" or "unsubscribe")
+          enum:
+            - subscribe
+            - unsubscribe
         channel:
           type: string
-          description: The subscription channel (e.g. "orders" for trade orders)
+          description: The subscription channel ("orders" for trade orders)
+          enum:
+            - orders
         accountId:
           $ref: '#/components/schemas/AccountId'
       example:
