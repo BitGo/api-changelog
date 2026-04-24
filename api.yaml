@@ -484,7 +484,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Webhook'
+                $ref: '#/components/schemas/WalletWebhookResponse'
         '400':
           description: Bad Request
           content:
@@ -34674,7 +34674,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListEnterpriseWebhooksResponse'
+                $ref: '#/components/schemas/ListEnterpriseWebhooksResponseScoped'
         '400':
           description: Bad Request
           content:
@@ -34725,7 +34725,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Webhook'
+                $ref: '#/components/schemas/EnterpriseWebhookResponse'
         '400':
           description: Bad Request
           content:
@@ -36025,7 +36025,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ListOrganizationWebhookResponseC'
+                $ref: '#/components/schemas/ListOrganizationWebhooksResponseScoped'
         '401':
           description: Unauthorized
           content:
@@ -36319,7 +36319,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Webhook'
+                $ref: '#/components/schemas/OrganizationWebhookResponse'
         '400':
           description: Bad Request
           content:
@@ -36416,7 +36416,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Webhook'
+                $ref: '#/components/schemas/OrganizationWebhookResponse'
         '401':
           description: Unauthorized
           content:
@@ -38646,6 +38646,11 @@ paths:
       tags:
         - Wallet
       parameters:
+        - name: coin
+          description: Optional coin to include in the balance check even if not yet in enabledChildChains.
+          in: query
+          schema:
+            type: string
         - name: walletId
           in: path
           required: true
@@ -50796,6 +50801,9 @@ components:
           type: boolean
           description: Whether the customer has waived the need for Video ID on low risk withdrawals.
           example: false
+        createdAt:
+          type: string
+          description: ISO 8601 creation timestamp derived from the MongoDB ObjectId
         additionalEnterpriseInfo:
           $ref: '#/components/schemas/AdditionalEnterpriseInfo'
         tradeOnboardingAgreement:
@@ -57955,6 +57963,127 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: Spending from the entire transferring wallet's enterprise will be included
+    EnterpriseWebhookResponse:
+      title: EnterpriseWebhookResponse
+      type: object
+      description: Webhook response scoped to enterprise webhook types — `coin` is optional.
+      properties:
+        id:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        created:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        url:
+          type: string
+          example: https://your.server.com/webhook
+          format: uri
+        version:
+          type: number
+          description: 2 for coins running on API v2.
+          example: 2
+        scope:
+          $ref: '#/components/schemas/WebhookScope'
+        state:
+          $ref: '#/components/schemas/WebhookState'
+        successiveFailedAttempts:
+          type: number
+          example: 0
+        listenToFailureStates:
+          type: boolean
+          description: Whether or not to listen to failed transactions on chain.
+        coin:
+          type: string
+          description: A cryptocurrency or token ticker symbol.
+          example: btc
+        label:
+          type: string
+          description: Label of the new webhook.
+        walletId:
+          type: string
+        enterpriseId:
+          type: string
+        organizationId:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        userId:
+          type: string
+        type:
+          allOf:
+            - $ref: '#/components/schemas/EnterpriseWebhookType'
+          description: Event type to listen to.
+        numConfirmations:
+          type: number
+          example: 6
+        lastAttempt:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        failingSince:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        allToken:
+          type: boolean
+        txRequestStates:
+          type: array
+          items:
+            type: string
+            enum:
+              - pendingApproval
+              - canceled
+              - rejected
+              - initialized
+              - pendingDelivery
+              - delivered
+              - pendingUserSignature
+              - pendingUserCommitment
+              - pendingUserRShare
+              - pendingUserGShare
+              - readyToSend
+              - signed
+              - failed
+            description: |-
+              If present, only transaction request state changes from the list will trigger notifications.
+              If not present, all transaction request state changes will trigger notifications.
+        txRequestTransactionStates:
+          type: array
+          items:
+            type: string
+            enum:
+              - initialized
+              - pendingSignature
+              - eddsaPendingCommitment
+              - eddsaPendingRShare
+              - eddsaPendingGShare
+              - ecdsaMPCv2Round1
+              - ecdsaMPCv2Round2
+              - ecdsaMPCv2Round3
+              - readyToCombineShares
+              - signed
+              - held
+              - delivered
+              - invalidSignature
+              - rejected
+            description: |-
+              If present, only transaction request transaction state changes from the list will trigger
+              notifications. If not present, all transaction request transaction state changes will
+              trigger notifications.
+      required:
+        - id
+        - created
+        - url
+        - version
+        - scope
+        - state
+        - successiveFailedAttempts
+        - listenToFailureStates
     EnterpriseWebhookType:
       title: EnterpriseWebhookType
       type: string
@@ -61947,6 +62076,23 @@ components:
                 - $ref: '#/components/schemas/FeeOption'
                 - $ref: '#/components/schemas/EIP1559FeeOptions'
         - $ref: '#/components/schemas/BaseBridgeFundsIntent'
+    HypeevmEnableBridgingIntent:
+      title: Hypeevm Enable Bridging Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - enableBridging
+            asset:
+              type: string
+            network:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - intentType
+            - asset
+        - $ref: '#/components/schemas/BaseIntent'
     HypeevmSpotTransferIntent:
       title: Hypeevm Spot Transfer Intent
       allOf:
@@ -62727,6 +62873,7 @@ components:
         - withdrawStake
         - spotTransfer
         - bridgeFunds
+        - enableBridging
         - goUnstake
         - createBtcDelegation
         - transferAccept
@@ -64163,14 +64310,16 @@ components:
           example: 59cd72485007a239fb00282ed480da1f
       required:
         - logs
-    ListEnterpriseWebhooksResponse:
-      title: ListEnterpriseWebhooksResponse
+    ListEnterpriseWebhooksResponseScoped:
+      title: ListEnterpriseWebhooksResponseScoped
       type: object
+      description: Scoped list response for enterprise webhooks.
       properties:
         webhooks:
           type: array
           items:
             type: object
+            description: Webhook response scoped to enterprise webhook types — `coin` is optional.
             properties:
               id:
                 type: string
@@ -64181,10 +64330,6 @@ components:
                 example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
-              coin:
-                type: string
-                description: A cryptocurrency or token ticker symbol.
-                example: btc
               url:
                 type: string
                 example: https://your.server.com/webhook
@@ -64203,6 +64348,10 @@ components:
               listenToFailureStates:
                 type: boolean
                 description: Whether or not to listen to failed transactions on chain.
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol.
+                example: btc
               label:
                 type: string
                 description: Label of the new webhook.
@@ -64218,7 +64367,7 @@ components:
                 type: string
               type:
                 allOf:
-                  - $ref: '#/components/schemas/WebhookType'
+                  - $ref: '#/components/schemas/EnterpriseWebhookType'
                 description: Event type to listen to.
               numConfirmations:
                 type: number
@@ -64282,7 +64431,6 @@ components:
             required:
               - id
               - created
-              - coin
               - url
               - version
               - scope
@@ -64379,55 +64527,76 @@ components:
           minLength: 1
       required:
         - webhookNotifications
-    ListOrganizationWebhookResponseC:
-      title: ListOrganizationWebhookResponseC
+    ListOrganizationWebhooksResponseScoped:
+      title: ListOrganizationWebhooksResponseScoped
       type: object
+      description: Scoped list response for organization webhooks.
       properties:
         webhooks:
           type: array
           items:
             type: object
+            description: Webhook response scoped to organization webhook types — `coin` is optional.
             properties:
               id:
                 type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
               created:
                 type: string
+                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
               url:
                 type: string
+                example: https://your.server.com/webhook
+                format: uri
               version:
                 type: number
+                description: 2 for coins running on API v2.
+                example: 2
               scope:
                 $ref: '#/components/schemas/WebhookScope'
               state:
                 $ref: '#/components/schemas/WebhookState'
               successiveFailedAttempts:
                 type: number
+                example: 0
               listenToFailureStates:
                 type: boolean
+                description: Whether or not to listen to failed transactions on chain.
               coin:
                 type: string
+                description: A cryptocurrency or token ticker symbol.
+                example: btc
               label:
                 type: string
+                description: Label of the new webhook.
               walletId:
                 type: string
               enterpriseId:
                 type: string
               organizationId:
                 type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
               userId:
                 type: string
               type:
-                $ref: '#/components/schemas/WebhookType'
+                allOf:
+                  - $ref: '#/components/schemas/OrganizationWebhookType'
+                description: Event type to listen to.
               numConfirmations:
                 type: number
+                example: 6
               lastAttempt:
                 type: string
+                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
               failingSince:
                 type: string
+                example: 2021-01-01T00:00:00.000Z
                 format: date-time
                 title: ISO Date String
               allToken:
@@ -64451,9 +64620,8 @@ components:
                     - signed
                     - failed
                   description: |-
-                    If supplied, only transaction request state changes from the provided list
-                    will trigger notifications. If not provided, all transaction request state
-                    changes will trigger notifications.
+                    If present, only transaction request state changes from the list will trigger notifications.
+                    If not present, all transaction request state changes will trigger notifications.
               txRequestTransactionStates:
                 type: array
                 items:
@@ -64474,9 +64642,9 @@ components:
                     - invalidSignature
                     - rejected
                   description: |-
-                    If supplied, only transaction request transaction state changes from the provided
-                    list will trigger notifications. If not provided, all transaction request
-                    transaction state changes will trigger notifications.
+                    If present, only transaction request transaction state changes from the list will trigger
+                    notifications. If not present, all transaction request transaction state changes will
+                    trigger notifications.
             required:
               - id
               - created
@@ -67625,6 +67793,142 @@ components:
         - member
         - customer
       example: admin
+    OrganizationWebhookResponse:
+      title: OrganizationWebhookResponse
+      type: object
+      description: Webhook response scoped to organization webhook types — `coin` is optional.
+      properties:
+        id:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        created:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        url:
+          type: string
+          example: https://your.server.com/webhook
+          format: uri
+        version:
+          type: number
+          description: 2 for coins running on API v2.
+          example: 2
+        scope:
+          $ref: '#/components/schemas/WebhookScope'
+        state:
+          $ref: '#/components/schemas/WebhookState'
+        successiveFailedAttempts:
+          type: number
+          example: 0
+        listenToFailureStates:
+          type: boolean
+          description: Whether or not to listen to failed transactions on chain.
+        coin:
+          type: string
+          description: A cryptocurrency or token ticker symbol.
+          example: btc
+        label:
+          type: string
+          description: Label of the new webhook.
+        walletId:
+          type: string
+        enterpriseId:
+          type: string
+        organizationId:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        userId:
+          type: string
+        type:
+          allOf:
+            - $ref: '#/components/schemas/OrganizationWebhookType'
+          description: Event type to listen to.
+        numConfirmations:
+          type: number
+          example: 6
+        lastAttempt:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        failingSince:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        allToken:
+          type: boolean
+        txRequestStates:
+          type: array
+          items:
+            type: string
+            enum:
+              - pendingApproval
+              - canceled
+              - rejected
+              - initialized
+              - pendingDelivery
+              - delivered
+              - pendingUserSignature
+              - pendingUserCommitment
+              - pendingUserRShare
+              - pendingUserGShare
+              - readyToSend
+              - signed
+              - failed
+            description: |-
+              If present, only transaction request state changes from the list will trigger notifications.
+              If not present, all transaction request state changes will trigger notifications.
+        txRequestTransactionStates:
+          type: array
+          items:
+            type: string
+            enum:
+              - initialized
+              - pendingSignature
+              - eddsaPendingCommitment
+              - eddsaPendingRShare
+              - eddsaPendingGShare
+              - ecdsaMPCv2Round1
+              - ecdsaMPCv2Round2
+              - ecdsaMPCv2Round3
+              - readyToCombineShares
+              - signed
+              - held
+              - delivered
+              - invalidSignature
+              - rejected
+            description: |-
+              If present, only transaction request transaction state changes from the list will trigger
+              notifications. If not present, all transaction request transaction state changes will
+              trigger notifications.
+      required:
+        - id
+        - created
+        - url
+        - version
+        - scope
+        - state
+        - successiveFailedAttempts
+        - listenToFailureStates
+    OrganizationWebhookType:
+      title: OrganizationWebhookType
+      type: string
+      enum:
+        - transfer
+        - txRequest
+        - pendingapproval
+        - txRequestTransaction
+        - bankAccount
+        - identityStatus
+        - userKycState
+        - enterpriseKycState
+        - accessToken
+        - reversal
+        - tradeOrder
     OsmoClaimRewardsRequestPOSTBody:
       title: Osmosis (OSMO) Claim Rewards Request
       type: object
@@ -78708,6 +79012,7 @@ components:
         - $ref: '#/components/schemas/FeeAddressTransferIntent'
         - $ref: '#/components/schemas/HypeevmBridgeFundsIntent'
         - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
+        - $ref: '#/components/schemas/HypeevmEnableBridgingIntent'
         - $ref: '#/components/schemas/IcpPaymentIntent'
         - $ref: '#/components/schemas/IrysPledgeIntent'
         - $ref: '#/components/schemas/IrysStakeIntent'
@@ -78758,6 +79063,11 @@ components:
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/TonWhalesDelegateIntent'
         - $ref: '#/components/schemas/TonWhalesUndelegateIntent'
+        - $ref: '#/components/schemas/TrxClaimRewardsIntent'
+        - $ref: '#/components/schemas/TrxFreezeIntent'
+        - $ref: '#/components/schemas/TrxUnfreezeIntent'
+        - $ref: '#/components/schemas/TrxVoteIntent'
+        - $ref: '#/components/schemas/TrxWithdrawExpireUnfreezeIntent'
         - $ref: '#/components/schemas/VetStakingIntent'
         - $ref: '#/components/schemas/VetDelegateIntent'
         - $ref: '#/components/schemas/VetExitDelegationIntent'
@@ -81338,6 +81648,22 @@ components:
           allOf:
             - $ref: '#/components/schemas/IntegerString'
           description: String representation of the amount to limit in base units (stroops)
+    TrxClaimRewardsIntent:
+      title: TRX Claim Rewards Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+            ownerAddress:
+              type: string
+          required:
+            - intentType
+            - ownerAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     TrxClaimRewardsRequestEntityProperties:
       title: TRX claim rewards request entity properties
       allOf:
@@ -81359,6 +81685,31 @@ components:
               enum:
                 - ENERGY
                 - BANDWIDTH
+    TrxFreezeIntent:
+      title: TRX Freeze Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stake
+            validatorAddress:
+              type: string
+            ownerAddress:
+              type: string
+            resource:
+              type: string
+              enum:
+                - BANDWIDTH
+                - ENERGY
+          required:
+            - intentType
+            - validatorAddress
+            - ownerAddress
+            - resource
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     TrxStakingRequest:
       title: TRX
       allOf:
@@ -81452,6 +81803,76 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
+    TrxUnfreezeIntent:
+      title: TRX Unfreeze Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - unstake
+            ownerAddress:
+              type: string
+            resource:
+              type: string
+              enum:
+                - BANDWIDTH
+                - ENERGY
+          required:
+            - intentType
+            - ownerAddress
+            - resource
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    TrxVoteIntent:
+      title: TRX Vote Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - voteDelegation
+            validatorAddress:
+              type: string
+            ownerAddress:
+              type: string
+            votes:
+              type: array
+              items:
+                type: object
+                properties:
+                  vote_address:
+                    type: string
+                  vote_count:
+                    type: string
+                required:
+                  - vote_address
+                  - vote_count
+          required:
+            - intentType
+            - validatorAddress
+            - ownerAddress
+            - votes
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
+    TrxWithdrawExpireUnfreezeIntent:
+      title: TRX Withdraw Expire Unfreeze Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - claim
+            ownerAddress:
+              type: string
+          required:
+            - intentType
+            - ownerAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     TssConfig:
       title: TssConfig
       type: object
@@ -87052,6 +87473,9 @@ components:
               - value
         receiveAddress:
           $ref: '#/components/schemas/WalletAddress'
+        userKeySigningRequired:
+          type: boolean
+          description: True, if the wallet requires the user key to sign transactions. Only applicable for OFC wallets.
       required:
         - allowBackupKeySigning
         - approvalsRequired
@@ -88077,6 +88501,9 @@ components:
                     - value
               receiveAddress:
                 $ref: '#/components/schemas/WalletAddress'
+              userKeySigningRequired:
+                type: boolean
+                description: True, if the wallet requires the user key to sign transactions. Only applicable for OFC wallets.
             required:
               - allowBackupKeySigning
               - approvalsRequired
@@ -88787,6 +89214,128 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: Only spending from the transferring wallet will be included
+    WalletWebhookResponse:
+      title: WalletWebhookResponse
+      type: object
+      description: Webhook response scoped to wallet webhook types — `coin` is required.
+      properties:
+        id:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        created:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        coin:
+          type: string
+          description: A cryptocurrency or token ticker symbol.
+          example: btc
+        url:
+          type: string
+          example: https://your.server.com/webhook
+          format: uri
+        version:
+          type: number
+          description: 2 for coins running on API v2.
+          example: 2
+        scope:
+          $ref: '#/components/schemas/WebhookScope'
+        state:
+          $ref: '#/components/schemas/WebhookState'
+        successiveFailedAttempts:
+          type: number
+          example: 0
+        listenToFailureStates:
+          type: boolean
+          description: Whether or not to listen to failed transactions on chain.
+        label:
+          type: string
+          description: Label of the new webhook.
+        walletId:
+          type: string
+        enterpriseId:
+          type: string
+        organizationId:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        userId:
+          type: string
+        type:
+          allOf:
+            - $ref: '#/components/schemas/WalletWebhookType'
+          description: Event type to listen to.
+        numConfirmations:
+          type: number
+          example: 6
+        lastAttempt:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        failingSince:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        allToken:
+          type: boolean
+        txRequestStates:
+          type: array
+          items:
+            type: string
+            enum:
+              - pendingApproval
+              - canceled
+              - rejected
+              - initialized
+              - pendingDelivery
+              - delivered
+              - pendingUserSignature
+              - pendingUserCommitment
+              - pendingUserRShare
+              - pendingUserGShare
+              - readyToSend
+              - signed
+              - failed
+            description: |-
+              If present, only transaction request state changes from the list will trigger notifications.
+              If not present, all transaction request state changes will trigger notifications.
+        txRequestTransactionStates:
+          type: array
+          items:
+            type: string
+            enum:
+              - initialized
+              - pendingSignature
+              - eddsaPendingCommitment
+              - eddsaPendingRShare
+              - eddsaPendingGShare
+              - ecdsaMPCv2Round1
+              - ecdsaMPCv2Round2
+              - ecdsaMPCv2Round3
+              - readyToCombineShares
+              - signed
+              - held
+              - delivered
+              - invalidSignature
+              - rejected
+            description: |-
+              If present, only transaction request transaction state changes from the list will trigger
+              notifications. If not present, all transaction request transaction state changes will
+              trigger notifications.
+      required:
+        - id
+        - created
+        - coin
+        - url
+        - version
+        - scope
+        - state
+        - successiveFailedAttempts
+        - listenToFailureStates
     WalletWebhookType:
       title: WalletWebhookType
       type: string
@@ -89042,127 +89591,6 @@ components:
       oneOf:
         - $ref: '#/components/schemas/OrderBooksRequest'
         - $ref: '#/components/schemas/TradeOrdersRequest'
-    Webhook:
-      title: Webhook
-      type: object
-      properties:
-        id:
-          type: string
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
-        created:
-          type: string
-          example: 2021-01-01T00:00:00.000Z
-          format: date-time
-          title: ISO Date String
-        coin:
-          type: string
-          description: A cryptocurrency or token ticker symbol.
-          example: btc
-        url:
-          type: string
-          example: https://your.server.com/webhook
-          format: uri
-        version:
-          type: number
-          description: 2 for coins running on API v2.
-          example: 2
-        scope:
-          $ref: '#/components/schemas/WebhookScope'
-        state:
-          $ref: '#/components/schemas/WebhookState'
-        successiveFailedAttempts:
-          type: number
-          example: 0
-        listenToFailureStates:
-          type: boolean
-          description: Whether or not to listen to failed transactions on chain.
-        label:
-          type: string
-          description: Label of the new webhook.
-        walletId:
-          type: string
-        enterpriseId:
-          type: string
-        organizationId:
-          type: string
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
-        userId:
-          type: string
-        type:
-          allOf:
-            - $ref: '#/components/schemas/WebhookType'
-          description: Event type to listen to.
-        numConfirmations:
-          type: number
-          example: 6
-        lastAttempt:
-          type: string
-          example: 2021-01-01T00:00:00.000Z
-          format: date-time
-          title: ISO Date String
-        failingSince:
-          type: string
-          example: 2021-01-01T00:00:00.000Z
-          format: date-time
-          title: ISO Date String
-        allToken:
-          type: boolean
-        txRequestStates:
-          type: array
-          items:
-            type: string
-            enum:
-              - pendingApproval
-              - canceled
-              - rejected
-              - initialized
-              - pendingDelivery
-              - delivered
-              - pendingUserSignature
-              - pendingUserCommitment
-              - pendingUserRShare
-              - pendingUserGShare
-              - readyToSend
-              - signed
-              - failed
-            description: |-
-              If present, only transaction request state changes from the list will trigger notifications.
-              If not present, all transaction request state changes will trigger notifications.
-        txRequestTransactionStates:
-          type: array
-          items:
-            type: string
-            enum:
-              - initialized
-              - pendingSignature
-              - eddsaPendingCommitment
-              - eddsaPendingRShare
-              - eddsaPendingGShare
-              - ecdsaMPCv2Round1
-              - ecdsaMPCv2Round2
-              - ecdsaMPCv2Round3
-              - readyToCombineShares
-              - signed
-              - held
-              - delivered
-              - invalidSignature
-              - rejected
-            description: |-
-              If present, only transaction request transaction state changes from the list will trigger
-              notifications. If not present, all transaction request transaction state changes will
-              trigger notifications.
-      required:
-        - id
-        - created
-        - coin
-        - url
-        - version
-        - scope
-        - state
-        - successiveFailedAttempts
-        - listenToFailureStates
     Webhook1:
       type: object
       properties:
