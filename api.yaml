@@ -23647,7 +23647,20 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/User'
+                type: object
+                properties:
+                  user:
+                    $ref: '#/components/schemas/User'
+                  kycStatus:
+                    type: string
+                    description: The user's KYC status. Only returned when the requester is an org admin viewing another user.
+                    enum:
+                      - approved
+                      - pending
+                      - rejected
+                      - unverified
+                required:
+                  - user
         '400':
           description: Bad Request
           content:
@@ -52484,7 +52497,7 @@ components:
           description: |
             Extra transaction information for CSPR, EOS, HBAR, RUNE, STX, TON, XLM, and XRP. Required for XLM transactions.
 
-            Note: For XRP this is the destination tag (DT). For CSPR this is the transfer ID.
+            Note: For XRP this is the destination tag (DT), for CSPR this is the transfer ID and for ALGO this is the message field.
         comment:
           type: string
           description: |
@@ -65445,7 +65458,7 @@ components:
       description: |
         Extra transaction information for CSPR, EOS, HBAR, RUNE, STX, TON, XLM, and XRP. Required for XLM transactions.
 
-        Note: For XRP this is the destination tag (DT). For CSPR this is the transfer ID.
+        Note: For XRP this is the destination tag (DT), for CSPR this is the transfer ID and for ALGO this is the message field.
     MemoString:
       type: string
       maxLength: 100
