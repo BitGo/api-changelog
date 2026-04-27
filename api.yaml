@@ -26204,6 +26204,13 @@ paths:
         Revoked keys cannot be used for webhook signature verification.
         Revocation is irreversible — a new key must be registered to restore access.
 
+        **Key ID tombstoning:** Once a `keyId` is revoked, it is **permanently tombstoned**
+        for this enterprise. Attempting to register a new key under the same `keyId` will
+        return a 400 error, even after revocation. This is intentional security design that
+        prevents key-reuse attacks. Choose a stable, unique `keyId` from the start (e.g.
+        use a version suffix such as `my-key-v2`) so that key rotation does not require
+        updating secrets or configuration files that reference the `keyId`.
+
         **Authorization:** Caller must be an admin of the specified enterprise.
       operationId: v1.enterprise.webhooks.keys.revoke
       parameters:
@@ -26246,6 +26253,17 @@ paths:
       description: |
         Registers a new webhook signing key for an enterprise. The key can be provided
         inline via a JWKS payload or referenced via a JWKS URI.
+
+        **Key ID selection:** The `keyId` (derived from the `kid` field in the JWK, or
+        supplied explicitly for JWKS URI registrations) must be unique within the
+        enterprise. Once a `keyId` is used — even if the key is later revoked — it is
+        **permanently tombstoned** and cannot be reused. Plan for this by choosing a
+        stable, unique `keyId` from the start (e.g. `my-key-v2`).
+
+        **Recommended rotation workflow:**
+        1. Register the new key under a new `keyId` (e.g. `my-key-v2`).
+        2. Update your service configuration to sign webhooks with the new key.
+        3. Revoke the old key only after you have confirmed the new key is working.
 
         **Authorization:** Caller must be an admin of the specified enterprise.
       operationId: v1.enterprise.webhooks.keys.register
@@ -53064,6 +53082,38 @@ components:
           $ref: '#/components/schemas/AmlAttestation'
         fundsSource:
           $ref: '#/components/schemas/FundsSource'
+        diligenceMaterialFindings:
+          type: boolean
+          description: Has there been any recent Financial Crime related civil or criminal proceedings, regulatory actions, or findings against the company in the past year?
+        diligenceMaterialFindingsDescription:
+          type: string
+          nullable: true
+          description: Description of material findings (required if diligenceMaterialFindings is true)
+        prescreenWalletAddressAtm:
+          type: boolean
+          description: Does the business pre-screen wallet addresses at ATMs?
+        outsourcedFunctions:
+          type: boolean
+          description: Does the business outsource any AML/compliance functions?
+        outsourcedVendors:
+          type: string
+          nullable: true
+          description: Names of vendors providing outsourced functions (required if outsourcedFunctions is true)
+        diligenceFinancialInstitutionsUsed:
+          type: string
+          description: Financial institutions used by the business
+        diligenceCanReceiveThirdPartyPayments:
+          type: boolean
+          description: Can the business receive payments from third parties?
+        diligenceCanSendRemittances:
+          $ref: '#/components/schemas/DiligenceCanSendRemittances'
+        diligenceRemittancesOther:
+          type: string
+          nullable: true
+          description: Description of remittance type (required if diligenceCanSendRemittances is "other")
+        diligenceAllowWhitelist:
+          type: boolean
+          description: Does the business allow wallet address whitelisting?
       title: Business
     BusinessIdentityResponse:
       type: object
@@ -56154,6 +56204,16 @@ components:
             anyOf:
               - $ref: '#/components/schemas/WhitelistedAddressValue'
               - $ref: '#/components/schemas/NonWhitelistedAddressValue'
+    DiligenceCanSendRemittances:
+      type: string
+      enum:
+        - yesBothFiatAndCrypto
+        - yesFiat
+        - yesCrypto
+        - 'no'
+        - other
+      title: DiligenceCanSendRemittances
+      description: Can the business send remittances?
     DiligenceRetailInstitutional:
       type: string
       enum:
@@ -71729,11 +71789,15 @@ components:
       properties:
         jwks:
           type: object
-          description: Inline JWKS payload containing the public key(s). Mutually exclusive with jwksUri.
+          description: |
+            Inline JWKS payload containing the public key(s). Mutually exclusive with jwksUri.
+            The `kid` field inside the JWK object becomes the `keyId` for this registration.
+            Choose a stable, unique `kid` value (e.g. `my-key-v2`) because once a `keyId`
+            is revoked it is permanently tombstoned and cannot be reused.
           properties:
             keys:
               type: array
-              description: Array of JWK objects.
+              description: Array of JWK objects. Exactly one key must be provided.
               items:
                 type: object
                 additionalProperties: true
@@ -71743,6 +71807,20 @@ components:
           type: string
           description: URI pointing to a hosted JWKS endpoint. Mutually exclusive with jwks.
           example: https://example.com/.well-known/jwks.json
+        keyId:
+          type: string
+          description: |
+            Customer-provided key identifier. Required when registering via `jwksUri` (must
+            match the `kid` in your JWKS endpoint). Optional when registering inline JWKS
+            (derived from the JWK `kid` field if not provided).
+
+            **Permanent restriction:** Once a `keyId` is registered under an enterprise —
+            even if the key is later revoked — the `keyId` is permanently tombstoned and
+            cannot be reused. Attempting to re-register the same `keyId` returns a 400 error.
+            Choose stable, unique values (e.g. `my-key-v2`) to avoid needing to update
+            secrets and configuration after key rotation.
+          example: my-key-v2
+          maxLength: 255
         keyName:
           type: string
           description: Human-readable name for the key.
