@@ -49113,6 +49113,16 @@ components:
               - usd
             description: Base asset for the token
             example: usd1
+          reserveManagementType:
+            type: string
+            enum:
+              - bitgo_managed
+              - issuer_managed
+              - bitgo_and_issuer_managed
+            description: |-
+              How the reserve backing this stablecoin is managed. Absent for fiat USD
+              and other non-stablecoin assets that have no corresponding base_asset row.
+            example: bitgo_managed
           chain:
             type: string
             description: Blockchain network identifier for the token
@@ -51162,6 +51172,9 @@ components:
         isContractedClient:
           type: boolean
           description: True, if the enterprise has been onboarded by Salesforce
+        smartWorkQueuePriority:
+          type: boolean
+          description: When true, Smart Work Queue treats this enterprise as priority for trust signing SLA tiers
         documents:
           allOf:
             - $ref: '#/components/schemas/DocumentCollection'
@@ -83133,6 +83146,10 @@ components:
               bitgoOrg:
                 type: string
               name:
+                type: string
+              videoIdState:
+                type: string
+              videoIdLink:
                 type: string
             required:
               - permissions
