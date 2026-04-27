@@ -10814,14 +10814,13 @@ paths:
                       example: US
                       minLength: 1
                     identificationNumber:
-                      type: string
                       description: |-
-                        Tax identification number for US individuals. Required for US citizens and US residents:
+                        Tax identification number. Required for US citizens and US residents; optional for non-US individuals who hold one:
                         - US citizens: Submit SSN (Social Security Number)
                         - US residents (non-citizens): Submit SSN or ITIN (Individual Taxpayer Identification Number)
-                        - Non-US individuals: Do not use this field. Instead, use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint to upload government-issued identification documents after creating the KYC identity
+                        - Non-US individuals: Optionally submit SSN or ITIN if held (e.g. dual nationals, former US residents).
+                          To upload other government-issued identification documents, use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint instead
                       example: 123-45-6789
-                      minLength: 1
                     nameFirst:
                       type: string
                       description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
@@ -11172,14 +11171,13 @@ paths:
                       example: US
                       minLength: 1
                     identificationNumber:
-                      type: string
                       description: |-
-                        Tax identification number for US individuals. Required for US citizens and US residents:
+                        Tax identification number. Required for US citizens and US residents; optional for non-US individuals who hold one:
                         - US citizens: Submit SSN (Social Security Number)
                         - US residents (non-citizens): Submit SSN or ITIN (Individual Taxpayer Identification Number)
-                        - Non-US individuals: Do not use this field. Instead, use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint to upload government-issued identification documents after creating the KYC identity
+                        - Non-US individuals: Optionally submit SSN or ITIN if held (e.g. dual nationals, former US residents).
+                          To upload other government-issued identification documents, use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint instead
                       example: 123-45-6789
-                      minLength: 1
                     nameFirst:
                       type: string
                       description: The first name (Latin letters, spaces, hyphens, apostrophes, and periods)
@@ -11426,6 +11424,10 @@ paths:
                       type: string
                       description: The Bitgo organization ID
                       minLength: 1
+                    phoneNumber:
+                      type: string
+                      description: The phone number of the individual. Required for EU unregulated clients.
+                      minLength: 1
                     politicallyExposedPerson:
                       type: boolean
                       description: Whether the individual is a Politically Exposed Person (PEP)
@@ -11650,7 +11652,7 @@ paths:
                   description: The expected monthly withdrawal amount range
                 phoneNumber:
                   type: string
-                  description: The phone number of the individual
+                  description: The phone number of the individual. Required for EU unregulated clients.
                   minLength: 1
                 birthdate:
                   type: string
@@ -11695,13 +11697,13 @@ paths:
                   example: US
                   minLength: 1
                 identificationNumber:
-                  type: string
                   description: |-
-                    The Social Security Number (SSN) for US citizens
+                    Tax identification number for US individuals (SSN or ITIN).
 
-                    Use this field only to submit the SSN for US citizens. For non-US citizens or for submitting other identification documents (e.g., passport, driver's license), use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint after creating the KYC identity
+                    Required for US citizens (SSN) and US residents (SSN or ITIN). Non-US individuals may optionally
+                    submit SSN or ITIN if held (e.g. dual nationals, former US residents). For other identification
+                    documents (e.g., passport, driver's license), use the [Submit KYC Documents](https://developers.bitgo.com/reference/entityvalidationidentitydocumentcreate) endpoint after creating the KYC identity
                   example: 123-45-6789
-                  minLength: 1
                 addressStreet2:
                   type: string
                   description: The street address line 2
@@ -59147,7 +59149,7 @@ components:
         - Civil servant
         - Employee
         - Student
-        - Retirees / Pensioners
+        - Retiree / Pensioner
         - Public service
         - Self-employed
         - Unemployed
