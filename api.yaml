@@ -53082,6 +53082,38 @@ components:
           $ref: '#/components/schemas/AmlAttestation'
         fundsSource:
           $ref: '#/components/schemas/FundsSource'
+        diligenceMaterialFindings:
+          type: boolean
+          description: Has there been any recent Financial Crime related civil or criminal proceedings, regulatory actions, or findings against the company in the past year?
+        diligenceMaterialFindingsDescription:
+          type: string
+          nullable: true
+          description: Description of material findings (required if diligenceMaterialFindings is true)
+        prescreenWalletAddressAtm:
+          type: boolean
+          description: Does the business pre-screen wallet addresses at ATMs?
+        outsourcedFunctions:
+          type: boolean
+          description: Does the business outsource any AML/compliance functions?
+        outsourcedVendors:
+          type: string
+          nullable: true
+          description: Names of vendors providing outsourced functions (required if outsourcedFunctions is true)
+        diligenceFinancialInstitutionsUsed:
+          type: string
+          description: Financial institutions used by the business
+        diligenceCanReceiveThirdPartyPayments:
+          type: boolean
+          description: Can the business receive payments from third parties?
+        diligenceCanSendRemittances:
+          $ref: '#/components/schemas/DiligenceCanSendRemittances'
+        diligenceRemittancesOther:
+          type: string
+          nullable: true
+          description: Description of remittance type (required if diligenceCanSendRemittances is "other")
+        diligenceAllowWhitelist:
+          type: boolean
+          description: Does the business allow wallet address whitelisting?
       title: Business
     BusinessIdentityResponse:
       type: object
@@ -56172,6 +56204,16 @@ components:
             anyOf:
               - $ref: '#/components/schemas/WhitelistedAddressValue'
               - $ref: '#/components/schemas/NonWhitelistedAddressValue'
+    DiligenceCanSendRemittances:
+      type: string
+      enum:
+        - yesBothFiatAndCrypto
+        - yesFiat
+        - yesCrypto
+        - 'no'
+        - other
+      title: DiligenceCanSendRemittances
+      description: Can the business send remittances?
     DiligenceRetailInstitutional:
       type: string
       enum:
