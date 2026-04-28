@@ -54878,6 +54878,9 @@ components:
       description: Exactly one of `amount` or `baseAmount` must be provided. Providing both or neither will return a 400 error.
       type: object
       properties:
+        acceptAuthTerms:
+          type: boolean
+          description: 'Whether the client has accepted the ACH authorization terms. Required for deposits (`transferDirection: "in"`). Must be `true` to initiate a deposit. See https://app.bitgo.com/my/ach-terms for institutional and retail clients, or https://app.bitgo.com/my/caas/ach-terms for CaaS.'
         amount:
           type: string
           minLength: 1
@@ -54905,6 +54908,7 @@ components:
           minLength: 1
           description: The Go Account wallet to use as counterparty.
       required:
+        - acceptAuthTerms
         - bankAccountId
         - id
         - transferDirection
