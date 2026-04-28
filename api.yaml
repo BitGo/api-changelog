@@ -12411,6 +12411,30 @@ paths:
           $ref: '#/components/responses/ForbiddenError'
         '500':
           $ref: '#/components/responses/InternalServerError'
+  /api/go-staking/v1/coins:
+    get:
+      tags:
+        - Go Account Staking (beta)
+      summary: List supported coins
+      description: Returns a paginated list of supported staking coins for the authenticated user.
+      operationId: v1.goStaking.coins.list
+      x-internal: false
+      parameters:
+        - $ref: '#/components/parameters/queryPageNumber'
+        - $ref: '#/components/parameters/queryPageSize'
+      responses:
+        '200':
+          description: A paginated list of supported coins.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoStakingCoinsResults'
+        '400':
+          $ref: '#/components/responses/BadRequestError'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
   /api/go-staking/v1/accounts/{accountId}/coins:
     get:
       tags:
@@ -46703,6 +46727,7 @@ components:
       name: page
       in: query
       required: false
+      description: Page number to retrieve (1-based).
       schema:
         type: integer
         minimum: 1
@@ -46711,6 +46736,7 @@ components:
       name: pageSize
       in: query
       required: false
+      description: Number of items per page.
       schema:
         type: integer
         minimum: 1
@@ -61742,6 +61768,28 @@ components:
           $ref: '#/components/schemas/SpendableAttributes'
         disclaimerAttributes:
           $ref: '#/components/schemas/DisclaimerAttributes'
+    GoStakingCoinsResults:
+      type: object
+      properties:
+        coins:
+          type: array
+          items:
+            type: string
+          example:
+            - sol
+            - sui
+        page:
+          type: integer
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+      required:
+        - coins
+        - page
+        - totalPages
+        - totalElements
     GoStakingRequest:
       type: object
       required:
