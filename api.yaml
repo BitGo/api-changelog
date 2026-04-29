@@ -218,6 +218,15 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: includeEvmKeyringWhitelist
+          description: |-
+            When true, includes whitelist policy rules from all EVM keyring derived wallets
+            in addition to the main wallet's rules. Each merged rule is tagged with the
+            source walletId so the caller can identify which network it belongs to.
+            Only applicable for EVM keyring wallets (parent or derived).
+          in: query
+          schema:
+            type: boolean
         - name: exactConfirmedBalance
           description: |-
             When set to true, the `confirmedBalance` in the response will be the exact on-chain balance
@@ -38260,6 +38269,15 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: includeEvmKeyringWhitelist
+          description: |-
+            When true, includes whitelist policy rules from all EVM keyring derived wallets
+            in addition to the main wallet's rules. Each merged rule is tagged with the
+            source walletId so the caller can identify which network it belongs to.
+            Only applicable for EVM keyring wallets (parent or derived).
+          in: query
+          schema:
+            type: boolean
         - name: exactConfirmedBalance
           description: |-
             When set to true, the `confirmedBalance` in the response will be the exact on-chain balance
@@ -70710,6 +70728,13 @@ components:
                 allOf:
                   - $ref: '#/components/schemas/Condition'
                 description: Parameters for the type
+              walletId:
+                type: string
+                description: |-
+                  The ID of the wallet this rule originates from.
+                  Populated only when the rule is returned as part of an EVM keyring
+                  aggregated response (includeEvmKeyringWhitelist=true) for rules that
+                  belong to a derived wallet. Absent for rules on the main wallet itself.
             required:
               - id
               - type
