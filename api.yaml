@@ -88030,8 +88030,16 @@ components:
             pendingChainInitialization:
               type: boolean
               description: Whether the wallet needs to be initialized on the chain
+        - $ref: '#/components/schemas/WalletCoinSpecificBtc'
         - $ref: '#/components/schemas/WalletCoinSpecificCosmos'
         - $ref: '#/components/schemas/WalletCoinSpecificXlm'
+    WalletCoinSpecificBtc:
+      title: BTC
+      type: object
+      properties:
+        allowQuantumUnsafeAddresses:
+          type: boolean
+          description: If true, the wallet allows creation of addresses which are vulnerable to quantum attacks. Defaults to false.
     WalletCoinSpecificCosmos:
       title: ATOM
       type: object
@@ -89343,6 +89351,12 @@ components:
     WalletUpdateCoinSpecific:
       type: object
       properties:
+        btc:
+          $ref: '#/components/schemas/WalletUpdateCoinSpecificBtc'
+        tbtc:
+          $ref: '#/components/schemas/WalletUpdateCoinSpecificBtc'
+        tbtc4:
+          $ref: '#/components/schemas/WalletUpdateCoinSpecificBtc'
         eth:
           $ref: '#/components/schemas/WalletUpdateCoinSpecificEth'
         teth:
@@ -89351,6 +89365,12 @@ components:
           $ref: '#/components/schemas/WalletUpdateCoinSpecificZec'
         tzec:
           $ref: '#/components/schemas/WalletUpdateCoinSpecificZec'
+    WalletUpdateCoinSpecificBtc:
+      type: object
+      properties:
+        allowQuantumUnsafeAddresses:
+          type: boolean
+          description: If true, the wallet will allow creation of taproot addresses which are vulnerable to quantum computing attacks.
     WalletUpdateCoinSpecificEth:
       type: object
       properties:
