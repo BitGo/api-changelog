@@ -33591,6 +33591,8 @@ paths:
               - type: array
                 items:
                   type: string
+                  x-enumsDeprecated:
+                    - adminUnblockUserEmail
         - name: userId
           description: The user ID to filter by
           in: query
@@ -35383,6 +35385,7 @@ paths:
               - organizationTransactions
               - organizationTrades
               - organizationStaking
+              - userAccess
         - name: status
           description: Only return rports for this report status
           in: query
@@ -35827,6 +35830,30 @@ paths:
                     - endDate
                     - organization
                     - startDate
+                userAccess:
+                  type: object
+                  description: Organization-level User Access Review report (DE-519)
+                  properties:
+                    allEnterprises:
+                      type: boolean
+                    asOfDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    enterprises:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    organization:
+                      type: string
+                      minLength: 1
+                    reportContents:
+                      $ref: '#/components/schemas/UserAccessReportContents'
+                  required:
+                    - asOfDate
+                    - organization
+                    - reportContents
               required:
                 - type
                 - format
@@ -37008,6 +37035,7 @@ paths:
               - organizationTransactions
               - organizationTrades
               - organizationStaking
+              - userAccess
         - name: status
           description: Only return rports for this report status
           in: query
@@ -37451,6 +37479,30 @@ paths:
                     - endDate
                     - organization
                     - startDate
+                userAccess:
+                  type: object
+                  description: Organization-level User Access Review report (DE-519)
+                  properties:
+                    allEnterprises:
+                      type: boolean
+                    asOfDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    enterprises:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    organization:
+                      type: string
+                      minLength: 1
+                    reportContents:
+                      $ref: '#/components/schemas/UserAccessReportContents'
+                  required:
+                    - asOfDate
+                    - organization
+                    - reportContents
               required:
                 - type
                 - format
@@ -39585,6 +39637,42 @@ paths:
                       description: The type of the request body
                   required:
                     - signatureShares
+                    - type
+                - type: object
+                  properties:
+                    signatureShares:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          from:
+                            allOf:
+                              - $ref: '#/components/schemas/SignatureShareType'
+                            description: The source of the signature share.
+                          share:
+                            type: string
+                            description: The signature share
+                          to:
+                            allOf:
+                              - $ref: '#/components/schemas/SignatureShareType'
+                            description: The recipient of the signature share.
+                        required:
+                          - from
+                          - share
+                          - to
+                        description: The array of signature shares without VSS proof
+                    signerGpgPublicKey:
+                      type: string
+                      description: The GPG public key of the signer
+                      minLength: 1
+                    type:
+                      type: string
+                      enum:
+                        - eddsaMpcV2
+                      description: The type of the request body
+                  required:
+                    - signatureShares
+                    - signerGpgPublicKey
                     - type
       responses:
         '200':
@@ -49691,6 +49779,8 @@ components:
     AuditLogType1:
       title: AuditLogType
       type: string
+      x-enumsDeprecated:
+        - adminUnblockUserEmail
     AuditableItem:
       type: object
       properties:
@@ -60969,6 +61059,11 @@ components:
               items:
                 type: string
                 description: Transaction IDs that replace this transfer.
+            replacedByTransferId:
+              type: array
+              items:
+                type: string
+                description: Transfer IDs that replace this transfer.
             replacedTime:
               type: string
               description: The time this transfer was replaced
@@ -72341,6 +72436,30 @@ components:
             - endDate
             - organization
             - startDate
+        userAccess:
+          type: object
+          description: Organization-level User Access Review report (DE-519)
+          properties:
+            allEnterprises:
+              type: boolean
+            asOfDate:
+              type: string
+              format: date-time
+              title: ISO Date String
+            enterprises:
+              type: array
+              items:
+                type: string
+                minLength: 1
+            organization:
+              type: string
+              minLength: 1
+            reportContents:
+              $ref: '#/components/schemas/UserAccessReportContents'
+          required:
+            - asOfDate
+            - organization
+            - reportContents
     ReportStatus1:
       title: ReportStatus
       type: string
@@ -74228,6 +74347,7 @@ components:
         - organizationTransactions
         - organizationTrades
         - organizationStaking
+        - userAccess
     SolAddress:
       title: Sol Address
       type: object
@@ -80669,6 +80789,11 @@ components:
           items:
             type: string
             description: Transaction IDs that replace this transfer.
+        replacedByTransferId:
+          type: array
+          items:
+            type: string
+            description: Transfer IDs that replace this transfer.
         riskIndicators:
           type: array
           items:
@@ -83189,6 +83314,12 @@ components:
             - phone
             - timezone
         - $ref: '#/components/schemas/UserRequiredFields'
+    UserAccessReportContents:
+      title: UserAccessReportContents
+      type: string
+      enum:
+        - members
+        - roles
     UserCategoriesResponse:
       required:
         - categories
@@ -83453,6 +83584,8 @@ components:
           type: array
           items:
             type: string
+        allowQuantumUnsafeAddresses:
+          type: boolean
     V1AllocationGetOutput:
       title: V1AllocationGetOutput
       type: object
