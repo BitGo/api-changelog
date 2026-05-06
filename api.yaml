@@ -3,8 +3,13 @@ info:
   title: BitGo API
   version: 1.0.0
 servers:
-  - url: ''
+  - url: https://app.bitgo.com
+    description: Production server
+  - url: https://app.bitgo-test.com
+    description: Test server
 tags:
+  - name: Audit log
+    description: Endpoints for retrieving audit log records
   - name: Compliance Transaction Monitoring
   - name: CryptoCompare
     description: CryptoCompare is a partner API from CryptoCompare that you can use to compare prices of cryptocurrency, tokens, and fiat.
@@ -21,7 +26,6 @@ tags:
   - name: User Management Notification
     description: Public APIs for user management for notifications
   - name: Address
-  - name: Audit log
   - name: Bank account
     description: Manage links to external bank accounts
   - name: Circuit breaker
@@ -91090,6 +91094,12 @@ components:
             required:
               - transferCount
           - $ref: '#/components/schemas/baseBalanceStrings'
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: BitGo access token
 x-tagGroups:
   - name: API reference
     tags:
