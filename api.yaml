@@ -41198,7 +41198,6 @@ components:
             useValidatorList: false
             skipAddressValidation: false
             allowPartialUnstake: true
-            restakingEnabled: false
             validatorNotNeededForStake: false
         spendable:
           staking:
@@ -42351,7 +42350,6 @@ components:
             useValidatorList: false
             skipAddressValidation: false
             allowPartialUnstake: true
-            restakingEnabled: false
             validatorNotNeededForStake: false
         spendable:
           staking:
@@ -42558,7 +42556,6 @@ components:
               forkVersion: '0x10000910'
               eth2NetworkName: hoodi
               effectiveBalance: '0'
-              isRestaking: false
               seenInPartialWithdrawalQueue: false
               seenInPendingDepositQueue: false
               stakingType: ETH_STAKE_PECTRA
@@ -42592,7 +42589,6 @@ components:
               unstaking:
                 enabled: false
                 disabledReason: Delegation is not active.
-            restaking: false
           - id: 35e168f5-83f8-4ca6-ba7e-81f20b411dfc
             delegationAddress: '0x93688c58fc284c242791a9893d6c505ad9b96580dae993b8b17cadd36fd707756f69a6f03485871ce0d5f91b111ae265'
             provider: Figment
@@ -42618,7 +42614,6 @@ components:
               lastRewardEpochProcessed: '37435'
               lastRewardEpochQueried: '37435'
               effectiveBalance: '0'
-              isRestaking: false
               seenInPartialWithdrawalQueue: false
               seenInPendingDepositQueue: false
               stakingType: ETH_STAKE_PECTRA
@@ -42652,7 +42647,6 @@ components:
               unstaking:
                 enabled: false
                 disabledReason: Delegation is not active.
-            restaking: false
           - id: 30045922-768f-4de5-bae8-b7e5553bfa2f
             delegationAddress: '0xa874e8e2593126551f272f0774788fda88d596b587ccdd0cba200e2d8360a73dd944082984db83494cdd3b64053aea5e'
             provider: Figment
@@ -42677,7 +42671,6 @@ components:
               lastRewardEpochProcessed: '44000'
               lastRewardEpochQueried: '44000'
               effectiveBalance: '32000000000000000000'
-              isRestaking: false
               seenInPartialWithdrawalQueue: false
               seenInPendingDepositQueue: false
               stakingType: ETH_STAKE_PECTRA
@@ -42709,7 +42702,6 @@ components:
                 allowClientToUseOwnValidator: false
               unstaking:
                 enabled: true
-            restaking: false
     EthPectraStakingRequestWithTransactionsExample:
       summary: Ethereum Pectra Staking Request Example
       value:
@@ -44009,7 +44001,6 @@ components:
             useValidatorList: true
             skipAddressValidation: false
             allowPartialUnstake: true
-            restakingEnabled: false
             validatorNotNeededForStake: false
         spendable:
           staking:
@@ -44858,7 +44849,6 @@ components:
             useValidatorList: true
             skipAddressValidation: false
             allowPartialUnstake: true
-            restakingEnabled: false
             validatorNotNeededForStake: false
         spendable:
           staking:
@@ -45134,7 +45124,6 @@ components:
             useValidatorList: true
             skipAddressValidation: true
             allowPartialUnstake: false
-            restakingEnabled: true
             validatorNotNeededForStake: false
         rewards: '113195558094000778'
         pendingClaimRewards: '0'
@@ -50901,10 +50890,6 @@ components:
               $ref: '#/components/schemas/WalletStakingPermissionAttributes'
             spendableAttributes:
               $ref: '#/components/schemas/WalletStakingSpendableAttributes'
-            restaking:
-              type: boolean
-              description: Whether this delegation is restaking rewards automatically.
-              nullable: true
             rewardPairs:
               type: array
               description: Reward token breakdown for Eigen-like or ETH restaking.
@@ -58658,14 +58643,6 @@ components:
             - feeOptions
         - $ref: '#/components/schemas/AccelerationIntent1'
         - $ref: '#/components/schemas/EthBuildOptionsWithoutFeeOptions'
-    EthAuthorizeValidatorTransactionProperties:
-      title: ETH Authorize Validator Transaction Properties
-      allOf:
-        - $ref: '#/components/schemas/StakingTransactionProperties'
-        - type: object
-          properties:
-            validatorAddress:
-              type: string
     EthBuildOptions:
       title: EthBuildOptions
       allOf:
@@ -58716,20 +58693,6 @@ components:
             senderAddressIndex:
               $ref: '#/components/schemas/optionalNumber'
         - $ref: '#/components/schemas/AccountBaseBuildOptions'
-    EthCheckpointRequestEntityProperties:
-      title: Ethereum checkpoint request entity properties
-      allOf:
-        - $ref: '#/components/schemas/EthCommonStakingRequestEntityProperties'
-    EthCheckpointTransactionProperties:
-      title: ETH Checkpoint Transaction Properties
-      allOf:
-        - $ref: '#/components/schemas/StakingTransactionProperties'
-        - type: object
-          properties:
-            to:
-              type: string
-            calldata:
-              type: string
     EthClaimRewardsRequestEntityProperties:
       title: Ethereum claim rewards request entity properties
       allOf:
@@ -58740,8 +58703,6 @@ components:
         - $ref: '#/components/schemas/StakingTransactionProperties'
         - type: object
           properties:
-            withdrawalStruct:
-              $ref: '#/components/schemas/Withdrawal'
             calldata:
               type: string
             to:
@@ -58761,14 +58722,6 @@ components:
                 - $ref: '#/components/schemas/IntegerString'
               description: Optional gas price override for Ethereum staking requests.
               nullable: true
-    EthCompleteWithdrawalsTransactionProperties:
-      title: ETH Complete Withdrawals Transaction Properties
-      allOf:
-        - $ref: '#/components/schemas/StakingTransactionProperties'
-        - type: object
-          properties:
-            operator:
-              type: string
     EthConsolidateIntent:
       title: ETH Consolidate Intent
       allOf:
@@ -58876,14 +58829,6 @@ components:
             - selfSend
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/EthBuildOptions'
-    EthQueueWithdrawalsTransactionProperties:
-      title: ETH Queue Withdrawals Transaction Properties
-      allOf:
-        - $ref: '#/components/schemas/StakingTransactionProperties'
-        - type: object
-          properties:
-            operator:
-              type: string
     EthStakingDelegation:
       title: ETH Staking Delegation
       allOf:
@@ -58984,12 +58929,6 @@ components:
               type: array
               items:
                 type: string
-            isRestaking:
-              type: boolean
-              description: Whether this staking request is a restake.
-            operator:
-              type: string
-              description: The operator address.
             precomputedBatch:
               type: object
               properties:
@@ -59026,11 +58965,6 @@ components:
         - $ref: '#/components/schemas/StakingRequestWithGasPOSTBody'
       type: object
       properties:
-        operator:
-          description: The operator address to be used for restaking ETH
-          type: string
-          example: '0x0'
-          nullable: true
         validator:
           description: The provider to use to provision ETH validators.
           type: string
@@ -59112,9 +59046,6 @@ components:
           type: string
           enum:
             - ETH
-        eigenPodAddress:
-          type: string
-          nullable: true
         rewardPairs:
           type: array
           items:
@@ -59166,20 +59097,6 @@ components:
               $ref: '#/components/schemas/IntegerString'
             isFullUnstake:
               type: boolean
-    EthVerifyWithdrawalsTransactionProperties:
-      title: ETH Verify Withdrawals Transaction Properties
-      allOf:
-        - $ref: '#/components/schemas/StakingTransactionProperties'
-        - type: object
-          properties:
-            to:
-              type: string
-            calldata:
-              type: string
-            validatorIndices:
-              type: array
-              items:
-                $ref: '#/components/schemas/IntegerString'
     Ethereum2Address:
       title: Ethereum2 Address
       type: object
@@ -75643,9 +75560,6 @@ components:
           description: Whether this validator is marked as preferred.
           type: boolean
           default: false
-        restaking:
-          description: Whether this validator supports restaking.
-          type: boolean
         rewardPairs:
           type: array
           items:
@@ -75784,10 +75698,6 @@ components:
             - $ref: '#/components/schemas/IntegerString'
           description: The sum of the amounts of all confirmed staking transactions in this request.
           nullable: true
-        isRestaking:
-          description: Whether this request is a restaking operation.
-          type: boolean
-          nullable: true
         properties:
           oneOf:
             - $ref: '#/components/schemas/StakingRequestEntityProperties'
@@ -75798,7 +75708,6 @@ components:
             - $ref: '#/components/schemas/EthClaimRewardsRequestEntityProperties'
             - $ref: '#/components/schemas/EthP2POrgStakingRequestEntityProperties'
             - $ref: '#/components/schemas/TrxStakingRequestEntityProperties'
-            - $ref: '#/components/schemas/EthCheckpointRequestEntityProperties'
             - $ref: '#/components/schemas/NearStakingRequestEntityProperties'
             - $ref: '#/components/schemas/SolStakingRequestEntityProperties'
             - $ref: '#/components/schemas/DotStakingRequestEntityProperties'
@@ -75912,7 +75821,6 @@ components:
         - TRX_UNSTAKE
         - TRX_CLAIM_REWARDS
         - ETH_CLAIM_REWARDS
-        - ETH_CHECKPOINT
         - ETH_UNSTAKE
         - ETH_STAKE_P2P
         - NEAR_STAKE
@@ -76062,7 +75970,6 @@ components:
         - UNSTAKE
         - CLAIM_REWARDS
         - SWITCH_VALIDATOR
-        - CHECKPOINT
         - UNSUPPORTED
     StakingRequestWithGasPOSTBody:
       allOf:
@@ -76446,12 +76353,7 @@ components:
         - $ref: '#/components/schemas/MaticLikeStakingTransactionProperties'
         - $ref: '#/components/schemas/EthStakingTransactionProperties'
         - $ref: '#/components/schemas/SolJitoStakingTransactionProperties'
-        - $ref: '#/components/schemas/EthAuthorizeValidatorTransactionProperties'
         - $ref: '#/components/schemas/EthClaimRewardsTransactionProperties'
-        - $ref: '#/components/schemas/EthVerifyWithdrawalsTransactionProperties'
-        - $ref: '#/components/schemas/EthQueueWithdrawalsTransactionProperties'
-        - $ref: '#/components/schemas/EthCompleteWithdrawalsTransactionProperties'
-        - $ref: '#/components/schemas/EthCheckpointTransactionProperties'
         - $ref: '#/components/schemas/EthUnstakingTransactionProperties'
         - $ref: '#/components/schemas/DotUnstakingTransactionProperties'
         - $ref: '#/components/schemas/DotStakingTransactionProperties'
@@ -76518,12 +76420,7 @@ components:
         - SUI
         - SUI_UNSTAKE
         - SUI_SWITCH
-        - ETH_AUTHORIZE_VALIDATOR
         - ETH_STAKE_PECTRA
-        - ETH_QUEUE_WITHDRAWALS
-        - ETH_COMPLETE_WITHDRAWALS
-        - ETH_VERIFY_WITHDRAWALS
-        - ETH_CHECKPOINTS
         - ETH_UNSTAKE
         - ETH_CLAIM_REWARDS
         - SOL_JITO_STAKE
@@ -76694,9 +76591,6 @@ components:
             type: string
         preferred:
           description: Whether this validator is preferred.
-          type: boolean
-        restaking:
-          description: Whether restaking is enabled.
           type: boolean
         rewardPairs:
           description: List of reward pairs.
@@ -89012,9 +88906,6 @@ components:
         allowPartialUnstake:
           description: True if the wallet allows partial unstaking.
           type: boolean
-        restakingEnabled:
-          description: True if restaking is enabled for the wallet.
-          type: boolean
         validatorNotNeededForStake:
           description: True if a validator is not required when staking.
           type: boolean
@@ -89882,8 +89773,6 @@ components:
           format: bigInteger
         permissionAttributes:
           $ref: '#/components/schemas/WalletStakingPermissionAttributes'
-        restaking:
-          type: boolean
         rewardPairs:
           type: array
           items:
