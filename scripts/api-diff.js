@@ -8,6 +8,16 @@ const outputPath = process.argv[4] || 'release-description.md';
 const previousSpec = JSON.parse(fs.readFileSync(previousPath, 'utf8'));
 const currentSpec = JSON.parse(fs.readFileSync(currentPath, 'utf8'));
 
+// OpenAPI Path Item Object operation keys. Other keys on a path item
+// (parameters, summary, description, servers, $ref, x-* extensions like
+// x-internal) are NOT operations and must be excluded when iterating methods.
+const HTTP_METHODS = new Set(['get', 'put', 'post', 'delete', 'options', 'head', 'patch', 'trace']);
+
+function getOperations(pathItem) {
+    if (!pathItem) return [];
+    return Object.entries(pathItem).filter(([key]) => HTTP_METHODS.has(key.toLowerCase()));
+}
+
 // Initialize change tracking
 const changes = {
     added: {},      // Group by path
@@ -48,7 +58,7 @@ function checkSimilarity(endpoint1, endpoint2) {
     if (endpoint1.details.summary && endpoint2.details.summary && endpoint1.details.summary === endpoint2.details.summary) {
         similarityScore += 1;
     }
-    if (endpoint1.details.description && endpoint1.details.description && endpoint1.details.description === endpoint2.details.description) {
+    if (endpoint1.details.description && endpoint2.details.description && endpoint1.details.description === endpoint2.details.description) {
         similarityScore += 1;
     }
 
@@ -157,7 +167,7 @@ function findAffectedPaths() {
     if (changes.components.size === 0) return;
 
     Object.entries(currentSpec.paths || {}).forEach(([path, methods]) => {
-        Object.entries(methods).forEach(([method, details]) => {
+        getOperations(methods).forEach(([method, details]) => {
             const usedComponents = new Set();
             findComponentRefs(details, usedComponents);
             
@@ -183,8 +193,8 @@ function comparePaths() {
     // Check for added and modified endpoints
     Object.entries(currentSpec.paths || {}).forEach(([path, methods]) => {
         const previousMethods = previousSpec.paths?.[path] || {};
-        
-        Object.entries(methods).forEach(([method, details]) => {
+
+        getOperations(methods).forEach(([method, details]) => {
             if (!previousMethods[method]) {
                 if (!changes.added[path]) changes.added[path] = new Set();
                 changes.added[path].add(method.toUpperCase());
@@ -203,7 +213,7 @@ function comparePaths() {
 
     // Check for removed endpoints
     Object.entries(previousSpec.paths || {}).forEach(([path, methods]) => {
-        Object.keys(methods).forEach(method => {
+        getOperations(methods).forEach(([method]) => {
             if (!currentSpec.paths?.[path]?.[method]) {
                 if (!changes.removed[path]) changes.removed[path] = new Set();
                 changes.removed[path].add(method.toUpperCase());
