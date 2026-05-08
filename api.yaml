@@ -1026,193 +1026,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/user/accesstoken:
-    get:
-      tags:
-        - User
-      summary: List access tokens
-      description: List all access tokens for a user
-      operationId: user.listaccesstokens
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  accessTokens:
-                    $ref: '#/components/schemas/Session'
-    post:
-      summary: Create access token
-      description: Create an access token to use BitGo APIs. BitGo restricts access tokens in the production environment to specific IP addresses. However, access tokens in the test environment don't require an IP address restriction. If you omit a spending limit, you must unlock the token using the [Unlock session](/reference/userunlock#/) endpoint on a regular basis to permit operations such as withdrawals. Therefore, BitGo recommends including a spending limit.
-      operationId: v2.accesstoken.add
-      tags:
-        - User
-      parameters: []
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                scope:
-                  oneOf:
-                    - type: array
-                      items:
-                        type: string
-                        enum:
-                          - openid
-                          - profile
-                          - user_manage
-                          - enterprise_view_all
-                          - enterprise_manage_all
-                          - auditlogs_view_all
-                          - wallet_view
-                          - wallet_view_enterprise
-                          - wallet_view_all
-                          - wallet_create
-                          - wallet_freeze
-                          - wallet_freeze_all
-                          - wallet_manage
-                          - wallet_manage_all
-                          - wallet_approve
-                          - wallet_approve_all
-                          - wallet_spend
-                          - wallet_spend_all
-                          - wallet_edit
-                          - wallet_edit_all
-                          - wallet_stake
-                          - wallet_stake_all
-                          - wallet_edit_enterprise
-                          - wallet_spend_enterprise
-                          - wallet_approve_enterprise
-                          - wallet_manage_enterprise
-                          - settlement_network_read
-                          - settlement_network_write
-                          - portfolio_view
-                          - trade_view
-                          - trade_trade
-                          - trade_fix
-                          - pending_approval_update
-                          - metamask_institutional
-                          - crypto_compare
-                          - all
-                    - type: array
-                      items:
-                        type: string
-                  description: |-
-                    The permissions granted by this access token.
-
-                    - `all` - Access all actions in the test environment.
-                    - `crypto_compare` - Call CryptoCompare API.
-                    - `enterprise_manage_all` - Manage users and settings for any enterprise to which the user belongs.
-                    - `enterprise_view_all` - View any enterprise to which the user belongs.
-                    - `metamask_institutional` - [DEPRECATED] Enables using BitGo wallets in the MetaMask Institutional extension.
-                    - `openid` - Verify your BitGo user ID using OpenID Connect.
-                    - `pending_approval_update` - Approve or reject pending actions that require approval to proceed.
-                    - `portfolio_view` - [DEPRECATED] Call the Portfolio API.
-                    - `profile` - View your BitGo Profile.
-                    - `settlement_network_read` - View your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners.
-                    - `settlement_network_write` - Update your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners.
-                    - `trade_trade` - Initiate trades.
-                    - `trade_view` - View trades.
-                    - `trade_fix` - Access the Trade FIX API gateway.
-                    - `wallet_approve` - Approve policies and transactions for a wallet where the user is a wallet admin.
-                    - `wallet_approve_all` - Approve transactions for any wallet where the user is a wallet admin within any enterprise to which the user belongs.
-                    - `wallet_approve_enterprise` - Approve transactions for any wallet where the user is a wallet admin within a single enterprise.
-                    - `wallet_create` - Create wallets.
-                    - `wallet_edit` - Edit comments on a transfer.
-                    - `wallet_edit_all` - Edit comments on all transfers within multiple enterprises.
-                    - `wallet_edit_enterprise` - [DEPRECATED] Edit comments on all transfers within a single enterprise.
-                    - `wallet_freeze` - Freeze a wallet.
-                    - `wallet_freeze_all` - Freeze any wallet within any enterprises to which the user belongs.
-                    - `wallet_manage` - Manage settings for a wallet where the user is a wallet admin.
-                    - `wallet_manage_all` - Manage settings for any wallet where the user is a wallet admin within any enterprise to which the user belongs.
-                    - `wallet_manage_enterprise` - Manage settings for any wallet where the user is a wallet admin within a single enterprise.
-                    - `wallet_spend` - Initiate transactions from a wallet.
-                    - `wallet_spend_all` - Initiate transactions from any wallet within any enterprise to which the user belongs.
-                    - `wallet_spend_enterprise` - Initiate transactions from any wallet within a single enterprise.
-                    - `wallet_stake` - Initiate staking transactions from a wallet.
-                    - `wallet_stake_all` - Initiate staking transactions from any wallet within any enterprise to which the user belongs.
-                    - `wallet_view` - View a wallet.
-                    - `wallet_view_all` - View any wallet within any enterprise to which the user belongs.
-                    - `wallet_view_enterprise` - View any wallet within a single enterprise.
-                duration:
-                  type: number
-                  description: The duration of the access token in seconds.
-                label:
-                  type: string
-                  description: A label for the access token.
-                otp:
-                  type: string
-                  description: The one-time password.
-                admin:
-                  type: boolean
-                  description: True, if this access token has admin permissions.
-                ipRestrict:
-                  nullable: true
-                  type: array
-                  items:
-                    type: string
-                  description: Restricts the access token to use only from the provided IP addresses. Required for access tokens in the production environment. Not required for access tokens in the test environment.
-                enterprise:
-                  type: string
-                  description: The enterprise ID that the user belongs to.
-                spendingLimits:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      coin:
-                        $ref: '#/components/schemas/CoinString'
-                      maxLimit:
-                        type: boolean
-                      txValueLimit:
-                        oneOf:
-                          - type: string
-                          - type: number
-                    required:
-                      - coin
-                      - txValueLimit
-                allErc20TokensLimit:
-                  type: object
-                  properties:
-                    enabled:
-                      type: boolean
-                    maxLimit:
-                      type: boolean
-                    txValueLimit:
-                      oneOf:
-                        - type: string
-                        - type: number
-                accessTokenTemplateId:
-                  type: string
-                  description: |-
-                    ID of the AccessTokenTemplate to use as defaults for this token.
-
-                    Template fields act as defaults — they are used when the corresponding field is absent from the
-                    request body. Any value you provide in the request, including an empty array, takes precedence.
-
-                    For example, if the template has `scope: ['spend', 'transfer']` and you send `scope: ['read']`,
-                    the created token will have `scope: ['read']`. If you omit `scope` entirely, the token gets
-                    `scope: ['spend', 'transfer']` from the template.
-              required:
-                - label
-                - otp
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/AccessTokenResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/user/session:
     get:
       summary: Get session
@@ -37729,6 +37542,177 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/user/accesstoken:
+    post:
+      summary: Create access token
+      description: Create an access token to use BitGo APIs. BitGo restricts access tokens in the production environment to specific IP addresses. However, access tokens in the test environment don't require an IP address restriction. If you omit a spending limit, you must unlock the token using the [Unlock session](/reference/userunlock#/) endpoint on a regular basis to permit operations such as withdrawals. Therefore, BitGo recommends including a spending limit.
+      operationId: v2.accesstoken.add
+      tags:
+        - User
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                scope:
+                  oneOf:
+                    - type: array
+                      items:
+                        type: string
+                        enum:
+                          - openid
+                          - profile
+                          - user_manage
+                          - enterprise_view_all
+                          - enterprise_manage_all
+                          - auditlogs_view_all
+                          - wallet_view
+                          - wallet_view_enterprise
+                          - wallet_view_all
+                          - wallet_create
+                          - wallet_freeze
+                          - wallet_freeze_all
+                          - wallet_manage
+                          - wallet_manage_all
+                          - wallet_approve
+                          - wallet_approve_all
+                          - wallet_spend
+                          - wallet_spend_all
+                          - wallet_edit
+                          - wallet_edit_all
+                          - wallet_stake
+                          - wallet_stake_all
+                          - wallet_edit_enterprise
+                          - wallet_spend_enterprise
+                          - wallet_approve_enterprise
+                          - wallet_manage_enterprise
+                          - settlement_network_read
+                          - settlement_network_write
+                          - portfolio_view
+                          - trade_view
+                          - trade_trade
+                          - trade_fix
+                          - pending_approval_update
+                          - metamask_institutional
+                          - crypto_compare
+                          - all
+                    - type: array
+                      items:
+                        type: string
+                  description: |-
+                    The permissions granted by this access token.
+
+                    - `all` - Access all actions in the test environment.
+                    - `crypto_compare` - Call CryptoCompare API.
+                    - `enterprise_manage_all` - Manage users and settings for any enterprise to which the user belongs.
+                    - `enterprise_view_all` - View any enterprise to which the user belongs.
+                    - `metamask_institutional` - [DEPRECATED] Enables using BitGo wallets in the MetaMask Institutional extension.
+                    - `openid` - Verify your BitGo user ID using OpenID Connect.
+                    - `pending_approval_update` - Approve or reject pending actions that require approval to proceed.
+                    - `portfolio_view` - [DEPRECATED] Call the Portfolio API.
+                    - `profile` - View your BitGo Profile.
+                    - `settlement_network_read` - View your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners.
+                    - `settlement_network_write` - Update your client's Go Network data, enabling allocations to and from your platform. Only for Go Network partners.
+                    - `trade_trade` - Initiate trades.
+                    - `trade_view` - View trades.
+                    - `trade_fix` - Access the Trade FIX API gateway.
+                    - `wallet_approve` - Approve policies and transactions for a wallet where the user is a wallet admin.
+                    - `wallet_approve_all` - Approve transactions for any wallet where the user is a wallet admin within any enterprise to which the user belongs.
+                    - `wallet_approve_enterprise` - Approve transactions for any wallet where the user is a wallet admin within a single enterprise.
+                    - `wallet_create` - Create wallets.
+                    - `wallet_edit` - Edit comments on a transfer.
+                    - `wallet_edit_all` - Edit comments on all transfers within multiple enterprises.
+                    - `wallet_edit_enterprise` - [DEPRECATED] Edit comments on all transfers within a single enterprise.
+                    - `wallet_freeze` - Freeze a wallet.
+                    - `wallet_freeze_all` - Freeze any wallet within any enterprises to which the user belongs.
+                    - `wallet_manage` - Manage settings for a wallet where the user is a wallet admin.
+                    - `wallet_manage_all` - Manage settings for any wallet where the user is a wallet admin within any enterprise to which the user belongs.
+                    - `wallet_manage_enterprise` - Manage settings for any wallet where the user is a wallet admin within a single enterprise.
+                    - `wallet_spend` - Initiate transactions from a wallet.
+                    - `wallet_spend_all` - Initiate transactions from any wallet within any enterprise to which the user belongs.
+                    - `wallet_spend_enterprise` - Initiate transactions from any wallet within a single enterprise.
+                    - `wallet_stake` - Initiate staking transactions from a wallet.
+                    - `wallet_stake_all` - Initiate staking transactions from any wallet within any enterprise to which the user belongs.
+                    - `wallet_view` - View a wallet.
+                    - `wallet_view_all` - View any wallet within any enterprise to which the user belongs.
+                    - `wallet_view_enterprise` - View any wallet within a single enterprise.
+                duration:
+                  type: number
+                  description: The duration of the access token in seconds.
+                label:
+                  type: string
+                  description: A label for the access token.
+                otp:
+                  type: string
+                  description: The one-time password.
+                admin:
+                  type: boolean
+                  description: True, if this access token has admin permissions.
+                ipRestrict:
+                  nullable: true
+                  type: array
+                  items:
+                    type: string
+                  description: Restricts the access token to use only from the provided IP addresses. Required for access tokens in the production environment. Not required for access tokens in the test environment.
+                enterprise:
+                  type: string
+                  description: The enterprise ID that the user belongs to.
+                spendingLimits:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      coin:
+                        $ref: '#/components/schemas/CoinString'
+                      maxLimit:
+                        type: boolean
+                      txValueLimit:
+                        oneOf:
+                          - type: string
+                          - type: number
+                    required:
+                      - coin
+                      - txValueLimit
+                allErc20TokensLimit:
+                  type: object
+                  properties:
+                    enabled:
+                      type: boolean
+                    maxLimit:
+                      type: boolean
+                    txValueLimit:
+                      oneOf:
+                        - type: string
+                        - type: number
+                accessTokenTemplateId:
+                  type: string
+                  description: |-
+                    ID of the AccessTokenTemplate to use as defaults for this token.
+
+                    Template fields act as defaults — they are used when the corresponding field is absent from the
+                    request body. Any value you provide in the request, including an empty array, takes precedence.
+
+                    For example, if the template has `scope: ['spend', 'transfer']` and you send `scope: ['read']`,
+                    the created token will have `scope: ['read']`. If you omit `scope` entirely, the token gets
+                    `scope: ['spend', 'transfer']` from the template.
+              required:
+                - label
+                - otp
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/user/accesstokentemplate:
     get:
       summary: List access token templates
@@ -70456,23 +70440,6 @@ components:
         - ecdsaMPCv2Round1
         - ecdsaMPCv2Round2
         - ecdsaMPCv2Round3
-    PlatformUnlock:
-      type: object
-      properties:
-        time:
-          type: string
-          format: date-time
-        expires:
-          type: string
-          format: date-time
-        txCount:
-          type: integer
-        txValue:
-          type: integer
-        txValueLimit:
-          type: number
-        spendingLimits:
-          $ref: '#/components/schemas/SpendingLimits'
     PlatformUpdateWalletShareResponse:
       type: object
       properties:
@@ -73123,48 +73090,6 @@ components:
           properties: {}
         - $ref: '#/components/schemas/SepaAccountResponseProps'
         - $ref: '#/components/schemas/BankAccountResponseProps'
-    Session:
-      type: object
-      properties:
-        created:
-          type: string
-          format: date-time
-        expires:
-          type: string
-          format: date-time
-        id:
-          $ref: '#/components/schemas/Id'
-        ip:
-          allOf:
-            - $ref: '#/components/schemas/Ip'
-          description: IP address of the client that requested this access token
-        ipRestrict:
-          type: array
-          items:
-            type: string
-            format: ipv4
-          description: IP addresses or CIDR block of clients that are allowed to use this token
-        origin:
-          type: string
-          example: test.bitgo.com
-          description: BitGo environment that issued this token
-        scope:
-          allOf:
-            - $ref: '#/components/schemas/Scope'
-          description: Session permissions
-        unlock:
-          allOf:
-            - $ref: '#/components/schemas/PlatformUnlock'
-          description: The Unlock object, returned if this session is currently unlocked.
-        user:
-          $ref: '#/components/schemas/Id'
-      required:
-        - created
-        - expires
-        - id
-        - origin
-        - scope
-        - user
     Session1:
       type: object
       properties:
