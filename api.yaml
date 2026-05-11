@@ -23872,6 +23872,12 @@ paths:
           description: True, if including Replace-By-Fee (RBF) transfers.
           schema:
             type: boolean
+        - name: includeOperational
+          in: query
+          description: Include operational transfers (channel opening/closing) in the response. Only applicable for Lightning wallets (lnbtc/tlnbtc).
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: OK
@@ -80139,6 +80145,7 @@ components:
             - ofc_deposit
             - ofc_unstake
             - ofc_stake
+            - ofc_book_transfer
         feeCoin:
           type: string
           description: The coin used to pay the fee (for cross-chain transactions)
