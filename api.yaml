@@ -23872,6 +23872,12 @@ paths:
           description: True, if including Replace-By-Fee (RBF) transfers.
           schema:
             type: boolean
+        - name: includeOperational
+          in: query
+          description: Include operational transfers (channel opening/closing) in the response. Only applicable for Lightning wallets (lnbtc/tlnbtc).
+          schema:
+            type: boolean
+            default: false
       responses:
         '200':
           description: OK
@@ -51986,13 +51992,16 @@ components:
       properties:
         month:
           type: string
-          description: birthdate month
+          pattern: ^\d{2}$
+          description: birthdate month (MM, e.g. "06")
         day:
           type: string
-          description: birthdate day
+          pattern: ^\d{2}$
+          description: birthdate day (DD, e.g. "15")
         year:
           type: string
-          description: birthdate year
+          pattern: ^\d{4}$
+          description: birthdate year (YYYY, e.g. "1990")
       required:
         - month
         - day
@@ -80136,6 +80145,7 @@ components:
             - ofc_deposit
             - ofc_unstake
             - ofc_stake
+            - ofc_book_transfer
         feeCoin:
           type: string
           description: The coin used to pay the fee (for cross-chain transactions)
