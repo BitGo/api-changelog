@@ -35230,6 +35230,7 @@ paths:
               - organizationTrades
               - organizationStaking
               - userAccess
+              - policies
         - name: status
           description: Only return rports for this report status
           in: query
@@ -35698,6 +35699,17 @@ paths:
                     - asOfDate
                     - organization
                     - reportContents
+                policies:
+                  type: object
+                  description: Policies report
+                  properties:
+                    completeHistory:
+                      type: boolean
+                    enterprise:
+                      type: string
+                      minLength: 1
+                  required:
+                    - enterprise
               required:
                 - type
                 - format
@@ -36247,6 +36259,21 @@ paths:
                   required:
                     - type
                     - url
+                - type: object
+                  title: IDV Status
+                  properties:
+                    label:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - idvStatus
+                    url:
+                      type: string
+                      minLength: 1
+                  required:
+                    - type
+                    - url
       responses:
         '200':
           description: OK
@@ -36574,6 +36601,15 @@ paths:
                       format: UUID
                   required:
                     - orderId
+                - type: object
+                  title: IDV Status
+                  properties:
+                    idvId:
+                      type: string
+                      example: 550e8400-e29b-41d4-a716-446655440000
+                      format: UUID
+                  required:
+                    - idvId
       responses:
         '200':
           description: OK
@@ -36880,6 +36916,7 @@ paths:
               - organizationTrades
               - organizationStaking
               - userAccess
+              - policies
         - name: status
           description: Only return rports for this report status
           in: query
@@ -37347,6 +37384,17 @@ paths:
                     - asOfDate
                     - organization
                     - reportContents
+                policies:
+                  type: object
+                  description: Policies report
+                  properties:
+                    completeHistory:
+                      type: boolean
+                    enterprise:
+                      type: string
+                      minLength: 1
+                  required:
+                    - enterprise
               required:
                 - type
                 - format
@@ -48857,6 +48905,7 @@ components:
       enum:
         - policyRuleId
         - settlementId
+        - crossChainRecoveryId
     AnnotatedTransfer:
       allOf:
         - $ref: '#/components/schemas/Transfer'
@@ -61274,6 +61323,9 @@ components:
           type: string
           description: The wallet ID for the stuck transaction
           example: 59cd72485007a239fb00282ed480da1f
+        isFeeAddress:
+          type: boolean
+          description: True if the address is the wallet's dedicated fee/gas address
       required:
         - cause
         - message
@@ -72383,6 +72435,17 @@ components:
             - asOfDate
             - organization
             - reportContents
+        policies:
+          type: object
+          description: Policies report
+          properties:
+            completeHistory:
+              type: boolean
+            enterprise:
+              type: string
+              minLength: 1
+          required:
+            - enterprise
     ReportStatus1:
       title: ReportStatus
       type: string
@@ -74229,6 +74292,7 @@ components:
         - organizationTrades
         - organizationStaking
         - userAccess
+        - policies
     SolAddress:
       title: Sol Address
       type: object
