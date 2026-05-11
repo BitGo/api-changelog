@@ -13515,6 +13515,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserSubscriptionsResponse'
+        '400':
+          description: Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
     put:
       tags:
         - User Management Notification
@@ -13539,7 +13551,63 @@ paths:
           content:
             application/json:
               schema:
-                type: object
+                type: array
+                items:
+                  type: string
+                  description: Updated subscription entities
+        '400':
+          description: Invalid subscription request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+  /api/notifications/v1/user/mute-settings:
+    put:
+      tags:
+        - User Management Notification
+      summary: Update mute settings
+      description: Replaces both muted enterprises and wallets lists atomically. Wallet IDs belonging to muted enterprises are automatically removed.
+      operationId: updateMuteSettings
+      parameters:
+        - name: request-id
+          in: header
+          description: Optional idempotency key for the request
+          required: false
+          schema:
+            type: string
+      requestBody:
+        description: The new mute settings. Replaces existing settings entirely.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateMuteSettingsRequest'
+        required: true
+      responses:
+        '200':
+          description: Mute settings updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MuteSettingsResponse'
+        '400':
+          description: Invalid mute settings request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/mute/wallets:
     put:
       tags:
@@ -13568,6 +13636,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MuteResponse'
+        '400':
+          description: Invalid muted wallets request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
       x-internal: false
   /api/notifications/v1/mute/wallet:
     put:
@@ -13595,6 +13675,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MuteResponse'
+        '400':
+          description: Invalid mute wallet request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
   /api/notifications/v1/mute/enterprises:
     put:
       tags:
@@ -13623,6 +13715,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MuteResponse'
+        '400':
+          description: Invalid muted enterprises request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
       x-internal: false
   /api/notifications/v1/mute/enterprise:
     put:
@@ -13650,6 +13754,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MuteResponse'
+        '400':
+          description: Invalid mute enterprise request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
   /api/notifications/v1/tokens:
     post:
       tags:
@@ -13676,6 +13792,92 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AddDeviceTokenResponse'
+        '400':
+          description: Invalid device token request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+  /api/notifications/v1/user/notification-thresholds:
+    get:
+      tags:
+        - User Management Notification
+      summary: Get notification thresholds
+      description: Retrieves the deposit and withdrawal USD notification thresholds for the authenticated user.
+      operationId: getNotificationThresholds
+      parameters:
+        - name: request-id
+          in: header
+          description: Optional request ID for tracing
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Notification thresholds retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationThresholdsResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
+    patch:
+      tags:
+        - User Management Notification
+      summary: Update notification thresholds
+      description: Updates the deposit and/or withdrawal USD notification thresholds for the authenticated user.
+      operationId: patchNotificationThresholds
+      parameters:
+        - name: request-id
+          in: header
+          description: Optional request ID for tracing
+          required: false
+          schema:
+            type: string
+      requestBody:
+        description: The threshold values to update. Omitted fields are left unchanged.
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNotificationThresholdsRequest'
+        required: true
+      responses:
+        '200':
+          description: Notification thresholds updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotificationThresholdsResponse'
+        '400':
+          description: Invalid notification thresholds request body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/user/categories:
     get:
       tags:
@@ -13701,6 +13903,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/UserCategoriesResponse'
+        '400':
+          description: Invalid channel query parameter
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
   /api/notifications/v1/mute:
     get:
       tags:
@@ -13721,6 +13935,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MuteResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
   /api/notifications/v1/categories:
     get:
       tags:
@@ -13741,6 +13967,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CategoriesResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
   /api/notifications/v1/tokens/{deviceToken}:
     delete:
       tags:
@@ -13766,6 +14004,24 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeleteDeviceTokenResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '401':
+          description: Device token does not belong to user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnauthorizedErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
   /api/notifications/v1/mute/wallet/{walletId}:
     delete:
       tags:
@@ -13791,6 +14047,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MuteResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
   /api/notifications/v1/mute/enterprise/{enterpriseId}:
     delete:
       tags:
@@ -13816,6 +14084,18 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MuteResponse'
+        '400':
+          description: Bad request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '500':
+          description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
   /api/org/enterprise/{enterpriseId}:
     get:
       operationId: org.enterprise
@@ -50387,6 +50667,35 @@ components:
       type: string
       description: Coin name used to choose correct KRS public key for the given provider. Possible valid values are "btc", "eth", "bitcoin"
       example: eth
+    BadRequestErrorResponse:
+      required:
+        - error
+        - name
+        - status
+      type: object
+      properties:
+        name:
+          type: string
+          description: Error code
+          enum:
+            - ValidationFailed
+            - IllegalArgument
+            - BadRequest
+            - DataIntegrityError
+            - NotImplementedError
+            - RETRIGGER_RATE_LIMITED
+            - USER_CREATION_FAILED
+            - USER_FALLBACK_FAILED
+        error:
+          type: string
+          description: Human-readable error message
+        status:
+          type: integer
+          description: HTTP status code
+          format: int32
+          enum:
+            - 400
+      description: Bad request error response
     BalanceReserve:
       type: object
       properties:
@@ -66165,6 +66474,20 @@ components:
           type: array
           items:
             type: string
+    MuteSettingsResponse:
+      required:
+        - enterpriseIds
+        - walletIds
+      type: object
+      properties:
+        enterpriseIds:
+          type: array
+          items:
+            type: string
+        walletIds:
+          type: array
+          items:
+            type: string
     MuteWalletRequest:
       required:
         - walletId
@@ -66732,6 +67055,13 @@ components:
           type: string
         isSubscribed:
           type: boolean
+    NotificationThresholdsResponse:
+      type: object
+      properties:
+        depositThresholdUsd:
+          type: number
+        withdrawalThresholdUsd:
+          type: number
     NtildeProof:
       title: NtildeProof
       type: object
@@ -73147,6 +73477,31 @@ components:
           properties: {}
         - $ref: '#/components/schemas/SepaAccountResponseProps'
         - $ref: '#/components/schemas/BankAccountResponseProps'
+    ServerErrorResponse:
+      required:
+        - error
+        - name
+        - status
+      type: object
+      properties:
+        name:
+          type: string
+          description: Error code
+          enum:
+            - UnexpectedError
+            - ThirdPartyError
+            - DatabaseError
+            - USER_FALLBACK_TIMEOUT
+        error:
+          type: string
+          description: Human-readable error message
+        status:
+          type: integer
+          description: HTTP status code
+          format: int32
+          enum:
+            - 500
+      description: Internal server error response
     Session1:
       type: object
       properties:
@@ -82299,6 +82654,28 @@ components:
           description: Supported unstaking sub-types with their own spendable attributes.
           items:
             $ref: '#/components/schemas/UnstakingSubTypeSpendableAttributes'
+    UnauthorizedErrorResponse:
+      required:
+        - error
+        - name
+        - status
+      type: object
+      properties:
+        name:
+          type: string
+          description: Error code
+          enum:
+            - Unauthorized
+        error:
+          type: string
+          description: Human-readable error message
+        status:
+          type: integer
+          description: HTTP status code
+          format: int32
+          enum:
+            - 401
+      description: Unauthorized error response
     UndelegateIntent:
       title: UndelegateIntent
       allOf:
@@ -82882,6 +83259,28 @@ components:
             $ref: '#/components/schemas/Document'
           description: List of documents to update
       title: UpdateIdentityBody
+    UpdateMuteSettingsRequest:
+      required:
+        - enterpriseIds
+        - walletIds
+      type: object
+      properties:
+        enterpriseIds:
+          maxItems: 500
+          minItems: 0
+          type: array
+          items:
+            maxLength: 100
+            minLength: 0
+            type: string
+        walletIds:
+          maxItems: 5000
+          minItems: 0
+          type: array
+          items:
+            maxLength: 100
+            minLength: 0
+            type: string
     UpdateMutedEnterprisesRequest:
       type: object
       properties:
@@ -82904,6 +83303,17 @@ components:
             maxLength: 100
             minLength: 0
             type: string
+    UpdateNotificationThresholdsRequest:
+      type: object
+      properties:
+        depositThresholdUsd:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
+        withdrawalThresholdUsd:
+          minimum: 0
+          exclusiveMinimum: false
+          type: number
     UpdatePinnedWalletsResponse:
       title: UpdatePinnedWalletsResponse
       type: object
