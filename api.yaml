@@ -45407,6 +45407,9 @@ components:
             properties:
               validatorAddress: 5FCPTnjevGqAuTttetBy4a24Ej3pH9fiQ8fmvP1ZkrVsLUoT
               netUID: '0'
+              alphaTokenName: TAO
+              alphaAmount: '1000000000'
+              totalAlphaRewards: '8463576'
               type: TAO
             status: ACTIVE
             rewards: '8463576'
@@ -58738,24 +58741,6 @@ components:
             senderAddressIndex:
               $ref: '#/components/schemas/optionalNumber'
         - $ref: '#/components/schemas/AccountBaseBuildOptions'
-    EthClaimRewardsRequestEntityProperties:
-      title: Ethereum claim rewards request entity properties
-      allOf:
-        - $ref: '#/components/schemas/EthCommonStakingRequestEntityProperties'
-    EthClaimRewardsTransactionProperties:
-      title: ETH Claim Rewards Transaction Properties
-      allOf:
-        - $ref: '#/components/schemas/StakingTransactionProperties'
-        - type: object
-          properties:
-            calldata:
-              type: string
-            to:
-              type: string
-            unclaimedRewardsPair:
-              type: object
-              additionalProperties:
-                $ref: '#/components/schemas/IntegerString'
     EthCommonStakingRequestEntityProperties:
       title: Common Ethereum staking request entity properties
       allOf:
@@ -75706,7 +75691,6 @@ components:
             - $ref: '#/components/schemas/EthCommonStakingRequestEntityProperties'
             - $ref: '#/components/schemas/UnknownStakingRequestEntityProperties'
             - $ref: '#/components/schemas/EthStakingRequestEntityProperties'
-            - $ref: '#/components/schemas/EthClaimRewardsRequestEntityProperties'
             - $ref: '#/components/schemas/EthP2POrgStakingRequestEntityProperties'
             - $ref: '#/components/schemas/TrxStakingRequestEntityProperties'
             - $ref: '#/components/schemas/NearStakingRequestEntityProperties'
@@ -76354,7 +76338,6 @@ components:
         - $ref: '#/components/schemas/MaticLikeStakingTransactionProperties'
         - $ref: '#/components/schemas/EthStakingTransactionProperties'
         - $ref: '#/components/schemas/SolJitoStakingTransactionProperties'
-        - $ref: '#/components/schemas/EthClaimRewardsTransactionProperties'
         - $ref: '#/components/schemas/EthUnstakingTransactionProperties'
         - $ref: '#/components/schemas/DotUnstakingTransactionProperties'
         - $ref: '#/components/schemas/DotStakingTransactionProperties'
@@ -77629,6 +77612,20 @@ components:
               type: string
               format: bigInteger
               description: The network UID (subnet) where this delegation exists. TAO uses different subnets for different purposes.
+              nullable: true
+            alphaTokenName:
+              type: string
+              description: The name of the alpha token for this subnet.
+              nullable: true
+            alphaAmount:
+              type: string
+              format: bigInteger
+              description: The amount of alpha tokens staked in alpha units.
+              nullable: true
+            totalAlphaRewards:
+              type: string
+              format: bigInteger
+              description: The total alpha rewards accrued in alpha units.
               nullable: true
     TaoStakeIntent:
       title: Tao Stake Intent
