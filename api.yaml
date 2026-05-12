@@ -30300,22 +30300,21 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
-  /api/tradfi/v1/bank-transfer-methods/{id}/ach-authorization:
+  /api/tradfi/v1/enterprises/{enterpriseId}/ach-authorization:
     get:
       x-internal: false
       summary: Get ACH authorization language
       description: Returns the ACH debit authorization language that must be presented to and accepted by the end user before initiating an ACH debit transfer. Acceptance is mandatory — the `acceptAuthTerms` field on the initiate request must be `true`. This is a required part of BitGo's risk and compliance strategy for ACH debit origination. The ACH Terms URL in the response varies based on the enterprise's CaaS status.
-      operationId: tradfi.v1.bank-transfer-methods.ach-authorization
+      operationId: tradfi.v1.enterprises.ach-authorization
       tags:
         - ACH Debits
       parameters:
-        - name: id
+        - name: enterpriseId
           in: path
           required: true
           schema:
             type: string
-            format: uuid
-          description: UUID of the bank transfer method
+          description: ID of the enterprise
       responses:
         '200':
           description: OK
@@ -55531,7 +55530,7 @@ components:
       properties:
         acceptAuthTerms:
           type: boolean
-          description: 'Whether the client has accepted the ACH authorization terms. Required for deposits (`transferDirection: "in"`). Must be `true` to initiate a deposit. Retrieve the authorization language to present to the user via `GET /api/tradfi/v1/bank-transfer-methods/{id}/ach-authorization`.'
+          description: 'Whether the client has accepted the ACH authorization terms. Required for deposits (`transferDirection: "in"`). Must be `true` to initiate a deposit. Retrieve the authorization language to present to the user via `GET /api/tradfi/v1/enterprises/{enterpriseId}/ach-authorization`.'
         amount:
           type: string
           minLength: 1
