@@ -30300,6 +30300,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/bank-transfer-methods/{id}/ach-authorization:
+    get:
+      x-internal: false
+      summary: Get ACH authorization language
+      description: Returns the ACH debit authorization language that must be presented to and accepted by the end user before initiating an ACH debit transfer. Acceptance is mandatory — the `acceptAuthTerms` field on the initiate request must be `true`. This is a required part of BitGo's risk and compliance strategy for ACH debit origination. The ACH Terms URL in the response varies based on the enterprise's CaaS status.
+      operationId: tradfi.v1.bank-transfer-methods.ach-authorization
+      tags:
+        - ACH Debits
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: UUID of the bank transfer method
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - achAuthorizationLanguage
+                properties:
+                  achAuthorizationLanguage:
+                    type: string
+                    description: The ACH authorization language containing the deposit terms and a link to the full ACH Terms & Conditions.
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/tradfi/v1/bank-transfers/{id}:
     get:
       summary: Get a bank transfer
@@ -55382,7 +55429,7 @@ components:
       properties:
         acceptAuthTerms:
           type: boolean
-          description: 'Whether the client has accepted the ACH authorization terms. Required for deposits (`transferDirection: "in"`). Must be `true` to initiate a deposit. See https://app.bitgo.com/my/ach-terms for institutional and retail clients, or https://app.bitgo.com/my/caas/ach-terms for CaaS.'
+          description: 'Whether the client has accepted the ACH authorization terms. Required for deposits (`transferDirection: "in"`). Must be `true` to initiate a deposit. Retrieve the authorization language to present to the user via `GET /api/tradfi/v1/bank-transfer-methods/{id}/ach-authorization`.'
         amount:
           type: string
           minLength: 1
