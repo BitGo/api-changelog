@@ -1106,7 +1106,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformPlatformError'
     get:
-      summary: Get transaction requests by wallet
+      summary: List transaction requests by wallet
       description: Get a paginated list of transaction requests filtered by wallet. Use only with MPC wallets.
       operationId: v2.wallet.txrequest.get
       tags:
@@ -37924,6 +37924,54 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/user/accesstoken:
+    get:
+      summary: List access tokens
+      description: |-
+        Returns all non-expired long-lived access tokens for the authenticated user.
+        Results are paginated using cursor-based pagination. Use the `prevId` query
+        parameter with the `nextBatchPrevId` value from the previous response to fetch
+        the next page. Defaults to 25 results per page; maximum is 100.
+      operationId: v2.accesstoken.list
+      tags:
+        - User
+      x-internal: false
+      parameters:
+        - name: limit
+          description: 'Maximum number of results to return (default: 25, max: 100)'
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: prevId
+          description: Cursor for pagination; use the `nextBatchPrevId` value from the previous response
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListAccessTokensResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
     post:
       summary: Create access token
       description: Create an access token to use BitGo APIs. BitGo restricts access tokens in the production environment to specific IP addresses. However, access tokens in the test environment don't require an IP address restriction. If you omit a spending limit, you must unlock the token using the [Unlock session](/reference/userunlock#/) endpoint on a regular basis to permit operations such as withdrawals. Therefore, BitGo recommends including a spending limit.
@@ -38090,6 +38138,56 @@ paths:
                 $ref: '#/components/schemas/AccessTokenResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/user/accesstoken/{token}:
+    delete:
+      summary: Delete access token
+      description: |-
+        Revokes an access token by setting its expiration to the current time. The token can
+        no longer be used for authentication. Returns the expired token document.
+      operationId: v2.accesstoken.delete
+      tags:
+        - User
+      x-internal: false
+      parameters:
+        - name: token
+          description: The public ID of the access token to revoke (32-character lowercase hex string).
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccessTokenResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -39609,11 +39707,13 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/msgrequests:
     post:
-      summary: Create message-based transaction request
+      summary: Sign off-chain message
       description: |-
-        Create a transaction request for signing a message with the wallet keys.
-        Wallet requirement: Only multi-party computation (MPC) wallets are supported.
-        Supported chains: EVM-compatible chains (ETH, BSC, Polygon, etc.), Solana, and Cardano. UTXO-based chains (Bitcoin, Litecoin, etc.) are not supported.
+        Create a transaction request for signing an off-chain message with your keys for an MPC wallet. Use this endpoint when you need to produce a cryptographic signature over arbitrary data without broadcasting a transaction on-chain. Common use cases include proving wallet ownership to a dApp, signing authentication challenges, and signing EIP-191 or EIP-712 typed data.
+
+        Use only for MPC wallets. Supported chains include EVM-compatible chains (ETH, BSC, Polygon, etc.), Solana, and Cardano. UTXO-based chains (Bitcoin, Litecoin, etc.) are not supported.
+
+        To execute on-chain transactions with custom instructions (such as signing an on-chain message), use [Create transaction request](/reference/v2wallettxrequestcreate).
       operationId: v2.wallet.msgrequests.create
       tags:
         - Wallet
@@ -39791,8 +39891,8 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/txrequests/{txRequestId}:
     put:
-      summary: Update Transaction Request For Wallet
-      description: Route to update transaction request for wallet
+      summary: Cancel transaction request
+      description: Cancel a transaction request that has not yet been fully signed or delivered. The only supported state transition is to "canceled". For transaction request full, the request must be in "pendingApproval" or "pendingDelivery" state. For transaction request lite, the request must be in "pendingApproval", "pendingUserCommitment", "pendingUserGShare", "pendingUserRShare", or "pendingUserSignature" state.
       operationId: v2.wallet.txrequest.update
       tags:
         - Transaction request
@@ -40097,8 +40197,8 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/txrequests/{txRequestId}/coinSpecific:
     put:
-      summary: Update CoinSpecific field for Transaction Request For Wallet
-      description: Route to update transaction request coinSpecific for wallet
+      summary: Update coin-specific data for transaction request
+      description: Update coin-specific metadata on an existing unsigned transaction within a transaction request. Requires spend permission on the wallet. Currently, this endpoint is for use only with Bitcoin Lightning.
       operationId: v2.wallet.txrequest.coinSpecific.update
       tags:
         - Transaction request
@@ -40572,8 +40672,8 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/txrequests/rebuild:
     post:
-      summary: Rebuild transaction requests
-      description: Rebuild multiple transaction requests for a wallet. This is for convenience. The txRequests rebuild in sequential order based on creation date.
+      summary: Rebuild multiple transaction requests
+      description: Rebuild the unsigned transactions for multiple transaction requests in a single call. A rebuild resets existing signature shares and reconstructs each unsigned transaction from its original intent, which is necessary when a previously built transaction becomes invalid (for example, due to a changed nonce or updated fee estimate). Transaction requests are rebuilt sequentially in creation-date order.
       operationId: v2.wallet.txrequests.rebuild
       tags:
         - Transaction request
@@ -48781,6 +48881,7 @@ components:
                 enum:
                   - unverifiedRule
                   - fastWithdrawal
+                  - caasWaiverThreshold
                 description: the source that verified this entry (unverifiedRule or fastWithdrawal)
             required:
               - item
@@ -48813,6 +48914,7 @@ components:
           enum:
             - unverifiedRule
             - fastWithdrawal
+            - caasWaiverThreshold
           description: the source that verified this entry (unverifiedRule or fastWithdrawal)
       required:
         - item
@@ -64839,6 +64941,117 @@ components:
       required:
         - amountString
         - timeWindow
+    ListAccessTokensResponse:
+      title: ListAccessTokensResponse
+      type: object
+      properties:
+        accessTokens:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              isExtensible:
+                type: boolean
+              bitgoAdminPermissions:
+                type: array
+                items:
+                  type: string
+              client:
+                type: string
+              created:
+                type: string
+                format: date-time
+                title: ISO Date String
+              enterprise:
+                type: string
+              expires:
+                type: string
+                format: date-time
+                title: ISO Date String
+              extensionAddress:
+                type: string
+              ip:
+                type: string
+                description: IP address of the client that requested this access token
+                example: 127.0.0.1
+                format: ipv4
+              ipRestrict:
+                type: array
+                items:
+                  type: string
+                  description: IP addresses or CIDR block of clients that are allowed to use this token
+              label:
+                type: string
+              origin:
+                type: string
+                description: BitGo environment that issued this token
+                example: test.bitgo.com
+              token:
+                type: string
+              scope:
+                type: array
+                example:
+                  - crypto_compare
+                  - user_manage
+                  - openid
+                  - profile
+                  - wallet_create
+                  - wallet_manage_all
+                  - wallet_approve_all
+                  - wallet_spend_all
+                  - wallet_edit_all
+                  - wallet_view_all
+                items:
+                  type: string
+                  description: Session permissions
+              unlock:
+                allOf:
+                  - type: object
+                    properties:
+                      spendingLimits:
+                        type: object
+                        additionalProperties:
+                          type: object
+                          properties:
+                            txCount:
+                              type: number
+                              description: The transaction count limit for the coin
+                            txValue:
+                              type: number
+                              description: The transaction value limit for the coin
+                            txValueLimit:
+                              type: number
+                              description: The maximum transaction value limit for the coin
+                      allErc20TokensLimit:
+                        $ref: '#/components/schemas/AllErc20TokenLimit'
+                  - $ref: '#/components/schemas/Unlock'
+              user:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              oauth:
+                type: object
+                properties:
+                  oauthRequired:
+                    type: boolean
+                  expires:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+              isMobileAccessToken:
+                type: boolean
+                description: Flag indicating if this token was created via mobile session endpoint
+            required:
+              - id
+              - isExtensible
+        nextBatchPrevId:
+          type: string
+      required:
+        - accessTokens
     ListAuditLogsResponse:
       title: ListAuditLogsResponse
       type: object
