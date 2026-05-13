@@ -29726,6 +29726,233 @@ paths:
           $ref: '#/components/responses/ForbiddenError2'
         '500':
           $ref: '#/components/responses/InternalServerError1'
+  /api/sumsub-service/v1/idv/{idvId}:
+    get:
+      summary: Get Sumsub IDV status
+      description: Returns the current identity verification status for the given IDV record. Does not refresh the WebSDK URL — call POST /v1/idv to initiate or retry.
+      operationId: sumsub.get.v1.idv.id
+      tags:
+        - Identity Verification (IDV)
+      x-internal: false
+      parameters:
+        - name: idvId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The IDV record ID
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  idvId:
+                    type: string
+                  status:
+                    type: string
+                    enum:
+                      - pending
+                      - action_required
+                      - approved
+                      - rejected
+                  userId:
+                    type: string
+                  enterpriseId:
+                    type: string
+                  organizationId:
+                    type: string
+                    nullable: true
+                  rejectLabels:
+                    type: array
+                    items:
+                      type: string
+                    nullable: true
+                required:
+                  - idvId
+                  - status
+                  - userId
+                  - enterpriseId
+                  - organizationId
+                  - rejectLabels
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+  /api/sumsub-service/v1/idv:
+    post:
+      summary: Initiate Sumsub IDV for a user
+      description: Initiates the Sumsub identity verification flow for a user within an enterprise. Returns a WebSDK URL when verification is pending, or a completion status if the user has already been verified.
+      operationId: sumsub.post.v1.idv
+      tags:
+        - Identity Verification (IDV)
+      x-internal: false
+      parameters: []
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                userId:
+                  type: string
+                  description: The BitGo user ID
+                enterpriseId:
+                  type: string
+                  description: The BitGo enterprise ID
+                sumsubShareToken:
+                  type: string
+                  minLength: 1
+                  description: Share token to copy an existing applicant from another Sumsub environment
+              required:
+                - userId
+                - enterpriseId
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                discriminator:
+                  propertyName: status
+                oneOf:
+                  - type: object
+                    properties:
+                      idvId:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - pending
+                      url:
+                        type: string
+                      expiresAt:
+                        type: string
+                    required:
+                      - idvId
+                      - status
+                      - url
+                      - expiresAt
+                    title: Pending
+                  - type: object
+                    properties:
+                      idvId:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - action_required
+                      url:
+                        type: string
+                      expiresAt:
+                        type: string
+                    required:
+                      - idvId
+                      - status
+                      - url
+                      - expiresAt
+                    title: Action Required
+                  - type: object
+                    properties:
+                      idvId:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - approved
+                    required:
+                      - idvId
+                      - status
+                    title: Approved
+                  - type: object
+                    properties:
+                      idvId:
+                        type: string
+                      status:
+                        type: string
+                        enum:
+                          - rejected
+                    required:
+                      - idvId
+                      - status
+                    title: Rejected
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
   /api/fiat/v1/transaction/ach-debit:
     post:
       summary: Initiate ACH deposit
