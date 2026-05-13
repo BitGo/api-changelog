@@ -1052,331 +1052,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/wallet/{walletId}/txrequests:
-    post:
-      tags:
-        - Transaction request
-      summary: Create transaction request
-      description: Create a transaction request for a self-custody MPC hot wallet. To learn more about transacting from other wallet types, see [Withdraw Overview](/docs/withdraw-overview).
-      operationId: v2.wallet.txrequest.create
-      parameters:
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateTransactionRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformTransactionRequest'
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformTransactionRequest'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformPlatformError'
-                  - $ref: '#/components/schemas/DuplicateSequenceId'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformPlatformError'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformPlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformPlatformError'
-    get:
-      summary: List transaction requests by wallet
-      description: Get a paginated list of transaction requests filtered by wallet. Use only with MPC wallets.
-      operationId: v2.wallet.txrequest.get
-      tags:
-        - Transaction request
-      parameters:
-        - name: txRequestIds
-          description: If provided, only the specified transaction requests will be returned.
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              description: If provided, only the specified transaction requests will be returned.
-        - name: idempotencyKeys
-          description: If provided, only transaction requests with the matching idempotencyKeys will be returned.
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              description: If provided, only transaction requests with the matching idempotencyKeys will be returned.
-        - name: sequenceIds
-          description: A "sequenceId" is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a "sequenceId" you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per "sequenceId" (and fails all subsequent attempts), you can retry sending without the risk of double spending. The "sequenceId" is only visible to users on the wallet and is not shared publicly.
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              description: A "sequenceId" is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a "sequenceId" you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per "sequenceId" (and fails all subsequent attempts), you can retry sending without the risk of double spending. The "sequenceId" is only visible to users on the wallet and is not shared publicly.
-        - name: intentTypes
-          description: If provided, only transaction requests with the specified intent types will be returned.
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-                - payment
-                - consolidate
-                - consolidateToken
-                - fanout
-                - vote
-                - createAccount
-                - updateAccount
-                - addTrustLine
-                - removeTrustLine
-                - signMessage
-                - signTypedStructuredData
-                - enableToken
-                - acceleration
-                - transferToken
-                - fillNonce
-                - walletRecovery
-                - contractCall
-                - customTx
-                - closeAssociatedTokenAccount
-                - transferAcknowledge
-                - transferAccept
-                - transferReject
-                - stake
-                - unstake
-                - delegate
-                - undelegate
-                - switchValidator
-                - claim
-                - stakeClaimRewards
-                - pledge
-                - voteDelegation
-                - authorize
-                - deactivate
-                - createBtcDelegation
-                - goUnstake
-                - stakeWithCallData
-                - unstakeWithCallData
-                - validatorRegistration
-                - increaseStake
-                - decreaseStake
-                - signalExit
-                - withdrawStake
-                - switchValidatorWithCallData
-                - spotTransfer
-              description: If provided, only transaction requests with the specified intent types will be returned.
-        - name: excludeIntentTypes
-          description: If provided, transaction requests with the specified intent types will be excluded.
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-                - payment
-                - consolidate
-                - consolidateToken
-                - fanout
-                - vote
-                - createAccount
-                - updateAccount
-                - addTrustLine
-                - removeTrustLine
-                - signMessage
-                - signTypedStructuredData
-                - enableToken
-                - acceleration
-                - transferToken
-                - fillNonce
-                - walletRecovery
-                - contractCall
-                - customTx
-                - closeAssociatedTokenAccount
-                - transferAcknowledge
-                - transferAccept
-                - transferReject
-                - stake
-                - unstake
-                - delegate
-                - undelegate
-                - switchValidator
-                - claim
-                - stakeClaimRewards
-                - pledge
-                - voteDelegation
-                - authorize
-                - deactivate
-                - createBtcDelegation
-                - goUnstake
-                - stakeWithCallData
-                - unstakeWithCallData
-                - validatorRegistration
-                - increaseStake
-                - decreaseStake
-                - signalExit
-                - withdrawStake
-                - switchValidatorWithCallData
-                - spotTransfer
-              description: If provided, transaction requests with the specified intent types will be excluded.
-        - name: states
-          description: |-
-            If provided, only transaction requests of the specified state will be returned.
-            - `canceled`: Canceled by a wallet spender before approval or sending.
-            - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
-            - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
-            - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
-            - `pendingApproval`: Triggered a policy that requires approval to proceed.
-            - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
-            - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
-            - `pendingUserGShare`: Ready to receive your gShare.
-            - `pendingUserRShare`: Ready to receive your rShare.
-            - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
-            - `readyToSend`: Ready send (share combination is complete).
-            - `rejected`: Rejected by an approver.
-            - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
-          in: query
-          schema:
-            type: array
-            items:
-              type: string
-              enum:
-                - pendingApproval
-                - canceled
-                - rejected
-                - initialized
-                - pendingDelivery
-                - delivered
-                - pendingUserSignature
-                - pendingUserCommitment
-                - pendingUserRShare
-                - pendingUserGShare
-                - readyToSend
-                - signed
-                - failed
-              description: |-
-                If provided, only transaction requests of the specified state will be returned.
-                - `canceled`: Canceled by a wallet spender before approval or sending.
-                - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
-                - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
-                - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
-                - `pendingApproval`: Triggered a policy that requires approval to proceed.
-                - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
-                - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
-                - `pendingUserGShare`: Ready to receive your gShare.
-                - `pendingUserRShare`: Ready to receive your rShare.
-                - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
-                - `readyToSend`: Ready send (share combination is complete).
-                - `rejected`: Rejected by an approver.
-                - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
-        - name: latest
-          description: If provided, only the latest transaction request version will be returned.
-          in: query
-          schema:
-            type: boolean
-        - name: limit
-          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
-          in: query
-          schema:
-            type: string
-            default: '25'
-            minimum: 1
-            maximum: 500
-            format: number
-        - name: prevId
-          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
-          in: query
-          schema:
-            type: string
-            example: 59cd72485007a239fb00282ed480da1f
-            pattern: ^[0-9a-f]{32}$
-        - name: version
-          in: query
-          schema:
-            type: string
-            format: number
-        - name: sortBy
-          description: Sorts by specified field, default sorting by id.
-          in: query
-          schema:
-            type: string
-            enum:
-              - id
-              - createdDate
-        - name: sortDirection
-          description: Sorts order by field in specified sort direction, default ascending.
-          in: query
-          schema:
-            type: string
-            enum:
-              - ASC
-              - DESC
-        - name: dateLt
-          description: Optional get transaction requests less than date
-          in: query
-          schema:
-            type: string
-            format: date-time
-            title: ISO Date String
-        - name: dateGte
-          description: Optional get transaction requests greater than or equal to date
-          in: query
-          schema:
-            type: string
-            format: date-time
-            title: ISO Date String
-        - name: includeEvmKeyringTxRequests
-          description: If true, include transaction requests for all EVM keyring related wallets (main + derived).
-          in: query
-          schema:
-            type: boolean
-        - name: walletId
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/WalletIdString'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GetTransactionRequestsResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/address-book/v1/block-list:
     get:
       summary: Get Block Lists
@@ -25667,7 +25342,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
-                  - $ref: '#/components/schemas/DuplicateSequenceId1'
+                  - $ref: '#/components/schemas/DuplicateSequenceId'
                   - $ref: '#/components/schemas/InvalidOFAC'
         '423':
           description: Locked
@@ -38008,24 +37683,24 @@ paths:
                     - `trade_trade` - Initiate trades.
                     - `trade_view` - View trades.
                     - `trade_fix` - Access the Trade FIX API gateway.
-                    - `wallet_approve` - Approve policies and transactions for a wallet where the user is a wallet admin.
+                    - `wallet_approve` - Approve policies and transactions for a wallet where the user is a wallet admin. Requires wallet context: use `["wallet_approve:walletId"]`.
                     - `wallet_approve_all` - Approve transactions for any wallet where the user is a wallet admin within any enterprise to which the user belongs.
                     - `wallet_approve_enterprise` - Approve transactions for any wallet where the user is a wallet admin within a single enterprise.
                     - `wallet_create` - Create wallets.
-                    - `wallet_edit` - Edit comments on a transfer.
+                    - `wallet_edit` - Edit comments on a transfer. Requires wallet context: use `["wallet_edit:walletId"]`.
                     - `wallet_edit_all` - Edit comments on all transfers within multiple enterprises.
                     - `wallet_edit_enterprise` - [DEPRECATED] Edit comments on all transfers within a single enterprise.
-                    - `wallet_freeze` - Freeze a wallet.
+                    - `wallet_freeze` - Freeze a wallet. Requires wallet context: use `["wallet_freeze:walletId"]`.
                     - `wallet_freeze_all` - Freeze any wallet within any enterprises to which the user belongs.
-                    - `wallet_manage` - Manage settings for a wallet where the user is a wallet admin.
+                    - `wallet_manage` - Manage settings for a wallet where the user is a wallet admin. Requires wallet context: use `["wallet_manage:walletId"]` where `walletId` is the specific wallet ID. For managing multiple or all wallets, use `wallet_manage_all` or `wallet_manage_enterprise`.
                     - `wallet_manage_all` - Manage settings for any wallet where the user is a wallet admin within any enterprise to which the user belongs.
                     - `wallet_manage_enterprise` - Manage settings for any wallet where the user is a wallet admin within a single enterprise.
-                    - `wallet_spend` - Initiate transactions from a wallet.
+                    - `wallet_spend` - Initiate transactions from a wallet. Requires wallet context: use `["wallet_spend:walletId"]`.
                     - `wallet_spend_all` - Initiate transactions from any wallet within any enterprise to which the user belongs.
                     - `wallet_spend_enterprise` - Initiate transactions from any wallet within a single enterprise.
-                    - `wallet_stake` - Initiate staking transactions from a wallet.
+                    - `wallet_stake` - Initiate staking transactions from a wallet. Requires wallet context: use `["wallet_stake:walletId"]`.
                     - `wallet_stake_all` - Initiate staking transactions from any wallet within any enterprise to which the user belongs.
-                    - `wallet_view` - View a wallet.
+                    - `wallet_view` - View a wallet. Requires wallet context: use `["wallet_view:walletId"]`.
                     - `wallet_view_all` - View any wallet within any enterprise to which the user belongs.
                     - `wallet_view_enterprise` - View any wallet within a single enterprise.
                 duration:
@@ -39846,6 +39521,382 @@ paths:
                 $ref: '#/components/schemas/WalletMPCv2MigrationStatus'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/txrequests:
+    get:
+      summary: List transaction requests by wallet
+      description: Get a paginated list of transaction requests filtered by wallet. Use only with MPC wallets.
+      operationId: v2.wallet.txrequest.get
+      tags:
+        - Transaction request
+      parameters:
+        - name: txRequestIds
+          description: If provided, only the specified transaction requests will be returned.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: If provided, only the specified transaction requests will be returned.
+        - name: idempotencyKeys
+          description: If provided, only transaction requests with the matching idempotencyKeys will be returned.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: If provided, only transaction requests with the matching idempotencyKeys will be returned.
+        - name: sequenceIds
+          description: A "sequenceId" is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a "sequenceId" you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per "sequenceId" (and fails all subsequent attempts), you can retry sending without the risk of double spending. The "sequenceId" is only visible to users on the wallet and is not shared publicly.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              description: A "sequenceId" is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended. With a "sequenceId" you can easily reference transfers and transactions&mdash;for example, to safely retry sending. Because the system only confirms one send request per "sequenceId" (and fails all subsequent attempts), you can retry sending without the risk of double spending. The "sequenceId" is only visible to users on the wallet and is not shared publicly.
+        - name: intentTypes
+          description: If provided, only transaction requests with the specified intent types will be returned.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - payment
+                - consolidate
+                - consolidateToken
+                - fanout
+                - vote
+                - createAccount
+                - updateAccount
+                - addTrustLine
+                - removeTrustLine
+                - signMessage
+                - signTypedStructuredData
+                - enableToken
+                - acceleration
+                - transferToken
+                - fillNonce
+                - walletRecovery
+                - contractCall
+                - customTx
+                - closeAssociatedTokenAccount
+                - transferAcknowledge
+                - transferAccept
+                - transferReject
+                - stake
+                - unstake
+                - delegate
+                - undelegate
+                - switchValidator
+                - claim
+                - stakeClaimRewards
+                - pledge
+                - voteDelegation
+                - authorize
+                - deactivate
+                - createBtcDelegation
+                - goUnstake
+                - stakeWithCallData
+                - unstakeWithCallData
+                - validatorRegistration
+                - increaseStake
+                - decreaseStake
+                - signalExit
+                - withdrawStake
+                - switchValidatorWithCallData
+                - spotTransfer
+              description: If provided, only transaction requests with the specified intent types will be returned.
+        - name: excludeIntentTypes
+          description: If provided, transaction requests with the specified intent types will be excluded.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - payment
+                - consolidate
+                - consolidateToken
+                - fanout
+                - vote
+                - createAccount
+                - updateAccount
+                - addTrustLine
+                - removeTrustLine
+                - signMessage
+                - signTypedStructuredData
+                - enableToken
+                - acceleration
+                - transferToken
+                - fillNonce
+                - walletRecovery
+                - contractCall
+                - customTx
+                - closeAssociatedTokenAccount
+                - transferAcknowledge
+                - transferAccept
+                - transferReject
+                - stake
+                - unstake
+                - delegate
+                - undelegate
+                - switchValidator
+                - claim
+                - stakeClaimRewards
+                - pledge
+                - voteDelegation
+                - authorize
+                - deactivate
+                - createBtcDelegation
+                - goUnstake
+                - stakeWithCallData
+                - unstakeWithCallData
+                - validatorRegistration
+                - increaseStake
+                - decreaseStake
+                - signalExit
+                - withdrawStake
+                - switchValidatorWithCallData
+                - spotTransfer
+              description: If provided, transaction requests with the specified intent types will be excluded.
+        - name: states
+          description: |-
+            If provided, only transaction requests of the specified state will be returned.
+            - `canceled`: Canceled by a wallet spender before approval or sending.
+            - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
+            - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
+            - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
+            - `pendingApproval`: Triggered a policy that requires approval to proceed.
+            - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
+            - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
+            - `pendingUserGShare`: Ready to receive your gShare.
+            - `pendingUserRShare`: Ready to receive your rShare.
+            - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
+            - `readyToSend`: Ready send (share combination is complete).
+            - `rejected`: Rejected by an approver.
+            - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - pendingApproval
+                - canceled
+                - rejected
+                - initialized
+                - pendingDelivery
+                - delivered
+                - pendingUserSignature
+                - pendingUserCommitment
+                - pendingUserRShare
+                - pendingUserGShare
+                - readyToSend
+                - signed
+                - failed
+              description: |-
+                If provided, only transaction requests of the specified state will be returned.
+                - `canceled`: Canceled by a wallet spender before approval or sending.
+                - `delivered`: Inserted into the send queue (or rejected by BitGo through circuit breakers). This state is only used with apiVersion "full".
+                - `failed` : Catch-all state indicating an unrecoverable failure (such as a duplicate key error when creating a transfer).
+                - `initialized`: First state when a transaction request is created (before any policy evaluation occurs).
+                - `pendingApproval`: Triggered a policy that requires approval to proceed.
+                - `pendingDelivery`: Requires further action to proceed (such as pending signature, or accepting/rejecting due to triggering a circuit breaker). This state is only used with apiVersion "full".
+                - `pendingUserCommitment`: Ready to receive your user commitments. This state is only used with apiVersion "lite" and EdDSA assets with commitment signing states.
+                - `pendingUserGShare`: Ready to receive your gShare.
+                - `pendingUserRShare`: Ready to receive your rShare.
+                - `pendingUserSignature`: Ready to receive your user signature (get the unsigned transaction from BitGo and sign it). This state is only used with apiVersion "lite" and EdDSA assets without commitment signing states.
+                - `readyToSend`: Ready send (share combination is complete).
+                - `rejected`: Rejected by an approver.
+                - `signed`: All transactions in the transaction request were signed. All future updates will be in the transfer document.
+        - name: latest
+          description: If provided, only the latest transaction request version will be returned.
+          in: query
+          schema:
+            type: boolean
+        - name: limit
+          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
+          in: query
+          schema:
+            type: string
+            default: '25'
+            minimum: 1
+            maximum: 500
+            format: number
+        - name: prevId
+          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
+          in: query
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+        - name: version
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: sortBy
+          description: Sorts by specified field, default sorting by id.
+          in: query
+          schema:
+            type: string
+            enum:
+              - id
+              - createdDate
+        - name: sortDirection
+          description: Sorts order by field in specified sort direction, default ascending.
+          in: query
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
+        - name: dateLt
+          description: Optional get transaction requests less than date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: dateGte
+          description: Optional get transaction requests greater than or equal to date
+          in: query
+          schema:
+            type: string
+            format: date-time
+            title: ISO Date String
+        - name: includeEvmKeyringTxRequests
+          description: If true, include transaction requests for all EVM keyring related wallets (main + derived).
+          in: query
+          schema:
+            type: boolean
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTransactionRequestsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Create transaction request
+      description: |-
+        Allows users to create a transaction request given they have spender
+        permissions on the wallet. Use only with MPC wallets. For multisignature
+        wallets, use Build a transaction.
+      operationId: v2.wallet.txrequest.create
+      tags:
+        - Transaction request
+      x-internal: false
+      parameters:
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for creating a transaction request.
+                Specifies the intent and optional metadata for the transaction.
+              properties:
+                apiVersion:
+                  type: string
+                  enum:
+                    - lite
+                    - full
+                  description: Full or Light to differentiate between the different transaction request flows.
+                idempotencyKey:
+                  type: string
+                  description: The combination of the idempotencyKey, version and walletId has to be unique. If no idempotencyKey is specified then it remains undefined for the txRequest. Note, version is an internal field that is auto incremented on every update to a txRequest.
+                intent:
+                  type: object
+                  properties:
+                    intentType:
+                      allOf:
+                        - $ref: '#/components/schemas/IntentType'
+                      description: The type of the intent
+                    comment:
+                      type: string
+                      description: Only visible to users on the wallet and not shared publicly
+                    sequenceId:
+                      type: string
+                      description: A unique wallet identifier applied to transfers and transactions at creation
+                    nonce:
+                      oneOf:
+                        - type: string
+                        - type: number
+                      description: The nonce of the transaction
+                  required:
+                    - intentType
+                videoApprovers:
+                  type: array
+                  items:
+                    type: string
+                    description: (Custodial) Specify who should perform the Video ID with Trust if one should be required.
+                preview:
+                  type: boolean
+                  description: When set to true, the transaction request is returned without being stored in the DB.
+              required:
+                - intent
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionRequest1'
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionRequest1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -55969,32 +56020,6 @@ components:
         userPublicGpgKey:
           type: string
           description: User’s public key of the gpg key.
-    CreateTransactionRequest:
-      type: object
-      properties:
-        idempotencyKey:
-          type: string
-          description: The combination of the idempotencyKey, version and walletId has to be unique. If no idempotencyKey is specified then it remains undefined for the txRequest. Note, version is an internal field that is auto incremented on every update to a txRequest.
-        intent:
-          $ref: '#/components/schemas/TransactionRequestIntent'
-        videoApprovers:
-          allOf:
-            - $ref: '#/components/schemas/IdArray'
-          description: (Custodial) Specify who should perform the Video ID with Trust if one should be required.
-        apiVersion:
-          type: string
-          description: Full or Light to differentiate between the different transaction request flows.
-          enum:
-            - lite
-            - full
-          default: full
-        preview:
-          type: boolean
-          description: |
-            When set to true, the transaction request is returned without being stored in the DB.
-          default: false
-      required:
-        - intent
     CreateWallet:
       type: object
       properties:
@@ -57858,18 +57883,6 @@ components:
         - $ref: '#/components/schemas/WithdrawIntent'
         - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
     DuplicateSequenceId:
-      title: Duplicate SequenceId
-      allOf:
-        - $ref: '#/components/schemas/PlatformPlatformError'
-        - properties:
-            name:
-              type: string
-              description: Error code
-              enum:
-                - DuplicateSequenceId
-          required:
-            - name
-    DuplicateSequenceId1:
       title: Duplicate SequenceId
       allOf:
         - $ref: '#/components/schemas/PlatformError3'
