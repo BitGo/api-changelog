@@ -7776,26 +7776,7 @@ paths:
                     Can contain additional context or information about the purpose of the settlement.
                   minLength: 1
                 settlementAmounts:
-                  allOf:
-                    - $ref: '#/components/schemas/SettlementAmountsRecord'
-                  description: |-
-                    Contains instructions for the settlement. 
-                    There are two options for the settlementAmounts record:
-                    - Connection liabilities
-                     - Expresses amounts owed to connections and owed by connections.
-                     - Structured as a Record<ConnectionId, Record<Currency, Amount>>.
-                       - Amount is either base units integer string or full units decimal string depending on
-                       partners configuration.  
-                       - (+ amount for connection gain, - amount for connection loss)
-                     - Can be used by broker partners or exchange partners, 
-                     however for broker partners the amounts for each currency must net to 0 (spread not yet supported).
-                    - Connection to connection liabilities
-                     - Expresses amounts each connection owes to one another.
-                     - Structured as a Record<ConnectionId, Record<ConnectionId, Record<Currency, Amount>>>
-                       - Amount is either base units integer string or full units decimal string depending on
-                       partners configuration.
-                       - (+ amount for connection gain, - amount for connection loss)
-                    This allows the API to handle both settlement patterns with a single type.
+                  $ref: '#/components/schemas/UnmappedSettlementAmountsRecord'
                 nonce:
                   type: string
                   description: |-
@@ -7889,26 +7870,7 @@ paths:
                     Can contain additional context or information about the purpose of the settlement.
                   minLength: 1
                 settlementAmounts:
-                  allOf:
-                    - $ref: '#/components/schemas/SettlementAmountsRecord'
-                  description: |-
-                    Contains instructions for the settlement. 
-                    There are two options for the settlementAmounts record:
-                    - Connection liabilities
-                     - Expresses amounts owed to connections and owed by connections.
-                     - Structured as a Record<ConnectionId, Record<Currency, Amount>>.
-                       - Amount is either base units integer string or full units decimal string depending on
-                       partners configuration.  
-                       - (+ amount for connection gain, - amount for connection loss)
-                     - Can be used by broker partners or exchange partners, 
-                     however for broker partners the amounts for each currency must net to 0 (spread not yet supported).
-                    - Connection to connection liabilities
-                     - Expresses amounts each connection owes to one another.
-                     - Structured as a Record<ConnectionId, Record<ConnectionId, Record<Currency, Amount>>>
-                       - Amount is either base units integer string or full units decimal string depending on
-                       partners configuration.
-                       - (+ amount for connection gain, - amount for connection loss)
-                    This allows the API to handle both settlement patterns with a single type.
+                  $ref: '#/components/schemas/UnmappedSettlementAmountsRecord'
                 nonce:
                   type: string
                   description: |-
@@ -55435,34 +55397,6 @@ components:
           required:
             - validatorAddress
         - $ref: '#/components/schemas/WithdrawIntent'
-    CounterpartyPartySettlementAmountsRecord:
-      title: CounterpartyPartySettlementAmountsRecord
-      type: object
-      additionalProperties:
-        type: object
-        additionalProperties:
-          type: object
-          additionalProperties:
-            type: string
-          description: |-
-            For mapped settlement amounts where the amount will always be a bigint.
-            This ensures consistent handling of large monetary values in settlements.
-        description: |-
-          Maps destination connection IDs to currency amounts for settlement.
-
-          Record<Party (destination) connectionId, Record<Currency, Amount (bigint)>>
-
-          Used for exchange-style settlements, where the exchange is always the source and
-          client owned connections are the destination. Each entry maps a destination
-          connection ID to the currency amounts being settled to that connection.
-      description: |-
-        Maps source connection IDs to destination connections and their currency amounts.
-
-        Record<Counterparty (source) connectionId, Record<Party (dest) connectionId, Record<Currency, Amount (bigint)>>>
-
-        Used for broker-style settlements, where the source and destination are both client-owned 
-        connections. This structure allows specifying multiple source connections, each with multiple
-        destination connections, and the currency amounts being settled between them.
     CountryAddress:
       title: CountryAddress
       type: object
@@ -73803,11 +73737,6 @@ components:
         - origin
         - scope
         - user
-    SettlementAmountsRecord:
-      title: SettlementAmountsRecord
-      oneOf:
-        - $ref: '#/components/schemas/PartySettlementAmountsRecord'
-        - $ref: '#/components/schemas/CounterpartyPartySettlementAmountsRecord'
     SettlementClearingMethod:
       title: SettlementClearingMethod
       type: string
