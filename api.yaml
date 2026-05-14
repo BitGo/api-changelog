@@ -27865,6 +27865,7 @@ paths:
       summary: Cancel staking request
       description: Cancel an existing staking request.
       operationId: v1.staking.request.cancel
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -27895,6 +27896,7 @@ paths:
       summary: Retry staking request
       description: Try to resubmit the failed staking transaction
       operationId: v1.staking.request.retry
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathStakingRequestId'
@@ -27924,6 +27926,7 @@ paths:
       summary: Create staking request
       description: Create a staking request of type STAKE or UNSTAKE.
       operationId: v1.staking.request.create
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -28467,6 +28470,7 @@ paths:
       summary: List staking requests by asset
       description: Retrieve staking requests for a user's wallet.
       operationId: v1.user.staking.request
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -28515,6 +28519,7 @@ paths:
       summary: List Staking Requests for a Wallet
       description: List staking requests for a wallet.
       operationId: v1.staking.request.list
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathWalletId1'
         - $ref: '#/components/parameters/queryCoins'
@@ -28595,6 +28600,7 @@ paths:
       summary: List staking requests by ID
       description: Retrieve A Specific Staking Request.
       operationId: v1.staking.request
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathStakingRequestId'
         - $ref: '#/components/parameters/queryExpandBuildParams'
@@ -28652,6 +28658,7 @@ paths:
       summary: List staking requests by enterprise
       description: Retrieve staking requests and staking transactions for a given enterprise and query params.
       operationId: v1.staking.transactions
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathEnterpriseId1'
         - $ref: '#/components/parameters/queryCoins'
@@ -28750,6 +28757,7 @@ paths:
       summary: Get a staking transaction
       description: Retrieve details of a staking transaction for a given wallet and staking request.
       operationId: v1.staking.transaction.get
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -28804,6 +28812,7 @@ paths:
       summary: Sign staking transaction
       description: Use to act on a transaction like sending a transaction
       operationId: v1.staking.transaction.act
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -28865,6 +28874,7 @@ paths:
       summary: List staking details by wallet
       description: Get staking wallet information including staking delegated balance, rewards accrued, and rewards accrual annual percentage rate.
       operationId: v1.stakingWallet.get
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -28903,6 +28913,7 @@ paths:
       summary: List staking delegations
       description: Retrieve staking wallet delegation information.
       operationId: v1.staking.wallet.delegations
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -28996,6 +29007,7 @@ paths:
       summary: Get staking totals at the enterprise level
       description: Retrieve staking totals across all coins for a given enterprise, including delegated balances, rewards, and staking metadata.
       operationId: v1.staking.enterprise.allCoins
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathEnterpriseId1'
         - $ref: '#/components/parameters/queryPage'
@@ -29032,6 +29044,7 @@ paths:
       summary: List staking details by enterprise
       description: Retrieve staking information such as delegated balance, rewards accrued, and rewards accrual annual percentage rate.
       operationId: v1.staking.enterprise
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathEnterpriseId1'
@@ -29064,6 +29077,7 @@ paths:
       summary: List staking details by enterprise tokens
       description: Retrieve staking information at the enterprise and token level.
       operationId: v1.staking.enterprise.tokens
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathEnterpriseId1'
@@ -29093,6 +29107,7 @@ paths:
       summary: Get staking reward history
       description: Retrieve staking reward history.
       operationId: v1.staking.reward.history
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - name: enterpriseId
@@ -29225,11 +29240,13 @@ paths:
           $ref: '#/components/responses/InternalServerError1'
   /api/staking/v1/{coin}/wallets/{walletId}/delegations/accruals:
     get:
+      deprecated: true
       tags:
         - Staking History
       summary: Get staking accrual history
-      description: Retrieve staking delegation accrual history.
+      description: '**Deprecated.** This endpoint is being decommissioned. Please use `/{coin}/reward-accrual-report` (https://app.bitgo-test.com/api/staking/v1/{coin}/reward-accrual-report) for reward reports. Retrieve staking delegation accrual history.'
       operationId: v1.staking.reward.accrual
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -29282,6 +29299,7 @@ paths:
       summary: List staking wallet tokens
       description: Get staking wallets for a specific wallet ID that has been used for staking tokens.
       operationId: v1.staking.wallet.tokens
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -29313,6 +29331,7 @@ paths:
       summary: Get staking requirements
       description: Retrieve staking wallet state attribute information.
       operationId: v1.staking.wallet.attributes
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -29371,6 +29390,7 @@ paths:
       summary: List coins available for staking
       description: Retrieve a list of coins available for staking and additional information.
       operationId: v1.staking.coins
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/queryPage'
         - $ref: '#/components/parameters/queryPageSize1'
@@ -29411,6 +29431,7 @@ paths:
       summary: List staking validators for a wallet
       description: Returns a list of staking validators for a wallet, and includes the total delegated amount and the amount of accrued rewards.
       operationId: v1.validators.list
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin2'
         - $ref: '#/components/parameters/pathWalletId1'
@@ -29465,6 +29486,7 @@ paths:
       summary: List staking partnered validators
       description: Returns a list of staking partnered validators.
       operationId: v1.partneredValidators.list
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/coin1'
         - name: enterpriseId
@@ -29536,6 +29558,7 @@ paths:
       summary: Get staking license
       description: Returns a staking license for the given enterprise.
       operationId: v1.license
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathEnterpriseId1'
       responses:
@@ -29565,6 +29588,7 @@ paths:
       summary: List staking rewards
       description: Returns total rewards per staking wallet for an enterprise.
       operationId: v1.enterprise.stakingWallets.list
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathEnterpriseId1'
         - $ref: '#/components/parameters/queryCoins'
@@ -29609,6 +29633,7 @@ paths:
       summary: Get list of stake-able coins
       description: Returns a paginated list of stake-able coins for the given enterprise with basic attributes.
       operationId: v1.enterprise.stakingCoins.list
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathEnterpriseId1'
         - $ref: '#/components/parameters/queryPage'
@@ -29643,6 +29668,7 @@ paths:
       summary: List coins available to enterprise for staking
       description: Retrieve a list of coins available for staking.
       operationId: v1.enterprise.stakeableCoins
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathEnterpriseId1'
       responses:
