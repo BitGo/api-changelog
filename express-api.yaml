@@ -2651,7 +2651,7 @@ components:
       required:
         - changed
         - state
-    AccountBaseBuildOptions:
+    AccountBaseBuildOptions1:
       title: AccountBaseBuildOptions
       type: object
       properties:
@@ -2676,14 +2676,6 @@ components:
                 The pool key hash to which the coins will be delegated to.
           required:
             - poolKeyHash
-    Address:
-      title: Address
-      type: object
-      properties:
-        address:
-          $ref: '#/components/schemas/optionalString'
-        option:
-          $ref: '#/components/schemas/optionalUnknownObject'
     Address1:
       title: Address
       type: object
@@ -2839,17 +2831,6 @@ components:
       required:
         - item
         - type
-    Amount:
-      title: Amount
-      type: object
-      properties:
-        value:
-          type: string
-        symbol:
-          type: string
-      required:
-        - value
-        - symbol
     Amount1:
       title: Amount
       type: object
@@ -2904,22 +2885,6 @@ components:
       type: integer
       minimum: 1
       example: 1
-    BaseIntent:
-      title: Intent
-      type: object
-      properties:
-        intentType:
-          $ref: '#/components/schemas/IntentType'
-        sequenceId:
-          $ref: '#/components/schemas/optionalString'
-        comment:
-          $ref: '#/components/schemas/optionalString'
-        nonce:
-          oneOf:
-            - type: string
-            - type: number
-      required:
-        - intentType
     BaseIntent1:
       title: Intent
       type: object
@@ -2958,41 +2923,6 @@ components:
             A `memo` is an additional address feature necessary for identifying a transaction recipient beyond wallet address.
       required:
         - intentType
-    BaseIntentWithRecipients:
-      title: BaseIntentWithRecipients
-      type: object
-      description: |-
-        ============================================================================
-        REUSABLE SCHEMA FRAGMENTS FOR ASSET-CONTAINING INTENTS
-        ============================================================================
-
-        These schemas define reusable building blocks that concrete intent schemas
-        can compose with. They serve multiple purposes:
-
-        1. **Schema Reuse**: Concrete intents can intersect with these fragments
-        2. **Pattern Matching**: getAssetsFromIntent utility matches against these
-        3. **Type Safety**: Ensures consistency across all asset-containing intents
-        4. **Documentation**: Clearly shows which intents handle which asset types
-
-        By using the actual RecipientEntry and TokenRecipientEntry types, we ensure
-        these patterns exactly match the structures used in concrete intents.
-      properties:
-        recipients:
-          type: array
-          items:
-            type: object
-            properties:
-              address:
-                $ref: '#/components/schemas/Address'
-              amount:
-                $ref: '#/components/schemas/Amount'
-              data:
-                $ref: '#/components/schemas/optionalString'
-            required:
-              - address
-              - amount
-      required:
-        - recipients
     BaseIntentWithoutNonce1:
       title: BaseIntentWithoutNonce
       type: object
@@ -3397,7 +3327,7 @@ components:
       title: Consolidate Token
       allOf:
         - $ref: '#/components/schemas/BaseIntent2'
-        - $ref: '#/components/schemas/EthBuildOptions'
+        - $ref: '#/components/schemas/EthBuildOptions1'
         - type: object
           properties:
             intentType:
@@ -3417,7 +3347,7 @@ components:
           required:
             - intentType
             - recipients
-    CosmosContractCallIntent:
+    CosmosContractCallIntent1:
       title: Cosmos Contract Call
       allOf:
         - $ref: '#/components/schemas/BaseIntent2'
@@ -3505,7 +3435,7 @@ components:
         - default
       description: |
         (UTXO only) The default script type to use for change for this wallet. Per transaction, you override the default with the `changeAddressType` parameter. If `default` is provided, it will clear the `changeAddressType` default on the wallet. Note that each UTXO coin has different address types available. For example, Only BTC supports `p2tr`.
-    DotAccountBaseBuildOptions:
+    DotAccountBaseBuildOptions1:
       title: DotAccountBaseBuildOptions
       allOf:
         - type: object
@@ -3538,7 +3468,7 @@ components:
                     - ram
               required:
                 - amount
-        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+        - $ref: '#/components/schemas/AccountBaseBuildOptions1'
     DotPaymentIntent1:
       title: DOT Payment Intent
       allOf:
@@ -3552,7 +3482,7 @@ components:
             - proxy
             - owner
         - $ref: '#/components/schemas/PaymentIntent1'
-        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions1'
     DotProxy:
       title: DotProxy
       type: object
@@ -3582,7 +3512,7 @@ components:
             - amount
             - stakingProxy
         - $ref: '#/components/schemas/StakeIntent1'
-        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions1'
     DotUnstakingIntent1:
       title: DOT Unstaking Intent
       allOf:
@@ -3598,7 +3528,7 @@ components:
             - amount
             - stakingProxy
         - $ref: '#/components/schemas/UnstakeIntent1'
-        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions1'
     EIP1559FeeOptions:
       title: EIP1559FeeOptions
       type: object
@@ -3625,7 +3555,7 @@ components:
       type: string
       format: email
       example: user@example.com
-    EnableTokenIntent:
+    EnableTokenIntent1:
       title: EnableTokenIntent
       allOf:
         - type: object
@@ -3648,7 +3578,7 @@ components:
           required:
             - intentType
             - enableTokens
-        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntent1'
     Error:
       required:
         - error
@@ -3710,8 +3640,8 @@ components:
           required:
             - feeOptions
         - $ref: '#/components/schemas/AccelerationIntent1'
-        - $ref: '#/components/schemas/EthBuildOptionsWithoutFeeOptions'
-    EthBuildOptions:
+        - $ref: '#/components/schemas/EthBuildOptionsWithoutFeeOptions1'
+    EthBuildOptions1:
       title: EthBuildOptions
       allOf:
         - type: object
@@ -3737,8 +3667,8 @@ components:
               $ref: '#/components/schemas/optionalString'
             senderAddressIndex:
               $ref: '#/components/schemas/optionalNumber'
-        - $ref: '#/components/schemas/AccountBaseBuildOptions'
-    EthBuildOptionsWithoutFeeOptions:
+        - $ref: '#/components/schemas/AccountBaseBuildOptions1'
+    EthBuildOptionsWithoutFeeOptions1:
       title: EthBuildOptionsWithoutFeeOptions
       allOf:
         - type: object
@@ -3760,8 +3690,8 @@ components:
               $ref: '#/components/schemas/optionalString'
             senderAddressIndex:
               $ref: '#/components/schemas/optionalNumber'
-        - $ref: '#/components/schemas/AccountBaseBuildOptions'
-    EthFillNonceBuildOptions:
+        - $ref: '#/components/schemas/AccountBaseBuildOptions1'
+    EthFillNonceBuildOptions1:
       title: EthFillNonceBuildOptions
       type: object
       properties:
@@ -3779,8 +3709,8 @@ components:
         - type: object
           properties: {}
         - $ref: '#/components/schemas/FillNonceIntent1'
-        - $ref: '#/components/schemas/EthFillNonceBuildOptions'
-    EthPaymentIntent:
+        - $ref: '#/components/schemas/EthFillNonceBuildOptions1'
+    EthPaymentIntent1:
       title: ETH Payment Intent
       allOf:
         - type: object
@@ -3789,8 +3719,8 @@ components:
               $ref: '#/components/schemas/optionalBoolean'
           required:
             - selfSend
-        - $ref: '#/components/schemas/PaymentIntent'
-        - $ref: '#/components/schemas/EthBuildOptions'
+        - $ref: '#/components/schemas/PaymentIntent1'
+        - $ref: '#/components/schemas/EthBuildOptions1'
     EthStakingIntent1:
       title: ETH Staking Intent
       allOf:
@@ -3810,7 +3740,7 @@ components:
             - signature
             - depositDataRoot
         - $ref: '#/components/schemas/StakeIntent1'
-        - $ref: '#/components/schemas/EthBuildOptions'
+        - $ref: '#/components/schemas/EthBuildOptions1'
     ExpressAccelerateTxRequest:
       type: object
       properties:
@@ -5233,62 +5163,6 @@ components:
       type: string
       pattern: ^-?\d+$
       example: '2000000'
-    IntentType:
-      title: IntentType
-      type: string
-      enum:
-        - payment
-        - transferToken
-        - consolidate
-        - consolidateToken
-        - fanout
-        - stake
-        - unstake
-        - delegate
-        - undelegate
-        - switchValidator
-        - claim
-        - stakeClaimRewards
-        - pledge
-        - voteDelegation
-        - vote
-        - createAccount
-        - updateAccount
-        - addTrustLine
-        - removeTrustLine
-        - signMessage
-        - signTypedStructuredData
-        - enableToken
-        - authorize
-        - acceleration
-        - fillNonce
-        - walletRecovery
-        - contractCall
-        - deactivate
-        - customTx
-        - closeAssociatedTokenAccount
-        - stakeWithCallData
-        - unstakeWithCallData
-        - switchValidatorWithCallData
-        - feeAddressTransfer
-        - tokenApproval
-        - transferStake
-        - validatorRegistration
-        - increaseStake
-        - decreaseStake
-        - signalExit
-        - withdrawStake
-        - spotTransfer
-        - bridgeFunds
-        - enableBridging
-        - goUnstake
-        - createBtcDelegation
-        - transferAccept
-        - transferReject
-        - transferAcknowledge
-        - transferOfferWithdrawn
-        - defi-deposit
-        - defi-redeem
     IntentType1:
       title: IntentType
       type: string
@@ -5535,31 +5409,6 @@ components:
       type: string
       example: '123456'
       description: Second factor authentication token
-    PaymentIntent:
-      title: PaymentIntent
-      allOf:
-        - $ref: '#/components/schemas/BaseIntent'
-        - $ref: '#/components/schemas/BaseIntentWithRecipients'
-        - oneOf:
-            - type: object
-              properties:
-                intentType:
-                  type: string
-                  enum:
-                    - payment
-              required:
-                - intentType
-            - type: object
-              properties:
-                intentType:
-                  type: string
-                  enum:
-                    - payment
-                isTestTransaction:
-                  type: boolean
-              required:
-                - intentType
-                - isTestTransaction
     PaymentIntent1:
       title: PaymentIntent
       allOf:
@@ -6725,7 +6574,7 @@ components:
         - userKeychain
         - backupKeychain
         - bitgoKeychain
-    SolBuildOptions:
+    SolBuildOptions1:
       title: SolBuildOptions
       allOf:
         - type: object
@@ -6734,7 +6583,7 @@ components:
               $ref: '#/components/schemas/optionalString'
           required:
             - memo
-        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+        - $ref: '#/components/schemas/AccountBaseBuildOptions1'
     SolClaimIntent1:
       title: SOL Claim Intent
       allOf:
@@ -6748,14 +6597,14 @@ components:
             - stakingAddress
             - amount
         - $ref: '#/components/schemas/WithdrawIntent1'
-        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/SolBuildOptions1'
     SolCreateAssociatedTokenAccountIntent1:
       title: SOL Create Associated Token Account Intent
       allOf:
         - type: object
           properties: {}
-        - $ref: '#/components/schemas/EnableTokenIntent'
-        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/EnableTokenIntent1'
+        - $ref: '#/components/schemas/SolBuildOptions1'
     SolStakeIntent1:
       title: SOL Stake Intent
       allOf:
@@ -6769,7 +6618,7 @@ components:
             - validatorAddress
             - amount
         - $ref: '#/components/schemas/StakeIntent1'
-        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/SolBuildOptions1'
     SolUnstakeIntent1:
       title: SOL Unstake Intent
       allOf:
@@ -6800,7 +6649,7 @@ components:
           required:
             - stakingAddress
         - $ref: '#/components/schemas/UnstakeIntent1'
-        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/SolBuildOptions1'
     StakeIntent1:
       title: StakeIntent
       allOf:
@@ -7004,14 +6853,14 @@ components:
       anyOf:
         - $ref: '#/components/schemas/AdaStakeIntent1'
         - $ref: '#/components/schemas/ConsolidateTokenIntent1'
-        - $ref: '#/components/schemas/CosmosContractCallIntent'
+        - $ref: '#/components/schemas/CosmosContractCallIntent1'
         - $ref: '#/components/schemas/DOTClaimIntent'
         - $ref: '#/components/schemas/DotPaymentIntent1'
         - $ref: '#/components/schemas/DotStakingIntent1'
         - $ref: '#/components/schemas/DotUnstakingIntent1'
         - $ref: '#/components/schemas/EthAccelerationIntent1'
         - $ref: '#/components/schemas/EthFillNonceIntent1'
-        - $ref: '#/components/schemas/EthPaymentIntent'
+        - $ref: '#/components/schemas/EthPaymentIntent1'
         - $ref: '#/components/schemas/ETHSignMessageIntent'
         - $ref: '#/components/schemas/EthStakingIntent1'
         - $ref: '#/components/schemas/NearStakeIntent1'

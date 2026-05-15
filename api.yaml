@@ -36158,6 +36158,7 @@ paths:
               - txRequestTransaction
               - bankAccount
               - identityStatus
+              - idvStatus
               - userKycState
               - enterpriseKycState
               - accessToken
@@ -36642,6 +36643,7 @@ paths:
               - userKycState
               - enterpriseKycState
               - identityStatus
+              - idvStatus
               - accessToken
               - accountCreated
               - contractSigned
@@ -40975,7 +40977,7 @@ paths:
                 type: array
                 items:
                   oneOf:
-                    - $ref: '#/components/schemas/TransactionRequestLite2'
+                    - $ref: '#/components/schemas/TransactionRequestLite'
                     - $ref: '#/components/schemas/TransactionRequestFull'
         '400':
           description: Bad Request
@@ -47999,14 +48001,20 @@ components:
               type: string
               enum:
                 - acceleration
+              description: Must be "acceleration".
             txid:
               type: string
+              description: Transaction hash (0x-prefixed) of the pending transaction to accelerate.
             senderAddress:
               type: string
+              description: Sender address of the original transaction.
           required:
             - intentType
             - txid
         - $ref: '#/components/schemas/BaseIntent'
+      description: |-
+        Base codec for acceleration intents. Replaces a stuck pending EVM transaction
+        with a higher-fee version to accelerate confirmation (replace-by-fee).
     AccelerationIntent1:
       title: AccelerationIntent
       allOf:
@@ -48269,6 +48277,15 @@ components:
           oneOf:
             - type: string
             - type: number
+          description: Override the on-chain nonce for this transaction.
+    AccountBaseBuildOptions1:
+      title: AccountBaseBuildOptions
+      type: object
+      properties:
+        nonce:
+          oneOf:
+            - type: string
+            - type: number
     AccountBaseBuildOptions2:
       type: object
       properties:
@@ -48283,12 +48300,18 @@ components:
               type: string
               enum:
                 - consolidate
+              description: Must be "consolidate".
             receiveAddress:
               type: string
+              description: Destination address for consolidated funds. Must be a wallet-owned address.
             senderAddressIndex:
-              $ref: '#/components/schemas/optionalNumber'
+              allOf:
+                - $ref: '#/components/schemas/optionalNumber'
+              description: Index of the wallet address to use as the sender.
             consolidateId:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: Opaque identifier used to correlate consolidation requests.
             recipients:
               type: array
               items:
@@ -48298,8 +48321,11 @@ components:
                       tokenData:
                         $ref: '#/components/schemas/TokenData'
                   - $ref: '#/components/schemas/RecipientEntry'
+                description: Token recipients for token consolidation flows.
             keepAlive:
-              $ref: '#/components/schemas/optionalBoolean'
+              allOf:
+                - $ref: '#/components/schemas/optionalBoolean'
+              description: When true, leaves a small amount in the source address to keep it alive.
           required:
             - intentType
             - receiveAddress
@@ -48315,6 +48341,21 @@ components:
                 - createAccount
             name:
               $ref: '#/components/schemas/optionalString'
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+    AccountBaseUpdateAccountIntent:
+      title: AccountBaseUpdateAccountIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - updateAccount
+            options:
+              $ref: '#/components/schemas/optionalUnknownObject'
           required:
             - intentType
         - $ref: '#/components/schemas/BaseIntent'
@@ -50370,10 +50411,16 @@ components:
         - type: object
           properties:
             memo:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: Optional memo string attached to the transaction, used for routing or identification by exchanges.
           required:
             - memo
         - $ref: '#/components/schemas/PaymentIntent'
+      description: |-
+        Transfer tokens from a Cosmos-family wallet to one or more recipient
+        addresses. Supported on all Cosmos-family chains. An optional memo may
+        be included for exchange routing or identification.
     AtomStakeIntent:
       title: Atom Stake Intent
       allOf:
@@ -50381,6 +50428,7 @@ components:
           properties:
             validatorAddress:
               type: string
+              description: Bech32 validator address to delegate tokens to (e.g. cosmosvaloper1...).
             recipients:
               type: array
               items:
@@ -50395,10 +50443,15 @@ components:
                 required:
                   - address
                   - amount
+                description: Optional list of validator–amount pairs for multi-validator delegation. When provided, overrides validatorAddress and amount.
           required:
             - validatorAddress
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Delegate (stake) tokens to one or more validators on ATOM. Use
+        `validatorAddress` and `amount` for a single validator, or `recipients`
+        for multi-validator delegation.
     AtomStakingDelegation:
       title: ATOM Staking Delegation
       allOf:
@@ -50477,6 +50530,7 @@ components:
           properties:
             validatorAddress:
               type: string
+              description: Bech32 validator address to undelegate tokens from (e.g. cosmosvaloper1...).
             recipients:
               type: array
               items:
@@ -50491,10 +50545,15 @@ components:
                 required:
                   - address
                   - amount
+                description: Optional list of validator–amount pairs for multi-validator undelegation. When provided, overrides validatorAddress and amount.
           required:
             - validatorAddress
         - $ref: '#/components/schemas/UnstakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Undelegate (unstake) tokens from one or more validators on ATOM. Tokens
+        enter the unbonding period. Use `validatorAddress` and `amount` for
+        single validator or `recipients` for multi-validator.
     AtomUnstakingTransactionProperties:
       title: ATOM Unstaking Transaction Properties
       allOf:
@@ -50521,17 +50580,6 @@ components:
       required:
         - rootAddress
         - lastMemoId
-    AtomWithdrawIntent:
-      title: Atom Withdraw Intent
-      allOf:
-        - type: object
-          properties:
-            validatorAddress:
-              type: string
-          required:
-            - validatorAddress
-        - $ref: '#/components/schemas/WithdrawIntent'
-        - $ref: '#/components/schemas/BaseIntentWithAmount'
     AuditLogType1:
       title: AuditLogType
       type: string
@@ -51623,10 +51671,12 @@ components:
               type: string
               enum:
                 - bridgeFunds
+              description: Must be "bridgeFunds".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: Base codec for bridge-funds intents across chains or protocols.
     BaseDelegation:
       title: Base Delegation
       allOf:
@@ -52021,6 +52071,9 @@ components:
           allOf:
             - $ref: '#/components/schemas/ReferralCodeString'
           description: Referral code
+        logoUrl:
+          type: string
+          description: URL of the enterprise logo image
         oauthSetting:
           allOf:
             - $ref: '#/components/schemas/OAuthSetting'
@@ -52165,13 +52218,18 @@ components:
         intentType:
           $ref: '#/components/schemas/IntentType'
         sequenceId:
-          $ref: '#/components/schemas/optionalString'
+          allOf:
+            - $ref: '#/components/schemas/optionalString'
+          description: Client-assigned sequence identifier for idempotency.
         comment:
-          $ref: '#/components/schemas/optionalString'
+          allOf:
+            - $ref: '#/components/schemas/optionalString'
+          description: Human-readable memo attached to the transaction.
         nonce:
           oneOf:
             - type: string
             - type: number
+          description: Override the on-chain nonce for this transaction.
       required:
         - intentType
     BaseIntent1:
@@ -52231,7 +52289,9 @@ components:
         Asset extraction: Extracts symbol from the amount field
       properties:
         amount:
-          $ref: '#/components/schemas/Amount'
+          allOf:
+            - $ref: '#/components/schemas/Amount'
+          description: Transaction amount. amount.symbol identifies the asset (e.g. "hypeevm:eth"); amount.value is the quantity in base units.
       required:
         - amount
     BaseIntentWithRecipients:
@@ -52267,6 +52327,7 @@ components:
             required:
               - address
               - amount
+            description: Array of recipient addresses and amounts.
       required:
         - recipients
     BaseIntentWithTokenName:
@@ -52285,6 +52346,7 @@ components:
       properties:
         tokenName:
           type: string
+          description: Name of the ERC-20 token to approve (e.g. "usdc", "weth").
       required:
         - tokenName
     BaseIntentWithTokenRecipients:
@@ -52313,6 +52375,7 @@ components:
                   tokenData:
                     $ref: '#/components/schemas/TokenData'
               - $ref: '#/components/schemas/RecipientEntry'
+            description: Recipients of the token transfer. Each entry must include tokenData with tokenName and tokenContractAddress.
       required:
         - recipients
     BaseIntentWithoutNonce:
@@ -52322,9 +52385,13 @@ components:
         intentType:
           $ref: '#/components/schemas/IntentType'
         sequenceId:
-          $ref: '#/components/schemas/optionalString'
+          allOf:
+            - $ref: '#/components/schemas/optionalString'
+          description: Client-assigned sequence identifier for idempotency.
         comment:
-          $ref: '#/components/schemas/optionalString'
+          allOf:
+            - $ref: '#/components/schemas/optionalString'
+          description: Human-readable memo attached to the transaction.
       required:
         - intentType
     BaseIntentWithoutNonce1:
@@ -52406,8 +52473,11 @@ components:
           properties:
             stakingRequestId:
               type: string
+              description: ID of the staking request, obtained from the BitGo staking service.
             source:
-              $ref: '#/components/schemas/StakingRequestSource'
+              allOf:
+                - $ref: '#/components/schemas/StakingRequestSource'
+              description: 'Origin of the staking request: MANUAL (user-initiated), AUTO_STAKE, or EXTERNAL.'
           required:
             - stakingRequestId
         - $ref: '#/components/schemas/BaseIntent'
@@ -52437,6 +52507,7 @@ components:
           properties:
             calldata:
               type: string
+              description: Pre-computed ABI-encoded calldata for the staking contract interaction, provided by the BitGo staking service.
           required:
             - calldata
         - $ref: '#/components/schemas/BaseStakeIntent'
@@ -54265,6 +54336,44 @@ components:
           required:
             - context
             - name
+    CantonCosignDelegationAcceptIntent:
+      title: Canton Cosign Delegation Accept Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cosignDelegationAccept
+            txRequestId:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonCosignDelegationProposalIntent:
+      title: Canton Cosign Delegation Proposal Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cosignDelegationProposal
+            contractId:
+              type: string
+            operatorId:
+              type: string
+            updateId:
+              type: string
+            packageName:
+              type: string
+          required:
+            - intentType
+            - contractId
+            - operatorId
+            - updateId
+        - $ref: '#/components/schemas/BaseIntent'
     CantonPaymentIntent:
       title: CANTON Payment Intent
       allOf:
@@ -54272,6 +54381,8 @@ components:
           properties:
             memo:
               $ref: '#/components/schemas/optionalString'
+            isConsolidate:
+              type: boolean
             unspents:
               $ref: '#/components/schemas/optionalStringArray'
           required:
@@ -54555,6 +54666,23 @@ components:
         - bulkUnlock
         - bulkArchive
         - duplicate
+    ClaimIntent:
+      title: Claim Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - claim
+              description: Must be "claim".
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntent'
+      description: |-
+        Claim unstaked or unbonded funds from an EVM validator after the
+        undelegation cooldown period. Requires a staking request ID from the
+        BitGo staking service.
     ClaimRewardsDisclaimerAttributes:
       allOf:
         - $ref: '#/components/schemas/BaseDisclaimer'
@@ -55146,7 +55274,7 @@ components:
       title: Consolidate Token
       allOf:
         - $ref: '#/components/schemas/BaseIntent2'
-        - $ref: '#/components/schemas/EthBuildOptions'
+        - $ref: '#/components/schemas/EthBuildOptions1'
         - type: object
           properties:
             intentType:
@@ -55456,6 +55584,34 @@ components:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
     CosmosContractCallIntent:
+      title: Cosmos Contract Call Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - contractCall
+              description: Must be "contractCall"
+            contract:
+              type: string
+              description: Bech32 contract address to execute
+            msgHex:
+              type: string
+              description: Hex-encoded binary message to pass to the contract Execute entrypoint
+            feeGranter:
+              type: string
+              description: Optional Bech32 address paying transaction fees on behalf of the submitter (fee-grant). Supported on hash chain; passed through for any chain.
+          required:
+            - intentType
+            - contract
+            - msgHex
+        - $ref: '#/components/schemas/BaseIntent'
+      description: |-
+        Execute a Wasm smart contract on a Cosmos-family chain. Supported on all
+        Cosmos-family chains. The hash chain additionally supports fee-grant via
+        the optional feeGranter field.
+    CosmosContractCallIntent1:
       title: Cosmos Contract Call
       allOf:
         - $ref: '#/components/schemas/BaseIntent2'
@@ -55629,10 +55785,36 @@ components:
         - type: object
           properties:
             memo:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: Optional memo string attached to the transaction, used for routing or identification by exchanges.
           required:
             - memo
         - $ref: '#/components/schemas/PaymentIntent'
+      description: |-
+        Transfer tokens from a Cosmos-family wallet to one or more recipient
+        addresses. Supported on all Cosmos-family chains. An optional memo may
+        be included for exchange routing or identification.
+    CosmosStakeClaimRewardsIntent:
+      title: Cosmos Stake Claim Rewards Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+              description: Must be "stakeClaimRewards"
+            validatorAddress:
+              type: string
+              description: Bech32 validator address to withdraw accumulated staking rewards from (e.g. cosmosvaloper1...)
+          required:
+            - intentType
+            - validatorAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+      description: |-
+        Claim accumulated staking rewards from a validator on a Cosmos-family chain.
+        Supported on all Cosmos-family chains. Submit with intentType stakeClaimRewards.
     CosmosStakeIntent:
       title: Cosmos Stake Intent
       allOf:
@@ -55644,6 +55826,7 @@ components:
                 - delegate
             validatorAddress:
               type: string
+              description: Bech32 validator address to delegate tokens to (e.g. cosmosvaloper1...).
             recipients:
               type: array
               items:
@@ -55658,15 +55841,24 @@ components:
                 required:
                   - address
                   - amount
+                description: Optional list of validator–amount pairs for multi-validator delegation. When provided, overrides validatorAddress and amount.
           required:
             - intentType
             - validatorAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Delegate (stake) tokens to one or more validators on a Cosmos-family
+        chain. Use `validatorAddress` and `amount` for a single validator, or
+        `recipients` for multi-validator delegation in a single transaction.
     CosmosSwitchValidatorIntent:
       title: Cosmos Switch Validator Intent
       allOf:
         - $ref: '#/components/schemas/StakeSwitchValidatorIntent'
+      description: |-
+        Atomically move a delegation from one validator to another (redelegate)
+        on a Cosmos-family chain. The redelegation is subject to the chain's
+        redelegation cooldown rules.
     CosmosUnstakeIntent:
       title: Cosmos Unstake Intent
       allOf:
@@ -55678,6 +55870,7 @@ components:
                 - undelegate
             validatorAddress:
               type: string
+              description: Bech32 validator address to undelegate tokens from (e.g. cosmosvaloper1...).
             recipients:
               type: array
               items:
@@ -55692,21 +55885,17 @@ components:
                 required:
                   - address
                   - amount
+                description: Optional list of validator–amount pairs for multi-validator undelegation. When provided, overrides validatorAddress and amount.
           required:
             - intentType
             - validatorAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
-    CosmosWithdrawIntent:
-      title: Cosmos Withdraw Intent
-      allOf:
-        - type: object
-          properties:
-            validatorAddress:
-              type: string
-          required:
-            - validatorAddress
-        - $ref: '#/components/schemas/WithdrawIntent'
+      description: |-
+        Undelegate (unstake) tokens from one or more validators on a
+        Cosmos-family chain. Tokens enter the chain's unbonding period and are
+        not immediately available. Use `validatorAddress` and `amount` for a
+        single validator, or `recipients` for multi-validator undelegation.
     CountryAddress:
       title: CountryAddress
       type: object
@@ -56714,9 +56903,14 @@ components:
               type: string
               enum:
                 - delegate
+              description: Must be "delegate".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
+      description: |-
+        Delegate staked assets to a validator on EVM-compatible chains that support
+        delegated proof-of-stake (e.g. BSC). Requires a staking request ID from the
+        BitGo staking service.
     DelegationAccrual:
       type: object
       properties:
@@ -57838,6 +58032,40 @@ components:
               required:
                 - amount
         - $ref: '#/components/schemas/AccountBaseBuildOptions'
+    DotAccountBaseBuildOptions1:
+      title: DotAccountBaseBuildOptions
+      allOf:
+        - type: object
+          properties:
+            fee:
+              type: object
+              properties:
+                amount:
+                  oneOf:
+                    - type: string
+                    - type: number
+                formula:
+                  type: string
+                  enum:
+                    - fixed
+                    - feeRate
+                    - perKB
+                    - custom
+                type:
+                  type: string
+                  enum:
+                    - base
+                    - max
+                    - tip
+                unit:
+                  type: string
+                  enum:
+                    - baseUnit
+                    - cpu
+                    - ram
+              required:
+                - amount
+        - $ref: '#/components/schemas/AccountBaseBuildOptions1'
     DotAddress:
       title: Dot Address
       type: object
@@ -57962,7 +58190,7 @@ components:
             - proxy
             - owner
         - $ref: '#/components/schemas/PaymentIntent1'
-        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions1'
     DotProxy:
       title: DotProxy
       type: object
@@ -58013,7 +58241,7 @@ components:
             - amount
             - stakingProxy
         - $ref: '#/components/schemas/StakeIntent1'
-        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions1'
     DotStakingRequest:
       title: DOT
       allOf:
@@ -58096,7 +58324,7 @@ components:
             - amount
             - stakingProxy
         - $ref: '#/components/schemas/UnstakeIntent1'
-        - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
+        - $ref: '#/components/schemas/DotAccountBaseBuildOptions1'
     DotUnstakingTransactionProperties:
       title: DOT Unstaking Transaction Properties
       allOf:
@@ -58390,6 +58618,30 @@ components:
             - intentType
             - enableTokens
         - $ref: '#/components/schemas/BaseIntent'
+    EnableTokenIntent1:
+      title: EnableTokenIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - enableToken
+            enableTokens:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  address:
+                    $ref: '#/components/schemas/optionalString'
+                required:
+                  - name
+          required:
+            - intentType
+            - enableTokens
+        - $ref: '#/components/schemas/BaseIntent1'
     EncryptedShare:
       title: EncryptedShare
       allOf:
@@ -59337,10 +59589,15 @@ components:
               oneOf:
                 - $ref: '#/components/schemas/FeeOption'
                 - $ref: '#/components/schemas/EIP1559FeeOptions'
+              description: New fee settings (must be higher than the original transaction). Use EIP1559FeeOptions for London-compatible chains.
           required:
             - feeOptions
         - $ref: '#/components/schemas/AccelerationIntent'
         - $ref: '#/components/schemas/EthBuildOptionsWithoutFeeOptions'
+      description: |-
+        Replace a stuck pending EVM transaction with a higher-fee version to
+        accelerate confirmation. Supply the original transaction's txid and new
+        feeOptions that exceed the original.
     EthAccelerationIntent1:
       title: ETH Acceleration Intent
       allOf:
@@ -59353,8 +59610,41 @@ components:
           required:
             - feeOptions
         - $ref: '#/components/schemas/AccelerationIntent1'
-        - $ref: '#/components/schemas/EthBuildOptionsWithoutFeeOptions'
+        - $ref: '#/components/schemas/EthBuildOptionsWithoutFeeOptions1'
     EthBuildOptions:
+      title: EthBuildOptions
+      allOf:
+        - type: object
+          properties:
+            feeOptions:
+              oneOf:
+                - $ref: '#/components/schemas/FeeOption'
+                - $ref: '#/components/schemas/EIP1559FeeOptions'
+              description: Override gas estimation. Provide EIP1559FeeOptions for EIP-1559 chains or FeeOption for legacy.
+            hopParams:
+              type: object
+              description: Parameters for BitGo Hop transactions (cross-chain bridging via the Hop protocol).
+              properties:
+                gasPriceMax:
+                  $ref: '#/components/schemas/optionalNumber'
+                paymentId:
+                  $ref: '#/components/schemas/optionalString'
+                userReqSig:
+                  $ref: '#/components/schemas/optionalString'
+              required:
+                - gasPriceMax
+                - paymentId
+                - userReqSig
+            receiveAddress:
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: Target receive address override. Defaults to wallet's primary receive address.
+            senderAddressIndex:
+              allOf:
+                - $ref: '#/components/schemas/optionalNumber'
+              description: Index of the wallet address to use as the sender.
+        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+    EthBuildOptions1:
       title: EthBuildOptions
       allOf:
         - type: object
@@ -59380,8 +59670,36 @@ components:
               $ref: '#/components/schemas/optionalString'
             senderAddressIndex:
               $ref: '#/components/schemas/optionalNumber'
-        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+        - $ref: '#/components/schemas/AccountBaseBuildOptions1'
     EthBuildOptionsWithoutFeeOptions:
+      title: EthBuildOptionsWithoutFeeOptions
+      allOf:
+        - type: object
+          properties:
+            hopParams:
+              type: object
+              description: Parameters for BitGo Hop transactions (cross-chain bridging via the Hop protocol).
+              properties:
+                gasPriceMax:
+                  $ref: '#/components/schemas/optionalNumber'
+                paymentId:
+                  $ref: '#/components/schemas/optionalString'
+                userReqSig:
+                  $ref: '#/components/schemas/optionalString'
+              required:
+                - gasPriceMax
+                - paymentId
+                - userReqSig
+            receiveAddress:
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: Target receive address override. Defaults to wallet's primary receive address.
+            senderAddressIndex:
+              allOf:
+                - $ref: '#/components/schemas/optionalNumber'
+              description: Index of the wallet address to use as the sender.
+        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+    EthBuildOptionsWithoutFeeOptions1:
       title: EthBuildOptionsWithoutFeeOptions
       allOf:
         - type: object
@@ -59403,7 +59721,7 @@ components:
               $ref: '#/components/schemas/optionalString'
             senderAddressIndex:
               $ref: '#/components/schemas/optionalNumber'
-        - $ref: '#/components/schemas/AccountBaseBuildOptions'
+        - $ref: '#/components/schemas/AccountBaseBuildOptions1'
     EthCommonStakingRequestEntityProperties:
       title: Common Ethereum staking request entity properties
       allOf:
@@ -59420,6 +59738,10 @@ components:
       allOf:
         - $ref: '#/components/schemas/AccountBaseConsolidateIntent'
         - $ref: '#/components/schemas/EthBuildOptions'
+      description: |-
+        Consolidate ETH from multiple receive addresses into the wallet's main
+        address on EVM-compatible chains. Used for wallet housekeeping. Provide
+        receiveAddress as the sweep destination.
     EthConsolidateTokenIntent:
       title: ETH Consolidate Token Intent
       allOf:
@@ -59429,6 +59751,7 @@ components:
               type: string
               enum:
                 - consolidateToken
+              description: Must be "consolidateToken".
             recipients:
               type: array
               items:
@@ -59438,10 +59761,15 @@ components:
                       tokenData:
                         $ref: '#/components/schemas/TokenData'
                   - $ref: '#/components/schemas/RecipientEntry'
+                description: Array of token recipients. Each entry specifies the token contract and amount via tokenData.
             consolidateId:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: Opaque identifier to correlate consolidation requests.
             keepAlive:
-              $ref: '#/components/schemas/optionalBoolean'
+              allOf:
+                - $ref: '#/components/schemas/optionalBoolean'
+              description: When true, leaves a minimal token balance in the source address.
           required:
             - intentType
             - recipients
@@ -59449,7 +59777,28 @@ components:
             - keepAlive
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/EthBuildOptions'
+      description: |-
+        Consolidate ERC-20 tokens from receive addresses into the wallet's main
+        address on EVM-compatible chains. Supply token details in the
+        recipients[].tokenData field.
     EthFillNonceBuildOptions:
+      title: EthFillNonceBuildOptions
+      type: object
+      properties:
+        feeOptions:
+          oneOf:
+            - $ref: '#/components/schemas/FeeOption'
+            - $ref: '#/components/schemas/EIP1559FeeOptions'
+          description: Override gas estimation for the fill-nonce transaction.
+        receiveAddress:
+          allOf:
+            - $ref: '#/components/schemas/optionalString'
+          description: Target receive address override. Defaults to wallet's primary receive address.
+        senderAddressIndex:
+          allOf:
+            - $ref: '#/components/schemas/optionalNumber'
+          description: Index of the wallet address to use as the sender.
+    EthFillNonceBuildOptions1:
       title: EthFillNonceBuildOptions
       type: object
       properties:
@@ -59466,13 +59815,17 @@ components:
       allOf:
         - $ref: '#/components/schemas/FillNonceIntent'
         - $ref: '#/components/schemas/EthFillNonceBuildOptions'
+      description: |-
+        Submit a zero-value self-send to consume a specific nonce on
+        EVM-compatible chains. Used to unblock transaction queues when a nonce gap
+        has formed.
     EthFillNonceIntent1:
       title: ETH Fill Nonce Intent
       allOf:
         - type: object
           properties: {}
         - $ref: '#/components/schemas/FillNonceIntent1'
-        - $ref: '#/components/schemas/EthFillNonceBuildOptions'
+        - $ref: '#/components/schemas/EthFillNonceBuildOptions1'
     EthLikeStakeIntent:
       title: EthLike Stake Intent
       allOf:
@@ -59517,11 +59870,28 @@ components:
         - type: object
           properties:
             selfSend:
-              $ref: '#/components/schemas/optionalBoolean'
+              allOf:
+                - $ref: '#/components/schemas/optionalBoolean'
+              description: When true, sends to the wallet's own receive address.
           required:
             - selfSend
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/EthBuildOptions'
+      description: |-
+        Transfer ETH or ERC-20 tokens to one or more recipients on EVM-compatible
+        chains. Specify recipients with their address and amount. Optionally
+        override fee settings via feeOptions.
+    EthPaymentIntent1:
+      title: ETH Payment Intent
+      allOf:
+        - type: object
+          properties:
+            selfSend:
+              $ref: '#/components/schemas/optionalBoolean'
+          required:
+            - selfSend
+        - $ref: '#/components/schemas/PaymentIntent1'
+        - $ref: '#/components/schemas/EthBuildOptions1'
     EthStakingDelegation:
       title: ETH Staking Delegation
       allOf:
@@ -59548,12 +59918,16 @@ components:
           properties:
             pubkey:
               type: string
+              description: BLS public key of the validator (hex-encoded, provided by the staking service).
             withdrawalCredentials:
               type: string
+              description: Withdrawal credentials for the validator (provided by the staking service).
             signature:
               type: string
+              description: BLS signature over the deposit data (provided by the staking service).
             depositDataRoot:
               type: string
+              description: SHA-256 hash of the deposit data (provided by the staking service).
           required:
             - pubkey
             - withdrawalCredentials
@@ -59561,6 +59935,11 @@ components:
             - depositDataRoot
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/EthBuildOptions'
+      description: |-
+        Submit an ETH 2.0 validator staking deposit on Ethereum. Requires a
+        pre-created staking request from the BitGo staking service. All validator
+        fields (pubkey, withdrawalCredentials, signature, depositDataRoot) are
+        provided by the staking service.
     EthStakingIntent1:
       title: ETH Staking Intent
       allOf:
@@ -59580,7 +59959,7 @@ components:
             - signature
             - depositDataRoot
         - $ref: '#/components/schemas/StakeIntent1'
-        - $ref: '#/components/schemas/EthBuildOptions'
+        - $ref: '#/components/schemas/EthBuildOptions1'
     EthStakingRequest:
       title: ETH
       allOf:
@@ -59756,6 +60135,10 @@ components:
       allOf:
         - $ref: '#/components/schemas/TransferTokenIntent'
         - $ref: '#/components/schemas/EthBuildOptions'
+      description: |-
+        Transfer ERC-20 tokens to one or more recipients on EVM-compatible chains.
+        Each recipient entry must include tokenData specifying the token contract
+        and amount.
     EthUnStakingRequestPOSTBody:
       title: ETH unstake (default)
       allOf:
@@ -60329,16 +60712,23 @@ components:
               type: string
               enum:
                 - fillNonce
+              description: Must be "fillNonce".
             nonce:
               oneOf:
                 - type: string
                 - type: number
+              description: The nonce value to fill. The transaction will be a self-send that consumes this nonce.
             senderAddress:
               type: string
+              description: Sender address with the stuck nonce. Defaults to the wallet's base address.
           required:
             - intentType
             - nonce
         - $ref: '#/components/schemas/BaseIntentWithoutNonce'
+      description: |-
+        Base codec for fill-nonce intents. Submits a zero-value self-send to consume
+        a specific nonce on EVM-compatible chains. Used to unblock transaction queues
+        when a nonce gap has formed.
     FillNonceIntent1:
       title: FillNonceIntent
       allOf:
@@ -62169,7 +62559,7 @@ components:
           type: array
           items:
             oneOf:
-              - $ref: '#/components/schemas/TransactionRequestLite2'
+              - $ref: '#/components/schemas/TransactionRequestLite'
               - $ref: '#/components/schemas/TransactionRequestFull'
       required:
         - txRequests
@@ -62810,6 +63200,16 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
+    HbarUpdateAccountIntent:
+      title: HBAR Update Account Intent
+      allOf:
+        - type: object
+          properties:
+            stakedNodeId:
+              $ref: '#/components/schemas/optionalNumber'
+            declineStakingReward:
+              $ref: '#/components/schemas/optionalBoolean'
+        - $ref: '#/components/schemas/AccountBaseUpdateAccountIntent'
     HederaAddress:
       title: Hedera Address
       type: object
@@ -62969,7 +63369,11 @@ components:
               oneOf:
                 - $ref: '#/components/schemas/FeeOption'
                 - $ref: '#/components/schemas/EIP1559FeeOptions'
+              description: Override gas estimation for the bridge transaction.
         - $ref: '#/components/schemas/BaseBridgeFundsIntent'
+      description: |-
+        Bridge funds between HypeEVM L2 and L1. Specify the amount and asset via
+        the amount field. Used exclusively on the HypeEVM chain.
     HypeevmEnableBridgingIntent:
       title: Hypeevm Enable Bridging Intent
       allOf:
@@ -62996,10 +63400,14 @@ components:
               type: string
               enum:
                 - spotTransfer
+              description: Must be "spotTransfer".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/BaseIntentWithRecipients'
+      description: |-
+        Transfer assets via the HypeEVM spot trading mechanism. Provide recipients
+        with their address and amount. Used exclusively on the HypeEVM chain.
     ICPStakingRequestEntityProperties:
       title: ICP staking request entity properties
       allOf:
@@ -63774,8 +64182,12 @@ components:
         - transferReject
         - transferAcknowledge
         - transferOfferWithdrawn
+        - cosignDelegationProposal
+        - cosignDelegationAccept
         - defi-deposit
         - defi-redeem
+        - delegateResource
+        - undelegateResource
     IntentType1:
       title: IntentType
       type: string
@@ -68959,6 +69371,7 @@ components:
         - txRequestTransaction
         - bankAccount
         - identityStatus
+        - idvStatus
         - userKycState
         - enterpriseKycState
         - accessToken
@@ -69280,6 +69693,7 @@ components:
                   type: string
                   enum:
                     - payment
+                  description: Must be "payment".
               required:
                 - intentType
             - type: object
@@ -69288,8 +69702,10 @@ components:
                   type: string
                   enum:
                     - payment
+                  description: Must be "payment".
                 isTestTransaction:
                   type: boolean
+                  description: When true, marks this as a test transaction (not broadcast to the network).
               required:
                 - intentType
                 - isTestTransaction
@@ -70026,7 +70442,7 @@ components:
               description: The unique ID for the policy
             txRequest:
               oneOf:
-                - $ref: '#/components/schemas/TransactionRequestLite2'
+                - $ref: '#/components/schemas/TransactionRequestLite'
                 - $ref: '#/components/schemas/TransactionRequestFull'
               description: The transaction request details
             txRequestId:
@@ -75172,6 +75588,29 @@ components:
           required:
             - memo
         - $ref: '#/components/schemas/AccountBaseBuildOptions'
+      description: |-
+        Solana build fragment intersected by **every** Sol intent codec that composes
+        `SolBuildOptions` (e.g. payment, stake, consolidate, close-ATA, etc.).
+
+        **`memo` is part of the legacy wire contract:** `t.type({ memo: optionalString })`
+        keeps the **`memo` key structurally present** for `.is()` / `decode` (value may
+        be a string or `undefined` per `optionalString`). Payloads that omit `memo`
+        entirely are not accepted by this codec.
+
+        Upstream services (for example wallet-platform when persisting
+        `closeAssociatedTokenAccount` intents) may normalize a missing `memo` to
+        `""` before validation so stored objects match this shape. Other Sol flows
+        should send `memo` or apply the same normalization if they share this path.
+    SolBuildOptions1:
+      title: SolBuildOptions
+      allOf:
+        - type: object
+          properties:
+            memo:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - memo
+        - $ref: '#/components/schemas/AccountBaseBuildOptions1'
     SolClaimIntent:
       title: SOL Claim Intent
       allOf:
@@ -75197,7 +75636,7 @@ components:
             - stakingAddress
             - amount
         - $ref: '#/components/schemas/WithdrawIntent1'
-        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/SolBuildOptions1'
     SolClaimRewardsRequestPOSTBody:
       title: Solana (SOL) Claim Rewards Request
       type: object
@@ -75213,14 +75652,11 @@ components:
               type: string
               enum:
                 - closeAssociatedTokenAccount
-            accountAddress:
-              type: string
-            destinationAddress:
-              type: string
+            recipients:
+              $ref: '#/components/schemas/solCloseAssociatedTokenAccountRecipients'
           required:
             - intentType
-            - accountAddress
-            - destinationAddress
+            - recipients
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
     SolConsolidateIntent:
@@ -75237,8 +75673,8 @@ components:
       allOf:
         - type: object
           properties: {}
-        - $ref: '#/components/schemas/EnableTokenIntent'
-        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/EnableTokenIntent1'
+        - $ref: '#/components/schemas/SolBuildOptions1'
     SolCustomTxIntent:
       title: SOL Custom Transaction Intent
       allOf:
@@ -75404,7 +75840,7 @@ components:
             - validatorAddress
             - amount
         - $ref: '#/components/schemas/StakeIntent1'
-        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/SolBuildOptions1'
     SolStakingDelegation:
       title: SOL Staking Delegation
       allOf:
@@ -75573,7 +76009,7 @@ components:
           required:
             - stakingAddress
         - $ref: '#/components/schemas/UnstakeIntent1'
-        - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/SolBuildOptions1'
     SolVersionedCustomTxIntent:
       title: SOL Versioned Custom Transaction Intent
       allOf:
@@ -75851,10 +76287,15 @@ components:
               type: string
               enum:
                 - stakeClaimRewards
+              description: Must be "stakeClaimRewards".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Claim accumulated staking rewards on EVM-compatible chains. Specify the
+        amount of rewards to claim. Requires a staking request ID from the BitGo
+        staking service.
     StakeGoStakingRequest:
       type: object
       required:
@@ -75888,6 +76329,7 @@ components:
               type: string
               enum:
                 - stake
+              description: Must be "stake".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
@@ -75936,14 +76378,33 @@ components:
                 - switchValidator
             validatorAddress:
               type: string
+              description: Bech32 source validator address to redelegate from (e.g. cosmosvaloper1...).
             destValidatorAddress:
               type: string
+              description: Bech32 destination validator address to redelegate to (e.g. cosmosvaloper1...).
           required:
             - intentType
             - validatorAddress
             - destValidatorAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+    StakeWithCallDataIntent:
+      title: Stake With CallData Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeWithCallData
+              description: Must be "stakeWithCallData".
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+      description: |-
+        Submit an EVM staking transaction using pre-computed calldata provided by
+        the BitGo staking service. Used when the staking protocol requires custom
+        calldata that cannot be derived from standard deposit parameters.
     StakeableCoins:
       type: object
       properties:
@@ -78370,6 +78831,23 @@ components:
         maxSwitchable:
           type: string
           description: The maximum amount of balance that can be switched to another validator.
+    SwitchValidatorWithCallDataIntent:
+      title: Switch Validator With CallData Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - switchValidatorWithCallData
+              description: Must be "switchValidatorWithCallData".
+          required:
+            - intentType
+        - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+      description: |-
+        Switch validators on EVM-compatible chains using pre-computed calldata.
+        Supply the staking service's stakingRequestId and the pre-computed calldata
+        for the validator switch.
     SwitchValidatorsRequestPOSTBody:
       type: object
       description: Base request to switch staking delegation to a new validator.
@@ -78928,10 +79406,15 @@ components:
               type: string
               enum:
                 - tokenApproval
+              description: Must be "tokenApproval".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/BaseIntentWithTokenName'
+      description: |-
+        Approve an ERC-20 token for spending by the BitGo batcher contract on
+        EVM-compatible chains. Required before sending a token that has not been
+        previously approved. Provide tokenName to identify the token.
     TokenConnectionKey:
       title: TokenConnectionKey
       type: object
@@ -80017,7 +80500,7 @@ components:
                       - $ref: '#/components/schemas/MemoString'
                       - $ref: '#/components/schemas/MemoObject'
               description: A list of recipient addresses and amounts. Must be present but empty for Child-Pays-For-Parent transactions.
-    TransactionIntent1:
+    TransactionIntent:
       title: TransactionIntent
       oneOf:
         - $ref: '#/components/schemas/AdaConsolidateIntent'
@@ -80030,22 +80513,25 @@ components:
         - $ref: '#/components/schemas/AtomPaymentIntent'
         - $ref: '#/components/schemas/AtomStakeIntent'
         - $ref: '#/components/schemas/AtomUnstakeIntent'
-        - $ref: '#/components/schemas/AtomWithdrawIntent'
         - $ref: '#/components/schemas/BabyCreateBtcDelegationIntent'
         - $ref: '#/components/schemas/BabyWithdrawRewardIntent'
         - $ref: '#/components/schemas/BscDelegateIntent'
         - $ref: '#/components/schemas/BscUnDelegateIntent'
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
+        - $ref: '#/components/schemas/CantonCosignDelegationAcceptIntent'
+        - $ref: '#/components/schemas/CantonCosignDelegationProposalIntent'
         - $ref: '#/components/schemas/CantonPaymentIntent'
         - $ref: '#/components/schemas/CantonTransferAcceptIntent'
         - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
         - $ref: '#/components/schemas/CantonTransferOfferWithdrawnIntent'
         - $ref: '#/components/schemas/CantonTransferRejectIntent'
+        - $ref: '#/components/schemas/ClaimIntent'
+        - $ref: '#/components/schemas/CosmosContractCallIntent'
         - $ref: '#/components/schemas/CosmosPaymentIntent'
+        - $ref: '#/components/schemas/CosmosStakeClaimRewardsIntent'
         - $ref: '#/components/schemas/CosmosStakeIntent'
         - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
         - $ref: '#/components/schemas/CosmosUnstakeIntent'
-        - $ref: '#/components/schemas/CosmosWithdrawIntent'
         - $ref: '#/components/schemas/DefiDepositIntent'
         - $ref: '#/components/schemas/DefiRedeemIntent'
         - $ref: '#/components/schemas/DotConsolidateIntent'
@@ -80054,14 +80540,19 @@ components:
         - $ref: '#/components/schemas/DotStakingIntent'
         - $ref: '#/components/schemas/DotUnstakingIntent'
         - $ref: '#/components/schemas/DotWithdrawStakeIntent'
+        - $ref: '#/components/schemas/DelegateIntent'
         - $ref: '#/components/schemas/EthAccelerationIntent'
         - $ref: '#/components/schemas/EthConsolidateIntent'
         - $ref: '#/components/schemas/EthConsolidateTokenIntent'
         - $ref: '#/components/schemas/EthFillNonceIntent'
+        - $ref: '#/components/schemas/FillNonceIntent'
         - $ref: '#/components/schemas/EthPaymentIntent'
         - $ref: '#/components/schemas/EthStakingIntent'
         - $ref: '#/components/schemas/EthTransferTokenIntent'
+        - $ref: '#/components/schemas/StakeClaimRewardsIntent'
+        - $ref: '#/components/schemas/UndelegateIntent'
         - $ref: '#/components/schemas/FeeAddressTransferIntent'
+        - $ref: '#/components/schemas/HbarUpdateAccountIntent'
         - $ref: '#/components/schemas/HypeevmBridgeFundsIntent'
         - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
         - $ref: '#/components/schemas/HypeevmEnableBridgingIntent'
@@ -80116,7 +80607,9 @@ components:
         - $ref: '#/components/schemas/TonWhalesDelegateIntent'
         - $ref: '#/components/schemas/TonWhalesUndelegateIntent'
         - $ref: '#/components/schemas/TrxClaimRewardsIntent'
+        - $ref: '#/components/schemas/TrxDelegateResourceIntent'
         - $ref: '#/components/schemas/TrxFreezeIntent'
+        - $ref: '#/components/schemas/TrxUndelegateResourceIntent'
         - $ref: '#/components/schemas/TrxUnfreezeIntent'
         - $ref: '#/components/schemas/TrxVoteIntent'
         - $ref: '#/components/schemas/TrxWithdrawExpireUnfreezeIntent'
@@ -80132,6 +80625,8 @@ components:
         - $ref: '#/components/schemas/VetWithdrawStakeIntent'
         - $ref: '#/components/schemas/WalletRecoveryIntent'
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
+        - $ref: '#/components/schemas/StakeWithCallDataIntent'
+        - $ref: '#/components/schemas/SwitchValidatorWithCallDataIntent'
         - $ref: '#/components/schemas/CoreDaoDelegateIntent'
         - $ref: '#/components/schemas/CoreDaoUndelegateIntent'
         - $ref: '#/components/schemas/CoreDaoClaimIntent'
@@ -80161,7 +80656,7 @@ components:
     TransactionRequest1:
       title: TransactionRequest
       oneOf:
-        - $ref: '#/components/schemas/TransactionRequestLite2'
+        - $ref: '#/components/schemas/TransactionRequestLite'
         - $ref: '#/components/schemas/TransactionRequestFull'
     TransactionRequestApiVersion:
       title: TransactionRequestApiVersion
@@ -80538,14 +81033,14 @@ components:
       anyOf:
         - $ref: '#/components/schemas/AdaStakeIntent1'
         - $ref: '#/components/schemas/ConsolidateTokenIntent1'
-        - $ref: '#/components/schemas/CosmosContractCallIntent'
+        - $ref: '#/components/schemas/CosmosContractCallIntent1'
         - $ref: '#/components/schemas/DOTClaimIntent'
         - $ref: '#/components/schemas/DotPaymentIntent1'
         - $ref: '#/components/schemas/DotStakingIntent1'
         - $ref: '#/components/schemas/DotUnstakingIntent1'
         - $ref: '#/components/schemas/EthAccelerationIntent1'
         - $ref: '#/components/schemas/EthFillNonceIntent1'
-        - $ref: '#/components/schemas/EthPaymentIntent'
+        - $ref: '#/components/schemas/EthPaymentIntent1'
         - $ref: '#/components/schemas/ETHSignMessageIntent'
         - $ref: '#/components/schemas/EthStakingIntent1'
         - $ref: '#/components/schemas/NearStakeIntent1'
@@ -80559,49 +81054,14 @@ components:
         - $ref: '#/components/schemas/UnstakeIntent2'
         - $ref: '#/components/schemas/WalletRecoveryIntent1'
         - $ref: '#/components/schemas/WithdrawIntent2'
-    TransactionRequestLite1:
-      title: Lite
-      allOf:
-        - $ref: '#/components/schemas/TransactionRequestBase1'
-        - type: object
-          properties:
-            unsignedTxs:
-              type: array
-              description: Holds all unsigned transactions that will be used to fulfill the TxRequest for MPC wallets.
-              items:
-                $ref: '#/components/schemas/TransactionRequestUnsignedTransaction'
-            signatureShares:
-              type: array
-              description: Only used for MPC coins. This is used to collect signature shares from and exchange them with the user.
-              items:
-                $ref: '#/components/schemas/SignatureShare'
-            commitmentShares:
-              type: array
-              description: Only used for MPC coins on EdDSA curve. This is used to collect commitment shares from and exchange them with the user.
-              items:
-                $ref: '#/components/schemas/CommitmentShare'
-            txHashes:
-              type: array
-              items:
-                type: string
-                description: The hashes of all transactions from the TxRequest that have been signed and are pending broadcast.
-      required:
-        - txRequestId
-        - version
-        - latest
-        - walletId
-        - state
-        - date
-        - userId
-        - intent
-    TransactionRequestLite2:
+    TransactionRequestLite:
       title: TransactionRequestLite
       allOf:
         - type: object
           properties:
             intent:
               allOf:
-                - $ref: '#/components/schemas/TransactionIntent1'
+                - $ref: '#/components/schemas/TransactionIntent'
               description: The intent of the transaction request
             unsignedTxs:
               type: array
@@ -80687,6 +81147,41 @@ components:
                 type: string
                 description: The hashes of all transactions from the TxRequest that have been signed and are pending broadcast.
         - $ref: '#/components/schemas/TransactionRequestBase'
+    TransactionRequestLite1:
+      title: Lite
+      allOf:
+        - $ref: '#/components/schemas/TransactionRequestBase1'
+        - type: object
+          properties:
+            unsignedTxs:
+              type: array
+              description: Holds all unsigned transactions that will be used to fulfill the TxRequest for MPC wallets.
+              items:
+                $ref: '#/components/schemas/TransactionRequestUnsignedTransaction'
+            signatureShares:
+              type: array
+              description: Only used for MPC coins. This is used to collect signature shares from and exchange them with the user.
+              items:
+                $ref: '#/components/schemas/SignatureShare'
+            commitmentShares:
+              type: array
+              description: Only used for MPC coins on EdDSA curve. This is used to collect commitment shares from and exchange them with the user.
+              items:
+                $ref: '#/components/schemas/CommitmentShare'
+            txHashes:
+              type: array
+              items:
+                type: string
+                description: The hashes of all transactions from the TxRequest that have been signed and are pending broadcast.
+      required:
+        - txRequestId
+        - version
+        - latest
+        - walletId
+        - state
+        - date
+        - userId
+        - intent
     TransactionRequestState:
       title: TransactionRequestState
       type: string
@@ -82277,6 +82772,7 @@ components:
               type: string
               enum:
                 - transferToken
+              description: Must be "transferToken".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseIntent'
@@ -82733,6 +83229,31 @@ components:
       title: TRX Claim Rewards Transaction Properties
       allOf:
         - $ref: '#/components/schemas/StakingTransactionProperties'
+    TrxDelegateResourceIntent:
+      title: TRX Delegate Resource Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegateResource
+            ownerAddress:
+              type: string
+            receiverAddress:
+              type: string
+            resource:
+              type: string
+              enum:
+                - BANDWIDTH
+                - ENERGY
+          required:
+            - intentType
+            - ownerAddress
+            - receiverAddress
+            - resource
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     TrxDelegationProperties:
       title: TRX Delegation Properties
       allOf:
@@ -82864,6 +83385,31 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
+    TrxUndelegateResourceIntent:
+      title: TRX Undelegate Resource Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegateResource
+            ownerAddress:
+              type: string
+            receiverAddress:
+              type: string
+            resource:
+              type: string
+              enum:
+                - BANDWIDTH
+                - ENERGY
+          required:
+            - intentType
+            - ownerAddress
+            - receiverAddress
+            - resource
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/BaseIntentWithAmount'
     TrxUnfreezeIntent:
       title: TRX Unfreeze Intent
       allOf:
@@ -83146,9 +83692,14 @@ components:
               type: string
               enum:
                 - undelegate
+              description: Must be "undelegate".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
+      description: |-
+        Remove delegation of staked assets from a validator on EVM-compatible chains.
+        Initiates the unbonding period. Requires a staking request ID from the BitGo
+        staking service.
     UnknownDelegationProperties:
       title: Unknown Delegation Properties
       allOf:
@@ -90985,6 +91536,7 @@ components:
         - userKycState
         - enterpriseKycState
         - identityStatus
+        - idvStatus
         - accessToken
         - accountCreated
         - contractSigned
@@ -92014,6 +92566,34 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/AllWalletsScope'
+    solCloseAssociatedTokenAccountRecipients:
+      title: solCloseAssociatedTokenAccountRecipients
+      type: array
+      items:
+        type: object
+        description: |-
+          Internal io-ts brand for one close-ATA recipient row (not exported).
+
+          Uses {@link t.brand} instead of `t.refinement` so OpenAPI generation does not
+          emit an unresolvable `#/components/schemas/refinement`. The brand predicate must be
+          an inline function expression (not a bare identifier) so `@api-ts/openapi-generator`
+          does not try to resolve it as a codec. The predicate is cast via `unknown` to
+          satisfy `t.brand`'s `Branded<…>` predicate type because runtime checks match the
+          brand, while `SolCloseAssociatedTokenAccountRecipient` is a plain structural alias.
+          For the
+          narrowed row shape after validation, use {@link SolCloseAssociatedTokenAccountRecipient}
+          (see {@link SolCloseAssociatedTokenAccountIntent}’s exported type, which overrides
+          `recipients` accordingly).
+        properties:
+          address:
+            $ref: '#/components/schemas/Address'
+          amount:
+            $ref: '#/components/schemas/Amount'
+          data:
+            $ref: '#/components/schemas/optionalString'
+        required:
+          - address
+          - amount
     tokenBalances:
       title: tokenBalances
       type: object
