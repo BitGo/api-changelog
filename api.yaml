@@ -127,11 +127,6 @@ tags:
 
       The following headers are returned on every request <table> <tr> <td>Header</td><td>Description</td> </tr> <tr> <td>X-Ratelimit-Limit</td><td>Request limit per second</td> </tr> <tr> <td>X-Ratelimit-Remaining</td><td>Remaining number of requests allowed in interval</td> </tr> <tr> <td>X-Ratelimit-Reset</td><td>Duration in milliseconds until the total quota resets</td> </tr> </table>
       The following header is also returned if the response is `429 Too Many Requests` <table> <tr> <td>Header</td><td>Description</td> </tr> <tr> <td>Retry-After</td><td>Duration in seconds of how long to wait before making a new request</td> </tr> </table>
-  - name: Trade WebSocket
-    description: |-
-      Trade WebSocket API to get real-time status updates for market data and trigger messages for:
-      - Order books - Subscribe to a live feed of all outstanding buy and sell orders on the market for specific coins and tokens. Send messages when specific market conditions occur.
-      - Trade orders - Subscribe to live status updates for your trade orders, including individual fills for an order. Send messages when statuses update.
   - name: Trade Falcon
     description: Service for our trading platform
   - name: User Management Service (Internal)
@@ -25540,6 +25535,7 @@ paths:
                   - $ref: '#/components/schemas/InvalidWalletId'
   /api/policy/v1/enterprises/{enterpriseId}/rules:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: List policy rules
@@ -25579,6 +25575,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/organizations/{organizationId}/rules:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: List organization policy rules
@@ -25629,6 +25626,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/rules/{id}:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: Get policy rule
@@ -25657,6 +25655,7 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
     delete:
+      x-internal: false
       tags:
         - Policy Builder
       summary: Deactivate policy rule
@@ -25687,6 +25686,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/rules/{id}/versions:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: List policy-rule versions
@@ -25712,6 +25712,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/touchpoints/{touchpointName}/rules:
     post:
+      x-internal: false
       tags:
         - Policy Builder
       summary: Create policy rule
@@ -25750,6 +25751,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/touchpoints/{touchpointName}/rules/{id}:
     put:
+      x-internal: false
       tags:
         - Policy Builder
       summary: Update policy rule
@@ -25791,6 +25793,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/scopes:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: List scopes
@@ -25818,6 +25821,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/scopes/{scopeId}/conditions:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: List conditions for scope
@@ -25846,6 +25850,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/scopes/{scopeId}/touchpoints:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: List touchpoints
@@ -25874,6 +25879,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/touchpoints/{touchpointId}/conditions:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: List conditions for touchpoint
@@ -25902,6 +25908,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/touchpoints/{touchpointId}/filteringconditions/{filteringCondition}/actions:
     get:
+      x-internal: false
       tags:
         - Policy Builder
       summary: List actions
@@ -25931,6 +25938,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/organizations/{organizationId}/touchpoints/{touchpointName}/rules/{sharedId}:
     put:
+      x-internal: false
       tags:
         - Policy Builder
       summary: Update organization policy rule
@@ -25997,6 +26005,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/webhooks/keys/{keyId}:
     delete:
+      x-internal: false
       tags:
         - Webhook Keys
       summary: Revoke a webhook signing key
@@ -26050,6 +26059,7 @@ paths:
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/webhooks/keys:
     post:
+      x-internal: false
       tags:
         - Webhook Keys
       summary: Register a webhook signing key
@@ -26102,6 +26112,7 @@ paths:
         '500':
           $ref: '#/components/responses/ServerError'
     get:
+      x-internal: false
       tags:
         - Webhook Keys
       summary: List webhook signing keys
@@ -27784,80 +27795,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollateralWithdrawalRequestResponse'
-  /api/prime/trading/v1/ws:
-    get:
-      summary: Get WebSocket connection
-      description: Establish a WebSocket connection to get real-time updates for order books and trade orders.
-      operationId: trade.websocket
-      tags:
-        - Trade WebSocket
-      parameters:
-        - in: header
-          name: Authorization
-          required: true
-          schema:
-            type: string
-          description: Bearer token for authorization
-      requestBody:
-        description: Event subscription details
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/WebSocketSubscription'
-      responses:
-        '101':
-          description: |
-            Switching Protocols. Once connected, the server may send:
-            - `OrderBooksResponse` — level2 order book snapshot/updates
-            - `TradeOrdersResponse` — order events and subscription confirmations
-            - `SubscriptionResponse` — confirmation after every subscribe/unsubscribe request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/OrderBooksResponse'
-                  - $ref: '#/components/schemas/TradeOrdersResponse'
-                  - $ref: '#/components/schemas/SubscriptionResponse'
-              examples:
-                level2SnapshotPriceAndSize:
-                  summary: Level2 snapshot — [price, size] per level
-                  description: Order book snapshot when `includeCumulative` is false or omitted on the subscription.
-                  value:
-                    channel: level2
-                    type: snapshot
-                    product: TBTC-TUSD*
-                    time: '2020-01-01T09:35:26.465Z'
-                    bids:
-                      - - '7001.10'
-                        - '1.5084'
-                    asks:
-                      - - '7002.55'
-                        - '2.7524'
-                level2SnapshotWithCumulative:
-                  summary: Level2 snapshot — [price, size, cumulativeSize] per level
-                  description: Order book snapshot when `includeCumulative` is true on the subscription.
-                  value:
-                    channel: level2
-                    type: snapshot
-                    product: TBTC-TUSD*
-                    time: '2020-01-01T09:35:26.465Z'
-                    bids:
-                      - - '7001.10'
-                        - '1.5084'
-                        - '1.5084'
-                      - - '7000.50'
-                        - '0.8000'
-                        - '2.3084'
-                    asks:
-                      - - '7002.55'
-                        - '2.7524'
-                        - '2.7524'
-                      - - '7003.00'
-                        - '1.2000'
-                        - '3.9524'
-        '403':
-          $ref: '#/components/responses/ForbiddenError1'
   /api/staking/v1/{coin}/wallets/{walletId}/requests/{stakingRequestId}:
     delete:
       tags:
@@ -34093,9 +34030,13 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - export
+                - import
+                - importtoc
                 - transferAcknowledge
                 - transferAccept
                 - transferReject
+                - cosignDelegationProposal
                 - stake
                 - unstake
                 - delegate
@@ -34118,6 +34059,8 @@ paths:
                 - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
+                - delegateResource
+                - undelegateResource
               description: If provided, only transaction requests with the specified intent types will be returned.
         - name: excludeIntentTypes
           description: If provided, transaction requests with the specified intent types will be excluded.
@@ -34146,9 +34089,13 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - export
+                - import
+                - importtoc
                 - transferAcknowledge
                 - transferAccept
                 - transferReject
+                - cosignDelegationProposal
                 - stake
                 - unstake
                 - delegate
@@ -34171,6 +34118,8 @@ paths:
                 - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
+                - delegateResource
+                - undelegateResource
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: |-
@@ -34362,9 +34311,13 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - export
+                - import
+                - importtoc
                 - transferAcknowledge
                 - transferAccept
                 - transferReject
+                - cosignDelegationProposal
                 - stake
                 - unstake
                 - delegate
@@ -34387,6 +34340,8 @@ paths:
                 - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
+                - delegateResource
+                - undelegateResource
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: |-
@@ -39844,9 +39799,13 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - export
+                - import
+                - importtoc
                 - transferAcknowledge
                 - transferAccept
                 - transferReject
+                - cosignDelegationProposal
                 - stake
                 - unstake
                 - delegate
@@ -39869,6 +39828,8 @@ paths:
                 - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
+                - delegateResource
+                - undelegateResource
               description: If provided, only transaction requests with the specified intent types will be returned.
         - name: excludeIntentTypes
           description: If provided, transaction requests with the specified intent types will be excluded.
@@ -39897,9 +39858,13 @@ paths:
                 - contractCall
                 - customTx
                 - closeAssociatedTokenAccount
+                - export
+                - import
+                - importtoc
                 - transferAcknowledge
                 - transferAccept
                 - transferReject
+                - cosignDelegationProposal
                 - stake
                 - unstake
                 - delegate
@@ -39922,6 +39887,8 @@ paths:
                 - withdrawStake
                 - switchValidatorWithCallData
                 - spotTransfer
+                - delegateResource
+                - undelegateResource
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: |-
@@ -60746,37 +60713,6 @@ components:
             - intentType
             - nonce
         - $ref: '#/components/schemas/BaseIntentWithoutNonce1'
-    FillUpdated:
-      title: Fill Updated
-      allOf:
-        - $ref: '#/components/schemas/TradeBaseOrder'
-      example:
-        channel: orders
-        time: '2025-12-08T16:41:03.30491Z'
-        creationDate: '2025-12-08T16:41:02.802558Z'
-        scheduledDate: null
-        lastFillDate: '2025-12-08T16:41:03.419104Z'
-        completionDate: null
-        settleDate: null
-        accountId: 6598421ec862bac27d0d4f7d827fe202
-        orderId: 4f9aacc5-d8aa-4fe4-bb6d-109eee0b7270
-        clientOrderId: my-order-1
-        product: BTC-USD
-        fundingType: funded
-        status: open
-        execType: F
-        type: market
-        side: buy
-        quantity: '0.0068'
-        quantityCurrency: BTC
-        cumulativeQuantity: '0.00342566'
-        cumulativeQuoteQuantity: '310'
-        leavesQuantity: '0.0068'
-        leavesQuoteQuantity: null
-        averagePrice: '90493.51'
-        tradeId: 5606d256-818f-4e55-9cf8-4b237ddd0c85
-        fillQuantity: '0.00342566'
-        fillPrice: '90493.51'
     FilteringConditions:
       type: object
       description: |
@@ -64188,6 +64124,9 @@ components:
         - defi-redeem
         - delegateResource
         - undelegateResource
+        - export
+        - import
+        - importtoc
     IntentType1:
       title: IntentType
       type: string
@@ -64244,9 +64183,13 @@ components:
         - contractCall
         - customTx
         - closeAssociatedTokenAccount
+        - export
+        - import
+        - importtoc
         - transferAcknowledge
         - transferAccept
         - transferReject
+        - cosignDelegationProposal
         - stake
         - unstake
         - delegate
@@ -64269,6 +64212,8 @@ components:
         - withdrawStake
         - switchValidatorWithCallData
         - spotTransfer
+        - delegateResource
+        - undelegateResource
     InternationalWireAccountResponseProps:
       title: InternationalWireAccountResponseProps
       type: object
@@ -66624,6 +66569,18 @@ components:
           $ref: '#/components/schemas/User1'
         warning:
           type: string
+        sourceVerificationType:
+          type: string
+          description: How the request source was verified during login.
+          example: trust-my-device
+        twoFactorMethod:
+          type: string
+          description: The two-factor authentication method used during login.
+          example: totp
+        ssoProvider:
+          type: string
+          description: The SSO provider used for login, when applicable.
+          example: google
       required:
         - expires_at
         - expires_in
@@ -68592,145 +68549,6 @@ components:
         rtId: null
         isFinanced: false
         notes: null
-    OrderBooksRequest:
-      title: Order Books
-      required:
-        - type
-        - channel
-        - accountId
-        - productId
-      type: object
-      properties:
-        type:
-          type: string
-          description: The event type (e.g. "subscribe" or "unsubscribe")
-        channel:
-          type: string
-          description: The subscription channel (e.g. "level2" for order books)
-        accountId:
-          $ref: '#/components/schemas/AccountId'
-        productId:
-          type: string
-          description: The ID of product. (e.g. "TBTC-TUSD*")
-        includeCumulative:
-          type: boolean
-          description: |
-            Include cumulative size in each price level. When `true`, each level is `[price, size, cumulativeSize]` instead of `[price, size]`.
-            `cumulativeSize` is the running total of `size` from the top of that side through the level.
-          default: false
-      example:
-        type: subscribe
-        channel: level2
-        accountId: f230fdebfa084ffebc7e00515f54603f
-        productId: TBTC-TUSD*
-    OrderBooksResponse:
-      title: Order Books Response
-      type: object
-      properties:
-        channel:
-          type: string
-          description: The channel name (e.g. "level2").
-        type:
-          type: string
-          description: The type of the response (e.g. "snapshot").
-        product:
-          type: string
-          description: The product name (e.g. "TBTC-TUSD*").
-        time:
-          type: string
-          format: date-time
-          description: The timestamp of the snapshot.
-        bids:
-          type: array
-          description: |
-            An array of bid levels `[price, size]` or `[price, size, cumulativeSize]` when `includeCumulative` is true.
-            `cumulativeSize` is the running total of `size` from the top of that side through the level.
-          items:
-            type: array
-            items:
-              type: string
-        asks:
-          type: array
-          description: |
-            An array of ask levels `[price, size]` or `[price, size, cumulativeSize]` when `includeCumulative` is true.
-            `cumulativeSize` is the running total of `size` from the top of that side through the level.
-          items:
-            type: array
-            items:
-              type: string
-      example:
-        channel: level2
-        type: snapshot
-        product: TBTC-TUSD*
-        time: '2020-01-01T09:35:26.465Z'
-        bids:
-          - - '7001.10'
-            - '1.5084'
-        asks:
-          - - '7002.55'
-            - '2.7524'
-    OrderCanceled:
-      title: Order Canceled
-      allOf:
-        - $ref: '#/components/schemas/TradeBaseOrder'
-      example:
-        channel: orders
-        time: '2025-12-05T00:03:29.878861Z'
-        creationDate: '2025-12-05T00:03:28.501965Z'
-        scheduledDate: null
-        lastFillDate: null
-        completionDate: null
-        settleDate: null
-        accountId: 6598421ec862bac27d0d4f7d827fe202
-        orderId: 8857abd9-a88b-4059-a66c-9e45bfb58699
-        clientOrderId: my-order-1
-        product: BTC-USD
-        fundingType: funded
-        status: canceled
-        execType: '4'
-        type: market
-        side: buy
-        quantity: '0.0068'
-        quantityCurrency: BTC
-        cumulativeQuantity: '0'
-        cumulativeQuoteQuantity: '0'
-        leavesQuantity: '0.0068'
-        leavesQuoteQuantity: null
-        averagePrice: '0'
-        tradeId: ''
-        fillQuantity: ''
-        fillPrice: ''
-    OrderCompleted:
-      title: Order Completed
-      allOf:
-        - $ref: '#/components/schemas/TradeBaseOrder'
-      example:
-        channel: orders
-        time: '2025-12-05T00:03:29.878861Z'
-        creationDate: '2025-12-05T00:03:28.501965Z'
-        scheduledDate: null
-        lastFillDate: '2025-12-05T00:03:29.091521Z'
-        completionDate: '2025-12-05T00:03:29.878861Z'
-        settleDate: null
-        accountId: 6598421ec862bac27d0d4f7d827fe202
-        orderId: 8857abd9-a88b-4059-a66c-9e45bfb58699
-        clientOrderId: my-order-1
-        product: BTC-USD
-        fundingType: funded
-        status: completed
-        execType: I
-        type: market
-        side: buy
-        quantity: '0.0068'
-        quantityCurrency: BTC
-        cumulativeQuantity: '0.0068'
-        cumulativeQuoteQuantity: '615.38'
-        leavesQuantity: '0'
-        leavesQuoteQuantity: null
-        averagePrice: '90497.05'
-        tradeId: ''
-        fillQuantity: ''
-        fillPrice: ''
     OrderConflictError:
       required:
         - error
@@ -68748,63 +68566,6 @@ components:
         error: backend:common:inUse key=clientOrderId
         errorName: backend:common:inUse
         reqId: unk-nqo97l23l2ofpvgkbb8z
-    OrderCreated:
-      title: Order Created
-      allOf:
-        - $ref: '#/components/schemas/TradeBaseOrder'
-        - type: object
-      example:
-        channel: orders
-        time: '2025-12-08T16:41:02.802558Z'
-        creationDate: '2025-12-05T21:31:37.907912Z'
-        scheduledDate: null
-        lastFillDate: null
-        completionDate: null
-        settleDate: null
-        accountId: f230fdebfa084ffebc7e00515f54603f
-        orderId: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
-        clientOrderId: my-order-1
-        product: BTC-USD
-        fundingType: funded
-        status: pending_open
-        execType: A
-        type: market
-        side: buy
-        quantity: '0.0068'
-        quantityCurrency: BTC
-        cumulativeQuantity: '0.00110034'
-        cumulativeQuoteQuantity: '0'
-        leavesQuantity: '0.0068'
-        leavesQuoteQuantity: null
-        averagePrice: '0'
-        tradeId: ''
-        fillQuantity: ''
-        fillPrice: ''
-    OrderError:
-      title: Order Error
-      allOf:
-        - $ref: '#/components/schemas/TradeBaseOrder'
-      example:
-        channel: orders
-        time: '2019-04-25T01:02:03.045678Z'
-        accountId: f230fdebfa084ffebc7e00515f54603f
-        orderId: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
-        product: BTC-USD
-        fundingType: funded
-        status: error
-        execType: '8'
-        type: market
-        side: buy
-        quantity: '0.0068'
-        quantityCurrency: BTC
-        cumulativeQuantity: '0.00359973'
-        cumulativeQuoteQuantity: '325.53'
-        leavesQuantity: '0.00320027'
-        leavesQuoteQuantity: null
-        averagePrice: '90431.78'
-        tradeId: ''
-        fillQuantity: ''
-        fillPrice: ''
     OrderHistoryBase:
       title: OrderHistoryBase
       type: object
@@ -78392,54 +78153,6 @@ components:
                 - STACK
                 - SELF_STACK
                 - UNSTACK
-    SubscriptionResponse:
-      title: Subscription Response
-      description: |
-        Sent by the server after every subscribe or unsubscribe request to confirm the outcome.
-        Clients should handle this message type to detect whether a subscription was accepted,
-        already active, or released.
-      type: object
-      required:
-        - type
-        - channel
-        - status
-      properties:
-        type:
-          type: string
-          description: Always "subscription_response".
-          enum:
-            - subscription_response
-        channel:
-          type: string
-          description: The channel the subscription applies to ("orders" or "level2").
-          enum:
-            - orders
-            - level2
-        status:
-          type: string
-          description: |
-            Outcome of the subscribe/unsubscribe request:
-            - `subscribed` — subscription was accepted and is now active.
-            - `already_subscribed` — (orders channel only) a subscription for this accountId was already active; no duplicate was created. For the level2 channel, duplicate subscribe requests return an error instead, because `includeCumulative` is fixed for the lifetime of a subscription and cannot be changed without unsubscribing first.
-            - `unsubscribed` — subscription was successfully removed.
-          enum:
-            - subscribed
-            - already_subscribed
-            - unsubscribed
-        accountId:
-          $ref: '#/components/schemas/AccountId'
-        productId:
-          type: string
-          description: The product ID, present for level2 subscriptions.
-          example: TBTC-TUSD*
-        session_id:
-          type: string
-          description: The session ID for this WebSocket connection.
-      example:
-        type: subscription_response
-        channel: orders
-        status: subscribed
-        accountId: f230fdebfa084ffebc7e00515f54603f
     SubstrateAccountBaseBuildOptions:
       title: SubstrateAccountBaseBuildOptions
       allOf:
@@ -79927,119 +79640,6 @@ components:
               items:
                 $ref: '#/components/schemas/Touchpoint'
         - $ref: '#/components/schemas/PaginatedResults'
-    TradeBaseOrder:
-      type: object
-      properties:
-        channel:
-          type: string
-          description: The channel you are subscribed to.
-          example: orders
-        time:
-          type: string
-          format: date-time
-        creationDate:
-          type: string
-          format: date-time
-        completionDate:
-          type: string
-          format: date-time
-        settleDate:
-          type: string
-          format: date-time
-        scheduledDate:
-          $ref: '#/components/schemas/ScheduledDate'
-        lastFillDate:
-          type: string
-          format: date-time
-        accountId:
-          $ref: '#/components/schemas/AccountId'
-        clientOrderId:
-          $ref: '#/components/schemas/ClientOrderId'
-        orderId:
-          type: string
-          description: The ID of the order.
-          example: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
-        product:
-          type: string
-          description: Product name.
-          example: BTC-USD
-        fundingType:
-          $ref: '#/components/schemas/FundingType'
-        status:
-          $ref: '#/components/schemas/OrderStatus'
-        execType:
-          type: string
-          description: |
-            The type of update, using FIX 4.4 ExecType (tag 150) values.
-            Use this field to distinguish order status updates from fill events.
-
-            - `F` (Trade) — a fill occurred; check `tradeId`, `fillQuantity`, `fillPrice` for fill details
-            - `0` (New) — order accepted by the exchange
-            - `A` (Pending New) — order submitted, awaiting acceptance
-            - `6` (Pending Cancel) — cancel request sent
-            - `4` (Canceled) — order canceled
-            - `8` (Rejected) — order rejected or internal failure
-            - `I` (Order Status) — terminal status summary (e.g. completed)
-          example: F
-        type:
-          $ref: '#/components/schemas/OrderType'
-        side:
-          $ref: '#/components/schemas/Side'
-        quantity:
-          type: string
-          format: decimal
-          description: The specified quantity.
-          example: 25.07
-        quantityCurrency:
-          type: string
-          description: The specified quantity currency.
-          example: USD
-        cumulativeQuantity:
-          type: string
-          format: decimal
-          description: The total base quantity filled for the order.
-          example: 0.0123
-        cumulativeQuoteQuantity:
-          type: string
-          format: decimal
-          description: The total quote quantity filled for the order.
-          example: 49.99
-        leavesQuantity:
-          type: string
-          format: decimal
-          description: |
-            For orders created with base currency, this field is set to the remaining unfilled base quantity.
-
-            - Only one of leavesQuantity or leavesQuoteQuantity will be set.
-            - This field is set to null for orders created with quote currency.
-          example: 0.0068
-        leavesQuoteQuantity:
-          type: string
-          format: decimal
-          description: |
-            For orders created with quote currency, this field is set to the remaining unfilled quote quantity.
-
-            - Only one of leavesQuantity or leavesQuoteQuantity will be set.
-            - This field is set to null for orders created with base currency.
-          example: 23.12
-        averagePrice:
-          type: string
-          format: decimal
-          description: The average price for the order's fills.
-        tradeId:
-          type: string
-          description: The ID of the trade.
-          example: 14db12f5-4d3d-4fd8-8ced-062aa81bb4bc
-        fillQuantity:
-          type: string
-          format: decimal
-          description: The quantity of the fill for the trade.
-          example: 0.5
-        fillPrice:
-          type: string
-          format: decimal
-          description: The price of the fill for the trade.
-          example: 7090.1
     TradeBaseQuoteInbound:
       title: TradeBaseQuoteInbound
       oneOf:
@@ -80105,49 +79705,6 @@ components:
       required:
         - currency
         - quantity
-    TradeOrdersRequest:
-      title: Trade Orders
-      description: |
-        Subscribe or unsubscribe to order events for a specific account.
-
-        Multiple subscriptions are supported on a single connection — send separate subscribe
-        messages for each accountId. Each subscribe/unsubscribe triggers a `subscription_response`
-        message confirming the outcome.
-
-        **Behavior changes (previously silent, now explicit):**
-        - Subscribing to an already-subscribed accountId returns status `already_subscribed` instead of being silently ignored.
-        - Unsubscribing from an accountId that is not currently subscribed returns an error message instead of being silently ignored.
-      required:
-        - type
-        - channel
-        - accountId
-      type: object
-      properties:
-        type:
-          type: string
-          description: The event type ("subscribe" or "unsubscribe")
-          enum:
-            - subscribe
-            - unsubscribe
-        channel:
-          type: string
-          description: The subscription channel ("orders" for trade orders)
-          enum:
-            - orders
-        accountId:
-          $ref: '#/components/schemas/AccountId'
-      example:
-        type: subscribe
-        channel: orders
-        accountId: f230fdebfa084ffebc7e00515f54603f
-    TradeOrdersResponse:
-      title: Trade Orders Response
-      oneOf:
-        - $ref: '#/components/schemas/OrderCreated'
-        - $ref: '#/components/schemas/FillUpdated'
-        - $ref: '#/components/schemas/OrderCompleted'
-        - $ref: '#/components/schemas/OrderCanceled'
-        - $ref: '#/components/schemas/OrderError'
     TradePayloadResponse:
       title: TradePayloadResponse
       type: object
@@ -91299,10 +90856,6 @@ components:
       title: WCT unstaking request entity properties
       allOf:
         - $ref: '#/components/schemas/EthCommonStakingRequestEntityProperties'
-    WebSocketSubscription:
-      oneOf:
-        - $ref: '#/components/schemas/OrderBooksRequest'
-        - $ref: '#/components/schemas/TradeOrdersRequest'
     Webhook1:
       type: object
       properties:
@@ -92663,7 +92216,6 @@ x-tagGroups:
       - Settlement Onboarding
       - Settlement Signing
       - Settlements
-      - Trade WebSocket
       - Transaction request
       - Transfer
       - User
