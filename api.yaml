@@ -11669,10 +11669,11 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/requests/{requestId}:
     get:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: Get staking request for Go Account
       description: Get a specific staking request for a given asset and Go Account.
       operationId: v1.goStaking.request.getById
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin1'
         - $ref: '#/components/parameters/pathAccountId'
@@ -11697,10 +11698,11 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/requests:
     get:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: List staking requests by asset for Go Account
       description: List all staking requests for a given asset and Go Account.
       operationId: v1.goStaking.request.listByCoinAndAccount
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin1'
         - $ref: '#/components/parameters/pathAccountId'
@@ -11728,10 +11730,11 @@ paths:
   /api/go-staking/v1/accounts/{accountId}/rewards:
     get:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: List staking rewards for Go Account
       description: List all staking rewards for a given Go Account.
       operationId: v1.goStaking.rewards.listByAccount
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathAccountId'
         - $ref: '#/components/parameters/queryPageNumber'
@@ -11756,10 +11759,11 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/rewards:
     get:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: List staking rewards by asset for Go Account
       description: List all staking rewards for a given asset and Go Account.
       operationId: v1.goStaking.rewards.listByAccountAndCoin
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin1'
         - $ref: '#/components/parameters/pathAccountId'
@@ -11785,10 +11789,11 @@ paths:
   /api/go-staking/v1/accounts/{accountId}/requests:
     get:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: List staking requests for Go Account
       description: List all staking requests for a given Go Account.
       operationId: v1.goStaking.request.listByAccount
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathAccountId'
         - $ref: '#/components/parameters/queryRequestStatus'
@@ -11815,10 +11820,11 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/requests/preview:
     post:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: Generate staking request for Go Account
       description: Generate an unsigned staking request to preview for a given asset and Go Account. Use only for stake requests - don't use for unstaking requests.
       operationId: v1.goStaking.request.preview
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin1'
         - $ref: '#/components/parameters/pathAccountId'
@@ -11853,10 +11859,11 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/requests/finalize:
     post:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: Finalize staking request for Go Account
       description: Create a finalized staking request based on previously previewed data for a given asset and Go Account.
       operationId: v1.goStaking.request.finalize
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin1'
         - $ref: '#/components/parameters/pathAccountId'
@@ -11897,7 +11904,7 @@ paths:
   /api/go-staking/v1/coins:
     get:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: List supported coins
       description: Returns a paginated list of supported staking coins for the authenticated user.
       operationId: v1.goStaking.coins.list
@@ -11921,10 +11928,11 @@ paths:
   /api/go-staking/v1/accounts/{accountId}/coins:
     get:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: List staking wallets for Go Account
       description: List all staking wallets associated with a given Go Account.
       operationId: v1.goStaking.wallet.listByAccountId
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathAccountId'
         - $ref: '#/components/parameters/queryPageNumber'
@@ -11947,10 +11955,11 @@ paths:
   /api/go-staking/v1/{coin}/accounts/{accountId}/attributes:
     get:
       tags:
-        - Go Account Staking (beta)
+        - Go Account Staking
       summary: Get staking wallet attributes for Go Account
       description: Get staking wallet attributes for a given asset and Go Account.
       operationId: v1.goStaking.wallet.getAttributesByCoinAndAccount
+      x-internal: false
       parameters:
         - $ref: '#/components/parameters/pathCoin1'
         - $ref: '#/components/parameters/pathAccountId'
@@ -47512,6 +47521,7 @@ components:
       name: createdDateGte
       in: query
       required: false
+      description: Filter results created on or after this date-time (ISO 8601).
       schema:
         type: string
         format: date-time
@@ -47519,6 +47529,7 @@ components:
       name: createdDateLt
       in: query
       required: false
+      description: Filter results created before this date-time (ISO 8601).
       schema:
         type: string
         format: date-time
@@ -47526,6 +47537,7 @@ components:
       name: endDate
       in: query
       required: false
+      description: End of the date range filter (ISO 8601).
       schema:
         type: string
         format: date-time
@@ -47616,6 +47628,7 @@ components:
       name: sortBy
       in: query
       required: false
+      description: Sort order for results. Prefix with '-' for descending order.
       schema:
         type: string
         enum:
@@ -47650,6 +47663,7 @@ components:
       name: startDate
       in: query
       required: false
+      description: Start of the date range filter (ISO 8601).
       schema:
         type: string
         format: date-time
@@ -62928,6 +62942,8 @@ components:
           format: date-time
         properties:
           $ref: '#/components/schemas/GoStakingRequestProperties'
+        source:
+          $ref: '#/components/schemas/RequestSource'
     GoStakingRequestProperties:
       type: object
       properties:
@@ -62962,6 +62978,8 @@ components:
         coin:
           type: string
         activeStake:
+          type: string
+        activeAutoStaked:
           type: string
         pendingStake:
           type: string
@@ -73430,6 +73448,11 @@ components:
         - processing
         - completed
         - failed
+    RequestSource:
+      type: string
+      enum:
+        - MANUAL
+        - AUTO_STAKE
     RequestedProductResponse:
       type: object
       properties:
