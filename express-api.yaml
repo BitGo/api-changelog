@@ -7876,6 +7876,7 @@ components:
               description: Whether the wallet needs to be initialized on the chain
         - $ref: '#/components/schemas/WalletCoinSpecificBtc'
         - $ref: '#/components/schemas/WalletCoinSpecificCosmos'
+        - $ref: '#/components/schemas/WalletCoinSpecificOfc'
         - $ref: '#/components/schemas/WalletCoinSpecificXlm'
     WalletCoinSpecificBtc:
       title: BTC
@@ -7907,6 +7908,26 @@ components:
       required:
         - rootAddress
         - lastMemoId
+    WalletCoinSpecificOfc:
+      title: OFC
+      type: object
+      description: Coin-specific data for OFC (Go Account) wallets.
+      properties:
+        needsKeyReshareAfterPasswordReset:
+          type: boolean
+          description: |
+            True if all users need to recover the user key. Set to true after a successful
+            password reset with support.
+        pendingSystemInitialization:
+          type: boolean
+          description: |
+            True if the wallet is still pending initialization. While true, users cannot
+            create addresses or initiate withdrawals.
+        userKeySigningRequired:
+          type: boolean
+          description: |
+            True if the wallet requires user signatures for all transactions and refuses BitGo
+            KMS signing. Defaults to true when not explicitly set. Only applicable for OFC wallets.
     WalletCoinSpecificXlm:
       title: XLM
       type: object
