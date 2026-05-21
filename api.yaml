@@ -26184,6 +26184,48 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/policy/v1/enterprises/{enterpriseId}/recommendations:
+    get:
+      x-internal: false
+      tags:
+        - Policy Builder
+      summary: Get policy recommendations
+      description: |
+        Returns policy recommendations for an enterprise.
+
+        **Authorization:** Caller must have read-policy permissions, be an admin, or be a member of the enterprise.
+      operationId: v1.policy.recommendations.list
+      parameters:
+        - $ref: '#/components/parameters/Enterprise1'
+        - name: limit
+          in: query
+          description: |
+            Number of recommendations to return. Default: 3, Minimum: 1, Maximum: 50.
+          required: false
+          schema:
+            type: integer
+            default: 3
+            minimum: 1
+            maximum: 50
+          example: 3
+      responses:
+        '200':
+          description: A list of policy recommendations for the enterprise.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyRecommendationResponse'
+              examples:
+                PolicyRecommendationsExample:
+                  $ref: '#/components/examples/PolicyRecommendationsExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /api/prime/trading/v1/user/current:
     get:
       summary: Get Current User
@@ -44871,6 +44913,90 @@ components:
         totalStaked: '0'
         amount: '500000000000'
         gasPrice: '200000000000'
+    PolicyRecommendationsExample:
+      summary: Policy recommendations
+      description: A successful response with policy recommendations for an enterprise.
+      value:
+        enterpriseId: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
+        recommendations:
+          - recommendationId: rec-spend-limit-001
+            adoptionPercentage: 0.75
+            confidenceScore: 0.85
+            explanation: 75% of enterprises enforce a spending limit on segregated wallet transfers.
+            description: Protect against unauthorized large transfers by requiring approval above a threshold.
+            source: PEER_POPULAR
+            enterpriseAdoptionCount: 150
+            totalPeers: 200
+            title: Add spending limit on wallet transfers
+            template:
+              name: Spending limit on segregated wallet transfers
+              scopeCondition:
+                name: wallet.type
+                label: Wallet Type
+                description: Allows creating a condition based on the Wallet Type
+                status: ACTIVE
+                parameters: []
+                adminOnly: false
+                bitgoManaged: false
+              touchpoint:
+                id: 0441ea9f-cd66-4d60-a52a-471aecd3e54e
+                name: wallet.segregated.transfer
+                status: ACTIVE
+                label: Transfer from a Segregated Wallet
+                description: When transferring from a BitGo Segregated Wallet
+                adminOnly: false
+              touchpointConditions:
+                - condition:
+                    name: transfer.amount
+                    label: Spending limit
+                    description: Allows creating a condition based on the Transfer Amount
+                    status: ACTIVE
+                    adminOnly: false
+                    parameters:
+                      - name: operator
+                        label: Comparison Operator
+                        description: The comparison operator to use when comparing the transfer amount with the given limit
+                        type: ENUMERATED
+                        required: ALWAYS
+                        allowMultiple: false
+                        values: []
+                      - name: amount
+                        label: The amount to compare to
+                        description: The transfer amount will be compared with this limit
+                        type: NON_NEGATIVE_NUMBER
+                        required: ALWAYS
+                        allowMultiple: false
+                        values: []
+                      - name: coin
+                        label: Currency
+                        description: This condition only applies to transfers of this currency
+                        type: COIN_OR_USD
+                        required: ALWAYS
+                        allowMultiple: false
+                        values: []
+                    bitgoManaged: false
+                  conditionParameters:
+                    operator: '>'
+                    amount: '10000000'
+                    coin: btc
+              touchpointActions:
+                - action:
+                    name: approvals.customer.walletAdmin
+                    label: Wallet Admin
+                    description: Require approval from wallet admins
+                    status: ACTIVE
+                    adminOnly: false
+                    parameters:
+                      - name: minRequired
+                        label: Approvals Required
+                        description: Minimum required number of approvers
+                        type: NON_NEGATIVE_NUMBER
+                        required: OPTIONAL
+                        allowMultiple: false
+                        values: []
+                    bitgoManaged: false
+                  actionParameters: {}
+              touchpointConditionsOperator: AND
     PolicyRuleExample:
       summary: A policy rule
       description: A successful policy rule details response.
@@ -54768,6 +54894,13 @@ components:
               - $ref: '#/components/schemas/TransferVelocityLimitConditionRequest'
               - $ref: '#/components/schemas/TransferDestinationTypeConditionRequest'
               - $ref: '#/components/schemas/TransferInitiatorsConditionRequest'
+    ClauseOperator:
+      type: string
+      description: Logical operator for combining multiple conditions or actions within a clause.
+      enum:
+        - AND
+        - OR
+      example: AND
     ClearLoopConnectionKey:
       title: ClearLoopConnectionKey
       type: object
@@ -71869,6 +72002,74 @@ components:
           items:
             type: string
             minLength: 1
+    PolicyRecommendation:
+      type: object
+      description: A recommended policy configuration for the enterprise.
+      required:
+        - recommendationId
+        - adoptionPercentage
+        - confidenceScore
+        - explanation
+        - source
+        - enterpriseAdoptionCount
+        - totalPeers
+        - title
+        - template
+      properties:
+        recommendationId:
+          type: string
+          description: Unique identifier for this recommendation.
+          example: rec-abc123
+        adoptionPercentage:
+          type: number
+          format: double
+          description: Adoption rate for this policy pattern.
+          example: 0.75
+        confidenceScore:
+          type: number
+          format: double
+          description: Confidence score for this recommendation (0.0 to 1.0).
+          example: 0.85
+        explanation:
+          type: string
+          description: Human-readable explanation of why this policy is recommended.
+          example: 75% of similar enterprises enforce a spending limit on segregated wallet transfers.
+        description:
+          type: string
+          description: Additional description of the recommendation.
+          example: Protect against unauthorized large transfers by requiring approval above a threshold.
+        source:
+          $ref: '#/components/schemas/RecommendationSource'
+        enterpriseAdoptionCount:
+          type: integer
+          description: Number of enterprises that have adopted this policy pattern.
+          example: 150
+        totalPeers:
+          type: integer
+          description: Total number of enterprises considered.
+          example: 200
+        title:
+          type: string
+          description: Short title for the recommendation.
+          example: Add spending limit on wallet transfers
+        template:
+          $ref: '#/components/schemas/RecommendationTemplate'
+    PolicyRecommendationResponse:
+      type: object
+      description: Response containing policy recommendations for an enterprise.
+      required:
+        - enterpriseId
+        - recommendations
+      properties:
+        enterpriseId:
+          type: string
+          description: The enterprise ID.
+          example: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
+        recommendations:
+          type: array
+          description: List of policy recommendations.
+          items:
+            $ref: '#/components/schemas/PolicyRecommendation'
     PolicyRule:
       type: object
       properties:
@@ -72882,6 +73083,295 @@ components:
       required:
         - address
         - amount
+    RecommendationActionEntry:
+      type: object
+      description: An action entry in the recommendation template.
+      required:
+        - action
+      properties:
+        action:
+          $ref: '#/components/schemas/RecommendationActionMeta'
+        actionParameters:
+          type: object
+          description: Recommended parameter values for the action.
+          additionalProperties: true
+    RecommendationActionMeta:
+      type: object
+      description: Metadata for a recommended action.
+      required:
+        - name
+        - label
+        - description
+        - status
+        - adminOnly
+        - parameters
+        - bitgoManaged
+      properties:
+        name:
+          type: string
+          description: Name of the action.
+          example: approvals.customer.walletAdmin
+        label:
+          type: string
+          description: Human-readable label.
+          example: Wallet Admin
+        description:
+          type: string
+          description: Description of the action.
+          example: Require approval from wallet admins
+        status:
+          type: string
+          description: Status of the action.
+          enum:
+            - ACTIVE
+            - INACTIVE
+          example: ACTIVE
+        adminOnly:
+          type: boolean
+          description: Whether this action is admin-only.
+          example: false
+        parameters:
+          type: array
+          description: Parameter definitions for the action.
+          items:
+            $ref: '#/components/schemas/RecommendationParameterDef'
+        bitgoManaged:
+          type: boolean
+          description: Whether this action is managed by BitGo.
+          example: false
+    RecommendationConditionEntry:
+      type: object
+      description: A condition entry in the recommendation template.
+      required:
+        - condition
+      properties:
+        condition:
+          $ref: '#/components/schemas/RecommendationConditionMeta'
+        conditionParameters:
+          type: object
+          description: Recommended parameter values for the condition.
+          additionalProperties: true
+    RecommendationConditionMeta:
+      type: object
+      description: Metadata for a recommended condition.
+      required:
+        - name
+        - label
+        - description
+        - status
+        - parameters
+        - bitgoManaged
+      properties:
+        name:
+          type: string
+          description: Name of the condition.
+          example: transfer.amount
+        label:
+          type: string
+          description: Human-readable label.
+          example: Spending limit
+        description:
+          type: string
+          description: Description of the condition.
+          example: Allows creating a condition based on the Transfer Amount
+        status:
+          type: string
+          description: Status of the condition.
+          enum:
+            - ACTIVE
+            - INACTIVE
+          example: ACTIVE
+        adminOnly:
+          type: boolean
+          description: Whether this condition is admin-only.
+          default: false
+          example: false
+        parameters:
+          type: array
+          description: Parameter definitions for the condition.
+          items:
+            $ref: '#/components/schemas/RecommendationParameterDef'
+        bitgoManaged:
+          type: boolean
+          description: Whether this condition is managed by BitGo.
+          example: false
+    RecommendationParameterDef:
+      type: object
+      description: Definition of a parameter for a condition or action.
+      required:
+        - name
+        - label
+        - description
+        - type
+        - required
+        - allowMultiple
+      properties:
+        name:
+          type: string
+          description: Name of the parameter.
+          example: amount
+        label:
+          type: string
+          description: Human-readable label.
+          example: Amount
+        description:
+          type: string
+          description: Description of the parameter.
+          example: The amount that can be spent within the time window
+        type:
+          type: string
+          description: Type of the parameter value.
+          example: NON_NEGATIVE_NUMBER
+        required:
+          type: string
+          description: Whether the parameter is required.
+          enum:
+            - ALWAYS
+            - OPTIONAL
+            - ONE_OR_MORE
+          example: ALWAYS
+        allowMultiple:
+          type: boolean
+          description: Whether multiple values can be provided.
+          example: false
+        values:
+          type: array
+          description: List of valid values (empty if free-form).
+          items: {}
+    RecommendationScopeCondition:
+      type: object
+      description: The scope condition for the recommended policy rule.
+      required:
+        - name
+        - label
+        - description
+        - status
+      properties:
+        name:
+          type: string
+          description: Name of the scope condition.
+          example: wallet.type
+        label:
+          type: string
+          description: Human-readable label.
+          example: Wallet Type
+        description:
+          type: string
+          description: Description of the scope condition.
+          example: Allows creating a condition based on the Wallet Type
+        status:
+          type: string
+          description: Status of the scope condition.
+          enum:
+            - ACTIVE
+            - INACTIVE
+          example: ACTIVE
+        parameters:
+          type: array
+          description: Parameter definitions for the scope condition.
+          items: {}
+        adminOnly:
+          type: boolean
+          description: Whether this scope condition is admin-only.
+          default: false
+          example: false
+        bitgoManaged:
+          type: boolean
+          description: Whether this scope condition is managed by BitGo.
+          default: false
+          example: false
+    RecommendationSource:
+      type: string
+      description: |
+        The source of the recommendation.
+
+        * `PEER_POPULAR` - Based on popular adoption among enterprises.
+        * `PARAMETER_DRIFT` - Based on differences from common parameter configurations.
+        * `DEFAULT_TEMPLATE` - Based on a default best-practice template.
+      enum:
+        - PEER_POPULAR
+        - PARAMETER_DRIFT
+        - DEFAULT_TEMPLATE
+      example: PEER_POPULAR
+    RecommendationTemplate:
+      type: object
+      description: The recommended policy rule template with scope, touchpoint, conditions, and actions.
+      required:
+        - name
+        - scopeCondition
+        - touchpoint
+        - touchpointConditions
+        - touchpointActions
+      properties:
+        name:
+          type: string
+          description: Name of the template.
+          example: Spending limit on segregated wallet transfers
+        scopeCondition:
+          $ref: '#/components/schemas/RecommendationScopeCondition'
+        touchpoint:
+          $ref: '#/components/schemas/RecommendationTouchpoint'
+        touchpointConditions:
+          type: array
+          description: List of conditions for the policy rule.
+          items:
+            $ref: '#/components/schemas/RecommendationConditionEntry'
+        touchpointActions:
+          type: array
+          description: List of actions for the policy rule.
+          items:
+            $ref: '#/components/schemas/RecommendationActionEntry'
+        scopeConditionParameters:
+          type: object
+          description: Parameter values for the scope condition.
+          additionalProperties: true
+          nullable: true
+        touchpointConditionsOperator:
+          allOf:
+            - $ref: '#/components/schemas/ClauseOperator'
+          nullable: true
+        touchpointActionsOperator:
+          allOf:
+            - $ref: '#/components/schemas/ClauseOperator'
+          nullable: true
+    RecommendationTouchpoint:
+      type: object
+      description: The touchpoint (trigger point) for the recommended policy rule.
+      required:
+        - id
+        - name
+        - status
+        - label
+        - description
+        - adminOnly
+      properties:
+        id:
+          type: string
+          description: Unique identifier of the touchpoint.
+          example: 0441ea9f-cd66-4d60-a52a-471aecd3e54e
+        name:
+          type: string
+          description: Name of the touchpoint.
+          example: wallet.segregated.transfer
+        status:
+          type: string
+          description: Status of the touchpoint.
+          enum:
+            - ACTIVE
+            - INACTIVE
+          example: ACTIVE
+        label:
+          type: string
+          description: Human-readable label for the touchpoint.
+          example: Transfer from a Segregated Wallet
+        description:
+          type: string
+          description: Description of the touchpoint.
+          example: When transferring from a BitGo Segregated Wallet
+        adminOnly:
+          type: boolean
+          description: Whether this touchpoint is admin-only.
+          example: false
     RecoveryCodesResponse:
       title: RecoveryCodesResponse
       type: object
@@ -89140,6 +89630,7 @@ components:
               description: Whether the wallet needs to be initialized on the chain
         - $ref: '#/components/schemas/WalletCoinSpecificBtc'
         - $ref: '#/components/schemas/WalletCoinSpecificCosmos'
+        - $ref: '#/components/schemas/WalletCoinSpecificOfc'
         - $ref: '#/components/schemas/WalletCoinSpecificXlm'
     WalletCoinSpecificBtc:
       title: BTC
@@ -89171,6 +89662,26 @@ components:
       required:
         - rootAddress
         - lastMemoId
+    WalletCoinSpecificOfc:
+      title: OFC
+      type: object
+      description: Coin-specific data for OFC (Go Account) wallets.
+      properties:
+        needsKeyReshareAfterPasswordReset:
+          type: boolean
+          description: |
+            True if all users need to recover the user key. Set to true after a successful
+            password reset with support.
+        pendingSystemInitialization:
+          type: boolean
+          description: |
+            True if the wallet is still pending initialization. While true, users cannot
+            create addresses or initiate withdrawals.
+        userKeySigningRequired:
+          type: boolean
+          description: |
+            True if the wallet requires user signatures for all transactions and refuses BitGo
+            KMS signing. Defaults to true when not explicitly set. Only applicable for OFC wallets.
     WalletCoinSpecificXlm:
       title: XLM
       type: object
