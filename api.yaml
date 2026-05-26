@@ -29856,6 +29856,66 @@ paths:
                   type: string
                   minLength: 1
                   description: Share token to copy an existing applicant from another Sumsub environment
+                lang:
+                  type: string
+                  enum:
+                    - ar
+                    - hy
+                    - az
+                    - bn
+                    - bg
+                    - my
+                    - ca
+                    - km
+                    - zh
+                    - zh-tw
+                    - hr
+                    - cs
+                    - da
+                    - nl
+                    - en
+                    - et
+                    - fl
+                    - fi
+                    - fr
+                    - ka
+                    - de
+                    - el
+                    - ha
+                    - he
+                    - hi
+                    - hu
+                    - id
+                    - it
+                    - ja
+                    - kk
+                    - ko
+                    - lo
+                    - lv
+                    - lt
+                    - ms
+                    - 'no'
+                    - fa
+                    - pl
+                    - pt
+                    - pt-br
+                    - ro
+                    - ru
+                    - sr
+                    - sk
+                    - sl
+                    - es
+                    - sw
+                    - sv
+                    - tg
+                    - tr
+                    - th
+                    - uk
+                    - ur
+                    - uz
+                    - vi
+                    - zu
+                  description: Language code for the Sumsub WebSDK UI (ISO 639-1). Defaults to en.
               required:
                 - userId
                 - enterpriseId
@@ -31455,7 +31515,7 @@ paths:
                     - sofid
                     - cusd
                     - fyusd
-                    - goqxmp
+                    - qxmp
                     - usd
               - type: string
                 enum:
@@ -31464,7 +31524,7 @@ paths:
                   - sofid
                   - cusd
                   - fyusd
-                  - goqxmp
+                  - qxmp
                   - usd
             example: usd1
         - name: type
@@ -31824,7 +31884,7 @@ paths:
                     - sofid
                     - cusd
                     - fyusd
-                    - goqxmp
+                    - qxmp
               - type: string
                 enum:
                   - gousd
@@ -31832,7 +31892,7 @@ paths:
                   - sofid
                   - cusd
                   - fyusd
-                  - goqxmp
+                  - qxmp
             example: usd1
         - name: chain
           description: Blockchain network identifier to filter summary
@@ -50202,7 +50262,7 @@ components:
               - sofid
               - cusd
               - fyusd
-              - goqxmp
+              - qxmp
               - usd
             description: Base asset for the token
             example: usd1
@@ -62624,9 +62684,17 @@ components:
           minLength: 1
         totalSupplyAggregated:
           type: string
-          description: Total supply across all chains in the smallest unit
-          example: '5000000000000000000'
+          description: |-
+            Total supply across all chains, normalized to the highest decimal precision among chains.
+            Each chain's supply is scaled to this common precision before summing:
+            chainSupply * 10^(decimals - chain.decimals). Divide by 10^decimals for the human-readable total.
+            Note: supplyByChain[].supply values use each chain's own decimals, not this one.
+          example: '"2000000000000000000000" (2000 tokens, with decimals=18)'
           minLength: 1
+        decimals:
+          type: number
+          description: Decimal precision of totalSupplyAggregated (the max decimals across all successful chains)
+          example: 18
         supplyByChain:
           type: array
           items:
@@ -62639,9 +62707,16 @@ components:
                 minLength: 1
               supply:
                 type: string
-                description: Total supply for this chain in the smallest unit (wei, satoshi, etc.)
-                example: '1000000000000000000'
+                description: |-
+                  Total supply for this chain in the chain's native smallest unit.
+                  Divide by 10^decimals to get the human-readable token amount.
+                  Note: this is NOT normalized to the aggregated decimals — use the per-chain decimals field to interpret.
+                example: '"1000000000000000000000" (1000 tokens on an 18-decimal chain)'
                 minLength: 1
+              decimals:
+                type: number
+                description: Number of decimal places for the token on this chain (e.g. 18 for EVM, 6 for Solana)
+                example: 18
               error:
                 type: string
                 description: Error message if supply fetch failed
@@ -62649,6 +62724,7 @@ components:
             required:
               - chain
               - supply
+              - decimals
             description: Breakdown of supply by chain
         totalReserves:
           type: string
@@ -62657,6 +62733,7 @@ components:
       required:
         - token
         - totalSupplyAggregated
+        - decimals
         - supplyByChain
         - totalReserves
     GetTransactionRequestsResponse:
