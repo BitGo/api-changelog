@@ -35288,6 +35288,7 @@ paths:
                     - staking-sa
                     - master-agreement
                     - distributed-custody-mic
+                    - accredited-investor-cl
                 signedDate:
                   type: string
               required:
@@ -38115,6 +38116,20 @@ paths:
                     For example, if the template has `scope: ['spend', 'transfer']` and you send `scope: ['read']`,
                     the created token will have `scope: ['read']`. If you omit `scope` entirely, the token gets
                     `scope: ['spend', 'transfer']` from the template.
+                permittedEnterprises:
+                  type: array
+                  items:
+                    type: string
+                    description: |-
+                      Restricts the access token to the listed enterprise IDs only.
+                      Absence means no restriction (the token can access all enterprises the user belongs to).
+                permittedWallets:
+                  type: array
+                  items:
+                    type: string
+                    description: |-
+                      Restricts the access token to the listed wallet IDs only.
+                      Absence means no restriction (the token can access all wallets the user has access to).
               required:
                 - label
                 - otp
@@ -64377,6 +64392,7 @@ components:
         - transferOfferWithdrawn
         - cosignDelegationProposal
         - cosignDelegationAccept
+        - allocationRequest
         - defi-deposit
         - defi-redeem
         - delegateResource
@@ -70001,6 +70017,11 @@ components:
                 items:
                   type: string
                   description: The approvers of the action
+              excludedApprovers:
+                type: array
+                items:
+                  type: string
+                  description: Users that are eligible approvers but cannot approve (e.g. already approved or the initiator)
               id:
                 type: string
                 description: The ID of the action
@@ -70123,6 +70144,31 @@ components:
               enum:
                 - frozen
                 - unFrozen
+        memo:
+          type: array
+          items:
+            type: object
+            properties:
+              text:
+                type: string
+                description: The text of the memo
+              time:
+                type: string
+                description: The time the memo was created
+                format: date-time
+                title: ISO Date String
+              userId:
+                type: string
+                description: The user ID of the admin who created the memo
+              username:
+                type: string
+                description: The username of the admin who created the memo
+            required:
+              - text
+              - time
+              - userId
+              - username
+            description: Admin memos attached to this pending approval
         associatedInquiries:
           type: array
           items:
@@ -72606,6 +72652,10 @@ components:
                 - stake
             addToStake:
               $ref: '#/components/schemas/optionalBoolean'
+            validators:
+              type: array
+              items:
+                type: string
           required:
             - intentType
         - $ref: '#/components/schemas/PolyxBaseIntent'
@@ -89358,9 +89408,6 @@ components:
               - value
         receiveAddress:
           $ref: '#/components/schemas/WalletAddress'
-        userKeySigningRequired:
-          type: boolean
-          description: True, if the wallet requires the user key to sign transactions. Only applicable for OFC wallets.
       required:
         - allowBackupKeySigning
         - approvalsRequired
@@ -90420,9 +90467,6 @@ components:
                     - value
               receiveAddress:
                 $ref: '#/components/schemas/WalletAddress'
-              userKeySigningRequired:
-                type: boolean
-                description: True, if the wallet requires the user key to sign transactions. Only applicable for OFC wallets.
             required:
               - allowBackupKeySigning
               - approvalsRequired
