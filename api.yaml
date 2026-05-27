@@ -43,7 +43,7 @@ tags:
     description: Internal APIs for service-to-service communication
   - name: Admin
     description: NCC Admin Internal APIs
-  - name: Webhooks
+  - name: Notification Webhooks
     description: Webhook notification APIs
   - name: User Management Notification
     description: Public APIs for user management for notifications
@@ -13168,6 +13168,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
     put:
       tags:
         - User Management Notification
@@ -13208,6 +13209,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/user/mute-settings:
     put:
       tags:
@@ -13328,6 +13330,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/mute/enterprises:
     put:
       tags:
@@ -13407,6 +13410,106 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
+  /api/notifications/v1/webhooks/{webhookId}/notifications/retrigger:
+    post:
+      tags:
+        - Notification Webhooks
+      summary: Retrigger webhook notifications
+      description: 'Retriggers a list of webhook notifications by their IDs. Max 25 notifications per request. Note: retriggered webhooks use the original signature. If the webhook secret was rotated since the original send, the signature will be incorrect.'
+      operationId: retriggerNotifications
+      parameters:
+        - name: webhookId
+          in: path
+          description: The webhook ID
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: List of webhook notification IDs to retrigger (max 25)
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RetriggerWebhookNotificationsRequest'
+        required: true
+      responses:
+        '200':
+          description: Retrigger results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RetriggerWebhookNotificationsResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '409':
+          description: Concurrent retrigger in progress
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConflictErrorResponse'
+        '500':
+          description: Unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
+  /api/notifications/v1/webhooks/notifications:
+    post:
+      tags:
+        - Notification Webhooks
+      summary: Get or retrigger webhook notifications across multiple webhooks
+      description: Retrieves and optionally retriggers paginated notification history for up to 25 webhook IDs with optional filters.
+      operationId: getBulkWebhookNotifications
+      requestBody:
+        description: Webhook IDs, optional filters, pagination parameters, and whether to retrigger the notifications
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PostBulkWebhookNotificationsRequest'
+        required: true
+      responses:
+        '200':
+          description: Bulk webhook notification history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostBulkWebhookNotificationsResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '403':
+          description: Access denied for one or more webhook IDs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+        '500':
+          description: Unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/tokens:
     post:
       tags:
@@ -13445,6 +13548,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/user/notification-thresholds:
     get:
       tags:
@@ -13519,6 +13623,58 @@ paths:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
       x-internal: false
+  /api/notifications/v1/webhooks/{webhookId}/notifications:
+    get:
+      tags:
+        - Notification Webhooks
+      summary: Get webhook notification history
+      description: Retrieves paginated notification history for a specific webhook with optional filters for status, date range, hash, and transfer ID.
+      operationId: getWebhookNotifications
+      parameters:
+        - name: webhookId
+          in: path
+          description: The webhook ID
+          required: true
+          schema:
+            type: string
+        - name: request
+          in: query
+          description: Query filters for notification history
+          required: true
+          schema:
+            $ref: '#/components/schemas/GetWebhookNotificationsRequest'
+      responses:
+        '200':
+          description: Webhook notification history retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWebhookNotificationsResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/user/categories:
     get:
       tags:
@@ -13556,6 +13712,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/mute:
     get:
       tags:
@@ -13588,6 +13745,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/categories:
     get:
       tags:
@@ -13620,6 +13778,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/tokens/{deviceToken}:
     delete:
       tags:
@@ -13663,6 +13822,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/mute/wallet/{walletId}:
     delete:
       tags:
@@ -13700,6 +13860,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/mute/enterprise/{enterpriseId}:
     delete:
       tags:
@@ -13737,6 +13898,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/org/enterprise/{enterpriseId}:
     get:
       operationId: org.enterprise
@@ -53974,6 +54136,112 @@ components:
             description: Individual approval result item
       required:
         - results
+    BulkWebhookNotificationDTO:
+      required:
+        - createdAt
+        - id
+        - notificationRequestId
+        - payload
+        - retries
+        - status
+        - type
+        - updatedAt
+        - url
+        - webhookId
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        webhookId:
+          type: string
+        notificationRequestId:
+          type: string
+        url:
+          type: string
+        payload:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        retries:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        response:
+          type: object
+          additionalProperties:
+            type: object
+        coin:
+          type: string
+        walletId:
+          type: string
+        enterpriseId:
+          type: string
+        organizationId:
+          type: string
+        transferId:
+          type: string
+        hash:
+          type: string
+        retriggeredNotificationRequestId:
+          type: string
+        retriggerError:
+          type: string
+    BulkWebhookNotificationFilters:
+      type: object
+      properties:
+        start:
+          type: string
+          description: 'Start timestamp (default: now - 1 day). Supports ISO 8601 datetime (2023-01-01T00:00:00Z) or simple date (2023-01-01).'
+          example: '2023-01-01T00:00:00.000Z'
+        end:
+          type: string
+          description: 'End timestamp (default: now). Supports ISO 8601 datetime (2023-12-31T23:59:59Z) or simple date (2023-12-31).'
+          example: '2023-12-31T23:59:59.000Z'
+        enterpriseId:
+          type: string
+          description: Filter by enterprise ID
+          example: ent-abc123
+        organizationId:
+          type: string
+          description: Filter by organization ID
+          example: org-xyz789
+        walletId:
+          type: string
+          description: Filter by wallet ID
+          example: wallet-def456
+        type:
+          type: string
+          description: Filter by notification type
+          example: transfer
+        coin:
+          type: string
+          description: Filter by coin
+          example: btc
+      description: Optional filters to narrow results
+    BulkWebhookNotificationMetadata:
+      required:
+        - limit
+        - offset
+        - total
+      type: object
+      properties:
+        total:
+          type: integer
+          format: int64
+        limit:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int32
     BulkWhitelistAddEntry:
       title: BulkWhitelistAddEntry
       type: object
@@ -55440,6 +55708,28 @@ components:
         - oneOf:
             - $ref: '#/components/schemas/StaticFee'
             - $ref: '#/components/schemas/VariableFee'
+    ConflictErrorResponse:
+      required:
+        - error
+        - name
+        - status
+      type: object
+      properties:
+        name:
+          type: string
+          description: Error code
+          enum:
+            - Conflict
+        error:
+          type: string
+          description: Human-readable error message
+        status:
+          type: integer
+          description: HTTP status code
+          format: int32
+          enum:
+            - 409
+      description: Conflict error response
     ConnectionKey:
       title: ConnectionKey
       oneOf:
@@ -61230,6 +61520,28 @@ components:
             - amount
             - validator
             - duration
+    ForbiddenErrorResponse:
+      required:
+        - error
+        - name
+        - status
+      type: object
+      properties:
+        name:
+          type: string
+          description: Error code
+          enum:
+            - AccessDenied
+        error:
+          type: string
+          description: Human-readable error message
+        status:
+          type: integer
+          description: HTTP status code
+          format: int32
+          enum:
+            - 403
+      description: Forbidden error response
     Freeze:
       title: Freeze
       type: object
@@ -63097,6 +63409,80 @@ components:
             - confirmedBalance
             - spendableBalance
         - $ref: '#/components/schemas/baseBalanceStrings'
+    GetWebhookNotificationsRequest:
+      required:
+        - limit
+        - offset
+      type: object
+      properties:
+        webhookNotificationId:
+          type: string
+          description: Filter by specific webhook notification UUID
+          example: 550e8400-e29b-41d4-a716-446655440000
+        notificationRequestId:
+          type: string
+          description: Filter by notification request ID (Cuid)
+          example: cjld2cjxh0000qzrmn831i7rn
+        start:
+          type: string
+          description: 'Start timestamp (default: now - 1 day). Supports ISO 8601 datetime (2023-01-01T00:00:00Z) or simple date (2023-01-01).'
+          example: '2023-01-01T00:00:00.000Z'
+        end:
+          type: string
+          description: 'End timestamp (default: now). Supports ISO 8601 datetime (2023-12-31T23:59:59Z) or simple date (2023-12-31).'
+          example: '2023-12-31T23:59:59.000Z'
+        hash:
+          type: string
+          description: Filter by transaction hash
+          example: 11256099
+        transferId:
+          type: string
+          description: Filter by transfer ID
+          example: transfer-12345
+        status:
+          type: string
+          description: Filter by notification status
+          example: sent
+          enum:
+            - pending
+            - processing
+            - sent
+            - failed
+            - skipped
+        limit:
+          maximum: 1000
+          minimum: 1
+          type: integer
+          description: Number of records to return (default 25, max 1000)
+          format: int32
+          example: 25
+        offset:
+          minimum: 0
+          type: integer
+          description: Number of records to skip (default 0)
+          format: int32
+          example: 0
+    GetWebhookNotificationsResponse:
+      required:
+        - limit
+        - notifications
+        - offset
+        - total
+      type: object
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookNotificationDTO'
+        total:
+          type: integer
+          format: int64
+        limit:
+          type: integer
+          format: int32
+        offset:
+          type: integer
+          format: int32
     GlobalGoStakingRequestStatus:
       type: string
       description: |
@@ -68135,6 +68521,28 @@ components:
           additionalProperties: true
         operator:
           $ref: '#/components/schemas/OperatorType'
+    NotFoundErrorResponse:
+      required:
+        - error
+        - name
+        - status
+      type: object
+      properties:
+        name:
+          type: string
+          description: Error code
+          enum:
+            - NotFound
+        error:
+          type: string
+          description: Human-readable error message
+        status:
+          type: integer
+          description: HTTP status code
+          format: int32
+          enum:
+            - 404
+      description: Not found error response
     NotificationSubscriptionListRequest:
       required:
         - notificationSubscriptions
@@ -72854,6 +73262,53 @@ components:
       required:
         - currency
         - quantity
+    PostBulkWebhookNotificationsRequest:
+      required:
+        - limit
+        - offset
+        - retrigger
+        - webhookIds
+      type: object
+      properties:
+        webhookIds:
+          maxItems: 25
+          minItems: 1
+          type: array
+          description: List of webhook IDs to fetch notifications for (max 25)
+          items:
+            type: string
+            description: List of webhook IDs to fetch notifications for (max 25)
+        filters:
+          $ref: '#/components/schemas/BulkWebhookNotificationFilters'
+        offset:
+          minimum: 0
+          type: integer
+          description: Number of records to skip (default 0)
+          format: int32
+          example: 0
+        limit:
+          maximum: 50
+          minimum: 1
+          type: integer
+          description: Number of records per page (default 50, max 50)
+          format: int32
+          example: 50
+        retrigger:
+          type: boolean
+          description: 'If true, all matched notifications are retriggered after fetching. Retrigger outcome (success or error) is returned inline on each notification. Subject to per-webhook rate limits (default 50/min). Default: false.'
+          example: false
+    PostBulkWebhookNotificationsResponse:
+      required:
+        - metadata
+        - notifications
+      type: object
+      properties:
+        notifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/BulkWebhookNotificationDTO'
+        metadata:
+          $ref: '#/components/schemas/BulkWebhookNotificationMetadata'
     PostIdentityDocumentCreateResponse:
       title: PostIdentityDocumentCreateResponse
       type: object
@@ -74282,6 +74737,52 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithGasPrice'
       type: object
+    RetriggerNotificationResult:
+      required:
+        - webhookNotificationId
+      type: object
+      properties:
+        webhookNotificationId:
+          type: string
+          format: uuid
+        retriggeredNotificationRequestId:
+          type: string
+        error:
+          type: string
+    RetriggerWebhookNotificationsRequest:
+      type: object
+      properties:
+        webhookNotificationIds:
+          type: array
+          items:
+            type: string
+            format: uuid
+    RetriggerWebhookNotificationsResponse:
+      required:
+        - failedNotifications
+        - successfulNotifications
+        - totalFailed
+        - totalRequested
+        - totalSuccess
+      type: object
+      properties:
+        totalRequested:
+          type: integer
+          format: int32
+        totalSuccess:
+          type: integer
+          format: int32
+        totalFailed:
+          type: integer
+          format: int32
+        successfulNotifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/RetriggerNotificationResult'
+        failedNotifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/RetriggerNotificationResult'
     RevokeWebhookKeyResponse:
       type: object
       description: Response after successfully revoking a webhook signing key.
@@ -91738,6 +92239,57 @@ components:
         idempotencyKey:
           type: string
           description: A unique id that can be used to de-duplicate notifications.
+    WebhookNotificationDTO:
+      required:
+        - createdAt
+        - id
+        - notificationRequestId
+        - payload
+        - retries
+        - status
+        - type
+        - updatedAt
+        - url
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        notificationRequestId:
+          type: string
+        url:
+          type: string
+        payload:
+          type: string
+        type:
+          type: string
+        status:
+          type: string
+        retries:
+          type: integer
+          format: int32
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        response:
+          type: object
+          additionalProperties:
+            type: object
+        coin:
+          type: string
+        walletId:
+          type: string
+        enterpriseId:
+          type: string
+        organizationId:
+          type: string
+        transferId:
+          type: string
+        hash:
+          type: string
     WebhookNotificationState:
       title: WebhookNotificationState
       type: string
