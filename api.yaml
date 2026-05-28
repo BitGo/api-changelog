@@ -54813,6 +54813,66 @@ components:
           required:
             - context
             - name
+    CantonCommand:
+      title: CantonCommand
+      oneOf:
+        - $ref: '#/components/schemas/CreateCommand'
+        - $ref: '#/components/schemas/ExerciseCommand'
+    CantonCommandIntent:
+      title: CantonCommandIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonCommand
+            cantonCommandParams:
+              $ref: '#/components/schemas/CantonCommandParams'
+          required:
+            - intentType
+            - cantonCommandParams
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonCommandParams:
+      title: CantonCommandParams
+      type: object
+      properties:
+        command:
+          $ref: '#/components/schemas/CantonCommand'
+        actAs:
+          type: array
+          items:
+            type: string
+        readAs:
+          type: array
+          items:
+            type: string
+        resolveContracts:
+          type: array
+          items:
+            type: object
+            properties:
+              templateId:
+                type: string
+              actAs:
+                type: array
+                items:
+                  type: string
+              injectAs:
+                type: string
+              readAs:
+                type: array
+                items:
+                  type: string
+              resolveAll:
+                type: boolean
+            required:
+              - templateId
+              - actAs
+              - injectAs
+      required:
+        - command
+        - actAs
     CantonCosignDelegationAcceptIntent:
       title: Canton Cosign Delegation Accept Intent
       allOf:
@@ -56629,6 +56689,23 @@ components:
         - enterpriseId
         - requestedProducts
       title: CreateBusinessIdentityBody
+    CreateCommand:
+      title: Canton Command Intent
+      type: object
+      properties:
+        CreateCommand:
+          type: object
+          properties:
+            templateId:
+              type: string
+            createArguments:
+              type: object
+              additionalProperties: {}
+          required:
+            - templateId
+            - createArguments
+      required:
+        - CreateCommand
     CreateDocumentRequest:
       type: object
       properties:
@@ -60905,6 +60982,28 @@ components:
           description: The commitment share.
       required:
         - commitmentShare
+    ExerciseCommand:
+      title: ExerciseCommand
+      type: object
+      properties:
+        ExerciseCommand:
+          type: object
+          properties:
+            templateId:
+              type: string
+            choice:
+              type: string
+            choiceArgument:
+              type: object
+              additionalProperties: {}
+            contractId:
+              type: string
+          required:
+            - templateId
+            - choice
+            - choiceArgument
+      required:
+        - ExerciseCommand
     ExpectedTransfers:
       title: ExpectedTransfers
       type: object
@@ -64779,6 +64878,7 @@ components:
         - cosignDelegationProposal
         - cosignDelegationAccept
         - allocationRequest
+        - cantonCommand
         - defi-deposit
         - defi-redeem
         - delegateResource
@@ -81266,6 +81366,7 @@ components:
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
         - $ref: '#/components/schemas/CantonCosignDelegationAcceptIntent'
         - $ref: '#/components/schemas/CantonCosignDelegationProposalIntent'
+        - $ref: '#/components/schemas/CantonCommandIntent'
         - $ref: '#/components/schemas/CantonPaymentIntent'
         - $ref: '#/components/schemas/CantonTransferAcceptIntent'
         - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
