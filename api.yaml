@@ -30897,6 +30897,53 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/v1/external/sandbox/transaction/simulate:
+    post:
+      tags:
+        - Fiat
+      summary: Simulate a test deposit
+      operationId: fiat-indexer.transaction.simulate
+      x-internal: false
+      description: Creates a simulated test deposit transaction for a wallet in non-production environments. Requires the calling user to be an owner or member of the wallet's enterprise. Blocked in production.
+      parameters:
+        - name: user-id
+          in: header
+          required: true
+          description: The authenticated user's ID (set by auth-service).
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulateTransactionRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            text/plain:
+              schema:
+                type: string
+                example: Transaction sim-abc123 created successfully. Please allow a few moments for it to appear in the Go Account. Contact support if there is more than a 5 minute delay.
+        '400':
+          description: Bad Request – invalid or missing parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden – missing user-id header or user does not have access to the wallet's enterprise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/v2/bankaccounts:
     get:
       x-internal: false
@@ -31011,9 +31058,9 @@ paths:
         - Bank Accounts
       summary: Add bank account
       description: |
-        Add a bank account to a BitGo enterprise so you can deposit and withdraw fiat. 
+        Add a bank account to a BitGo enterprise so you can deposit and withdraw fiat. Required address parameters vary by country. Determine required parameters by calling [Get address format information](/reference/fiataddressinfo).
 
-        >**NOTE:** Required address parameters vary by country. Determine required parameters by calling [Get address format information](https://developers.bitgo.com/reference/fiataddressinfo).
+        >**CaaS clients:** If you are integrating as a Crypto as a Service (CaaS) client, follow the [Fund Go account integration guide](/docs/crypto-as-a-service-fund-go-accounts#steps) instead of using this endpoint directly.
       operationId: v2.bankaccount.add
       parameters: []
       requestBody:
@@ -76482,6 +76529,39 @@ components:
               - id
       required:
         - webhookNotifications
+    SimulateTransactionRequest:
+      title: SimulateTransactionRequest
+      type: object
+      description: Request body for creating a simulated test deposit transaction. Only testnet currencies are accepted. Non-production only.
+      properties:
+        walletId:
+          type: string
+          minLength: 1
+          description: The Go Account wallet ID to create the deposit for.
+        currency:
+          type: string
+          description: A testnet backing fiat currency (e.g., tfiatusd, tfiateur, tfiatsgd).
+        amount:
+          type: string
+          description: The deposit amount in cents as a string. Defaults to "1000" (i.e., $10.00) if not provided.
+          default: '1000'
+        type:
+          type: string
+          description: The transaction type. Defaults to "wire". ACH transactions are created in an incomplete/delayed state with a 1-day clearing window.
+          enum:
+            - wire
+            - ach
+          default: wire
+        instantCreditEligible:
+          type: boolean
+          description: Whether the transaction is eligible for instant credit. Only relevant for ACH transactions. When true and type is ach, the platform is notified immediately.
+        withdrawHoldReleaseAt:
+          type: string
+          format: date-time
+          description: Optional ISO 8601 datetime for when a withdraw hold should be released.
+      required:
+        - walletId
+        - currency
     SimulateWalletWebhookRequestBody:
       oneOf:
         - title: Transfer
