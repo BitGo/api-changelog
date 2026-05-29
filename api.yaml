@@ -64919,6 +64919,8 @@ components:
         - deactivate
         - customTx
         - closeAssociatedTokenAccount
+        - delegateResource
+        - undelegateResource
     IntentType11:
       title: IntentType1
       type: string
@@ -81899,6 +81901,8 @@ components:
         - $ref: '#/components/schemas/SolStakeIntent1'
         - $ref: '#/components/schemas/SolUnstakeIntent1'
         - $ref: '#/components/schemas/TransferTokenIntent1'
+        - $ref: '#/components/schemas/TrxDelegateResourceIntent1'
+        - $ref: '#/components/schemas/TrxUndelegateResourceIntent1'
         - $ref: '#/components/schemas/UnstakeIntent2'
         - $ref: '#/components/schemas/WalletRecoveryIntent1'
         - $ref: '#/components/schemas/WithdrawIntent2'
@@ -84102,6 +84106,42 @@ components:
             - resource
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+    TrxDelegateResourceIntent1:
+      title: TRX Delegate Resource Intent
+      description: |
+        Delegates TRON ENERGY or BANDWIDTH from the wallet root address to a receiver address.
+        For TRX (`trx`, `ttrx`) MPC (TSS) wallets only — use with [Create transaction request](/reference/v2wallettxrequestcreate).
+        Minimum delegation amount is 1 TRX (1,000,000 sun).
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - delegateResource
+            stakingRequestId:
+              type: string
+            ownerAddress:
+              type: string
+              description: TRON address delegating resources (typically the wallet root address)
+            receiverAddress:
+              type: string
+              description: TRON address receiving the delegated ENERGY or BANDWIDTH
+            amount:
+              $ref: '#/components/schemas/Amount1'
+            resource:
+              type: string
+              enum:
+                - ENERGY
+                - BANDWIDTH
+          required:
+            - intentType
+            - stakingRequestId
+            - ownerAddress
+            - receiverAddress
+            - amount
+            - resource
+        - $ref: '#/components/schemas/BaseIntent1'
     TrxDelegationProperties:
       title: TRX Delegation Properties
       allOf:
@@ -84258,6 +84298,41 @@ components:
             - resource
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+    TrxUndelegateResourceIntent1:
+      title: TRX Undelegate Resource Intent
+      description: |
+        Undelegates previously delegated TRON ENERGY or BANDWIDTH from the wallet root address.
+        For TRX (`trx`, `ttrx`) MPC (TSS) wallets only — use with [Create transaction request](/reference/v2wallettxrequestcreate).
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - undelegateResource
+            stakingRequestId:
+              type: string
+            ownerAddress:
+              type: string
+              description: TRON address that delegated the resources (typically the wallet root address)
+            receiverAddress:
+              type: string
+              description: TRON address from which resources are being undelegated
+            amount:
+              $ref: '#/components/schemas/Amount1'
+            resource:
+              type: string
+              enum:
+                - ENERGY
+                - BANDWIDTH
+          required:
+            - intentType
+            - stakingRequestId
+            - ownerAddress
+            - receiverAddress
+            - amount
+            - resource
+        - $ref: '#/components/schemas/BaseIntent1'
     TrxUnfreezeIntent:
       title: TRX Unfreeze Intent
       allOf:
