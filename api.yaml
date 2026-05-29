@@ -50497,6 +50497,12 @@ components:
               enterprise → org → base_asset hierarchy. Defaults to 0 when no fee hierarchy
               row exists in the DB for this base asset.
             example: 0
+          smartContractMetadata:
+            allOf:
+              - $ref: '#/components/schemas/SmartContractMetadata'
+            description: |-
+              Smart contract metadata. On the public assets endpoint this is included only for
+              issuer enterprises; on the admin assets endpoint it is always included.
         required:
           - id
           - token
@@ -76525,6 +76531,91 @@ components:
       description: Unified schema for a single bank account response
       allOf:
         - $ref: '#/components/schemas/BankAccountResponse1'
+    SmartContractMetadata:
+      title: SmartContractMetadata
+      type: object
+      description: |-
+        Smart-contract metadata for an asset.
+
+        Flat shape: every field is optional. Which fields are populated depends on
+        the asset's contract type (TokenGovernor, UUPS Stablecoin, SPL Token, SPL
+        Token-2022, Aptos RegulatedToken, Tempo precompile). Consumers should treat
+        absent fields as "not applicable for this asset/chain".
+
+        See the contract-roles reference doc for the per-asset, per-chain mapping.
+      properties:
+        contractAddress:
+          type: string
+          description: 'Primary contract address: governor / proxy / SPL mint / Aptos package.'
+        implementationAddress:
+          type: string
+          description: EIP-1967 implementation address (UUPS Stablecoin proxies only).
+        governedTokenAddress:
+          type: string
+          description: Underlying token address governed by a TokenGovernor (EVM/Tron USD1 only).
+        tokenProgramId:
+          type: string
+          description: Solana token program (Tokenkeg... or Token-2022).
+        recoveryManagers:
+          type: array
+          items:
+            type: string
+        minters:
+          type: array
+          items:
+            type: string
+        burners:
+          type: array
+          items:
+            type: string
+        bridgeMintersOrBurners:
+          type: array
+          items:
+            type: string
+        freezers:
+          type: array
+          items:
+            type: string
+        unfreezers:
+          type: array
+          items:
+            type: string
+        pausers:
+          type: array
+          items:
+            type: string
+        unpausers:
+          type: array
+          items:
+            type: string
+        owner:
+          type: string
+        freezer:
+          type: string
+        blacklister:
+          type: string
+        rescuer:
+          type: string
+        upgrader:
+          type: string
+        mintAuthority:
+          type: string
+        freezeAuthority:
+          type: string
+        transferFeeConfigAuthority:
+          type: string
+        confidentialTransferAuthority:
+          type: string
+        transferHookAuthority:
+          type: string
+        scaledUiAmountAuthority:
+          type: string
+        metadataPointerAuthority:
+          type: string
+        pausableAuthority:
+          type: string
+        tokenMetadataUpdateAuthority:
+          type: string
     SnowflakeReportType:
       title: SnowflakeReportType
       type: string
