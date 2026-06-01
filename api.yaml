@@ -4,8 +4,10 @@ info:
   version: 1.0.0
 servers:
   - url: /
-    description: Default APS Server
+    description: Default server
 tags:
+  - name: BitGo Products
+    description: Endpoints for retrieving public asset metadata including supported coins, tokens, and their properties.
   - name: Market Data
     description: Endpoints for retrieving market price data including latest spot prices and historical OHLC data
   - name: Admin FX Rates
@@ -2390,6 +2392,95 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/v1/all/publicAssets:
+    get:
+      x-internal: false
+      tags:
+        - BitGo Products
+      summary: List all public assets
+      description: |-
+        Returns a list of all digital assets (coins and tokens) available in the current environment. Each asset includes metadata such as wallet type, custody support, staking support, key curve, contract address, and more.
+
+        Use the `stakingData` query parameter to optionally include detailed staking information for each asset (reward rates, warmup periods, unbonding durations, etc.).
+      operationId: getAllPublicAssets
+      parameters:
+        - name: stakingData
+          in: query
+          required: false
+          description: When set to `true`, includes detailed staking information for each asset that supports staking. Staking data includes reward rates, minimum stake amounts, warmup periods, unbonding durations, and reward frequency.
+          schema:
+            type: string
+            enum:
+              - 'true'
+              - 'false'
+            default: 'false'
+          example: 'true'
+      responses:
+        '200':
+          description: Successfully returns the list of public assets.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PublicAsset'
+              example:
+                - id: d5ef3942-9985-4c4a-b30e-1a6078f14ca3
+                  name: Bitcoin
+                  symbol: btc
+                  display_name: Bitcoin
+                  display_symbol: btc
+                  environment: mainnet
+                  type: chain
+                  network: btc
+                  decimal: 8
+                  wallet_type:
+                    - MPC
+                    - Multisig
+                  key_curve: secp256k1
+                  explorer: https://blockchair.com/bitcoin
+                  contract_address: null
+                  custody_supported: true
+                  custody_jurisdiction:
+                    - US
+                    - DE
+                  staking_supported: false
+                  wallet_connect: false
+                  token_supported: false
+                  testnet_symbol: tbtc
+                  goaccounts_supported: true
+                  trade_supported: false
+                - id: a1b2c3d4-5678-90ab-cdef-1234567890ab
+                  name: Ether
+                  symbol: eth
+                  display_name: Ether
+                  display_symbol: eth
+                  environment: mainnet
+                  type: chain
+                  network: eth
+                  decimal: 18
+                  wallet_type:
+                    - MPC
+                    - Multisig
+                  key_curve: secp256k1
+                  explorer: https://etherscan.io
+                  contract_address: null
+                  custody_supported: true
+                  custody_jurisdiction:
+                    - US
+                    - DE
+                  staking_supported: true
+                  wallet_connect: true
+                  token_supported: true
+                  testnet_symbol: hteth
+                  goaccounts_supported: true
+                  trade_supported: false
+        '500':
+          description: Internal server error.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
   /api/network/v1/enterprises/{enterpriseId}/clients:
     post:
       summary: Create client
@@ -26407,7 +26498,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
   /api/prime/trading/v1/accounts:
     get:
       summary: List Accounts
@@ -26432,7 +26523,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
   /api/prime/trading/v1/accounts/{accountId}/balances:
     get:
       summary: Get Account Balance
@@ -26576,7 +26667,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/Error'
+                  - $ref: '#/components/schemas/Error1'
                   - $ref: '#/components/schemas/ValidationError1'
               examples:
                 invalidRequest:
@@ -26780,7 +26871,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
               examples:
                 invalidArgument:
                   summary: Invalid order ID format
@@ -26797,7 +26888,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
               examples:
                 notFound:
                   summary: Order not found
@@ -26835,7 +26926,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
               examples:
                 invalidRequest:
                   summary: Request is invalid
@@ -26965,7 +27056,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
               examples:
                 invalidArgument:
                   summary: Invalid query parameter
@@ -27008,7 +27099,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
               examples:
                 invalidArgument:
                   summary: Invalid trade ID format
@@ -27025,7 +27116,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
               examples:
                 notFound:
                   summary: Trade not found
@@ -27061,7 +27152,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
   /api/prime/trading/v1/accounts/{accountId}/products:
     get:
       summary: List Products
@@ -27088,7 +27179,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
   /api/prime/trading/v1/accounts/{accountId}/products/{product}/level1:
     get:
       summary: Get Level1 Order Book
@@ -27119,7 +27210,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
   /api/prime/trading/v1/accounts/{accountId}/products/{product}/level2:
     get:
       summary: Get Level2 Order Book
@@ -27196,7 +27287,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/currencies:
     get:
       summary: List available currencies for collateral
@@ -27849,7 +27940,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/Error'
+                $ref: '#/components/schemas/Error1'
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests/{closePositionRequestID}:
     get:
       summary: Get close position request details
@@ -48284,7 +48375,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error1'
           examples:
             forbidden:
               summary: Insufficient permissions
@@ -48323,7 +48414,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error1'
           examples:
             malformedJSON:
               summary: JSON payload is improperly formatted
@@ -48362,7 +48453,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error1'
           examples:
             rateLimitExceeded:
               summary: Too many API requests
@@ -48401,7 +48492,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error1'
           examples:
             unauthorized:
               summary: Unauthorized access
@@ -48424,7 +48515,7 @@ components:
       content:
         application/json:
           schema:
-            $ref: '#/components/schemas/Error'
+            $ref: '#/components/schemas/Error1'
           examples:
             internalServerError:
               summary: Generic server error - Reach out to support for more information
@@ -60137,6 +60228,18 @@ components:
         - creationFailure
         - lastMemoId
     Error:
+      type: object
+      description: Error response.
+      properties:
+        error:
+          type: string
+          description: Error message.
+        name:
+          type: string
+          description: Error name or code.
+      required:
+        - error
+    Error1:
       required:
         - error
         - errorName
@@ -73917,6 +74020,132 @@ components:
       type: string
       description: public part of a key pair
       example: xpub661MyMwAqRbcGMVhmc7wqQRYMtcX9LAvSj1pjB213y5TsrkV2uuzJjWnjBrT1FUeNWGPjaVm5p7o6jdNcQJrV1cy3a1R8NQ9m7LuYKA8RpH
+    PublicAsset:
+      type: object
+      description: Metadata for a single digital asset (coin or token).
+      required:
+        - id
+        - name
+        - symbol
+        - display_name
+        - display_symbol
+        - type
+        - custody_supported
+        - staking_supported
+        - wallet_connect
+        - token_supported
+        - goaccounts_supported
+        - trade_supported
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the asset.
+          example: d5ef3942-9985-4c4a-b30e-1a6078f14ca3
+        name:
+          type: string
+          description: Full name of the asset.
+          example: Bitcoin
+        symbol:
+          type: string
+          description: Ticker symbol used by BitGo (e.g., `btc`, `eth`, `sol`).
+          example: btc
+        display_name:
+          type: string
+          description: Human-readable display name.
+          example: Bitcoin
+        display_symbol:
+          type: string
+          description: Display symbol, same as `symbol`.
+          example: btc
+        environment:
+          type: string
+          description: Network environment.
+          enum:
+            - mainnet
+            - testnet
+          example: mainnet
+        type:
+          type: string
+          description: Whether this asset is a native chain coin or a token on a chain.
+          enum:
+            - chain
+            - token
+          example: chain
+        network:
+          type: string
+          description: Network family the asset belongs to (e.g., `btc`, `eth`, `sol`, `trx`).
+          example: eth
+        decimal:
+          type: integer
+          description: Number of decimal places for the asset's smallest unit.
+          example: 18
+        wallet_type:
+          type: array
+          description: Supported wallet types for this asset. Possible values are `MPC` and `Multisig`.
+          items:
+            type: string
+            enum:
+              - MPC
+              - Multisig
+          example:
+            - MPC
+            - Multisig
+        key_curve:
+          type: string
+          description: Cryptographic key curve used by the asset.
+          example: secp256k1
+        explorer:
+          type: string
+          nullable: true
+          description: URL of the block explorer for this asset's network.
+          example: https://etherscan.io
+        contract_address:
+          type: string
+          nullable: true
+          description: Smart contract address for token assets. Null for native chain coins.
+          example: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48'
+        custody_supported:
+          type: boolean
+          description: Whether BitGo custody is available for this asset. Returns `false` if the asset is currently gatekept.
+          example: true
+        custody_jurisdiction:
+          type: array
+          description: List of jurisdiction codes where custody is available for this asset (e.g., `US`, `DE`).
+          items:
+            type: string
+          example:
+            - US
+            - DE
+        staking_supported:
+          type: boolean
+          description: Whether staking is supported for this asset.
+          example: true
+        wallet_connect:
+          type: boolean
+          description: Whether WalletConnect DeFi integration is supported.
+          example: false
+        token_supported:
+          type: boolean
+          description: Whether this chain supports tokens (only relevant for chain-type assets).
+          example: true
+        testnet_symbol:
+          type: string
+          nullable: true
+          description: Symbol of the corresponding testnet asset, if one exists.
+          example: hteth
+        goaccounts_supported:
+          type: boolean
+          description: Whether BitGo Go accounts are available for this asset.
+          example: true
+        trade_supported:
+          type: boolean
+          description: Whether trading is supported for this asset.
+          example: false
+        staking:
+          nullable: true
+          description: Detailed staking information. Only present when the `stakingData=true` query parameter is provided. Null for assets that do not support staking.
+          allOf:
+            - $ref: '#/components/schemas/StakingDetails'
     PutIdentityDocumentUpdateResponse:
       title: PutIdentityDocumentUpdateResponse
       type: object
@@ -77869,6 +78098,59 @@ components:
         unstakeable:
           description: Indicates whether the delegation can currently be unstaked.
           type: boolean
+    StakingDetails:
+      type: object
+      description: Detailed staking information for an asset.
+      properties:
+        rewardRate:
+          type: string
+          nullable: true
+          description: Annual reward rate as a percentage string.
+          example: '5.98'
+        walletType:
+          type: array
+          description: Wallet types that support staking for this asset.
+          items:
+            type: string
+            enum:
+              - MPC
+              - Multisig
+          example:
+            - MPC
+        minToStake:
+          type: number
+          nullable: true
+          description: Minimum amount required to stake, denominated in the asset's base unit (adjusted for decimals).
+          example: 32
+        stakeWarmupPeriod:
+          type: string
+          nullable: true
+          description: Human-readable duration for the staking warmup period.
+          example: 2 days
+        claimMethod:
+          type: string
+          description: How staking rewards are claimed. `manual` means the user must explicitly claim rewards; `auto` means rewards are distributed automatically.
+          enum:
+            - manual
+            - auto
+          example: auto
+        autoCompound:
+          type: string
+          description: Whether staking rewards are automatically compounded.
+          enum:
+            - 'yes'
+            - 'no'
+          example: 'yes'
+        unbonding:
+          type: string
+          nullable: true
+          description: Human-readable duration for the unbonding/unstaking period.
+          example: 21 days
+        rewardFrequency:
+          type: string
+          nullable: true
+          description: Human-readable duration between reward distributions.
+          example: 3 days
     StakingDisclaimer:
       type: object
       properties:
