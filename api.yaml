@@ -81486,9 +81486,26 @@ components:
                     anyOf:
                       - $ref: '#/components/schemas/MemoString'
                       - $ref: '#/components/schemas/MemoObject'
-              description: A list of recipient addresses and amounts. Must be present but empty for Child-Pays-For-Parent transactions.
+              description: |
+                A list of recipient addresses and amounts. Must be present but empty for Child-Pays-For-Parent transactions and for ERC-7984 token enablement transactions (use `enableTokens` in that case — the server derives the delegation calldata and overrides this field internally).
             txFormat:
               $ref: '#/components/schemas/UtxoTransactionFormat'
+            enableTokens:
+              type: array
+              description: |
+                Tokens to enable decryption delegation for (ERC-7984 / Zama confidential tokens, ETH family only). When present, `recipients` must be an empty array — the server derives delegation calldata from this field and overrides `recipients` internally.
+              items:
+                type: object
+                required:
+                  - name
+                  - address
+                properties:
+                  name:
+                    type: string
+                    description: Token coin name (e.g. "hteth:cusdt")
+                  address:
+                    type: string
+                    description: Wallet address that will delegate decryption rights (the owner address — must be registered to this wallet)
           required:
             - recipients
     TransactionBuildResult:
