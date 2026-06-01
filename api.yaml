@@ -35741,17 +35741,17 @@ paths:
             enum:
               - holdings
               - transactions
-              - quarterly
               - trades
               - staking
               - holdingsByAddress
+              - userAccess
+              - policies
               - organizationHoldings
               - organizationHoldingsByAddress
               - organizationTransactions
               - organizationTrades
               - organizationStaking
-              - userAccess
-              - policies
+              - quarterly
         - name: status
           description: Only return rports for this report status
           in: query
@@ -35839,9 +35839,15 @@ paths:
           application/json:
             schema:
               type: object
+              description: |-
+                Restricted request body for the organization-scoped report-create endpoints
+                (`POST /api/v2/organization/{organizationId}/reports` and its `/admin/organization`
+                variant). Narrows `type` to only the values accepted at runtime by
+                `validateOrganizationReportParams`, so the OpenAPI/dev-docs contract matches
+                the controller behavior.
               properties:
                 type:
-                  $ref: '#/components/schemas/SnowflakeReportType'
+                  $ref: '#/components/schemas/OrganizationSnowflakeReportType'
                 format:
                   $ref: '#/components/schemas/ReportFormatType'
                 holdings:
@@ -37431,17 +37437,17 @@ paths:
             enum:
               - holdings
               - transactions
-              - quarterly
               - trades
               - staking
               - holdingsByAddress
+              - userAccess
+              - policies
               - organizationHoldings
               - organizationHoldingsByAddress
               - organizationTransactions
               - organizationTrades
               - organizationStaking
-              - userAccess
-              - policies
+              - quarterly
         - name: status
           description: Only return rports for this report status
           in: query
@@ -37528,9 +37534,14 @@ paths:
           application/json:
             schema:
               type: object
+              description: |-
+                Restricted request body for the enterprise-scoped report-create endpoints
+                (`POST /api/v2/reports` and its `/admin/enterprise` variant). Narrows
+                `type` to only the values accepted at runtime by `validateReportParams`,
+                so the OpenAPI/dev-docs contract matches the controller behavior.
               properties:
                 type:
-                  $ref: '#/components/schemas/SnowflakeReportType'
+                  $ref: '#/components/schemas/EnterpriseSnowflakeReportType'
                 format:
                   $ref: '#/components/schemas/ReportFormatType'
                 holdings:
@@ -38278,6 +38289,12 @@ paths:
                 admin:
                   type: boolean
                   description: True, if this access token has admin permissions.
+                adminScope:
+                  type: string
+                  enum:
+                    - read
+                    - full
+                  description: Scope for admin permissions. Defaults to 'full' when omitted.
                 ipRestrict:
                   nullable: true
                   type: array
@@ -40390,9 +40407,13 @@ paths:
     post:
       summary: Create transaction request
       description: |-
-        Allows users to create a transaction request given they have spender
-        permissions on the wallet. Use only with MPC wallets. For multisignature
-        wallets, use Build a transaction.
+        Create a transaction request for an MPC (TSS) wallet. To learn more
+        about transacting from other wallet types, see
+        [Withdraw Overview](/docs/withdraw-overview).
+
+        TRX (`trx`, `ttrx`) MPC wallets support native transfers, TRC-20
+        tokens, consolidation, staking, and resource delegation via
+        `delegateResource` and `undelegateResource` intents.
       operationId: v2.wallet.txrequest.create
       tags:
         - Transaction request
@@ -40471,7 +40492,9 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PlatformError'
+                oneOf:
+                  - $ref: '#/components/schemas/DuplicateSequenceId1'
+                  - $ref: '#/components/schemas/PlatformError'
         '401':
           description: Unauthorized
           content:
@@ -48475,6 +48498,11 @@ components:
           pattern: ^[0-9a-f]{32}$
         isExtensible:
           type: boolean
+        adminScope:
+          type: string
+          enum:
+            - read
+            - full
         bitgoAdminPermissions:
           type: array
           items:
@@ -54866,6 +54894,74 @@ components:
           required:
             - context
             - name
+    CantonAllocationAllocateIntent:
+      title: Canton Allocation Allocate Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - allocationAllocate
+            txRequestId:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonAllocationRequestIntent:
+      title: Canton Allocation Request Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - allocationRequest
+            updateId:
+              type: string
+            operatorId:
+              type: string
+            contractId:
+              type: string
+            tradeId:
+              type: string
+            transferLegId:
+              type: string
+            senderPartyId:
+              type: string
+            receiverPartyId:
+              type: string
+            amount:
+              type: string
+            token:
+              type: string
+            receiveToken:
+              type: string
+            receiveAmount:
+              type: string
+            allocateBefore:
+              type: string
+            settleBefore:
+              type: string
+            comment:
+              type: string
+          required:
+            - intentType
+            - updateId
+            - operatorId
+            - contractId
+            - tradeId
+            - transferLegId
+            - senderPartyId
+            - receiverPartyId
+            - amount
+            - token
+            - receiveToken
+            - receiveAmount
+            - allocateBefore
+            - settleBefore
+        - $ref: '#/components/schemas/BaseIntent'
     CantonCommand:
       title: CantonCommand
       oneOf:
@@ -57505,14 +57601,19 @@ components:
               type: string
               enum:
                 - defi-deposit
-            protocol:
+            vaultId:
               type: string
             amount:
               type: string
+            operationId:
+              type: string
+            clientIdempotencyKey:
+              type: string
           required:
             - intentType
-            - protocol
+            - vaultId
             - amount
+            - operationId
         - $ref: '#/components/schemas/BaseIntent'
     DefiRedeemIntent:
       title: DefiRedeemIntent
@@ -59019,6 +59120,23 @@ components:
                 - DuplicateSequenceId
           required:
             - name
+    DuplicateSequenceId1:
+      title: Duplicate SequenceId
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              enum:
+                - DuplicateSequenceIdError
+              description: Error code
+            context:
+              type: object
+              additionalProperties: {}
+              description: Properties that apply to a specific error name
+          required:
+            - name
+        - $ref: '#/components/schemas/PlatformErrorNoName'
     EIP1559FeeOptions:
       title: EIP1559FeeOptions
       type: object
@@ -59526,6 +59644,17 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/AuditableItem'
+    EnterpriseSnowflakeReportType:
+      title: EnterpriseSnowflakeReportType
+      type: string
+      enum:
+        - holdings
+        - transactions
+        - trades
+        - staking
+        - holdingsByAddress
+        - userAccess
+        - policies
     EnterpriseStakingTotals:
       type: object
       properties:
@@ -62511,6 +62640,7 @@ components:
                       - onchainidWalletLinked
                       - onchainidClaimAdded
                       - onchainidClaimRemoved
+                      - AccountCreateContract
                   value:
                     type: number
                     description: The change (in base units) in the address' balance
@@ -64932,8 +65062,10 @@ components:
         - cosignDelegationAccept
         - allocationRequest
         - cantonCommand
+        - allocationAllocate
         - defi-deposit
         - defi-redeem
+        - defi-approve
         - delegateResource
         - undelegateResource
         - export
@@ -66332,6 +66464,11 @@ components:
                 pattern: ^[0-9a-f]{32}$
               isExtensible:
                 type: boolean
+              adminScope:
+                type: string
+                enum:
+                  - read
+                  - full
               bitgoAdminPermissions:
                 type: array
                 items:
@@ -69834,6 +69971,16 @@ components:
         - member
         - customer
       example: admin
+    OrganizationSnowflakeReportType:
+      title: OrganizationSnowflakeReportType
+      type: string
+      enum:
+        - organizationHoldings
+        - organizationHoldingsByAddress
+        - organizationTransactions
+        - organizationTrades
+        - organizationStaking
+        - userAccess
     OrganizationWebhookResponse:
       title: OrganizationWebhookResponse
       type: object
@@ -76702,17 +76849,17 @@ components:
       enum:
         - holdings
         - transactions
-        - quarterly
         - trades
         - staking
         - holdingsByAddress
+        - userAccess
+        - policies
         - organizationHoldings
         - organizationHoldingsByAddress
         - organizationTransactions
         - organizationTrades
         - organizationStaking
-        - userAccess
-        - policies
+        - quarterly
     SolAddress:
       title: Sol Address
       type: object
@@ -81554,6 +81701,8 @@ components:
         - $ref: '#/components/schemas/BscDelegateIntent'
         - $ref: '#/components/schemas/BscUnDelegateIntent'
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
+        - $ref: '#/components/schemas/CantonAllocationAllocateIntent'
+        - $ref: '#/components/schemas/CantonAllocationRequestIntent'
         - $ref: '#/components/schemas/CantonCosignDelegationAcceptIntent'
         - $ref: '#/components/schemas/CantonCosignDelegationProposalIntent'
         - $ref: '#/components/schemas/CantonCommandIntent'
@@ -82869,6 +83018,7 @@ components:
                   - onchainidWalletLinked
                   - onchainidClaimAdded
                   - onchainidClaimRemoved
+                  - AccountCreateContract
               isPayGo:
                 type: boolean
                 description: True if this address is the BitGo PayGo wallet
