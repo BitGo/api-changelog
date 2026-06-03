@@ -15544,7 +15544,10 @@ paths:
     post:
       operationId: org.search.history.create
       summary: Create search history item
-      description: Create a new search history item for reference later
+      description: |-
+        Create a new search history item for reference later
+
+        **Requires access token scope:** `user_manage`
       tags:
         - Organization Management
       x-internal: false
@@ -15665,7 +15668,10 @@ paths:
     delete:
       operationId: org.search.history.delete
       summary: Delete a search history item
-      description: Delete an existing search history item or all history for a given organization
+      description: |-
+        Delete an existing search history item or all history for a given organization
+
+        **Requires access token scope:** `user_manage`
       tags:
         - Organization Management
       x-internal: false
@@ -33259,6 +33265,76 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/delegateResources/build:
+    post:
+      summary: Build bulk resource delegation transactions
+      description: |-
+        Builds one delegation transaction per entry, collecting per-entry errors
+        rather than aborting the batch on first failure.
+      operationId: v2.wallet.delegateresources.build
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: coin
+          description: The coin ticker symbol (e.g. 'trx', 'ttrx')
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Build Resource Delegations Request Body
+
+                Request body for building bulk resource delegation transactions.
+                Each entry delegates a resource (ENERGY or BANDWIDTH) from the wallet's root address to a receiver address.
+              properties:
+                delegations:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      receiverAddress:
+                        type: string
+                        description: The address receiving the delegated resource
+                      amount:
+                        type: string
+                        description: Amount of resource to delegate (in sun for TRX)
+                      resource:
+                        type: string
+                        description: Resource type to delegate, e.g. 'ENERGY' or 'BANDWIDTH'
+                    required:
+                      - receiverAddress
+                      - amount
+                      - resource
+                    description: Array of resource delegation entries, each specifying a receiver address, amount, and resource type
+              required:
+                - delegations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildDelegationsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/forwarders/balances:
     get:
       summary: List forwarder addresses and balances
@@ -33798,6 +33874,76 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ChangeFeeResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/undelegateResources/build:
+    post:
+      summary: Build bulk resource undelegation transactions
+      description: |-
+        Builds one undelegation transaction per entry, collecting per-entry errors
+        rather than aborting the batch on first failure.
+      operationId: v2.wallet.undelegateresources.build
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: coin
+          description: The coin ticker symbol (e.g. 'trx', 'ttrx')
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Build Resource Undelegations Request Body
+
+                Request body for building bulk resource undelegation transactions.
+                Each entry undelegates a resource (ENERGY or BANDWIDTH) previously delegated from the wallet's root address.
+              properties:
+                undelegations:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      receiverAddress:
+                        type: string
+                        description: The address receiving the delegated resource
+                      amount:
+                        type: string
+                        description: Amount of resource to delegate (in sun for TRX)
+                      resource:
+                        type: string
+                        description: Resource type to delegate, e.g. 'ENERGY' or 'BANDWIDTH'
+                    required:
+                      - receiverAddress
+                      - amount
+                      - resource
+                    description: Array of resource undelegation entries, each specifying a receiver address, amount, and resource type
+              required:
+                - undelegations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BuildDelegationsResponse'
         '400':
           description: Bad Request
           content:
@@ -35893,6 +36039,7 @@ paths:
               - holdingsByAddress
               - userAccess
               - policies
+              - costBasis
               - organizationHoldings
               - organizationHoldingsByAddress
               - organizationTransactions
@@ -36384,6 +36531,33 @@ paths:
                       minLength: 1
                   required:
                     - enterprise
+                costBasis:
+                  type: object
+                  description: Cost basis report
+                  properties:
+                    account:
+                      type: string
+                    assets:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    endDate:
+                      type: string
+                      description: Date of the snapshot
+                      format: date-time
+                      title: ISO Date String
+                    enterprise:
+                      $ref: '#/components/schemas/EnterpriseIdNonEmptyString'
+                    startDate:
+                      type: string
+                      description: Date of the snapshot
+                      format: date-time
+                      title: ISO Date String
+                  required:
+                    - endDate
+                    - enterprise
+                    - startDate
               required:
                 - type
                 - format
@@ -37589,6 +37763,7 @@ paths:
               - holdingsByAddress
               - userAccess
               - policies
+              - costBasis
               - organizationHoldings
               - organizationHoldingsByAddress
               - organizationTransactions
@@ -38078,6 +38253,33 @@ paths:
                       minLength: 1
                   required:
                     - enterprise
+                costBasis:
+                  type: object
+                  description: Cost basis report
+                  properties:
+                    account:
+                      type: string
+                    assets:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    endDate:
+                      type: string
+                      description: Date of the snapshot
+                      format: date-time
+                      title: ISO Date String
+                    enterprise:
+                      $ref: '#/components/schemas/EnterpriseIdNonEmptyString'
+                    startDate:
+                      type: string
+                      description: Date of the snapshot
+                      format: date-time
+                      title: ISO Date String
+                  required:
+                    - endDate
+                    - enterprise
+                    - startDate
               required:
                 - type
                 - format
@@ -53988,6 +54190,28 @@ components:
               type: string
             validatorAddress:
               type: string
+    BuildDelegationsResponse:
+      title: BuildDelegationsResponse
+      type: object
+      properties:
+        transactions:
+          type: array
+          items: {}
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              receiverAddress:
+                type: string
+              message:
+                type: string
+            required:
+              - receiverAddress
+              - message
+      required:
+        - transactions
+        - errors
     BuildParams:
       type: object
       properties:
@@ -59804,6 +60028,7 @@ components:
         - holdingsByAddress
         - userAccess
         - policies
+        - costBasis
     EnterpriseStakingTotals:
       type: object
       properties:
@@ -75527,6 +75752,33 @@ components:
               minLength: 1
           required:
             - enterprise
+        costBasis:
+          type: object
+          description: Cost basis report
+          properties:
+            account:
+              type: string
+            assets:
+              type: array
+              items:
+                type: string
+                minLength: 1
+            endDate:
+              type: string
+              description: Date of the snapshot
+              format: date-time
+              title: ISO Date String
+            enterprise:
+              $ref: '#/components/schemas/EnterpriseIdNonEmptyString'
+            startDate:
+              type: string
+              description: Date of the snapshot
+              format: date-time
+              title: ISO Date String
+          required:
+            - endDate
+            - enterprise
+            - startDate
     ReportStatus1:
       title: ReportStatus
       type: string
@@ -77557,6 +77809,7 @@ components:
         - holdingsByAddress
         - userAccess
         - policies
+        - costBasis
         - organizationHoldings
         - organizationHoldingsByAddress
         - organizationTransactions
