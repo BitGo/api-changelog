@@ -34473,6 +34473,7 @@ paths:
                 - transferAccept
                 - transferReject
                 - cosignDelegationProposal
+                - allocationRequest
                 - stake
                 - unstake
                 - delegate
@@ -34532,6 +34533,7 @@ paths:
                 - transferAccept
                 - transferReject
                 - cosignDelegationProposal
+                - allocationRequest
                 - stake
                 - unstake
                 - delegate
@@ -34754,6 +34756,7 @@ paths:
                 - transferAccept
                 - transferReject
                 - cosignDelegationProposal
+                - allocationRequest
                 - stake
                 - unstake
                 - delegate
@@ -35357,6 +35360,59 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/organization/{id}:
+    get:
+      summary: Get Organization
+      description: Retrieve an organization by its ID. The caller must be a member of the organization.
+      operationId: v2.organization.get
+      tags:
+        - Organization Management
+      x-internal: false
+      parameters:
+        - name: id
+          description: The organization ID
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrganizationGetResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
           content:
             application/json:
               schema:
@@ -40276,6 +40332,7 @@ paths:
                 - transferAccept
                 - transferReject
                 - cosignDelegationProposal
+                - allocationRequest
                 - stake
                 - unstake
                 - delegate
@@ -40335,6 +40392,7 @@ paths:
                 - transferAccept
                 - transferReject
                 - cosignDelegationProposal
+                - allocationRequest
                 - stake
                 - unstake
                 - delegate
@@ -62757,6 +62815,13 @@ components:
                     description: Only visible when the user has access to the wallet
                     example: 59cd72485007a239fb00282ed480da1f
                     pattern: ^[0-9a-f]{32}$
+                  walletLabel:
+                    type: string
+                    description: |-
+                      The label of the wallet referenced by `wallet`. Only visible when the user has access to that
+                      wallet. Useful for displaying a human-readable destination name (e.g. for sibling enterprise
+                      wallets) instead of a generic external-address fallback.
+                    example: My Cold Wallet
                 required:
                   - address
                 description: An array of objects describing the change in address balances made as a result of this Transfer
@@ -65239,6 +65304,7 @@ components:
         - transferAccept
         - transferReject
         - cosignDelegationProposal
+        - allocationRequest
         - stake
         - unstake
         - delegate
@@ -70034,6 +70100,17 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Order'
+    Organization:
+      title: Organization
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+              description: The organization ID
+          required:
+            - id
+        - $ref: '#/components/schemas/OrganizationMutableParameters'
     OrganizationAdminActionRequest:
       title: Organization Admin Approval
       type: object
@@ -70060,11 +70137,408 @@ components:
               example: '1'
         operator:
           $ref: '#/components/schemas/OperatorType'
+    OrganizationBusinessModel:
+      title: OrganizationBusinessModel
+      type: string
+      enum:
+        - cryptoAsAService
+    OrganizationDefaultEnterpriseValue:
+      title: OrganizationDefaultEnterpriseValue
+      type: object
+      properties:
+        bitgoOrg:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/BitgoOrg'
+        licenses:
+          type: array
+          items:
+            type: string
+            enum:
+              - bitgoNetwork
+              - marginTrading
+              - metaMaskInstitutional
+              - mtGox
+              - portfolioAPI
+              - portfolioBasic
+              - portfolioProfessional
+              - portfolioInstitutional
+              - tax
+              - tradeAPI
+              - staking
+              - stakingApi
+              - cryptoCompare
+              - elliptic
+              - instantFeeHotWallet
+              - bitgoTrustAsKrs
+              - escrow
+              - escrowTriparty
+              - distributedCustodyWallet
+              - selfCustodyLightningWallet
+              - custodyLightningWallet
+              - custodyGoLightning
+              - achDebits
+              - advancedWallets
+              - stablecoins
+              - canBorrowAgainstGoAccount
+              - autoLiquidation
+              - tradeFixApi
+              - goStaking
+            x-enumsDeprecated:
+              - portfolioAPI
+              - portfolioBasic
+              - portfolioProfessional
+              - portfolioInstitutional
+              - tax
+        labels:
+          type: array
+          items:
+            type: string
+            enum:
+              - B2B2C - Swan
+              - B2B2C - Binance
+              - B2B2C - Fold
+              - Sofi
+              - Mt Gox
+              - Bitcoin Builder
+              - Employee
+              - General
+              - B2B2C
+              - B2B2B - Keyrails
+              - B2B2B - Onramp
+              - B2B2C - Onramp
+              - starterAccount
+              - ftx
+              - bitgoTechnologiesFBO
+              - retail
+              - foundation
+              - Coinlist
+              - Sales Referral!Frank Wang
+        usersViewAllWallets:
+          nullable: true
+          type: boolean
+        videoIdWaived:
+          nullable: true
+          type: boolean
+        pricingPlan:
+          nullable: true
+          oneOf:
+            - type: string
+            - type: string
+              enum:
+                - ''
+        upfrontPaymentStatus:
+          nullable: true
+          oneOf:
+            - $ref: '#/components/schemas/UpfrontPaymentStatus'
+            - type: string
+              enum:
+                - ''
+        accountType:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/AccountType'
+        pricingType:
+          nullable: true
+          oneOf:
+            - $ref: '#/components/schemas/PricingTypeName'
+            - type: string
+              enum:
+                - ''
+        businessModel:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/BusinessModel'
+        complianceModel:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/ComplianceModel'
+        featureFlags:
+          type: array
+          items:
+            type: string
+            enum:
+              - adaBYOValidator
+              - adaBYODRep
+              - adaPledging
+              - adaStaking
+              - atomStaking
+              - avaxcAlwaysUseHop
+              - avaxpStaking
+              - avaxpBYOValidator
+              - bscStaking
+              - bscBYOValidator
+              - babylonStaking
+              - cronosStaking
+              - fetchStaking
+              - lidoStaking
+              - cosmosBYOValidator
+              - icpStaking
+              - nearBYOValidator
+              - maticBYOValidator
+              - mpcStaking
+              - pstAvaxStaking
+              - solBYOValidator
+              - somniaStaking
+              - somniaBYOValidator
+              - storyStaking
+              - hypeevmStaking
+              - hypeevmBYOValidator
+              - storyBYOValidator
+              - stAvaxStaking
+              - sAvaxStaking
+              - v2RewardAccrualReportAPI
+              - trxStaking
+              - trxBYOValidator
+              - vetStaking
+              - vetBYOValidator
+              - xdcBYOValidator
+              - reactOnly
+              - useEddsaCommitment
+              - enableBG23
+              - enableBG25Inst
+              - enableBG25Retail
+              - bitgoNetwork
+              - btcHSMv3
+              - ecdsaTssColdWallets
+              - eddsaTssColdWallets
+              - enableMMI
+              - ethHSMv3
+              - nftWallets
+              - checkPendingBalanceOnBuild
+              - enableEcdsaWallets
+              - enableTendermintHotWallets
+              - enableMpcEvmCustody
+              - enableMpcEvmHot
+              - ethBatchStaking
+              - enableConcurrentGg18Evm
+              - specialVideoInstructions
+              - csprStaking
+              - tssCustodial
+              - blockTransactionIfPending
+              - mystenEmployee
+              - mystenInvestor
+              - monthlyTrustReports
+              - nitroHSM
+              - unspentsConsolidation
+              - newPolicyServiceShadowMode
+              - useEnterpriseEcdsaTssChallenge
+              - clearingSettlementUI
+              - snowflakeReports
+              - multiAssetDVP
+              - solStakingAuthorize
+              - suiCustomTx
+              - csprBYOValidator
+              - suiBYOValidator
+              - stxStaking
+              - stxBYOValidator
+              - tonBYOValidator
+              - btcBYOValidator
+              - btcStaking
+              - tonStaking
+              - useEcdsaTssPaillierBlum
+              - useEcdsaTssPhase5
+              - allowBackupKeySigning
+              - useCustomValidators
+              - sendTxRequestFullNotification
+              - addressBookRevised
+              - enableEnterprisePolicy
+              - bgUILargeEnterprise
+              - enableDurableNonce
+              - automateGoAccountActivation
+              - showUnstableOesPartners
+              - stakingReports
+              - cosmosClaimRewards
+              - cosmosSwitchValidator
+              - enablePlaid
+              - enableMPCv2
+              - useWireWithdrawalConfirmAPI
+              - disableDurableNonce
+              - tonV1Wallets
+              - allowExternalChangeAddressUI
+              - eigenStaking
+              - eigenBYOValidator
+              - eigenLikeClaimRewards
+              - enableRiskScoring
+              - useValidatorList
+              - ethRestaking
+              - ethClaimRewards
+              - enableKycReverification
+              - fetchAdaBalanceFromIndexer
+              - polStaking
+              - enableTrxFundingFromGasTank
+              - useAvailableBandwidthForTokenConsolidation
+              - enablePreventDuplicateConsolidations
+              - ethUnstakingPolicyService
+              - bulkTx
+              - eth2Staking
+              - nearStaking
+              - solStaking
+              - dotStaking
+              - maticStaking
+              - suiStaking
+              - wctStaking
+              - wflrStaking
+              - coredaoStaking
+              - coredaoBYOValidator
+              - beraStaking
+              - beraBYOValidator
+              - beraNativeStaking
+              - walrusStaking
+              - walrusBYOValidator
+              - taoStaking
+              - taoBYOValidator
+              - babylonBYOValidator
+              - btcBabylonStaking
+              - polyxStaking
+              - polyxBYOValidator
+              - tokenization
+              - globalTravelRule
+              - addressReports
+              - enableMarginV2
+              - enableMarginV2UI
+              - mpcV2ReceiveAddress
+              - enableUSDS
+              - enableDEX
+              - enableWalletConnect
+              - shouldCreateGoAccountAsynchronously
+              - enableWhitelistTestTransactions
+              - disableCustodyGoGasVideoWaiver
+              - enableFinancing
+              - disableFinancing
+              - financingGatedRelease
+              - enableEnterpriseWhitelist
+              - enableEnterpriseAddressBook
+              - enableSmartContractCalls
+              - enableCrossChainRecovery
+              - enablePolicyRuleTemplates
+              - enableUserRoleApprovalAction
+              - enableTimeBasedPolicies
+              - securePolicyWebhooks
+              - dontSendStatementEmailNotifications
+              - hotBackingWalletsEnabled
+              - enableSso
+              - enableOktaSso
+              - volumeTieredTradingFees
+              - enableInternalOnlyTradeProducts
+              - showNewTradeProductsBanner
+              - enableTokenManagementTab
+              - enableNewConsolidationDesign
+              - enableMidnightGlacierDrop
+              - useImsBuiltTransaction
+              - enableNewInfraredRewardTracking
+              - skipFailedTxnEntriesUpdate
+              - expiryBasedNonceHandler
+              - disableSelfCustodyWhitelistLock
+              - enableTradeV2UI
+              - showOrderBookData
+              - achDebitsEnabled
+              - enableFrankfurtDETrustTrading
+              - enableEVMKeyring
+              - invoiceFiatFees
+              - seievmStaking
+              - seievmBYOValidator
+              - jitoStaking
+              - enableKoreanLocalization
+              - taoBittensorStaking
+              - enableDvPBulkInitialization
+              - enableUSDMena
+              - aptStaking
+              - solRedelegationBackfill
+              - ignoreSpendingCalculationMissingMarketData
+              - enableMobileDownloadBanner
+              - enableTrxMpc
+              - enterpriseLogoUpload
+        distributedCustody:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/DistributedCustody'
+    OrganizationGetResponse:
+      title: OrganizationGetResponse
+      type: object
+      properties:
+        organization:
+          $ref: '#/components/schemas/Organization'
+      required:
+        - organization
     OrganizationIdString:
       title: OrganizationIdString
       type: string
       example: 59cd72485007a239fb00282ed480da1f
       pattern: ^[0-9a-f]{32}$
+    OrganizationMutableParameters:
+      title: OrganizationMutableParameters
+      type: object
+      properties:
+        name:
+          type: string
+          description: The name of the organization
+        pricingPlan:
+          nullable: true
+          oneOf:
+            - type: string
+            - type: string
+              enum:
+                - ''
+          description: The pricing plan for the organization
+        enterpriseNameSuffix:
+          nullable: true
+          oneOf:
+            - type: string
+            - type: string
+              enum:
+                - ''
+          description: The suffix for the enterprise name
+        salesforceAccountId:
+          type: string
+          description: The Salesforce account ID
+        enterprises:
+          type: array
+          items:
+            type: string
+            description: The list of enterprises associated with the organization
+        defaultEnterpriseValues:
+          allOf:
+            - $ref: '#/components/schemas/OrganizationDefaultEnterpriseValue'
+          description: The default values for the enterprise
+        approvedVideoIdUsers:
+          type: array
+          items:
+            type: string
+            description: The list of approved users for video ID
+        defaultOrgEnterpriseTemplateId:
+          type: string
+        orgFeatureFlags:
+          type: array
+          items:
+            type: string
+            enum:
+              - disableLivenessAsDefault
+              - dontSendStatementEmailNotifications
+              - userManagementServiceEnabled
+              - achDebitsEnabledAllEnterprises
+              - isTriPartyAutoAcceptEnabled
+              - tokenManagementServiceEnabled
+              - CaaSEnabledFiatPolicies
+              - euRegulated
+            description: All feature flags that should be set on the organization
+        reserveGoAccountId:
+          nullable: true
+          type: string
+          description: The ID of the organization's reserve holdings Go account
+        licenses:
+          type: array
+          items:
+            type: string
+            enum:
+              - DAppConnections
+              - KycExemption
+            description: Organization-level licenses
+        businessModel:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/OrganizationBusinessModel'
+          description: The business model for the organization
     OrganizationRole:
       title: OrganizationRole
       type: string
@@ -83284,6 +83758,13 @@ components:
                 description: Only visible when the user has access to the wallet
                 example: 59cd72485007a239fb00282ed480da1f
                 pattern: ^[0-9a-f]{32}$
+              walletLabel:
+                type: string
+                description: |-
+                  The label of the wallet referenced by `wallet`. Only visible when the user has access to that
+                  wallet. Useful for displaying a human-readable destination name (e.g. for sibling enterprise
+                  wallets) instead of a generic external-address fallback.
+                example: My Cold Wallet
               value:
                 type: number
                 description: The change (in base units) in the address' balance
@@ -85943,6 +86424,15 @@ components:
       required:
         - state
         - changed
+    UpfrontPaymentStatus:
+      title: UpfrontPaymentStatus
+      type: string
+      enum:
+        - received
+        - waived
+        - pending
+        - overdue
+        - delinquent
     User:
       type: object
       properties:
