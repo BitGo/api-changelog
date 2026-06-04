@@ -2485,11 +2485,10 @@ paths:
     post:
       summary: Create client
       description: |-
-        Create a new OES client for the specified enterprise. This endpoint allows enterprise users 
-        to create a new client within the OES system, establishing the foundation for future trading 
-        activities. The client will be automatically associated with the enterprise specified in the path 
+        Create a new OES client for the specified enterprise. This endpoint allows enterprise users
+        to create a new client within the OES system, establishing the foundation for future trading
+        activities. The client will be automatically associated with the enterprise specified in the path
         parameter.
-
 
         Error scenarios:
         - 400: Invalid Request Error
@@ -2507,6 +2506,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected error processing the request.
         - Examples: Database connection failure, transient network error.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1ClientsPostRoute
       tags:
         - Client Activation
@@ -2581,6 +2582,8 @@ paths:
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, error retrieving allocations data,
         error transforming allocation data for response.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientAllocationsGetRoute
       tags:
         - Client Allocations & Deallocations
@@ -2836,6 +2839,8 @@ paths:
         - Occurs when there's an unexpected error processing the request
         - Examples: Database connection failure, currency mapping error,
         error transforming allocation data for response
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientAllocationGetRoute
       tags:
         - Client Allocations & Deallocations
@@ -2926,6 +2931,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request
         - Examples: Database connection issues, transient network errors,
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientBalancesGetRoute
       tags:
         - Client Balances
@@ -3073,6 +3080,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, error retrieving connection data.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientConnectionsGetRoute
       tags:
         - Client Activation
@@ -3197,6 +3206,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues. Transient network errors,
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1ClientConnectionsPostRoute
       tags:
         - Client Activation
@@ -3307,6 +3318,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, transient network errors.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientConnectionGetRoute
       tags:
         - Client Activation
@@ -3394,6 +3407,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, transient network errors.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1ClientConnectionPutRoute
       tags:
         - Client Activation
@@ -3487,6 +3502,8 @@ paths:
         A successful allocation indicates that funds are locked at BitGo and available for spend on the connected partner.
         Note: Allocations will happen synchronously and allocated amounts can be viewed in the
         BitGo application or via a balances endpoint.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: V1ClientAllocationsPostRoute
       tags:
         - Client Allocations & Deallocations
@@ -3647,6 +3664,8 @@ paths:
       description: |-
         This API call allows clients to get the client allocations payload for signing.
         If your HTTP client doesn't support sending a request body on a get request, use the v1ClientAllocationsSigningPostRoute
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientAllocationsSigningGetRoute
       tags:
         - Client Allocations & Deallocations
@@ -3770,6 +3789,8 @@ paths:
       description: |-
         This API call allows clients to get the client allocations payload for signing.
         This endpoint is effectively the same as the GET endpoint, but is helpful if your HTTP client doesn't support sending a request body on a get request.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1ClientAllocationsSigningPostRoute
       tags:
         - Client Allocations & Deallocations
@@ -3924,6 +3945,8 @@ paths:
         - 500: Internal Server Error or Reserved Deallocation
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, transient network errors.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: V1ClientDeallocationsPostRoute
       tags:
         - Client Allocations & Deallocations
@@ -4087,6 +4110,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: V1ClientDeallocationsSigningGetRoute
       tags:
         - Client Allocations & Deallocations
@@ -4217,6 +4242,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: V1ClientDeallocationsSigningPostRoute
       tags:
         - Client Allocations & Deallocations
@@ -4344,6 +4371,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues. Transient network errors.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: V1ClientConnectionsSigningGetRoute
       tags:
         - Client Activation
@@ -4446,6 +4475,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues. Transient network errors.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: V1ClientConnectionsSigningPostRoute
       tags:
         - Client Activation
@@ -4525,7 +4556,10 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/settlement/disputes:
     get:
       summary: List Settlement Disputes for a Client
-      description: This API call allows clients to list disputes associated with their settlements.
+      description: |-
+        This API call allows clients to list disputes associated with their settlements.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: listClientSettlementDisputes
       tags:
         - Settlement Disputes
@@ -4723,6 +4757,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, query errors.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientSettlementsGetRoute
       tags:
         - Client Settlements & Transfers
@@ -4887,16 +4923,18 @@ paths:
         - Examples: Caller is not a member of the enterprise.
 
         - 403: Permission Denied Error
-        - Occurs when the authenticated client doesn't have necessary permissions.
+        - Occurs when the authenticated client doesn’t have necessary permissions.
         - Examples: Enterprise does not have OES license.
 
         - 404: Not Found Error
         - Occurs when the specified settlement cannot be found.
-        - Examples: Settlement ID doesn't exist or the calling client isn't involved in the settlement.
+        - Examples: Settlement ID doesn’t exist or the calling client isn’t involved in the settlement.
 
         - 500: Internal Server Error
-        - Occurs when there's an unexpected server error processing the request.
+        - Occurs when there’s an unexpected server error processing the request.
         - Examples: Database connection issues.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientSettlementGetRoute
       tags:
         - Client Settlements & Transfers
@@ -4990,7 +5028,10 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/settlements/{settlementId}/disputes:
     post:
       summary: Dispute a Settlement
-      description: This API call allows clients to dispute a settlement (if within the dispute window).
+      description: |-
+        This API call allows clients to dispute a settlement (if within the dispute window).
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: createClientSettlementDispute
       tags:
         - Settlement Disputes
@@ -5088,7 +5129,10 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/settlements/disputes/{disputeId}:
     put:
       summary: Update a Settlement Dispute
-      description: This API call allows clients to retract or un-retract a dispute (if within the dispute window).
+      description: |-
+        This API call allows clients to retract or un-retract a dispute (if within the dispute window).
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: updateClientSettlementDispute
       tags:
         - Settlement Disputes
@@ -5237,8 +5281,10 @@ paths:
     post:
       summary: Close a dispute
       description: |-
-        Close a dispute for cases when their dispute is invalid. 
+        Close a dispute for cases when their dispute is invalid.
         If the dispute was valid and instructions need to be adjusted then a bitgo admin will need to close it.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: V1ClientSettlementDisputeClosurePostRoute
       tags:
         - Settlement Disputes
@@ -5364,7 +5410,10 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/clients/settlementTransfers:
     get:
       summary: List client settlement transfers
-      description: Lists all settlement transfers for your OES client account.
+      description: |-
+        Lists all settlement transfers for your OES client account.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1ClientSettlementTransfersGetRoute
       tags:
         - Client Settlements & Transfers
@@ -5556,7 +5605,7 @@ paths:
     get:
       summary: List Partners
       description: |-
-        Lists all OES Partners associated with the specified enterprise. 
+        Lists all OES Partners associated with the specified enterprise.
         Returns a collection of partners with information required to connect to them.
 
         Error scenarios:
@@ -5575,6 +5624,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected error processing the request
         - Examples: Database connection failure, transient network error.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnersGetRoute
       tags:
         - Client Activation
@@ -5716,9 +5767,8 @@ paths:
     post:
       summary: Create Partner
       description: |-
-        Create a new OES Partner. This endpoint allows enterprise users to add themselves as a partner in OES for 
+        Create a new OES Partner. This endpoint allows enterprise users to add themselves as a partner in OES for
         clients to connect to.
-
 
         Before calling this endpoint, a configuration for the partner must exist.
 
@@ -5747,6 +5797,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected error processing the request
         - Examples: Database connection failure, transient network error.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1PartnersPostRoute
       tags:
         - Onboarding
@@ -5860,7 +5912,10 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/allocations:
     get:
       summary: List partner allocations and deallocations
-      description: Lists all allocations and deallocations. For use only by OES partners.
+      description: |-
+        Lists all allocations and deallocations. For use only by OES partners.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerAllocationsGetRoute
       tags:
         - Partner Allocations & Deallocations
@@ -6084,11 +6139,13 @@ paths:
     put:
       summary: Update Partner Allocations
       description: |-
-        This API call allows partners to inform the OES system about an update to an allocation made to one of 
+        This API call allows partners to inform the OES system about an update to an allocation made to one of
         their connections. This endpoint is only relevant to OES partners that have async allocations enabled.
 
-        A successful response indicates that the allocation was successfully updated in the OES system and the funds 
+        A successful response indicates that the allocation was successfully updated in the OES system and the funds
         are cleared (if cleared is passed for status) or released (if released is passed for status).
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1PartnerAllocationsPutRoute
       tags:
         - Partner Allocations & Deallocations
@@ -6288,6 +6345,7 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/allocations/{allocationId}:
     get:
       summary: Get partner allocation or deallocation
+      description: '**Requires access token scope:** `settlement_network_read`'
       operationId: v1PartnerAllocationGetRoute
       tags:
         - Partner Allocations & Deallocations
@@ -6375,6 +6433,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request
         - Examples: Database connection issues, transient network errors.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerBalancesGetRoute
       tags:
         - Partner Balances
@@ -6566,6 +6626,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, error retrieving connection data.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerConnectionsGetRoute
       tags:
         - Partner Activation
@@ -6698,6 +6760,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, transient network errors.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerConnectionGetRoute
       tags:
         - Partner Activation
@@ -6756,11 +6820,13 @@ paths:
     put:
       summary: Update Partner Deallocations
       description: |-
-        This API call allows partners to inform the OES system about an update to a deallocation made to one of 
+        This API call allows partners to inform the OES system about an update to a deallocation made to one of
         their connections. This endpoint is only relevant to OES partners that have async deallocations enabled.
 
-        A successful response indicates that the allocation was successfully updated in the OES system and the funds 
+        A successful response indicates that the allocation was successfully updated in the OES system and the funds
         are cleared (if cleared is passed for status) or released (if released is passed for status).
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: V1PartnerDeallocationsPutRoute
       tags:
         - Partner Allocations & Deallocations
@@ -6960,7 +7026,10 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/settlement/disputes:
     get:
       summary: List Settlement Disputes for a Partner
-      description: This API call allows partners to list disputes associated with their settlements.
+      description: |-
+        This API call allows partners to list disputes associated with their settlements.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: listPartnerSettlementDisputes
       tags:
         - Settlement Disputes
@@ -7207,6 +7276,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, query errors.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerSettlementsGetRoute
       tags:
         - Partner Settlements & Transfers
@@ -7412,6 +7483,8 @@ paths:
         - 500: Internal Server Error or Incomplete Settlement
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, settlement initiated but not completed due to transient errors.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1PartnerSettlementsPostRoute
       tags:
         - Partner Settlements & Transfers
@@ -7507,6 +7580,8 @@ paths:
         The returned payload should be cryptographically signed by the partner and included
         in the subsequent settlement creation request.
         If your HTTP client doesn't support sending a request body on a get request, use the V1PartnerSettlementsSigningPostRoute
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerSettlementSigningGetRoute
       tags:
         - Partner Settlements & Transfers
@@ -7599,8 +7674,10 @@ paths:
         This API call allows partners to get the partner settlements payload for signing.
         The returned payload should be cryptographically signed by the partner and included
         in the subsequent settlement creation request.
-        This endpoint is effectively the same as the GET endpoint, but is helpful if your HTTP client doesn't support 
+        This endpoint is effectively the same as the GET endpoint, but is helpful if your HTTP client doesn't support
         sending a request body on a get request.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1PartnerSettlementsSigningPostRoute
       tags:
         - Partner Settlements & Transfers
@@ -7715,6 +7792,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerSettlementGetRoute
       tags:
         - Partner Settlements & Transfers
@@ -7865,6 +7944,8 @@ paths:
 
         NOTE: this route is being deprecated in favor
         of the POST /api/network/v1/enterprises/{enterpriseId}/partners/settlements route.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1PartnerSettlementsNonReconciledPostRoute
       tags:
         - Partner Settlements & Transfers
@@ -7980,6 +8061,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1PartnerOnChainSettlementPostRoute
       tags:
         - Partner Settlements & Transfers
@@ -8099,7 +8182,6 @@ paths:
         associated with a specific settlement. The deposits will be tracked and reconciled
         with the settlement transaction.
 
-
         Error scenarios:
         - 400: Invalid Request Error
         - Occurs when the request parameters are invalid or incomplete.
@@ -8124,6 +8206,8 @@ paths:
         - 500: Internal Server Error
         - Occurs when there's an unexpected error processing the request
         - Examples: Database connection failure, transient network error.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v1PartnerExtDepositsPostRoute
       tags:
         - Partner Settlements & Transfers
@@ -8238,6 +8322,8 @@ paths:
         Partners can use this endpoint to retrieve a formatted payload that should be signed
         using their private key before submitting deposit information. This ensures that
         deposit submissions are properly authenticated and attributed to the correct partner.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerExtDepositsSigningGetRoute
       tags:
         - Partner Settlements & Transfers
@@ -8342,7 +8428,10 @@ paths:
   /api/network/v1/enterprises/{enterpriseId}/partners/trades/signing:
     get:
       summary: Get Signing Payload for Partner Trades
-      description: This API call allows partners to get the partner trades payload for signing.
+      description: |-
+        This API call allows partners to get the partner trades payload for signing.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1PartnerTradesSigningGetRoute
       tags:
         - Partner Trades
@@ -8412,9 +8501,11 @@ paths:
       summary: List Partner-Supported Currencies
       description: |-
         List all the currencies a given OES Partner supports for allocation and deallocation.
-        This endpoint returns a comprehensive list of currencies that can be used for allocations, 
+        This endpoint returns a comprehensive list of currencies that can be used for allocations,
         deallocations and settlements for each partner.
         with specific partners.
+
+        **Requires access token scope:** `settlement_network_read`
       operationId: v1EnterpriseSupportedCurrenciesRoute
       tags:
         - Client Allocations & Deallocations
@@ -8520,6 +8611,8 @@ paths:
         - 500: Internal Server Error or Incomplete Settlement
         - Occurs when there's an unexpected server error processing the request.
         - Examples: Database connection issues, settlement initiated but not completed due to transient errors.
+
+        **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: v2PartnerSettlementsPostRoute
       tags:
         - Partner Settlements & Transfers
