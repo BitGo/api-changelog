@@ -1145,6 +1145,7 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
     post:
       summary: Add Block List Entry
+      description: '**Requires access token scope:** `wallet_spend_all`'
       operationId: V1PostBlockListRoute
       tags:
         - Counterparties
@@ -1219,6 +1220,7 @@ paths:
   /api/address-book/v1/block-list/{blockListId}:
     delete:
       summary: Delete Block List Entry
+      description: '**Requires access token scope:** `wallet_spend_all`'
       operationId: V1DeleteBlockListRoute
       tags:
         - Counterparties
@@ -1438,6 +1440,8 @@ paths:
         Add a connection for your Go Account to another Go Account.
         To connect to a Go Account that's not listed in the public directory, pass a `walletId`.
         To connect to a Go Account that is listed in the public directory, pass a value for the `targetListingEntryId`.
+
+        **Requires access token scope:** `wallet_spend_all`
       operationId: V1PostConnectionRoute
       tags:
         - Counterparties
@@ -1528,7 +1532,10 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
     put:
       summary: Update connection status
-      description: Update connections to `PENDING_DEACTIVATION`.
+      description: |-
+        Update connections to `PENDING_DEACTIVATION`.
+
+        **Requires access token scope:** `wallet_spend_all`
       operationId: V1PutConnectionsRoute
       tags:
         - Counterparties
@@ -1599,7 +1606,10 @@ paths:
   /api/address-book/v1/connections/bulk:
     post:
       summary: Bulk add Go Account connections
-      description: Add connections for your Go Account to multiple other Go Accounts.
+      description: |-
+        Add connections for your Go Account to multiple other Go Accounts.
+
+        **Requires access token scope:** `wallet_spend_all`
       operationId: V1PostBulkConnectionsRoute
       tags:
         - Counterparties
@@ -1806,6 +1816,8 @@ paths:
         * Description of your enterprise listing.
         * Description of the target listing on connections you added from the directory.
         * Description and or name of the target listing name from connections you directly added by wallet ID.
+
+        **Requires access token scope:** `wallet_spend_all`
       operationId: V1PutListingRoute
       tags:
         - Counterparties
@@ -1883,7 +1895,10 @@ paths:
   /api/address-book/v1/listing/entry/{listingEntryId}:
     put:
       summary: Update Go Account entry
-      description: Update your Go Account entry and `targetListingEntries` for your connections.
+      description: |-
+        Update your Go Account entry and `targetListingEntries` for your connections.
+
+        **Requires access token scope:** `wallet_spend_all`
       operationId: V1PutListingEntryRoute
       tags:
         - Counterparties
@@ -2194,7 +2209,10 @@ paths:
   /api/address-book/v1/listing/entry/global:
     post:
       summary: Create enterprise listing entry
-      description: Create a listing entry for your enterprises Go Account.
+      description: |-
+        Create a listing entry for your enterprises Go Account.
+
+        **Requires access token scope:** `wallet_spend_all`
       operationId: V1PostListingEntryRoute
       tags:
         - Counterparties
@@ -2323,6 +2341,8 @@ paths:
       description: |-
         Create a listing for your enterprise in the Go network.
         Once you create a listing for your enterprise, you can list your Go Account in the public directory.
+
+        **Requires access token scope:** `wallet_spend_all`
       operationId: V1PostListingRoute
       tags:
         - Counterparties
