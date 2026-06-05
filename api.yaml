@@ -29038,16 +29038,20 @@ paths:
         - $ref: '#/components/parameters/queryCoins'
         - name: walletType
           in: query
-          description: Filter by Wallet Type (e.g. custodial, hot)
+          description: Filter by one or more Wallet Types. Multiple values may be specified (e.g. ?walletType=cold&walletType=hot) and are combined with OR semantics.
           required: false
           schema:
-            type: string
-            enum:
-              - cold
-              - custodial
-              - custodialPaired
-              - hot
-              - trading
+            type: array
+            items:
+              type: string
+              enum:
+                - cold
+                - custodial
+                - custodialPaired
+                - hot
+                - trading
+          style: form
+          explode: true
         - name: walletIds
           in: query
           description: Wallet Ids
