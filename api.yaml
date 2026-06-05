@@ -10088,9 +10088,11 @@ paths:
       tags:
         - Market Data
       summary: Get historical prices
-      description: |
+      description: |-
         Get a list of historical OHLCV (Open, High, Low, Close, Volume) prices for a currency pair within a specified time range.
         Using this endpoint requires an access token with the appropriate enterprise ID.
+
+        **Requires access token scope:** `crypto_compare`
       operationId: marketdata.cryptocompare.historical.prices.get
       parameters:
         - $ref: '#/components/parameters/Base'
@@ -10121,9 +10123,11 @@ paths:
       tags:
         - Market Data
       summary: Get spot prices
-      description: |
+      description: |-
         Get a single OHLCV (Open, High, Low, Close, Volume) price data point for a currency pair at a specific time.
         Using this endpoint requires an access token with the appropriate enterprise ID.
+
+        **Requires access token scope:** `crypto_compare`
       operationId: marketdata.cryptocompare.spot.prices.get
       parameters:
         - $ref: '#/components/parameters/Base'
@@ -29034,16 +29038,20 @@ paths:
         - $ref: '#/components/parameters/queryCoins'
         - name: walletType
           in: query
-          description: Filter by Wallet Type (e.g. custodial, hot)
+          description: Filter by one or more Wallet Types. Multiple values may be specified (e.g. ?walletType=cold&walletType=hot) and are combined with OR semantics.
           required: false
           schema:
-            type: string
-            enum:
-              - cold
-              - custodial
-              - custodialPaired
-              - hot
-              - trading
+            type: array
+            items:
+              type: string
+              enum:
+                - cold
+                - custodial
+                - custodialPaired
+                - hot
+                - trading
+          style: form
+          explode: true
         - name: walletIds
           in: query
           description: Wallet Ids
