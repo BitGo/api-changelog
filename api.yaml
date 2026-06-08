@@ -38977,6 +38977,14 @@ paths:
                             type: string
                         tokenLimits:
                           $ref: '#/components/schemas/TokenLimits'
+                        permittedEnterprises:
+                          type: array
+                          items:
+                            type: string
+                        permittedWallets:
+                          type: array
+                          items:
+                            type: string
                         createdAt:
                           type: string
                           format: date-time
@@ -39099,6 +39107,20 @@ paths:
                             type: string
                         required:
                           - coin
+                permittedEnterprises:
+                  type: array
+                  items:
+                    type: string
+                    description: |-
+                      Enterprise IDs to restrict tokens created from this template to. Absence means no enterprise restriction.
+                      Cannot be set together with permittedWallets.
+                permittedWallets:
+                  type: array
+                  items:
+                    type: string
+                    description: |-
+                      Wallet IDs to restrict tokens created from this template to. Absence means no wallet restriction.
+                      Cannot be set together with permittedEnterprises.
               required:
                 - name
       responses:
@@ -39306,6 +39328,16 @@ paths:
                             type: string
                         required:
                           - coin
+                permittedEnterprises:
+                  type: array
+                  items:
+                    type: string
+                    description: Updated enterprise IDs restriction. Omit to clear. Cannot be set together with permittedWallets.
+                permittedWallets:
+                  type: array
+                  items:
+                    type: string
+                    description: Updated wallet IDs restriction. Omit to clear. Cannot be set together with permittedEnterprises.
       responses:
         '200':
           description: OK
@@ -49119,6 +49151,14 @@ components:
             type: string
         tokenLimits:
           $ref: '#/components/schemas/TokenLimits'
+        permittedEnterprises:
+          type: array
+          items:
+            type: string
+        permittedWallets:
+          type: array
+          items:
+            type: string
         createdAt:
           type: string
           format: date-time
@@ -66210,6 +66250,7 @@ components:
             - institutional
             - nitro
             - SDTrustNitro
+            - frankfurtDETrustNitro
             - awsKms
           description: The type of HSM that owns this key.
           example: institutional
@@ -72274,6 +72315,20 @@ components:
             email:
               type: string
               description: The email of the user
+            inviterInfo:
+              type: object
+              description: CaaS org add-invite only (`POST /api/v2/organization/{orgId}/user`); UMS org user changes use `genericRequest`.
+              properties:
+                email:
+                  type: string
+                fullName:
+                  type: string
+                id:
+                  type: string
+              required:
+                - email
+                - fullName
+                - id
             role:
               type: string
               enum:
