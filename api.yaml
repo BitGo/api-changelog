@@ -25957,15 +25957,15 @@ paths:
       description: Lists all policy rules for an enterprise.
       operationId: v1.policy.rules.list
       parameters:
-        - $ref: '#/components/parameters/CreatedDateGte1'
-        - $ref: '#/components/parameters/CreatedDateLte1'
+        - $ref: '#/components/parameters/CreatedDateGte'
+        - $ref: '#/components/parameters/CreatedDateLte'
         - $ref: '#/components/parameters/Enterprise1'
         - $ref: '#/components/parameters/EvaluationId'
         - $ref: '#/components/parameters/EvaluationStatus'
         - $ref: '#/components/parameters/PolicyRuleName'
-        - $ref: '#/components/parameters/PolicyRuleStatus1'
-        - $ref: '#/components/parameters/ScopeName1'
-        - $ref: '#/components/parameters/Touchpoints1'
+        - $ref: '#/components/parameters/PolicyRuleStatus'
+        - $ref: '#/components/parameters/ScopeName'
+        - $ref: '#/components/parameters/Touchpoints'
         - $ref: '#/components/parameters/PolicyRuleIdQuery'
         - $ref: '#/components/parameters/Limit1'
         - $ref: '#/components/parameters/PrevId1'
@@ -26007,8 +26007,8 @@ paths:
           schema:
             type: string
             pattern: ^[0-9a-f]{32}$
-        - $ref: '#/components/parameters/Touchpoints1'
-        - $ref: '#/components/parameters/PolicyRuleStatus1'
+        - $ref: '#/components/parameters/Touchpoints'
+        - $ref: '#/components/parameters/PolicyRuleStatus'
         - name: page
           in: query
           description: Page number (1-based)
@@ -30609,7 +30609,13 @@ paths:
     post:
       x-internal: false
       summary: Create a bank transfer
-      description: Creates a new bank transfer using the `walletId` and `bankAccountId` as counterparties. Most details are inferred from `bankAccountId`. The `walletId` and `bankAccountId` must be owned by the same `enterpriseId`.
+      description: |-
+        Creates a new bank transfer using the `walletId` and
+        `bankAccountId` as counterparties. Most details are inferred
+        from `bankAccountId`. The `walletId` and `bankAccountId`
+        must be owned by the same `enterpriseId`.
+
+        **Requires access token scope:** `wallet_spend_all`
       operationId: tradfi.v1.bank-transfers.create
       tags:
         - ACH Debits
@@ -31145,7 +31151,7 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
-  /api/v1/external/sandbox/transaction/simulate:
+  /api/fiat/v1/sandbox/transaction/simulate:
     post:
       tags:
         - Fiat
@@ -47914,7 +47920,7 @@ components:
       example: BTC
       schema:
         type: string
-    CreatedDateGte1:
+    CreatedDateGte:
       name: createdDateGte
       in: query
       description: |
@@ -47923,7 +47929,7 @@ components:
         type: string
         format: date-time
       example: '2023-11-13T14:49:48.830522Z'
-    CreatedDateLte1:
+    CreatedDateLte:
       name: createdDateLte
       in: query
       description: |
@@ -48078,7 +48084,7 @@ components:
       schema:
         type: string
       example: My policy rule
-    PolicyRuleStatus1:
+    PolicyRuleStatus:
       name: status
       in: query
       description: Statuses of the returned policy rules, one or more may be provided.
@@ -48119,7 +48125,7 @@ components:
       example: USD
       schema:
         type: string
-    ScopeName1:
+    ScopeName:
       name: scopes
       in: query
       description: |
@@ -48159,7 +48165,7 @@ components:
       schema:
         type: string
       example: wallet.segregated.transfer
-    Touchpoints1:
+    Touchpoints:
       name: touchpoints
       in: query
       description: The Touchpoints of the returned policy rules. One or more may be provided. For example, the Transfer from a Wallet Touchpoint. See also the List scope Touchpoints API.
