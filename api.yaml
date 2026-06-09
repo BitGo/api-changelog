@@ -32155,6 +32155,19 @@ paths:
                     - rejected
                     - failed
                     - expired
+                    - triggering_mint_request
+                    - completed_mint_request
+                    - triggering_mint_accept
+                    - completed_mint_accept
+                    - triggering_mint_transfer
+                    - failed_to_mint_request
+                    - failed_to_mint_accept
+                    - failed_to_mint_transfer
+                    - triggering_burn_request
+                    - completed_burn_request
+                    - triggering_burn_accept
+                    - failed_to_burn_request
+                    - failed_to_burn_accept
               - type: string
                 enum:
                   - created
@@ -32180,6 +32193,19 @@ paths:
                   - rejected
                   - failed
                   - expired
+                  - triggering_mint_request
+                  - completed_mint_request
+                  - triggering_mint_accept
+                  - completed_mint_accept
+                  - triggering_mint_transfer
+                  - failed_to_mint_request
+                  - failed_to_mint_accept
+                  - failed_to_mint_transfer
+                  - triggering_burn_request
+                  - completed_burn_request
+                  - triggering_burn_accept
+                  - failed_to_burn_request
+                  - failed_to_burn_accept
             example: created
         - name: fromDate
           description: Start date for order search
@@ -32313,6 +32339,11 @@ paths:
                                   - clientDisbursement
                                   - treasuryMintTransfer
                                   - treasuryBurnTransfer
+                                  - mintRequest
+                                  - mintAccept
+                                  - mintTransfer
+                                  - burnRequest
+                                  - burnAccept
                                 description: Type of transaction
                                 example: clientDeposit
                               sender:
@@ -32795,6 +32826,62 @@ paths:
                 $ref: '#/components/schemas/BitgoTSSPublicKeyResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/tx/{txId}:
+    get:
+      summary: Get transaction information
+      description: |-
+        Returns transaction details (transfers, send queue items, transaction requests and pending
+        approvals) for a transaction id, scoped to the wallets the requesting user has access to.
+      operationId: v2.tx.get
+      tags:
+        - Transfer
+      x-internal: false
+      parameters:
+        - name: txId
+          description: The transaction ID to look up
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: coin
+          description: The cryptocurrency symbol (e.g. btc, eth)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetTxInfoResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -37954,6 +38041,12 @@ paths:
                         allOf:
                           - $ref: '#/components/schemas/BulkWhitelistCondition'
                         description: The condition for the rule (add/remove address)
+                      lockDate:
+                        type: string
+                        description: ISO date string for when the whitelist policy locks. Omit to auto-lock after ~48h.
+                      generatePolicy:
+                        type: boolean
+                        description: When true, creates the wallet whitelist policy in the Policy Service if it doesn't exist
                     required:
                       - walletId
                       - coin
@@ -50489,6 +50582,23 @@ components:
           type: string
       required:
         - rootAddress
+    AlgorandSendQueue:
+      title: Algorand
+      type: object
+      properties:
+        account:
+          type: string
+        feeString:
+          type: string
+        trustLines:
+          type: array
+          items:
+            type: object
+            properties:
+              limit:
+                type: string
+              token:
+                type: string
     AlgorandWallet:
       title: Algorand Wallet
       type: object
@@ -51250,6 +51360,21 @@ components:
             description: |-
               Smart contract metadata. On the public assets endpoint this is included only for
               issuer enterprises; on the admin assets endpoint it is always included.
+          publicDescription:
+            nullable: true
+            type: string
+            description: Public-facing description of the base asset
+            example: '"A stablecoin backed by US dollar reserves"'
+          publicTagline:
+            nullable: true
+            type: string
+            description: Public-facing tagline of the base asset
+            example: '"The stablecoin for global payments"'
+          publicMarketingUrl:
+            nullable: true
+            type: string
+            description: Public-facing URL of the base asset
+            example: '"https://example.com/stablecoin"'
         required:
           - id
           - token
@@ -52052,6 +52177,16 @@ components:
       required:
         - type
         - walletMultisigType
+    AvaxcTxSubdocument:
+      title: Avaxc
+      allOf:
+        - type: object
+          properties:
+            crossChainType:
+              type: string
+            parentTxid:
+              type: string
+        - $ref: '#/components/schemas/EthereumTx'
     AvaxcUnstakingRequestEntityProperties:
       title: AVAX C-chain unstaking request entity properties
       allOf:
@@ -53992,6 +54127,34 @@ components:
             format:
               $ref: '#/components/schemas/SupportedAddressFormat'
         - $ref: '#/components/schemas/UtxoAddress'
+    BitcoinSendQueueLighting:
+      title: Bitcoin
+      oneOf:
+        - type: object
+          properties:
+            feeLimit:
+              type: number
+            invoice:
+              type: string
+            lightning:
+              type: boolean
+              enum:
+                - true
+          required:
+            - feeLimit
+            - invoice
+            - lightning
+        - type: object
+          properties:
+            lightning:
+              type: boolean
+              enum:
+                - true
+            withdrawalDestination:
+              type: string
+          required:
+            - lightning
+            - withdrawalDestination
     BitgoOrg:
       title: BitgoOrg
       type: string
@@ -55871,6 +56034,12 @@ components:
         - accountHash
         - rootAddress
         - transferId
+    CasperSendQueue:
+      title: Casper
+      type: object
+      properties:
+        walletInitialization:
+          type: boolean
     CasperWallet:
       title: Casper Wallet
       type: object
@@ -60010,6 +60179,21 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithGasPrice'
       type: object
+    Eip1559:
+      title: Eip1559
+      type: object
+      properties:
+        maxPriorityFeePerGas:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Max priority tip price for EIP1559 transactions. Only for ETH and ERC20 tokens.
+        maxFeePerGas:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Max total gasPrice for EIP1559 transactions. Only for ETH and ERC20 tokens.
+      required:
+        - maxPriorityFeePerGas
+        - maxFeePerGas
     Eip1559Params:
       type: object
       required:
@@ -60812,6 +60996,12 @@ components:
       required:
         - rootAddress
         - memoId
+    EosSendQueue:
+      title: Eos
+      type: object
+      properties:
+        walletInitialzation:
+          type: boolean
     EosWallet:
       title: Eos Wallet
       type: object
@@ -61653,6 +61843,10 @@ components:
       properties:
         feeAddress:
           type: string
+    Ethereum2SendQueue:
+      title: Ethereum2
+      type: object
+      additionalProperties: {}
     Ethereum2Wallet:
       title: Ethereum2 Wallet
       type: object
@@ -61716,6 +61910,40 @@ components:
         - pendingDeployment
         - txCount
         - updateTime
+    EthereumTx:
+      title: Ethereum
+      type: object
+      properties:
+        addressInitialization:
+          type: boolean
+        nonce:
+          type: number
+        feeAddress:
+          type: string
+        token:
+          type: string
+        eth2ValidatorKey:
+          type: string
+        isMev:
+          type: boolean
+        eth2WithdrawalCommitment:
+          type: string
+        flushForwarderTokens:
+          type: boolean
+        gas:
+          type: number
+        gasPrice:
+          type: number
+        eip1559:
+          $ref: '#/components/schemas/Eip1559'
+        hopTxid:
+          type: string
+        walletInitialization:
+          type: boolean
+        custodianTransactionId:
+          type: string
+        contractSequenceId:
+          type: number
     EthereumWallet:
       title: Ethereum Wallet
       type: object
@@ -62172,6 +62400,52 @@ components:
           type: string
         bankAccount:
           $ref: '#/components/schemas/BankAccountJson'
+    FiatTransferCoinSpecific:
+      title: Fiat
+      type: object
+      properties:
+        IMAD:
+          type: string
+        OMAD:
+          type: string
+        cubixTransactionId:
+          type: string
+        traceNumber:
+          type: string
+        transactionType:
+          type: string
+        bankAccountId:
+          type: string
+        counterParty:
+          type: string
+        bankName:
+          type: string
+        rejectionReason:
+          type: string
+        returnReason:
+          type: string
+        reversesTxId:
+          type: string
+        reversalReason:
+          type: string
+        rejectedReason:
+          type: string
+        enterpriseName:
+          type: string
+        enterpriseId:
+          type: string
+        type:
+          type: string
+        instantCreditEligible:
+          type: boolean
+    FiatTx:
+      title: Fiat
+      type: object
+      properties:
+        description:
+          type: string
+        fiatInfo:
+          $ref: '#/components/schemas/FiatTransferCoinSpecific'
     FiatWallet:
       title: Fiat Wallet
       type: object
@@ -64325,6 +64599,10 @@ components:
           $ref: '#/components/schemas/Transfer1'
       required:
         - transfer
+    GetTxInfoResponse:
+      allOf:
+        - title: GetTxInfoResponse
+        - $ref: '#/components/schemas/TxDetails'
     GetWalletBalanceResponse:
       title: GetWalletBalanceResponse
       type: object
@@ -64797,6 +65075,8 @@ components:
           properties:
             stakedNodeId:
               $ref: '#/components/schemas/optionalNumber'
+            stakedAccountId:
+              $ref: '#/components/schemas/optionalString'
             declineStakingReward:
               $ref: '#/components/schemas/optionalBoolean'
         - $ref: '#/components/schemas/AccountBaseUpdateAccountIntent'
@@ -64811,6 +65091,27 @@ components:
       required:
         - baseAddress
         - memoId
+    HederaSendQueue:
+      title: Hedera
+      type: object
+      properties:
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
+        walletInitialization:
+          type: boolean
+        accountId:
+          type: string
+        transactionid:
+          type: string
+      required:
+        - trustedTokens
     HederaWallet:
       title: Hedera Wallet
       type: object
@@ -66255,69 +66556,6 @@ components:
           properties: {}
         - $ref: '#/components/schemas/IpiFtsAccountResponseProps'
         - $ref: '#/components/schemas/BankAccountResponseProps'
-    IrysCommitmentParams:
-      title: IrysCommitmentParams
-      type: object
-      description: |-
-        Parameters for Irys commitment transactions.
-        These values originate from the Irys pricing APIs called by staking-service.
-      properties:
-        commitmentFee:
-          type: string
-          description: Commitment fee as a bigint string (wei), from Irys price API.
-        commitmentValue:
-          type: string
-          description: Commitment value as a bigint string (wei), from Irys price API.
-        signerAddress:
-          type: string
-          description: 0x-prefixed hex Ethereum address of the signer.
-        chainId:
-          type: number
-          description: 'Irys chain ID: 1270 (testnet) or 3282 (mainnet).'
-      required:
-        - commitmentFee
-        - commitmentValue
-        - signerAddress
-        - chainId
-    IrysPledgeCommitmentParams:
-      title: IrysPledgeCommitmentParams
-      allOf:
-        - type: object
-          properties:
-            pledgeCount:
-              type: number
-              description: Number of partitions to pledge (each is 16TB).
-          required:
-            - pledgeCount
-        - $ref: '#/components/schemas/IrysCommitmentParams'
-      description: |-
-        Extended commitment parameters for Irys PLEDGE transactions.
-        Includes pledgeCount (number of partitions to pledge).
-    IrysPledgeIntent:
-      title: Irys Pledge Intent
-      allOf:
-        - type: object
-          properties:
-            intentType:
-              type: string
-              enum:
-                - pledge
-            commitmentParams:
-              $ref: '#/components/schemas/IrysPledgeCommitmentParams'
-          required:
-            - intentType
-            - commitmentParams
-        - $ref: '#/components/schemas/BaseStakeIntent'
-    IrysStakeIntent:
-      title: Irys Stake Intent
-      allOf:
-        - type: object
-          properties:
-            commitmentParams:
-              $ref: '#/components/schemas/IrysCommitmentParams'
-          required:
-            - commitmentParams
-        - $ref: '#/components/schemas/StakeIntent'
     KavacosmosStakingRequest:
       title: KAVACOSMOS
       allOf:
@@ -69876,6 +70114,43 @@ components:
       title: Offchain Address
       type: object
       additionalProperties: {}
+    OffchainTx:
+      title: Offchain
+      type: object
+      properties:
+        settlementFeeString:
+          type: string
+        transactionType:
+          type: string
+        referenceType:
+          type: string
+        referenceValue:
+          type: string
+        notation:
+          type: string
+        fiatInfo:
+          $ref: '#/components/schemas/FiatTransferCoinSpecific'
+        originalDestination:
+          type: string
+        memoType:
+          type: string
+        memoValue:
+          type: string
+        rtId:
+          type: string
+        fees:
+          type: array
+          items:
+            type: object
+            properties:
+              amount:
+                type: string
+              category:
+                type: string
+              payee:
+                type: string
+            required:
+              - amount
     OgStakingRequestPOSTBody:
       title: OG stake
       description: |
@@ -70293,6 +70568,19 @@ components:
             - rejected
             - failed
             - expired
+            - triggering_mint_request
+            - completed_mint_request
+            - triggering_mint_accept
+            - completed_mint_accept
+            - triggering_mint_transfer
+            - failed_to_mint_request
+            - failed_to_mint_accept
+            - failed_to_mint_transfer
+            - triggering_burn_request
+            - completed_burn_request
+            - triggering_burn_accept
+            - failed_to_burn_request
+            - failed_to_burn_accept
           description: Status of the order
           example: created
         timestamp:
@@ -70375,6 +70663,11 @@ components:
                       - clientDisbursement
                       - treasuryMintTransfer
                       - treasuryBurnTransfer
+                      - mintRequest
+                      - mintAccept
+                      - mintTransfer
+                      - burnRequest
+                      - burnAccept
                     description: Type of transaction
                     example: clientDeposit
                   sender:
@@ -70535,6 +70828,19 @@ components:
             - rejected
             - failed
             - expired
+            - triggering_mint_request
+            - completed_mint_request
+            - triggering_mint_accept
+            - completed_mint_accept
+            - triggering_mint_transfer
+            - failed_to_mint_request
+            - failed_to_mint_accept
+            - failed_to_mint_transfer
+            - triggering_burn_request
+            - completed_burn_request
+            - triggering_burn_accept
+            - failed_to_burn_request
+            - failed_to_burn_accept
           description: Current status of the order
           example: fulfilled
         enterpriseId:
@@ -74562,6 +74868,24 @@ components:
               type: string
             addToStake:
               type: boolean
+    PolyxSwitchValidatorIntent:
+      title: POLYX Switch Validator Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - switchValidator
+            validators:
+              type: array
+              items:
+                type: string
+          required:
+            - intentType
+            - validators
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
     PolyxUnStakingRequestPOSTBody:
       title: POLYX unstake
       allOf:
@@ -76822,6 +77146,27 @@ components:
         - address
         - enterpriseId
         - label
+    SendQueueCoinSpecific:
+      title: SendQueueCoinSpecific
+      oneOf:
+        - $ref: '#/components/schemas/AlgorandSendQueue'
+        - $ref: '#/components/schemas/AvaxcTxSubdocument'
+        - $ref: '#/components/schemas/UtxoSendQueue'
+        - $ref: '#/components/schemas/CasperSendQueue'
+        - $ref: '#/components/schemas/EosSendQueue'
+        - $ref: '#/components/schemas/Ethereum2SendQueue'
+        - $ref: '#/components/schemas/HederaSendQueue'
+        - $ref: '#/components/schemas/FiatTx'
+        - $ref: '#/components/schemas/OffchainTx'
+        - $ref: '#/components/schemas/StacksSendQueue'
+        - $ref: '#/components/schemas/TestcoinTx'
+        - $ref: '#/components/schemas/TronSendQueue'
+        - $ref: '#/components/schemas/StellarSendQueue'
+        - $ref: '#/components/schemas/XRPSendQueue'
+        - $ref: '#/components/schemas/TezosSendQueue'
+        - $ref: '#/components/schemas/SolSendQueue'
+        - $ref: '#/components/schemas/SuiSendQueue'
+        - $ref: '#/components/schemas/EthereumTx'
     SendTransaction:
       title: Sent Transaction
       allOf:
@@ -78476,6 +78821,14 @@ components:
       allOf:
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+    SolSendQueue:
+      title: Sol
+      type: object
+      properties:
+        walletInitialization:
+          type: boolean
+        addressInitialization:
+          type: boolean
     SolStakeIntent:
       title: SOL Stake Intent
       allOf:
@@ -78936,6 +79289,16 @@ components:
       required:
         - baseAddress
         - memoId
+    StacksSendQueue:
+      title: Stacks
+      type: object
+      properties:
+        memo:
+          type: string
+        type:
+          type: string
+        subtype:
+          type: string
     StacksWallet:
       title: Stacks Wallet
       type: object
@@ -80789,6 +81152,48 @@ components:
       required:
         - memoId
         - rootAddress
+    StellarSendQueue:
+      title: Stellas
+      type: object
+      properties:
+        account:
+          type: string
+        feeString:
+          type: string
+        memo:
+          type: string
+        memoType:
+          type: string
+        sequenceId:
+          type: string
+        trustlines:
+          type: array
+          items:
+            type: object
+            properties:
+              limit:
+                type: string
+              token:
+                type: string
+        muxedAddresses:
+          type: array
+          items:
+            type: object
+            properties:
+              baseAddress:
+                type: string
+              address:
+                type: string
+              id:
+                type: string
+            required:
+              - baseAddress
+              - address
+              - id
+        walletInitialization:
+          type: boolean
+        recipient:
+          type: string
     StellarWallet:
       title: Stellar Wallet
       type: object
@@ -81248,6 +81653,22 @@ components:
       allOf:
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/SuiBuildOptions'
+    SuiSendQueue:
+      title: Sui
+      type: object
+      properties:
+        publicKey:
+          type: string
+        signature:
+          type: string
+        pendingUnspents:
+          type: array
+          items:
+            type: string
+      required:
+        - publicKey
+        - signature
+        - pendingUnspents
     SuiStakingDelegation:
       title: SUI Staking Delegation
       allOf:
@@ -81869,6 +82290,21 @@ components:
       title: Testcoin Address
       type: object
       additionalProperties: {}
+    TestcoinTx:
+      title: Testcoin
+      type: object
+      properties:
+        fee:
+          type: number
+        recipients: {}
+        outputs:
+          type: array
+          items:
+            type: string
+      required:
+        - fee
+        - recipients
+        - outputs
     TestcoinWallet:
       title: Testcoin Wallet
       type: object
@@ -81908,6 +82344,24 @@ components:
         - pendingChainInitialization
         - pendingPublicKeyRevelation
         - creationFailure
+    TezosSendQueue:
+      title: Tezos
+      type: object
+      properties:
+        feeAddress:
+          type: string
+        feeAddressCounter:
+          type: string
+        contactAddress:
+          type: string
+        contactAddressCounter:
+          type: string
+        delegate:
+          type: string
+        walletInitialization:
+          type: boolean
+        publicKeyRevelation:
+          type: boolean
     TezosWallet:
       title: Tezos Wallet
       type: object
@@ -83096,8 +83550,6 @@ components:
         - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
         - $ref: '#/components/schemas/HypeevmEnableBridgingIntent'
         - $ref: '#/components/schemas/IcpPaymentIntent'
-        - $ref: '#/components/schemas/IrysPledgeIntent'
-        - $ref: '#/components/schemas/IrysStakeIntent'
         - $ref: '#/components/schemas/LightningPaymentIntent'
         - $ref: '#/components/schemas/MmiSignMessageIntent'
         - $ref: '#/components/schemas/MmiSignTransactionIntent'
@@ -83107,6 +83559,7 @@ components:
         - $ref: '#/components/schemas/PolyxCreateAccountIntent'
         - $ref: '#/components/schemas/PolyxPreApproveAssetIntent'
         - $ref: '#/components/schemas/PolyxStakeIntent'
+        - $ref: '#/components/schemas/PolyxSwitchValidatorIntent'
         - $ref: '#/components/schemas/PolyxUnstakeIntent'
         - $ref: '#/components/schemas/PolyxWithdrawIntent'
         - $ref: '#/components/schemas/SolAuthorizeIntent'
@@ -85680,6 +86133,14 @@ components:
       required:
         - bandwidthDeficit
         - bandwidthSunRequired
+    TronSendQueue:
+      title: Tron
+      type: object
+      properties:
+        rootPub:
+          type: string
+        walletInitialization:
+          type: boolean
     TronWallet:
       title: Tron Wallet
       type: object
@@ -85764,13 +86225,19 @@ components:
               type: string
               enum:
                 - stakeClaimRewards
+              description: Must be `"stakeClaimRewards"`.
             ownerAddress:
               type: string
+              description: Tron address of the wallet owner; must match the wallet's root address.
           required:
             - intentType
             - ownerAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Claim accumulated Tron staking rewards (WithdrawBalance) to the owner's
+        address. The reward balance must be non-zero; the handler does not verify
+        the amount before submitting the transaction. Valid on TRX and TTRX.
     TrxClaimRewardsRequestEntityProperties:
       title: TRX claim rewards request entity properties
       allOf:
@@ -85788,15 +86255,19 @@ components:
               type: string
               enum:
                 - delegateResource
+              description: Must be `"delegateResource"`.
             ownerAddress:
               type: string
+              description: Tron address of the resource owner delegating their staked resources.
             receiverAddress:
               type: string
+              description: Tron address of the account receiving the delegated resources; must be an active Tron account.
             resource:
               type: string
               enum:
                 - BANDWIDTH
                 - ENERGY
+              description: 'The resource type to delegate: `BANDWIDTH` or `ENERGY`.'
           required:
             - intentType
             - ownerAddress
@@ -85804,6 +86275,11 @@ components:
             - resource
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Delegate staked BANDWIDTH or ENERGY resources to another Tron address
+        (DelegateResourceContract). The owner must have sufficient staked
+        resources; the receiver address must be an active Tron account; and the
+        amount must be at least 1 TRX (1,000,000 sun). Valid on TRX and TTRX.
     TrxDelegateResourceIntent1:
       title: TRX Delegate Resource Intent
       description: |
@@ -85862,15 +86338,19 @@ components:
               type: string
               enum:
                 - stake
+              description: Must be `"stake"`.
             validatorAddress:
               type: string
+              description: Tron address of the Super Representative the user intends to vote for after freezing. Stored by the staking service to auto-construct the subsequent vote intent; not consumed by wallet-platform's freeze transaction builder.
             ownerAddress:
               type: string
+              description: Tron address of the wallet owner staking the TRX.
             resource:
               type: string
               enum:
                 - BANDWIDTH
                 - ENERGY
+              description: 'The resource type to obtain by staking: `BANDWIDTH` or `ENERGY`.'
           required:
             - intentType
             - validatorAddress
@@ -85878,6 +86358,11 @@ components:
             - resource
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Stake (freeze) TRX to obtain BANDWIDTH or ENERGY using the Tron Stake V2
+        protocol (FreezeBalanceV2). The spendable balance must be greater than or
+        equal to the freeze amount plus the transaction fee.
+        Valid on TRX and TTRX.
     TrxStakingRequest:
       title: TRX
       allOf:
@@ -85980,15 +86465,19 @@ components:
               type: string
               enum:
                 - undelegateResource
+              description: Must be `"undelegateResource"`.
             ownerAddress:
               type: string
+              description: Tron address of the resource owner reclaiming the delegated resources.
             receiverAddress:
               type: string
+              description: Tron address of the account from which the resources are being reclaimed.
             resource:
               type: string
               enum:
                 - BANDWIDTH
                 - ENERGY
+              description: 'The resource type to reclaim: `BANDWIDTH` or `ENERGY`.'
           required:
             - intentType
             - ownerAddress
@@ -85996,6 +86485,11 @@ components:
             - resource
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Reclaim previously delegated BANDWIDTH or ENERGY resources from a
+        receiver address (UnDelegateResourceContract). The undelegatable balance
+        must be sufficient to cover the requested amount.
+        Valid on TRX and TTRX.
     TrxUndelegateResourceIntent1:
       title: TRX Undelegate Resource Intent
       description: |
@@ -86040,19 +86534,27 @@ components:
               type: string
               enum:
                 - unstake
+              description: Must be `"unstake"`.
             ownerAddress:
               type: string
+              description: Tron address of the wallet owner unstaking the TRX.
             resource:
               type: string
               enum:
                 - BANDWIDTH
                 - ENERGY
+              description: 'The resource type to unstake: `BANDWIDTH` or `ENERGY`.'
           required:
             - intentType
             - ownerAddress
             - resource
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Unstake (unfreeze) previously staked TRX using the Tron Stake V2
+        protocol (UnfreezeBalanceV2). Initiates the unstaking waiting period;
+        use the `claim` intent to withdraw the TRX after the waiting period
+        has elapsed. Valid on TRX and TTRX.
     TrxVoteIntent:
       title: TRX Vote Intent
       allOf:
@@ -86062,10 +86564,13 @@ components:
               type: string
               enum:
                 - voteDelegation
+              description: Must be `"voteDelegation"`.
             validatorAddress:
               type: string
+              description: Tron address of the Super Representative selected during the freeze step. Carried forward by the staking service so the user does not need to re-select a validator; not consumed by wallet-platform's vote transaction builder (which reads the `votes` array instead).
             ownerAddress:
               type: string
+              description: Tron address of the wallet owner casting the votes.
             votes:
               type: array
               items:
@@ -86073,11 +86578,14 @@ components:
                 properties:
                   vote_address:
                     type: string
+                    description: Tron address of the Super Representative (SR) receiving the votes.
                   vote_count:
                     type: string
+                    description: Number of votes to allocate to this SR, as a decimal string.
                 required:
                   - vote_address
                   - vote_count
+                description: List of vote allocations. Each entry specifies a Super Representative address and the number of votes to assign. Total votes must not exceed available Tron Power.
           required:
             - intentType
             - validatorAddress
@@ -86085,6 +86593,11 @@ components:
             - votes
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Cast votes for Tron Super Representatives (SR) using accumulated Tron
+        Power (VoteWitnessContract). The total vote count across all entries must
+        not exceed the available Tron Power. Each staked TRX provides 1 unit of
+        Tron Power. Valid on TRX and TTRX.
     TrxWithdrawExpireUnfreezeIntent:
       title: TRX Withdraw Expire Unfreeze Intent
       allOf:
@@ -86094,13 +86607,20 @@ components:
               type: string
               enum:
                 - claim
+              description: Must be `"claim"`.
             ownerAddress:
               type: string
+              description: Tron address of the wallet owner withdrawing the unstaked TRX.
           required:
             - intentType
             - ownerAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Withdraw previously unstaked TRX after the Tron unstaking waiting period
+        has elapsed (WithdrawExpireUnfreeze). The handler does not verify that
+        the waiting period has passed before submitting the transaction. Use the
+        `unstake` intent to begin the unstaking process. Valid on TRX and TTRX.
     TssConfig:
       title: TssConfig
       type: object
@@ -86166,6 +86686,1357 @@ components:
           type: object
       required:
         - address
+    TxDetails:
+      title: TxDetails
+      type: object
+      properties:
+        transfers:
+          type: array
+          items:
+            type: object
+            properties:
+              baseValue:
+                type: number
+                description: The value (in base units) sent by this transfer, excluding network fees. BitGo is deprecating this field in the future.
+              baseValueString:
+                type: string
+                description: The value (in base units) sent by this transfer, excluding network fees represented as a string. BitGo is deprecating this field in the future.
+                example: '2000000'
+                pattern: ^-?\d+$
+              coin:
+                $ref: '#/components/schemas/CoinString'
+              comment:
+                nullable: true
+                type: string
+                description: A comment from the user
+              date:
+                type: string
+                description: The date this Transfer was last updated
+                format: date-time
+                title: ISO Date String
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organization:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              bitgoOrg:
+                type: string
+                enum:
+                  - BitGo Trust
+                  - BitGo New York
+                  - BitGo Germany
+                  - BitGo Switzerland
+                  - BitGo Europe ApS
+                  - Frankfurt DE Trust
+                  - BitGo Singapore
+                  - BitGo Korea
+                  - BitGo Custody MENA FZE
+                  - BitGo India
+                  - BitGo Sister Trust 1
+                  - BitGo Inc
+              entries:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      description: An address affected by this Transfer
+                      example: 2NAUwNgXaoFj2VVnSEvNLGuez8CfdU2UCMZ
+                    valueString:
+                      type: string
+                      description: The change (in base units) in the address' balance represented as a string
+                      example: '20000'
+                      pattern: '"^-?\d+$"'
+                    isChange:
+                      type: boolean
+                      description: True if this address is a change address (only exists for UTXO coins) and if this is a "send" transfer
+                    wallet:
+                      type: string
+                      description: Only visible when the user has access to the wallet
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                    walletLabel:
+                      type: string
+                      description: |-
+                        The label of the wallet referenced by `wallet`. Only visible when the user has access to that
+                        wallet. Useful for displaying a human-readable destination name (e.g. for sibling enterprise
+                        wallets) instead of a generic external-address fallback.
+                      example: My Cold Wallet
+                    value:
+                      type: number
+                      description: The change (in base units) in the address' balance
+                    nftSymbol:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - flushForwarderTokens
+                        - walletFunding
+                        - walletInitialization
+                        - addressInitialization
+                        - importedOutput
+                        - onchainidWalletLinked
+                        - onchainidClaimAdded
+                        - onchainidClaimRemoved
+                        - AccountCreateContract
+                    isPayGo:
+                      type: boolean
+                      description: True if this address is the BitGo PayGo wallet
+                    token:
+                      type: string
+                      description: If this is a token entry, the token's symbol
+                      example: omg
+                    failed:
+                      type: boolean
+                      description: True if this entry is failed
+                    associatedNativeCoinAddress:
+                      type: string
+                      description: |-
+                        The native coin receive address associated with the solana ATA address.
+                        This is currently present only for BitGo addresses.
+                        This change was done so that there is a mapping between the two addresses in the transfer entries.
+                    isFee:
+                      type: boolean
+                      description: Indicates if this entry is a fee
+                    isInternal:
+                      type: boolean
+                      description: Indicates if this entry is internal
+                    memo:
+                      type: string
+                      description: Memo associated with this entry
+                    rewardAddress:
+                      type: string
+                      description: Reward address associated with this entry
+                    subtype:
+                      type: string
+                      description: Subtype of this entry
+                    backingFeeString:
+                      type: string
+                      description: Backing fee represented as a string
+                    nftId:
+                      type: string
+                      description: NFT ID associated with this entry
+                    tokenContractHash:
+                      type: string
+                      description: Token contract hash associated with this entry
+                    isReward:
+                      type: boolean
+                      description: Indicates if this entry is a reward
+                  required:
+                    - address
+                  description: An array of objects describing the change in address balances made as a result of this Transfer
+              history:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    action:
+                      $ref: '#/components/schemas/TransferAction'
+                    comment:
+                      nullable: true
+                      type: string
+                      description: If this history object is of action "commented", this is the comment from the user
+                    date:
+                      type: string
+                      description: The date of this history object
+                      format: date-time
+                      title: ISO Date String
+                    transferId:
+                      type: string
+                      description: The ID of the transfer that this history object is associated with
+                    txid:
+                      type: string
+                      description: The transaction ID of the transaction that this history object is associated with
+                    user:
+                      type: string
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                  required:
+                    - action
+                    - date
+                  description: An audit log of events that have happened to the Transfer during its lifecycle
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              pendingApproval:
+                type: string
+              state:
+                $ref: '#/components/schemas/TransferState1'
+              stakingParams:
+                type: object
+                properties:
+                  actionType:
+                    type: string
+                  amount:
+                    type: string
+                  coreDao:
+                    type: object
+                    properties:
+                      amount:
+                        type: string
+                        format: number
+                      expiration:
+                        type: string
+                        format: date-time
+                        title: ISO Date String
+                      fee:
+                        type: number
+                      rewardAddress:
+                        type: string
+                      validator:
+                        type: string
+                      version:
+                        type: number
+                    required:
+                      - amount
+                      - expiration
+                      - fee
+                      - rewardAddress
+                      - validator
+                      - version
+                  receiverAddress:
+                    type: string
+                  requestId:
+                    type: string
+                  resource:
+                    type: string
+                  source:
+                    type: string
+                    enum:
+                      - external
+                      - internal
+                  validator:
+                    type: string
+                required:
+                  - actionType
+                  - requestId
+              txid:
+                type: string
+                description: The on-chain transaction id
+                example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+              type:
+                allOf:
+                  - $ref: '#/components/schemas/TransferType2'
+                description: Defines whether or not this Transfer was sent or received by the user
+              usd:
+                type: number
+                description: The amount of USD of this Transfer (will be negative if it's a send)
+              usdRate:
+                type: number
+                description: The USD rate at the time this Transfer was created
+              medianUsdValue:
+                type: number
+                description: The median USD value of this Transfer
+              medianUsdRate:
+                type: number
+                description: The median USD rate at the time this Transfer was created
+              feeUsd:
+                type: number
+                description: The fee USD value for token transfers
+              feeUsdRate:
+                type: number
+                description: The fee coin USD rate for token transfers
+              value:
+                type: number
+                description: The total value (in base units) sent by this Transfer (may be approximate for ETH and other coins where amounts in base units can exceed 2^53 - 1)
+              valueString:
+                type: string
+                description: The total value (in base units) sent by this Transfer represented as a String
+                example: '2000000'
+                pattern: ^-?\d+$
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              walletType:
+                type: string
+                enum:
+                  - backing
+                  - cold
+                  - custodial
+                  - custodialPaired
+                  - hot
+                  - advanced
+                  - trading
+                description: Wallet type
+              replaces:
+                type: array
+                items:
+                  type: string
+                  description: Transaction IDs that this transfer replaces.
+              replacedBy:
+                type: array
+                items:
+                  type: string
+                  description: Transaction IDs that replace this transfer.
+              replacedByTransferId:
+                type: array
+                items:
+                  type: string
+                  description: Transfer IDs that replace this transfer.
+              riskIndicators:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - SELFDESTRUCT
+                  description: Risk indicators for flagged transfers (e.g. SELFDESTRUCT opcode).
+              baseValueWithoutFeesString:
+                type: string
+                description: The value (in base units) sent by this transfer, excluding network fees, represented as a string
+              baseValueWithoutFees:
+                type: number
+                description: The value (in base units) sent by this transfer excluding network fees.
+              coinSpecific:
+                description: Transfer fields specific to each coin type
+              confirmations:
+                type: number
+                description: The number of blocks that have been confirmed since this Transfer's block was confirmed
+              consolidateId:
+                type: string
+                description: Consolidation ID if this transfer is part of a consolidation
+              feeString:
+                nullable: true
+                type: string
+                description: The Transfer's fee (in base units) represented as a String
+              feeCoin:
+                type: string
+                description: The coin used to pay the fee (for cross-chain transactions)
+              sequenceId:
+                type: string
+                description: Unique wallet identifier for preventing double-spends
+              subType:
+                type: string
+                enum:
+                  - ofc_deposit
+                  - ofc_withdrawal
+                  - ofc_book_transfer
+                  - ofc_exchange
+                  - ofc_bn_settlement_transfer
+                  - ofc_bn_allocation
+                  - ofc_trading_order
+                  - ofc_trading_settlement
+                  - ofc_margin_collateral
+                  - ofc_margin_position
+                  - ofc_direct_trade
+                  - ofc_routed
+                  - ofc_fee
+                  - ofc_other
+                  - ofc_unstake
+                  - ofc_financing_liquidation
+                  - receive_from_gastank
+                  - reserved_amount
+                  - utxo_message_signing
+                  - pending_deposit
+                  - pending_deposit_activity
+                  - internal_transfer
+                  - pending_withdrawal_offer
+                  - pending_deposit_offer
+                  - offer_accepted
+                  - offer_rejected
+                  - confirmed_deposit
+                  - confirmed_withdrawal
+                  - deposit_offer_expired
+                  - withdrawal_offer_expired
+                  - withdrawal_offer_rejected
+                  - utxo_expired
+                  - offer_cancelled
+                  - cancel_withdrawal_offer
+                  - staking_eth_withdrawal
+                  - staking_eth_partial_withdrawal
+                  - staking_eth_full_withdrawal
+                  - staking_eth_mev_reward
+                  - staking_eth_block_reward
+                  - staking_bera_withdrawal
+                  - staking_bera_block_reward
+                description: Transfer subtype
+                x-enumsDeprecated:
+                  - staking_eth_partial_withdrawal
+                  - staking_eth_full_withdrawal
+              txRequestId:
+                type: string
+                description: Associated transaction request ID
+              goStakingRequestId:
+                type: string
+                description: Associated GO staking request ID
+              height:
+                type: number
+                description: The height of the block this Transfer was confirmed in (999999999 if unconfirmed)
+              heightId:
+                type: string
+                description: The unique height id of the block
+              instant:
+                type: boolean
+                description: Whether this is an instant transaction
+              instantId:
+                type: string
+                description: The instant transaction ID if applicable
+              isFee:
+                type: boolean
+                description: Whether this transfer represents a fee
+              isReward:
+                type: boolean
+                description: Whether this transfer represents a staking reward
+              isUnlock:
+                type: boolean
+                description: Whether this transfer represents an unlock operation
+              nSegwitInputs:
+                type: number
+                description: DEPRECATED. Number of segwit inputs on the transfer.
+              outputs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      description: The address of the UTXO
+                    blockHeight:
+                      type: number
+                      description: The block this Unspent was created in
+                    chain:
+                      type: number
+                      description: The chain of the UTXO
+                    coinbase:
+                      type: boolean
+                      description: True if this unspent came from the coinbase transaction
+                    id:
+                      type: string
+                      description: The ID of the UTXO
+                    index:
+                      type: number
+                      description: The index of the UTXO
+                    redeemScript:
+                      type: string
+                      description: The redeem script of the UTXO
+                    value:
+                      type: number
+                      description: The value of the UTXO
+                    witnessScript:
+                      type: string
+                      description: The witness script of the UTXO
+              payGoFee:
+                type: number
+                description: The Transfer's BitGo fee (in base units)
+              payGoFeeString:
+                type: string
+                description: The Transfer's BitGo fee (in base units) represented as a String
+              inputs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      description: The address of the UTXO
+                    blockHeight:
+                      type: number
+                      description: The block this Unspent was created in
+                    chain:
+                      type: number
+                      description: The chain of the UTXO
+                    coinbase:
+                      type: boolean
+                      description: True if this unspent came from the coinbase transaction
+                    id:
+                      type: string
+                      description: The ID of the UTXO
+                    index:
+                      type: number
+                      description: The index of the UTXO
+                    redeemScript:
+                      type: string
+                      description: The redeem script of the UTXO
+                    value:
+                      type: number
+                      description: The value of the UTXO
+                    witnessScript:
+                      type: string
+                      description: The witness script of the UTXO
+              intendedValueString:
+                type: string
+                description: A string representation (in base units) of the initial value for the transfer. This is present because when a transaction fails on chain, its value is mutated to be zero. This string is immutable and will always be the intended value of the initial transfer regardless of the final state of the transaction.
+              label:
+                type: string
+                description: Address labels (if any) from entries concatenated.
+              metadata:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                    - key
+                    - value
+                  description: Additional metadata associated with the transfer
+              sendAccounting:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    amount:
+                      type: number
+                    amountString:
+                      type: string
+                    id:
+                      type: string
+                    nOuts:
+                      type: number
+                    type:
+                      type: string
+                  required:
+                    - amountString
+                    - nOuts
+                    - type
+                  description: Accounting breakdown for send transactions
+              tags:
+                type: array
+                items:
+                  type: string
+                  description: The tags to be used on this Transfer (used in Policies)
+              txidType:
+                type: string
+                description: The type of the transaction id
+              usersNotified:
+                type: boolean
+                description: Whether BitGo already sent notifications to the users of the transfer wallet
+              vSize:
+                type: number
+                description: The size of the transaction
+              walletLabel:
+                type: string
+                description: Label of the wallet associated with this transfer
+              enterpriseName:
+                type: string
+                description: Name of the enterprise associated with this transfer
+              elliptic:
+                type: string
+                description: Elliptic risk score information (trust transfers)
+              senderInformationVerified:
+                type: boolean
+                description: Whether sender information has been verified (trust transfers)
+              buildParams:
+                type: object
+                additionalProperties: {}
+                description: Parameters used to build the transaction
+              createdTime:
+                type: string
+                description: The time this transfer was created
+                format: date-time
+                title: ISO Date String
+              approvedTime:
+                type: string
+                description: The time this transfer was approved
+                format: date-time
+                title: ISO Date String
+              rejectedTime:
+                type: string
+                description: The time this transfer was rejected
+                format: date-time
+                title: ISO Date String
+              signedTime:
+                type: string
+                description: The time this transfer was signed
+                format: date-time
+                title: ISO Date String
+              unconfirmedTime:
+                type: string
+                description: The time this transfer became unconfirmed
+                format: date-time
+                title: ISO Date String
+              confirmedTime:
+                type: string
+                description: The time this transfer was confirmed
+                format: date-time
+                title: ISO Date String
+              removedTime:
+                type: string
+                description: The time this transfer was removed
+                format: date-time
+                title: ISO Date String
+              commentedTime:
+                type: string
+                description: The time this transfer was commented on
+                format: date-time
+                title: ISO Date String
+              failedTime:
+                type: string
+                description: The time this transfer failed
+                format: date-time
+                title: ISO Date String
+              regeneratedTime:
+                type: string
+                description: The time this transfer was regenerated
+                format: date-time
+                title: ISO Date String
+              replacedTime:
+                type: string
+                description: The time this transfer was replaced
+                format: date-time
+                title: ISO Date String
+              replacingTime:
+                type: string
+                description: The time this transfer started replacing another
+                format: date-time
+                title: ISO Date String
+              abandonedTime:
+                type: string
+                description: The time this transfer was abandoned
+                format: date-time
+                title: ISO Date String
+              signedDate:
+                type: string
+                description: The date this transfer was signed (legacy field)
+                format: date-time
+                title: ISO Date String
+              customerApprovedTime:
+                type: string
+                description: The time this transfer was approved by the customer (trust transfers)
+                format: date-time
+                title: ISO Date String
+              idVerificationTime:
+                type: string
+                description: The time identity verification was completed (trust transfers)
+                format: date-time
+                title: ISO Date String
+              trustSignedTime:
+                type: string
+                description: The time this transfer was signed by trust (trust transfers)
+                format: date-time
+                title: ISO Date String
+              trustFinalApprovalTime:
+                type: string
+                description: The time this transfer received final trust approval (trust transfers)
+                format: date-time
+                title: ISO Date String
+            required:
+              - coin
+              - date
+              - entries
+              - history
+              - id
+              - state
+              - type
+              - valueString
+              - wallet
+        sendQueue:
+          type: array
+          items:
+            type: object
+            properties:
+              debugTa2Ta: {}
+              coin:
+                $ref: '#/components/schemas/CoinString'
+              token:
+                type: string
+              state:
+                type: string
+                enum:
+                  - pending
+                  - attempted
+                  - failed
+                  - done
+                  - reverted
+                  - held
+                  - replaced
+                  - abandoned
+                description: The status of this SendQueue item
+                example: done
+              user:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              address:
+                type: string
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              pendingApprovalId:
+                type: string
+              createTime:
+                type: number
+                description: Number of milliseconds since January 1, 1970
+                example: 1537289808000
+              modifyTime:
+                type: number
+                description: Number of milliseconds since January 1, 1970
+                example: 1537289808000
+              expireTime:
+                type: number
+              submitHeight:
+                type: number
+              confirmHeight:
+                type: number
+              comment:
+                type: string
+              txType:
+                type: string
+              txid:
+                type: string
+                description: The on-chain transaction ID
+                example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+              tx:
+                type: string
+                description: Raw transaction (hex)
+              value:
+                type: number
+                description: The total value (in base units) sent by this sendq transaction
+              valueString:
+                type: string
+                description: The total value (in base units) sent by this sendq transaction represented as a String
+                example: '200000'
+                pattern: ^-?\d+$
+              payGoFee:
+                type: number
+                description: The Transfer's BitGo fee (in base units)
+              payGoFeeString:
+                type: string
+                description: The Transfer's BitGo fee (in base units) represented as a String
+              attempts:
+                type: number
+                description: Number of transmission attempts
+              targetAttempts:
+                type: number
+                description: Max number of times to try transmitting
+              nextAttempt:
+                example: '2018-05-05T19:46:22.019Z'
+              instantId:
+                type: string
+              instant:
+                type: boolean
+                description: Use instant sending (coin-specific) method if available
+              agent:
+                description: User agent used to submit the request
+              error:
+                type: string
+                description: Error regarding the transaction
+              held:
+                type: boolean
+                description: Indicates that the transaction was held at some point
+              uniqueDoubleSpendPreventionIds:
+                type: array
+                example:
+                  - 59cd72485007a239fb00282ed480da1f
+                items:
+                  type: string
+              coinSpecific:
+                allOf:
+                  - $ref: '#/components/schemas/SendQueueCoinSpecific'
+                description: Transaction fields specific to each coin type
+              deployment:
+                type: boolean
+              lowPriority:
+                type: boolean
+              feesUsed:
+                description: Fees (depending on the coin) used for the tx
+              firstValidBlock:
+                type: number
+              lastValidBlock:
+                type: number
+              customNode:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  nodeId:
+                    type: string
+                  url:
+                    type: string
+              txRequestId:
+                type: string
+                example: 123e4567-e89b-12d3-a456-426614174000
+                format: uuid
+            required:
+              - coin
+              - state
+              - user
+              - createTime
+              - modifyTime
+              - txid
+              - tx
+              - valueString
+              - payGoFee
+              - payGoFeeString
+              - attempts
+              - targetAttempts
+              - nextAttempt
+              - agent
+              - held
+              - uniqueDoubleSpendPreventionIds
+              - coinSpecific
+              - deployment
+              - feesUsed
+        sendQueueUnconfirmedInputs:
+          type: array
+          items:
+            type: object
+            properties:
+              debugTa2Ta: {}
+              coin:
+                $ref: '#/components/schemas/CoinString'
+              token:
+                type: string
+              state:
+                type: string
+                enum:
+                  - pending
+                  - attempted
+                  - failed
+                  - done
+                  - reverted
+                  - held
+                  - replaced
+                  - abandoned
+                description: The status of this SendQueue item
+                example: done
+              user:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              address:
+                type: string
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              pendingApprovalId:
+                type: string
+              createTime:
+                type: number
+                description: Number of milliseconds since January 1, 1970
+                example: 1537289808000
+              modifyTime:
+                type: number
+                description: Number of milliseconds since January 1, 1970
+                example: 1537289808000
+              expireTime:
+                type: number
+              submitHeight:
+                type: number
+              confirmHeight:
+                type: number
+              comment:
+                type: string
+              txType:
+                type: string
+              txid:
+                type: string
+                description: The on-chain transaction ID
+                example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+              tx:
+                type: string
+                description: Raw transaction (hex)
+              value:
+                type: number
+                description: The total value (in base units) sent by this sendq transaction
+              valueString:
+                type: string
+                description: The total value (in base units) sent by this sendq transaction represented as a String
+                example: '200000'
+                pattern: ^-?\d+$
+              payGoFee:
+                type: number
+                description: The Transfer's BitGo fee (in base units)
+              payGoFeeString:
+                type: string
+                description: The Transfer's BitGo fee (in base units) represented as a String
+              attempts:
+                type: number
+                description: Number of transmission attempts
+              targetAttempts:
+                type: number
+                description: Max number of times to try transmitting
+              nextAttempt:
+                example: '2018-05-05T19:46:22.019Z'
+              instantId:
+                type: string
+              instant:
+                type: boolean
+                description: Use instant sending (coin-specific) method if available
+              agent:
+                description: User agent used to submit the request
+              error:
+                type: string
+                description: Error regarding the transaction
+              held:
+                type: boolean
+                description: Indicates that the transaction was held at some point
+              uniqueDoubleSpendPreventionIds:
+                type: array
+                example:
+                  - 59cd72485007a239fb00282ed480da1f
+                items:
+                  type: string
+              coinSpecific:
+                allOf:
+                  - $ref: '#/components/schemas/SendQueueCoinSpecific'
+                description: Transaction fields specific to each coin type
+              deployment:
+                type: boolean
+              lowPriority:
+                type: boolean
+              feesUsed:
+                description: Fees (depending on the coin) used for the tx
+              firstValidBlock:
+                type: number
+              lastValidBlock:
+                type: number
+              customNode:
+                type: object
+                properties:
+                  accessToken:
+                    type: string
+                  nodeId:
+                    type: string
+                  url:
+                    type: string
+              txRequestId:
+                type: string
+                example: 123e4567-e89b-12d3-a456-426614174000
+                format: uuid
+            required:
+              - coin
+              - state
+              - user
+              - createTime
+              - modifyTime
+              - txid
+              - tx
+              - valueString
+              - payGoFee
+              - payGoFeeString
+              - attempts
+              - targetAttempts
+              - nextAttempt
+              - agent
+              - held
+              - uniqueDoubleSpendPreventionIds
+              - coinSpecific
+              - deployment
+              - feesUsed
+        txRequests:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/TransactionRequestLite'
+              - $ref: '#/components/schemas/TransactionRequestFull'
+        pendingApprovals:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol.
+                example: btc
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              walletType:
+                type: string
+              walletSubType:
+                type: string
+                description: The subtype of the wallet (e.g., custodialHot)
+              wallets:
+                type: array
+                items:
+                  type: string
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+                  description: The wallets of the pending approval
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organization:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organizationName:
+                type: string
+                description: The organization name
+              bitgoOrg:
+                type: string
+                description: The BitGo organization
+              creator:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              createDate:
+                type: string
+                description: The creation date of the pending approval
+                format: date-time
+                title: ISO Date String
+              approvedDate:
+                type: string
+                description: The date when the approval was granted
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                description: The date when the approval was last updated (any update, not just processing)
+                format: date-time
+                title: ISO Date String
+              keyCurve:
+                type: string
+                enum:
+                  - secp256k1
+                  - ed25519
+                  - bls12_381
+                description: The key curve of the coin attached to this pending approval
+              info:
+                allOf:
+                  - $ref: '#/components/schemas/PendingApprovalInfo'
+                description: Information about the pending approval
+              state:
+                allOf:
+                  - $ref: '#/components/schemas/PendingApprovalState'
+                description: The state of the pending approval
+              scope:
+                type: string
+                enum:
+                  - enterprise
+                  - wallet
+                  - organization
+                  - global
+                description: What kind of entity the Pending Approval is tied to
+              userIds:
+                type: array
+                items:
+                  type: string
+                  description: All the Users who should see this Pending Approval
+              approvalsRequired:
+                type: number
+                example: 1
+                minimum: 1
+              walletLabel:
+                type: string
+                description: Label for the wallet
+              addressLabels:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      $ref: '#/components/schemas/AddressString'
+                    label:
+                      type: string
+                      description: The label
+                    walletLabel:
+                      type: string
+                      description: The wallet label
+                  required:
+                    - address
+                    - label
+                  description: Address labels of recipients in this Pending Approval
+              resolvers:
+                type: array
+                items:
+                  type: object
+                  description: Resolvers for the pending approval
+                  properties:
+                    autoApproved:
+                      type: boolean
+                      description: Whether the resolution was auto approved
+                    date:
+                      type: string
+                      description: The date of resolution
+                      format: date-time
+                      title: ISO Date String
+                    resolutionAction:
+                      type: string
+                      enum:
+                        - approve
+                        - reject
+                        - skip
+                        - fail
+                      description: Action taken during resolution
+                    resolutionMemo:
+                      type: string
+                      description: Memo regarding the resolution
+                    resolutionType:
+                      allOf:
+                        - $ref: '#/components/schemas/PendingApprovalStatePending'
+                      description: The type of resolution
+                    user:
+                      type: string
+                      description: The user who resolved the approval
+                    videoApprover:
+                      type: string
+                      description: The approver of the video resolution
+                    videoException:
+                      type: string
+                      description: Exception details for the video
+                    videoLink:
+                      type: string
+                      description: Link to the resolution video
+                  required:
+                    - resolutionType
+              approvers:
+                type: array
+                items:
+                  type: string
+                  description: List of approvers
+              singleRunResults:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ruleId:
+                      type: string
+                      description: The rule ID
+                    triggered:
+                      type: boolean
+                      description: Whether the rule was triggered
+                  description: Results from single run checks
+              txRequestId:
+                type: string
+                description: Transaction request ID
+                example: 123e4567-e89b-12d3-a456-426614174000
+                format: uuid
+              videoId:
+                type: object
+                description: ID for the video related to the approval
+                properties:
+                  date:
+                    type: string
+                    description: The date of the video ID
+                    format: date-time
+                    title: ISO Date String
+                  user:
+                    type: string
+                    description: The user associated with the video ID
+                  videoApprover:
+                    type: string
+                    description: The approver of the video
+                  videoException:
+                    type: string
+                    description: The exception related to the video
+                  videoLink:
+                    type: string
+                    description: The link to the video
+              version:
+                type: number
+                description: Version of the pending approval
+              policyEvaluationId:
+                type: string
+                description: ID for the policy evaluation
+              actions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    approvers:
+                      type: array
+                      items:
+                        type: string
+                        description: The approvers of the action
+                    excludedApprovers:
+                      type: array
+                      items:
+                        type: string
+                        description: Users that are eligible approvers but cannot approve (e.g. already approved or the initiator)
+                    id:
+                      type: string
+                      description: The ID of the action
+                    name:
+                      type: string
+                      description: The name of the action
+                    operator:
+                      type: string
+                      enum:
+                        - AND
+                        - OR
+                      description: The operator of the action
+                    parameters:
+                      allOf:
+                        - $ref: '#/components/schemas/PolicyActionParameters'
+                      description: The parameters of the action
+                    resolvers:
+                      type: array
+                      items:
+                        type: object
+                        description: The resolvers of the action
+                        properties:
+                          autoApproved:
+                            type: boolean
+                            description: Whether the resolution was auto approved
+                          date:
+                            type: string
+                            description: The date of resolution
+                            format: date-time
+                            title: ISO Date String
+                          resolutionAction:
+                            type: string
+                            enum:
+                              - approve
+                              - reject
+                              - skip
+                              - fail
+                            description: Action taken during resolution
+                          resolutionMemo:
+                            type: string
+                            description: Memo regarding the resolution
+                          resolutionType:
+                            allOf:
+                              - $ref: '#/components/schemas/PendingApprovalStatePending'
+                            description: The type of resolution
+                          user:
+                            type: string
+                            description: The user who resolved the approval
+                          videoApprover:
+                            type: string
+                            description: The approver of the video resolution
+                          videoException:
+                            type: string
+                            description: Exception details for the video
+                          videoLink:
+                            type: string
+                            description: Link to the resolution video
+                        required:
+                          - resolutionType
+                    status:
+                      allOf:
+                        - $ref: '#/components/schemas/EvaluatedPolicyActionStatus'
+                      description: The status of the action
+                  required:
+                    - id
+                    - name
+                    - parameters
+                    - status
+                  description: List of actions taken
+              resolutionOrder:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    actions:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                  required:
+                    - actions
+                  description: Order of resolution
+              useLegacyPolicyEngine:
+                type: boolean
+                description: Flag to use legacy policy engine
+              videoCallId:
+                type: string
+                description: ID for the video call
+              lastUpdated:
+                type: string
+                description: The last date the approval was processing
+                format: date-time
+                title: ISO Date String
+              freeze:
+                type: object
+                description: The freeze state
+                properties:
+                  actions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reason:
+                          type: string
+                        state:
+                          type: string
+                          enum:
+                            - frozen
+                            - unFrozen
+                        time:
+                          type: string
+                          format: date-time
+                          title: ISO Date String
+                        userId:
+                          type: string
+                        username:
+                          type: string
+                  state:
+                    type: string
+                    enum:
+                      - frozen
+                      - unFrozen
+              memo:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                      description: The text of the memo
+                    time:
+                      type: string
+                      description: The time the memo was created
+                      format: date-time
+                      title: ISO Date String
+                    userId:
+                      type: string
+                      description: The user ID of the admin who created the memo
+                    username:
+                      type: string
+                      description: The username of the admin who created the memo
+                  required:
+                    - text
+                    - time
+                    - userId
+                    - username
+                  description: Admin memos attached to this pending approval
+              associatedInquiries:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    inquiryId:
+                      type: string
+                    inquiryStatus:
+                      $ref: '#/components/schemas/InquiryStatus'
+                    inquirySubType:
+                      $ref: '#/components/schemas/InquirySubType'
+                    inquiryType:
+                      $ref: '#/components/schemas/InquiryType'
+                  required:
+                    - inquiryId
+                    - inquiryStatus
+                    - inquirySubType
+                    - inquiryType
+                  description: Associated inquiries
+            required:
+              - id
+              - creator
+              - createDate
+              - info
+              - state
+              - scope
+      required:
+        - transfers
+        - sendQueue
+        - sendQueueUnconfirmedInputs
+        - txRequests
+        - pendingApprovals
     TxHex:
       type: string
       description: Serialized transaction hex
@@ -87508,6 +89379,24 @@ components:
           type: integer
           description: BitGo fee of the transaction (in base units) represented as a String
           example: '0'
+    UtxoSendQueue:
+      title: Utxo
+      allOf:
+        - $ref: '#/components/schemas/BitcoinSendQueueLighting'
+        - $ref: '#/components/schemas/UtxoSendQueueOnchain'
+    UtxoSendQueueOnchain:
+      title: Utxo
+      allOf:
+        - type: object
+          properties:
+            changeAddressType:
+              oneOf:
+                - type: string
+                - type: array
+                  items:
+                    type: string
+        - type: object
+          additionalProperties: {}
     UtxoTransactionFormat:
       type: string
       description: |-
@@ -91098,12 +92987,17 @@ components:
         - webhookId
         - isValid
     VetBurnNFTIntent:
-      title: VET Burn NFT Intent
+      title: VetBurnNFTIntent
       allOf:
         - $ref: '#/components/schemas/UnstakeIntent'
         - $ref: '#/components/schemas/VetUnstakeCommonFields'
+      description: |-
+        Burn a VeChain staking NFT to complete the unstaking withdrawal and reclaim
+        staked VET. This is the second (final) step in the basic unstaking flow —
+        must be preceded by `undelegate`. No VET is spent by the sender; gas is paid
+        by the enterprise gas tank (VTHO).
     VetDecreaseStakeIntent:
-      title: VET Decrease Stake Intent
+      title: VetDecreaseStakeIntent
       allOf:
         - type: object
           properties:
@@ -91111,11 +93005,14 @@ components:
               type: string
               enum:
                 - decreaseStake
+              description: Must be "decreaseStake".
             validatorAddress:
               type: string
+              description: Address of the validator whose staked position is being reduced.
               minLength: 1
             stakingContractAddress:
               type: string
+              description: Address of the VeChain staking contract holding the position.
               minLength: 1
           required:
             - intentType
@@ -91123,25 +93020,37 @@ components:
             - stakingContractAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Withdraw a portion of VET staked with a VeChain validator, reducing the
+        position size. The specified amount is returned to the sender's wallet. No
+        VET is spent — gas is paid by the enterprise gas tank (VTHO).
     VetDelegateIntent:
-      title: VET Delegate Intent
+      title: VetDelegateIntent
       allOf:
         - type: object
           properties:
             tokenId:
               type: string
+              description: ID of the staking NFT to delegate to the validator.
               minLength: 1
             stakingContractAddress:
               type: string
+              description: Address of the VeChain staking (Stargate) contract that holds the NFT.
               minLength: 1
             validatorAddress:
               type: string
+              description: Address of the validator to delegate the staking NFT to.
               minLength: 1
           required:
             - tokenId
             - stakingContractAddress
             - validatorAddress
         - $ref: '#/components/schemas/DelegateIntent'
+      description: |-
+        Delegate a VeChain staking NFT to a validator, granting the validator voting
+        and reward rights for that position. No VET is spent — this is an NFT
+        assignment operation, not a financial transfer. Gas is paid by the enterprise
+        gas tank (VTHO).
     VetDelegationProperties:
       title: VET Delegation Properties
       allOf:
@@ -91179,12 +93088,17 @@ components:
               nullable: true
               description: Frontend display label for the staking type (e.g., "Delegate" for VET_STAKE, "Stake" for VET_VALIDATOR_REGISTRATION, "Increase Stake" for VET_INCREASE_STAKE).
     VetExitDelegationIntent:
-      title: VET Exit Delegation Intent
+      title: VetExitDelegationIntent
       allOf:
         - $ref: '#/components/schemas/UndelegateIntent'
         - $ref: '#/components/schemas/VetUnstakeCommonFields'
+      description: |-
+        Remove validator delegation for a VeChain staking NFT, returning it to an
+        undelegated state. This is the first step in the full unstaking flow — must
+        precede `unstake` (burn NFT). No VET is spent; gas is paid by the enterprise
+        gas tank (VTHO).
     VetIncreaseStakeIntent:
-      title: VET Increase Stake Intent
+      title: VetIncreaseStakeIntent
       allOf:
         - type: object
           properties:
@@ -91192,11 +93106,14 @@ components:
               type: string
               enum:
                 - increaseStake
+              description: Must be "increaseStake".
             validatorAddress:
               type: string
+              description: Address of the validator whose staked position is being increased.
               minLength: 1
             stakingContractAddress:
               type: string
+              description: Address of the VeChain staking contract holding the existing position.
               minLength: 1
           required:
             - intentType
@@ -91204,8 +93121,12 @@ components:
             - stakingContractAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Increase the VET staked with an existing VeChain validator by depositing
+        additional VET into the staking contract. The sender must have sufficient VET
+        balance. Gas is paid by the enterprise gas tank (VTHO).
     VetSignalExitIntent:
-      title: VET Signal Exit Intent
+      title: VetSignalExitIntent
       allOf:
         - type: object
           properties:
@@ -91213,48 +93134,70 @@ components:
               type: string
               enum:
                 - signalExit
+              description: Must be "signalExit".
             validatorAddress:
               type: string
+              description: Address of the validator node whose position is being exited.
               minLength: 1
             stakingContractAddress:
               type: string
+              description: Address of the VeChain staking contract where the validator position is held.
               minLength: 1
           required:
             - intentType
             - validatorAddress
             - stakingContractAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
+      description: |-
+        Signal the intent to exit a VeChain validator staking position, initiating
+        the cooldown period. This is the first step in the validator unstake flow —
+        must be followed by `withdrawStake` after the cooldown expires. No VET is
+        spent; gas is paid by the enterprise gas tank (VTHO).
     VetStakeClaimRewardsIntent:
-      title: VET Stake Claim Rewards Intent
+      title: VetStakeClaimRewardsIntent
       allOf:
         - type: object
           properties:
             tokenId:
               type: string
+              description: ID of the staking NFT whose accumulated VTHO rewards will be claimed.
               minLength: 1
             stakingContractAddress:
               type: string
+              description: Address of the VeChain staking (Stargate) contract that holds the NFT.
               minLength: 1
           required:
             - tokenId
             - stakingContractAddress
         - $ref: '#/components/schemas/StakeClaimRewardsIntent'
+      description: |-
+        Claim VTHO rewards accumulated by a VeChain staking NFT position. Rewards
+        accrue in VTHO (VeChain's energy token) for each NFT held in the Stargate
+        contract. Supply the NFT's token ID and the staking contract address. Gas is
+        paid by the enterprise gas tank (VTHO).
     VetStakingIntent:
-      title: VET Staking Intent
+      title: VetStakingIntent
       allOf:
         - type: object
           properties:
             stakingContractAddress:
               type: string
+              description: Address of the VeChain staking contract that will hold the staked VET.
               minLength: 1
             levelId:
               type: string
+              description: Staking tier level in the VeChain contract. Determines reward rate and lock parameters.
               minLength: 1
           required:
             - stakingContractAddress
             - levelId
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Activate a new VeChain staking position by depositing VET into the staking
+        contract. Use `levelId` to select the staking tier. To add to an existing
+        position, use `increaseStake` instead. All VeChain gas fees are paid by the
+        enterprise gas tank (VTHO); the sender pays no gas.
     VetStakingRequestEntityProperties:
       title: VET staking request entity properties
       allOf:
@@ -91333,30 +93276,39 @@ components:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
     VetUnstakeCommonFields:
-      title: Common VET unstake intent fields
+      title: VetUnstakeCommonFields
       type: object
       properties:
         tokenId:
           type: string
+          description: ID of the staking NFT to operate on.
           minLength: 1
         stakingContractAddress:
           type: string
+          description: Address of the VeChain staking (Stargate) contract that holds the NFT.
           minLength: 1
       required:
         - tokenId
         - stakingContractAddress
     VetValidatorRegistrationIntent:
-      title: VET Validator Registration Intent
+      title: VetValidatorRegistrationIntent
       allOf:
         - type: object
           properties:
             validatorAddress:
               type: string
+              description: Address of the validator node being registered. Must be a valid VeChain address.
               minLength: 1
             stakingPeriod:
               type: number
+              enum:
+                - 60480
+                - 129600
+                - 259200
+              description: 'Duration of the staking lock period in blocks. Valid values: 60480 (~7 days), 129600 (~15 days), 259200 (~30 days).'
             stakingContractAddress:
               type: string
+              description: Address of the VeChain staking contract to register the validator with.
               minLength: 1
           required:
             - validatorAddress
@@ -91364,6 +93316,10 @@ components:
             - stakingContractAddress
         - $ref: '#/components/schemas/ValidatorRegistrationIntent'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: |-
+        Register a new validator node in VeChain's staking contract by depositing a
+        VET bond. The staking period determines the lock duration (60480, 129600, or
+        259200 blocks). Gas is paid by the enterprise gas tank (VTHO).
     VetWalletStakingStateAttributes:
       type: object
       properties:
@@ -91374,7 +93330,7 @@ components:
         disclaimerAttributes:
           $ref: '#/components/schemas/WalletStakingDisclaimerAttributes'
     VetWithdrawStakeIntent:
-      title: VET Withdraw Stake Intent
+      title: VetWithdrawStakeIntent
       allOf:
         - type: object
           properties:
@@ -91382,17 +93338,25 @@ components:
               type: string
               enum:
                 - withdrawStake
+              description: Must be "withdrawStake".
             validatorAddress:
               type: string
+              description: Address of the validator node whose staked VET is being withdrawn.
               minLength: 1
             stakingContractAddress:
               type: string
+              description: Address of the VeChain staking contract holding the exited position.
               minLength: 1
           required:
             - intentType
             - validatorAddress
             - stakingContractAddress
         - $ref: '#/components/schemas/BaseStakeIntent'
+      description: |-
+        Withdraw a VeChain validator's staked VET after the cooldown period from a
+        `signalExit` has completed. This is the second (final) step in the validator
+        unstake flow. No VET is spent — staked VET is returned to the sender; gas is
+        paid by the enterprise gas tank (VTHO).
     VideoApprovalActionRequest:
       title: BitGo Video Approval
       type: object
@@ -94897,6 +96861,27 @@ components:
             - detectedMissingNoncesData
       required:
         - nonceTracker
+    XRPSendQueue:
+      title: XRP
+      type: object
+      properties:
+        sequenceId:
+          type: number
+        account:
+          type: string
+        walletInitialization:
+          type: boolean
+        trustlines:
+          type: array
+          items:
+            type: object
+            properties:
+              limit:
+                type: string
+              token:
+                type: string
+      required:
+        - sequenceId
     XRPWallet:
       title: XRP Wallet
       type: object
