@@ -30182,6 +30182,11 @@ paths:
                       - action_required
                       - approved
                       - rejected
+                  verificationType:
+                    type: string
+                    enum:
+                      - penny-drop
+                      - video-id
                   userId:
                     type: string
                   enterpriseId:
@@ -30197,6 +30202,7 @@ paths:
                 required:
                   - idvId
                   - status
+                  - verificationType
                   - userId
                   - enterpriseId
                   - organizationId
@@ -30216,6 +30222,116 @@ paths:
                 additionalProperties: true
         '404':
           description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+  /api/sumsub-service/v1/idv/{idvId}/change-verification-type:
+    post:
+      summary: Switch verification flow for an existing IDV
+      description: Switches an existing IDV record from one verification flow to another (e.g. penny-drop to video-id). Only allowed when the current review is pending or action_required (null or RED+RETRY). Returns a fresh WebSDK link for the new level.
+      operationId: sumsub.post.v1.idv.id.change-verification-type
+      tags:
+        - Identity Verification (IDV)
+      x-internal: false
+      parameters:
+        - name: idvId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The IDV record ID
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                verificationType:
+                  type: string
+                  enum:
+                    - penny-drop
+                    - video-id
+                  description: The verification flow to switch to.
+              required:
+                - verificationType
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                  expiresAt:
+                    type: string
+                required:
+                  - url
+                  - expiresAt
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Error message
+                required:
+                  - error
+                additionalProperties: true
+        '409':
+          description: '409'
           content:
             application/json:
               schema:
@@ -30262,6 +30378,12 @@ paths:
                 enterpriseId:
                   type: string
                   description: The BitGo enterprise ID
+                verificationType:
+                  type: string
+                  enum:
+                    - penny-drop
+                    - video-id
+                  description: The verification flow to use. 'penny-drop' requires a bank transfer step. 'video-id' uses a video identification step instead.
                 sumsubShareToken:
                   type: string
                   minLength: 1
@@ -30329,6 +30451,7 @@ paths:
               required:
                 - userId
                 - enterpriseId
+                - verificationType
       responses:
         '200':
           description: '200'
