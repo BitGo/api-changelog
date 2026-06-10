@@ -37860,6 +37860,160 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/pendingapprovals:
+    get:
+      summary: List pending approvals
+      description: |-
+        Returns pending approvals for the authenticated user, filterable by wallet, enterprise,
+        coin, state, and request type. By default includes approvals in awaitingSignature, pending,
+        or pendingFinalApproval states.
+      operationId: v2.approval.list1
+      tags:
+        - Pending approval
+      x-internal: false
+      parameters:
+        - name: walletId
+          description: Filter by wallet ID
+          in: query
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+        - name: enterpriseId
+          description: Filter by enterprise (single ID or up to 20 IDs)
+          in: query
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - name: organizationId
+          description: Filter by organization
+          in: query
+          schema:
+            type: string
+        - name: scope
+          description: Filter by scope
+          in: query
+          schema:
+            type: string
+            enum:
+              - enterprise
+              - wallet
+              - organization
+              - global
+        - name: coin
+          description: Filter by coin
+          in: query
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - name: coins
+          description: Filter by coins
+          in: query
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - name: state
+          description: Filter by state
+          in: query
+          schema:
+            type: array
+            items:
+              oneOf:
+                - $ref: '#/components/schemas/PendingApprovalStatePending'
+                - $ref: '#/components/schemas/PendingApprovalStateResolved'
+                - $ref: '#/components/schemas/PendingApprovalStateTrust'
+                - $ref: '#/components/schemas/PendingApprovalStateProtected'
+              description: Filter by state
+        - name: allTokens
+          description: When true, include all tokens for each coin filter
+          in: query
+          schema:
+            type: boolean
+        - name: expandWalletLabels
+          description: When true, add walletLabel to each returned pending approval
+          in: query
+          schema:
+            type: boolean
+        - name: prevId
+          description: Return the next batch of results from the previous nextBatchPrevId
+          in: query
+          schema:
+            type: string
+        - name: limit
+          description: Maximum number of results to return. If truncated, use nextBatchPrevId for the next batch.
+          in: query
+          schema:
+            type: string
+            default: '25'
+            minimum: 1
+            maximum: 500
+            format: number
+        - name: offset
+          description: Number of documents to skip for offset-based pagination
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: expandAddressLabels
+          description: When true, adds addressLabels to each returned pending approval
+          in: query
+          schema:
+            type: boolean
+        - name: requestType
+          description: Filter by request type
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/PendingApprovalType'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - userChangeRequest
+                    - transactionRequest
+                    - transactionRequestFull
+                    - policyRuleRequest
+                    - updateApprovalsRequiredRequest
+                    - updateEnterpriseRequest
+                    - updateOrganizationRequest
+                    - genericRequest
+                    - enterpriseInviteRequest
+                    - updateWalletSettingRequest
+        - name: requestResourceType
+          description: Filter by generic request resource type
+          in: query
+          schema:
+            type: string
+            enum:
+              - countersigningSettlement
+              - policyRule
+              - signingSettlement
+              - ethUnstake
+              - userEmail
+              - organizationAdmin
+              - organizationAdminInvite
+              - crossChainRecovery
+        - name: includeEvmKeyringWallets
+          description: When true, include pending approvals from all wallets in the same EVM keyring
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalListResponse'
   /api/v2/pendingapprovals/{approvalId}/transfer:
     get:
       summary: Get Transfer By Approval Id
@@ -51032,6 +51186,410 @@ components:
         - approved
         - rejected
       description: Status type for approval actions
+    ApprovalListResponse:
+      title: ApprovalListResponse
+      type: object
+      properties:
+        pendingApprovals:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol.
+                example: btc
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              walletType:
+                type: string
+              walletSubType:
+                type: string
+                description: The subtype of the wallet (e.g., custodialHot)
+              wallets:
+                type: array
+                items:
+                  type: string
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+                  description: The wallets of the pending approval
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organization:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organizationName:
+                type: string
+                description: The organization name
+              bitgoOrg:
+                type: string
+                description: The BitGo organization
+              creator:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              createDate:
+                type: string
+                description: The creation date of the pending approval
+                format: date-time
+                title: ISO Date String
+              approvedDate:
+                type: string
+                description: The date when the approval was granted
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                description: The date when the approval was last updated (any update, not just processing)
+                format: date-time
+                title: ISO Date String
+              keyCurve:
+                type: string
+                enum:
+                  - secp256k1
+                  - ed25519
+                  - bls12_381
+                description: The key curve of the coin attached to this pending approval
+              info:
+                allOf:
+                  - $ref: '#/components/schemas/PendingApprovalInfo'
+                description: Information about the pending approval
+              state:
+                allOf:
+                  - $ref: '#/components/schemas/PendingApprovalState'
+                description: The state of the pending approval
+              scope:
+                type: string
+                enum:
+                  - enterprise
+                  - wallet
+                  - organization
+                  - global
+                description: What kind of entity the Pending Approval is tied to
+              userIds:
+                type: array
+                items:
+                  type: string
+                  description: All the Users who should see this Pending Approval
+              approvalsRequired:
+                type: number
+                example: 1
+                minimum: 1
+              walletLabel:
+                type: string
+                description: Label for the wallet
+              addressLabels:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      $ref: '#/components/schemas/AddressString'
+                    label:
+                      type: string
+                      description: The label
+                    walletLabel:
+                      type: string
+                      description: The wallet label
+                  required:
+                    - address
+                    - label
+                  description: Address labels of recipients in this Pending Approval
+              resolvers:
+                type: array
+                items:
+                  type: object
+                  description: Resolvers for the pending approval
+                  properties:
+                    autoApproved:
+                      type: boolean
+                      description: Whether the resolution was auto approved
+                    date:
+                      type: string
+                      description: The date of resolution
+                      format: date-time
+                      title: ISO Date String
+                    resolutionAction:
+                      type: string
+                      enum:
+                        - approve
+                        - reject
+                        - skip
+                        - fail
+                      description: Action taken during resolution
+                    resolutionMemo:
+                      type: string
+                      description: Memo regarding the resolution
+                    resolutionType:
+                      allOf:
+                        - $ref: '#/components/schemas/PendingApprovalStatePending'
+                      description: The type of resolution
+                    user:
+                      type: string
+                      description: The user who resolved the approval
+                    videoApprover:
+                      type: string
+                      description: The approver of the video resolution
+                    videoException:
+                      type: string
+                      description: Exception details for the video
+                    videoLink:
+                      type: string
+                      description: Link to the resolution video
+                  required:
+                    - resolutionType
+              approvers:
+                type: array
+                items:
+                  type: string
+                  description: List of approvers
+              singleRunResults:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ruleId:
+                      type: string
+                      description: The rule ID
+                    triggered:
+                      type: boolean
+                      description: Whether the rule was triggered
+                  description: Results from single run checks
+              txRequestId:
+                type: string
+                description: Transaction request ID
+                example: 123e4567-e89b-12d3-a456-426614174000
+                format: uuid
+              videoId:
+                type: object
+                description: ID for the video related to the approval
+                properties:
+                  date:
+                    type: string
+                    description: The date of the video ID
+                    format: date-time
+                    title: ISO Date String
+                  user:
+                    type: string
+                    description: The user associated with the video ID
+                  videoApprover:
+                    type: string
+                    description: The approver of the video
+                  videoException:
+                    type: string
+                    description: The exception related to the video
+                  videoLink:
+                    type: string
+                    description: The link to the video
+              version:
+                type: number
+                description: Version of the pending approval
+              policyEvaluationId:
+                type: string
+                description: ID for the policy evaluation
+              actions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    approvers:
+                      type: array
+                      items:
+                        type: string
+                        description: The approvers of the action
+                    excludedApprovers:
+                      type: array
+                      items:
+                        type: string
+                        description: Users that are eligible approvers but cannot approve (e.g. already approved or the initiator)
+                    id:
+                      type: string
+                      description: The ID of the action
+                    name:
+                      type: string
+                      description: The name of the action
+                    operator:
+                      type: string
+                      enum:
+                        - AND
+                        - OR
+                      description: The operator of the action
+                    parameters:
+                      allOf:
+                        - $ref: '#/components/schemas/PolicyActionParameters'
+                      description: The parameters of the action
+                    resolvers:
+                      type: array
+                      items:
+                        type: object
+                        description: The resolvers of the action
+                        properties:
+                          autoApproved:
+                            type: boolean
+                            description: Whether the resolution was auto approved
+                          date:
+                            type: string
+                            description: The date of resolution
+                            format: date-time
+                            title: ISO Date String
+                          resolutionAction:
+                            type: string
+                            enum:
+                              - approve
+                              - reject
+                              - skip
+                              - fail
+                            description: Action taken during resolution
+                          resolutionMemo:
+                            type: string
+                            description: Memo regarding the resolution
+                          resolutionType:
+                            allOf:
+                              - $ref: '#/components/schemas/PendingApprovalStatePending'
+                            description: The type of resolution
+                          user:
+                            type: string
+                            description: The user who resolved the approval
+                          videoApprover:
+                            type: string
+                            description: The approver of the video resolution
+                          videoException:
+                            type: string
+                            description: Exception details for the video
+                          videoLink:
+                            type: string
+                            description: Link to the resolution video
+                        required:
+                          - resolutionType
+                    status:
+                      allOf:
+                        - $ref: '#/components/schemas/EvaluatedPolicyActionStatus'
+                      description: The status of the action
+                  required:
+                    - id
+                    - name
+                    - parameters
+                    - status
+                  description: List of actions taken
+              resolutionOrder:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    actions:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                  required:
+                    - actions
+                  description: Order of resolution
+              useLegacyPolicyEngine:
+                type: boolean
+                description: Flag to use legacy policy engine
+              videoCallId:
+                type: string
+                description: ID for the video call
+              lastUpdated:
+                type: string
+                description: The last date the approval was processing
+                format: date-time
+                title: ISO Date String
+              freeze:
+                type: object
+                description: The freeze state
+                properties:
+                  actions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reason:
+                          type: string
+                        state:
+                          type: string
+                          enum:
+                            - frozen
+                            - unFrozen
+                        time:
+                          type: string
+                          format: date-time
+                          title: ISO Date String
+                        userId:
+                          type: string
+                        username:
+                          type: string
+                  state:
+                    type: string
+                    enum:
+                      - frozen
+                      - unFrozen
+              memo:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                      description: The text of the memo
+                    time:
+                      type: string
+                      description: The time the memo was created
+                      format: date-time
+                      title: ISO Date String
+                    userId:
+                      type: string
+                      description: The user ID of the admin who created the memo
+                    username:
+                      type: string
+                      description: The username of the admin who created the memo
+                  required:
+                    - text
+                    - time
+                    - userId
+                    - username
+                  description: Admin memos attached to this pending approval
+              associatedInquiries:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    inquiryId:
+                      type: string
+                    inquiryStatus:
+                      $ref: '#/components/schemas/InquiryStatus'
+                    inquirySubType:
+                      $ref: '#/components/schemas/InquirySubType'
+                    inquiryType:
+                      $ref: '#/components/schemas/InquiryType'
+                  required:
+                    - inquiryId
+                    - inquiryStatus
+                    - inquirySubType
+                    - inquiryType
+                  description: Associated inquiries
+            required:
+              - id
+              - creator
+              - createDate
+              - info
+              - state
+              - scope
+        nextBatchPrevId:
+          type: string
+        count:
+          type: number
+      required:
+        - pendingApprovals
     ApprovalRequestCount:
       title: ApprovalRequestCount
       type: object
@@ -55841,6 +56399,11 @@ components:
                 - cantonCommand
             cantonCommandParams:
               $ref: '#/components/schemas/CantonCommandParams'
+            token:
+              type: string
+              description: |-
+                Optional registered coin/token identifier for the command target (e.g. "tcanton:stgusd1").
+                This is not an auth/session token.
           required:
             - intentType
             - cantonCommandParams
@@ -62124,7 +62687,6 @@ components:
           required:
             - templateId
             - choice
-            - choiceArgument
       required:
         - ExerciseCommand
     ExpectedTransfers:
@@ -72693,7 +73255,7 @@ components:
               description: The action of the policy rule request
             update:
               type: object
-              description: The update details of the policy rule request
+              description: The update details of the policy rule request (single-wallet)
               properties:
                 action:
                   allOf:
@@ -72722,6 +73284,39 @@ components:
                 walletId:
                   type: string
                   description: Optional walletId field for multi-wallet updates
+            updates:
+              type: array
+              items:
+                type: object
+                properties:
+                  action:
+                    allOf:
+                      - $ref: '#/components/schemas/PolicyRuleAction'
+                    description: The action of the policy rule
+                  coin:
+                    $ref: '#/components/schemas/CoinString'
+                  condition:
+                    allOf:
+                      - $ref: '#/components/schemas/PolicyRuleUpdateCondition'
+                    description: The condition of the policy rule
+                  generatePolicy:
+                    type: boolean
+                    description: Should generate new whitelist policy when generatePolicy is undefined *
+                  id:
+                    type: string
+                    description: The ID of the policy rule
+                  lockDate:
+                    type: string
+                    format: date
+                    title: Date String
+                  type:
+                    allOf:
+                      - $ref: '#/components/schemas/ApiRuleType'
+                    description: The type of the API rule
+                  walletId:
+                    type: string
+                    description: Optional walletId field for multi-wallet updates
+                description: The update details for multi-wallet operations (bulk whitelist)
         updateApprovalsRequiredRequest:
           type: object
           properties:
