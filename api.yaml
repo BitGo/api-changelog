@@ -10185,6 +10185,7 @@ paths:
       operationId: documents.post.v1.documents
       tags:
         - Know Your Business (KYB)
+      x-internal: false
       parameters: []
       requestBody:
         description: Body
@@ -10204,19 +10205,84 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/CreateDocumentBadRequestError'
         '401':
           description: '401'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/CreateDocumentUnauthorizedError'
         '500':
           description: '500'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/CreateDocumentInternalError'
+    get:
+      summary: List KYB Documents
+      description: List documents belonging to the authenticated user with optional filtering and pagination.
+      operationId: documents.get.v1.documents
+      tags:
+        - Know Your Business (KYB)
+      x-internal: false
+      parameters:
+        - name: ids
+          in: query
+          description: Comma-separated list of up to 100 document UUIDs to filter by
+          schema:
+            type: string
+        - name: type
+          in: query
+          description: Type of document being uploaded
+          schema:
+            $ref: '#/components/schemas/DocumentType'
+        - name: status
+          in: query
+          description: Current status of the document
+          schema:
+            $ref: '#/components/schemas/DocumentStatus'
+        - name: enterpriseId
+          in: query
+          description: Narrows results to documents attributed to the given enterprise; always scoped to the authenticated user
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 255
+        - name: limit
+          in: query
+          description: 'Maximum number of documents to return (default: 20, max: 100)'
+          schema:
+            $ref: '#/components/schemas/DocumentListQueryLimit'
+        - name: offset
+          in: query
+          description: 'Number of documents to skip (default: 0)'
+          schema:
+            $ref: '#/components/schemas/DocumentListQueryOffset'
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDocumentsResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDocumentsBadRequestError'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDocumentsUnauthorizedError'
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetDocumentsInternalError'
   /api/document-service/v1/documents/{documentId}:
     get:
       summary: Get KYB Document
@@ -10224,6 +10290,7 @@ paths:
       operationId: documents.get.v1.documents.id
       tags:
         - Know Your Business (KYB)
+      x-internal: false
       parameters:
         - name: documentId
           in: path
@@ -10244,31 +10311,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/GetDocumentBadRequestError'
         '401':
           description: '401'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/GetDocumentUnauthorizedError'
         '403':
           description: '403'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/GetDocumentForbiddenError'
         '404':
           description: '404'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/GetDocumentNotFoundError'
         '500':
           description: '500'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/GetDocumentInternalError'
   /api/document-service/v1/documents/{documentId}/files/{fileId}:
     patch:
       summary: Update KYB Document Status
@@ -10276,6 +10343,7 @@ paths:
       operationId: documents.patch.v1.documents.id.files.id
       tags:
         - Know Your Business (KYB)
+      x-internal: false
       parameters:
         - name: documentId
           in: path
@@ -10308,31 +10376,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/UpdateFileStatusBadRequestError'
         '401':
           description: '401'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/UpdateFileStatusUnauthorizedError'
         '403':
           description: '403'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/UpdateFileStatusForbiddenError'
         '404':
           description: '404'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/UpdateFileStatusNotFoundError'
         '500':
           description: '500'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/UpdateFileStatusInternalError'
   /api/document-service/v1/documents/{documentId}/verify:
     post:
       summary: Verify KYB Document Status
@@ -10340,6 +10408,7 @@ paths:
       operationId: documents.post.v1.documents.id.verify
       tags:
         - Know Your Business (KYB)
+      x-internal: false
       parameters:
         - name: documentId
           in: path
@@ -10366,31 +10435,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/VerifyDocumentBadRequestError'
         '401':
           description: '401'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/VerifyDocumentUnauthorizedError'
         '403':
           description: '403'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/VerifyDocumentForbiddenError'
         '404':
           description: '404'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/VerifyDocumentNotFoundError'
         '500':
           description: '500'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/GetInternalDocumentsInternalError'
+                $ref: '#/components/schemas/VerifyDocumentInternalError'
   /api/evs/v1/identity:
     get:
       summary: Get KYC Identity
@@ -58287,6 +58356,44 @@ components:
             - createArguments
       required:
         - CreateCommand
+    CreateDocumentBadRequestError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: CreateDocumentBadRequestError
+      description: Generic error response
+    CreateDocumentInternalError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: CreateDocumentInternalError
+      description: Generic error response
     CreateDocumentRequest:
       type: object
       properties:
@@ -58328,6 +58435,25 @@ components:
         - files
       title: CreateDocumentResponse
       description: Response after creating a new document
+    CreateDocumentUnauthorizedError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: CreateDocumentUnauthorizedError
+      description: Generic error response
     CreateIdentityBody:
       discriminator:
         propertyName: type
@@ -59831,6 +59957,9 @@ components:
           type: string
           format: date-time
           description: When the upload URL expires
+        rejectionReason:
+          type: string
+          description: Human-readable reason when status is rejected (e.g. illegible scan, wrong document type)
         createdAt:
           type: string
           format: date-time
@@ -59846,11 +59975,54 @@ components:
         - updatedAt
       title: DocumentFileInfo
       description: File information for document retrieval
+    DocumentFileSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: File identifier
+        view:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/FileView'
+        status:
+          $ref: '#/components/schemas/FileStatus'
+      required:
+        - id
+        - view
+        - status
+      title: DocumentFileSummary
+      description: Lightweight summary of a file associated with a document
+    DocumentListQueryLimit:
+      default: 20
+      type: integer
+      minimum: 1
+      maximum: 100
+      title: DocumentListQueryLimit
+    DocumentListQueryOffset:
+      default: 0
+      type: integer
+      minimum: 0
+      nullable: true
+      title: DocumentListQueryOffset
+    DocumentPaginationLimit:
+      type: integer
+      minimum: 1
+      title: DocumentPaginationLimit
+      description: Applied page size
+    DocumentPaginationOffset:
+      type: integer
+      minimum: 0
+      title: DocumentPaginationOffset
+      description: Applied page offset
     DocumentStatus:
       type: string
       enum:
         - awaitingUpload
         - uploaded
+        - accepted
+        - rejected
       title: DocumentStatus
       description: Current status of the document
     DocumentSubType:
@@ -59883,8 +60055,17 @@ components:
         - vid
         - visa
         - wp
+        - computerizedPayslips
+        - incomeTaxAssessment
+        - employmentLetterContract
+        - bankStatement
+        - dptHoldingStatement
+        - investmentHoldingsStatement
+        - titleDeeds
+        - propertyTaxCpfStatement
+        - other
       title: DocumentSubType
-      description: Subtype of document (relevant for `governmentId` document type)
+      description: Subtype of document (relevant for `governmentId` and `singaporeSupportingDocument` document types)
     DocumentSubTypeDetailed:
       type: string
       enum:
@@ -59915,9 +60096,18 @@ components:
         - vid
         - visa
         - wp
+        - computerizedPayslips
+        - incomeTaxAssessment
+        - employmentLetterContract
+        - bankStatement
+        - dptHoldingStatement
+        - investmentHoldingsStatement
+        - titleDeeds
+        - propertyTaxCpfStatement
+        - other
       title: DocumentSubTypeDetailed
       description: |-
-        Subtype of document (required when documentType is 'governmentId'). Supported subtypes:
+        Subtype of document (required when documentType is 'governmentId' or 'singaporeSupportingDocument'). Supported subtypes:
         - `cct` - Citizenship Certificate
         - `cid` - Consular ID
         - `dl` - Driver's License
@@ -59945,6 +60135,55 @@ components:
         - `vid` - Voter ID
         - `visa` - Visa
         - `wp` - Work Permit
+
+        Singapore Accredited Investor supporting document subtypes (for documentType 'singaporeSupportingDocument'):
+        - `computerizedPayslips` - Computerized payslips (qualifying criteria: income)
+        - `incomeTaxAssessment` - Income tax assessment (qualifying criteria: income)
+        - `employmentLetterContract` - Employment letter or contract (qualifying criteria: income)
+        - `bankStatement` - Bank statement (qualifying criteria: netAssets, financialAssets)
+        - `dptHoldingStatement` - Digital payment token holding statement (qualifying criteria: netAssets)
+        - `investmentHoldingsStatement` - Investment holdings statement (qualifying criteria: netAssets, financialAssets)
+        - `titleDeeds` - Title deeds (qualifying criteria: netAssets)
+        - `propertyTaxCpfStatement` - Property tax or CPF statement (qualifying criteria: netAssets)
+        - `other` - Other supporting document
+    DocumentSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Document identifier
+        type:
+          $ref: '#/components/schemas/DocumentType'
+        subType:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/DocumentSubType'
+        status:
+          $ref: '#/components/schemas/DocumentStatus'
+        enterpriseId:
+          type: string
+          nullable: true
+          description: Enterprise associated with the document when created, or null for legacy documents
+        createdAt:
+          type: string
+          format: date-time
+          description: ISO timestamp when the document was created
+        files:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentFileSummary'
+          description: Files associated with the document
+      required:
+        - id
+        - type
+        - subType
+        - status
+        - enterpriseId
+        - createdAt
+        - files
+      title: DocumentSummary
+      description: Lightweight document summary suitable for list views
     DocumentType:
       type: string
       enum:
@@ -59952,6 +60191,7 @@ components:
         - commercialRegister
         - articlesOfAssociation
         - certificateOfIncorporation
+        - certificateOfGoodStanding
         - certificateOfTrust
         - certificateOfIncumbency
         - certificateOfIncumbencyOrShareRegister
@@ -59977,6 +60217,12 @@ components:
         - evidenceOfGovernmentOrStateOwnership
         - secFilingsAsEvidenceOfPublicTradingStatus
         - foundingTreatyOrEquivalent
+        - proofOfAddress
+        - sourceOfWealth
+        - singaporeSupportingDocument
+        - caseRequiredDocuments
+        - correspondentAccountCertification
+        - authorizedSignerForm
       title: DocumentType
       description: Type of document being uploaded
     DocumentTypeDetailed:
@@ -59986,6 +60232,7 @@ components:
         - commercialRegister
         - articlesOfAssociation
         - certificateOfIncorporation
+        - certificateOfGoodStanding
         - certificateOfTrust
         - certificateOfIncumbency
         - certificateOfIncumbencyOrShareRegister
@@ -60011,6 +60258,12 @@ components:
         - evidenceOfGovernmentOrStateOwnership
         - secFilingsAsEvidenceOfPublicTradingStatus
         - foundingTreatyOrEquivalent
+        - proofOfAddress
+        - sourceOfWealth
+        - singaporeSupportingDocument
+        - caseRequiredDocuments
+        - correspondentAccountCertification
+        - authorizedSignerForm
       title: DocumentTypeDetailed
       description: |-
         Type of document being uploaded. Supported document types:
@@ -60018,6 +60271,7 @@ components:
         - `commercialRegister` - Official government document that verifies the identity and legitimacy of the business, containing basic information such as the company's name, address, field of activity, shareholders, and capital.
         - `articlesOfAssociation` - The Articles of Association are formal legal documents that serve as the company's rulebook, outlining its fundamental structure, purpose, internal operations, and how decisions are made, including details on share capital, director appointments, and shareholder rights.
         - `certificateOfIncorporation` - The official document issued by the government registrar that legally recognizes your company's existence and outlines essential information such as its name, purpose, and structure.
+        - `certificateOfGoodStanding` - An official document issued by the government registrar confirming that the company is legally registered, active, and in compliance with statutory filing and payment obligations. Must be dated within the last 12 months.
         - `certificateOfTrust` - A document that verifies the existence of a trust, the identity of the trustee(s), and their authority to act on behalf of the trust.
         - `certificateOfIncumbency` - A private legal document issued by the company that verifies the identities and authority of the current directors, officers, and sometimes key shareholders who are authorized to act on behalf of the company in transactions.
         - `certificateOfIncumbencyOrShareRegister` - An official document listing current directors, shareholders, and the company's registered address, or a certified document detailing all company shareholders and their respective shareholdings.
@@ -60043,6 +60297,12 @@ components:
         - `evidenceOfGovernmentOrStateOwnership` - Documentation required to verify if the entity is owned or operated by a government or state organization.
         - `secFilingsAsEvidenceOfPublicTradingStatus` - Document field used to collect Securities and Exchange Commission (SEC) filings that serve as evidence of the business entity's public trading status.
         - `foundingTreatyOrEquivalent` - The founding treaty or equivalent document serves as official proof of the business entity's legal existence and is often referred to as a Certificate of Incorporation, Articles of Association, or other governing documents, depending on the jurisdiction and business structure.
+        - `proofOfAddress` - A document that verifies the individual's residential address, such as a utility bill, bank statement, or government correspondence dated within the last 3 months.
+        - `sourceOfWealth` - A document that evidences the individual's source of wealth, required for high-risk individuals under enhanced due diligence.
+        - `singaporeSupportingDocument` - A supporting document for Singapore Accredited Investor qualification. The specific document is indicated by the `documentSubType` field (e.g., `computerizedPayslips`, `bankStatement`, `titleDeeds`).
+        - `caseRequiredDocuments` - A collection of documents required for a specific KYB/KYC case. Unlike other document types, the specific file slots and their per-file document classifications are defined per-instance at creation time rather than statically configured. Each file within this collection sets its own classification via the `File.documentType` field.
+        - `correspondentAccountCertification` — FinCEN Certification Regarding Correspondent Accounts for Foreign Banks. Required from non-US bank applicants per FinCEN regulations. The blank form is available at https://www.fincen.gov/system/files/shared/Certification%20Regarding%20Correspondent%20Accounts%20for%20Foreign%20Banks.pdf — the applicant completes, signs, and uploads it.
+        - `authorizedSignerForm` — A signed form identifying the individual authorized to make contractual commitments on behalf of the applicant. The blank fillable form is available at https://www.bitgo.com/legal/bitgo-bank-and-trust-na-authorized-signer-form/ — the authorized signer completes, signs, and uploads it.
     DomesticWireAccountResponseProps:
       title: DomesticWireAccountResponseProps
       type: object
@@ -63031,8 +63291,11 @@ components:
       enum:
         - awaitingUpload
         - uploaded
+        - accepted
+        - rejected
+        - requiresManualReview
       title: FileStatus
-      description: Current status of the file upload
+      description: Current status of the file upload. `requiresManualReview` is a terminal state set after 2 failed AI screening attempts; the file is locked and Trust ops resolves it manually.
     FileView:
       type: string
       enum:
@@ -63669,6 +63932,82 @@ components:
           minLength: 1
       required:
         - payload
+    GetDocumentBadRequestError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetDocumentBadRequestError
+      description: Generic error response
+    GetDocumentForbiddenError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetDocumentForbiddenError
+      description: Generic error response
+    GetDocumentInternalError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetDocumentInternalError
+      description: Generic error response
+    GetDocumentNotFoundError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetDocumentNotFoundError
+      description: Generic error response
     GetDocumentResponse:
       type: object
       properties:
@@ -63684,6 +64023,10 @@ components:
           $ref: '#/components/schemas/DocumentSubType'
         status:
           $ref: '#/components/schemas/DocumentStatus'
+        enterpriseId:
+          type: string
+          nullable: true
+          description: Enterprise associated with the document when created, or null for legacy documents
         metadata:
           type: object
           additionalProperties:
@@ -63707,11 +64050,111 @@ components:
         - documentType
         - documentTypeLabel
         - status
+        - enterpriseId
         - files
         - createdAt
         - updatedAt
       title: GetDocumentResponse
       description: Response containing document information
+    GetDocumentUnauthorizedError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetDocumentUnauthorizedError
+      description: Generic error response
+    GetDocumentsBadRequestError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetDocumentsBadRequestError
+      description: Generic error response
+    GetDocumentsInternalError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetDocumentsInternalError
+      description: Generic error response
+    GetDocumentsResponse:
+      type: object
+      properties:
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentSummary'
+          description: List of document summaries
+        total:
+          type: integer
+          minimum: 0
+          description: Total number of matched documents
+        limit:
+          $ref: '#/components/schemas/DocumentPaginationLimit'
+        offset:
+          $ref: '#/components/schemas/DocumentPaginationOffset'
+      required:
+        - documents
+        - total
+        - limit
+        - offset
+      title: GetDocumentsResponse
+      description: Paginated list of document summaries
+    GetDocumentsUnauthorizedError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetDocumentsUnauthorizedError
+      description: Generic error response
     GetEnterpriseResponse:
       title: GetEnterpriseResponse
       allOf:
@@ -63777,25 +64220,6 @@ components:
         - userId
         - userEmail
         - derivedPubkey
-    GetInternalDocumentsInternalError:
-      type: object
-      properties:
-        code:
-          type: string
-          description: Error code
-        message:
-          type: string
-          description: Error message
-        details:
-          type: object
-          additionalProperties:
-            nullable: true
-          description: Additional error details
-      required:
-        - code
-        - message
-      title: GetInternalDocumentsInternalError
-      description: Generic error response
     GetInvoicesResponse:
       title: GetInvoicesResponse
       type: object
@@ -89282,6 +89706,82 @@ components:
         - h1
         - h2
         - verifiers
+    UpdateFileStatusBadRequestError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: UpdateFileStatusBadRequestError
+      description: Generic error response
+    UpdateFileStatusForbiddenError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: UpdateFileStatusForbiddenError
+      description: Generic error response
+    UpdateFileStatusInternalError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: UpdateFileStatusInternalError
+      description: Generic error response
+    UpdateFileStatusNotFoundError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: UpdateFileStatusNotFoundError
+      description: Generic error response
     UpdateFileStatusRequest:
       type: object
       properties:
@@ -89289,7 +89789,11 @@ components:
           type: string
           enum:
             - uploaded
-          description: File upload status
+            - requiresManualReview
+          description: File upload status. Use `requiresManualReview` when the user chooses to submit a previously-rejected file.
+        triggerLiveScreeningAsync:
+          type: boolean
+          description: When true, triggers async AI live screening on this upload. Defaults to false.
       required:
         - status
       title: UpdateFileStatusRequest
@@ -89320,6 +89824,25 @@ components:
         - status
       title: UpdateFileStatusResponse
       description: Response after updating file status
+    UpdateFileStatusUnauthorizedError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: UpdateFileStatusUnauthorizedError
+      description: Generic error response
     UpdateIdentityBody:
       type: object
       properties:
@@ -93516,6 +94039,25 @@ components:
         - approved
         - rejected
         - pending
+    VerifyDocumentBadRequestError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: VerifyDocumentBadRequestError
+      description: Generic error response
     VerifyDocumentFile:
       type: object
       properties:
@@ -93540,6 +94082,63 @@ components:
         - status
       title: VerifyDocumentFile
       description: File information after verification
+    VerifyDocumentForbiddenError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: VerifyDocumentForbiddenError
+      description: Generic error response
+    VerifyDocumentInternalError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: VerifyDocumentInternalError
+      description: Generic error response
+    VerifyDocumentNotFoundError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: VerifyDocumentNotFoundError
+      description: Generic error response
     VerifyDocumentRequest:
       type: object
       properties: {}
@@ -93573,6 +94172,25 @@ components:
         - files
       title: VerifyDocumentResponse
       description: Response after verifying document upload status
+    VerifyDocumentUnauthorizedError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: VerifyDocumentUnauthorizedError
+      description: Generic error response
     VerifyWebhookNotificationResponse:
       title: VerifyWebhookNotificationResponse
       type: object
