@@ -47226,7 +47226,7 @@ components:
                     useValidatorList: true
                     readonly: false
               - name: Pectra SSV Staking
-                type: ETH_STAKE_P2P
+                type: ETH_STAKE_SSV
                 fee: '634164472610000'
                 max: '193000000000000000000'
                 min: '22000000000000000000'
@@ -62522,6 +62522,7 @@ components:
               enum:
                 - ETH_STAKE
                 - ETH_STAKE_PECTRA
+                - ETH_STAKE_SSV
                 - ETH_STAKE_P2P
                 - LIDO
     EthStakingRequestPOSTBody:
@@ -79372,6 +79373,10 @@ components:
           type: string
           format: date-time
           description: Optional ISO 8601 datetime for when a withdraw hold should be released.
+        description:
+          type: string
+          minLength: 1
+          description: Optional custom description for the simulated deposit. When provided, replaces the default description. When omitted, defaults to "Test Deposit for {currency} wallet {walletId}".
       required:
         - walletId
         - currency
@@ -81191,6 +81196,7 @@ components:
         - TRX_CLAIM_REWARDS
         - ETH_CLAIM_REWARDS
         - ETH_UNSTAKE
+        - ETH_STAKE_SSV
         - ETH_STAKE_P2P
         - NEAR_STAKE
         - SOL_STAKE
