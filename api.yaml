@@ -36684,6 +36684,8 @@ paths:
                       title: ISO Date String
                     enterprise:
                       $ref: '#/components/schemas/EnterpriseIdNonEmptyString'
+                    isCostBasisReport:
+                      type: boolean
                     isFillsReport:
                       type: boolean
                     startDate:
@@ -36975,7 +36977,7 @@ paths:
                     - enterprise
                 costBasis:
                   type: object
-                  description: Cost basis report
+                  deprecated: true
                   properties:
                     account:
                       type: string
@@ -38566,6 +38568,8 @@ paths:
                       title: ISO Date String
                     enterprise:
                       $ref: '#/components/schemas/EnterpriseIdNonEmptyString'
+                    isCostBasisReport:
+                      type: boolean
                     isFillsReport:
                       type: boolean
                     startDate:
@@ -38857,7 +38861,7 @@ paths:
                     - enterprise
                 costBasis:
                   type: object
-                  description: Cost basis report
+                  deprecated: true
                   properties:
                     account:
                       type: string
@@ -50263,7 +50267,7 @@ components:
         label:
           $ref: '#/components/schemas/AddressLabel'
         addressType:
-          $ref: '#/components/schemas/AddressType'
+          $ref: '#/components/schemas/AddressType1'
     AddressBalance:
       type: object
       properties:
@@ -50515,7 +50519,7 @@ components:
         - $ref: '#/components/schemas/TronAddress'
         - $ref: '#/components/schemas/XRPAddress'
         - $ref: '#/components/schemas/TonAddress'
-    AddressType:
+    AddressType1:
       type: string
       example: p2sh
       enum:
@@ -55500,7 +55504,7 @@ components:
             The type of address to create for change. One of `p2sh`, `p2shP2wsh`, `p2wsh`, or `p2tr`.
         changeAddressType:
           anyOf:
-            - $ref: '#/components/schemas/AddressType'
+            - $ref: '#/components/schemas/AddressType1'
             - $ref: '#/components/schemas/ChangeAddressTypes'
           description: The address type for the change address. One of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`.
         startTime:
@@ -56833,7 +56837,7 @@ components:
     ChangeAddressTypes:
       type: array
       items:
-        $ref: '#/components/schemas/AddressType'
+        $ref: '#/components/schemas/AddressType1'
       description: The address types for the change address. Order by preference and BitGo uses the first available. Any subset of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`.
     ChangeFeeResponse:
       title: ChangeFeeResponse
@@ -69999,6 +70003,11 @@ components:
           type: boolean
         messageStandardType:
           type: string
+        preparedTransaction:
+          type: string
+          description: |-
+            Base64-encoded raw transaction bytes (PreparedTransaction protobuf or topology tx).
+            Not signed — used for clear signing display and HSM payload framing.
       required:
         - messageRaw
         - intentType
@@ -74293,6 +74302,105 @@ components:
       properties:
         contact:
           $ref: '#/components/schemas/PlatformGeographicAddress'
+    PlatformAddress2:
+      type: object
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/Id'
+          description: platform public id for an address
+        address:
+          $ref: '#/components/schemas/PlatformAddressString'
+        chain:
+          $ref: '#/components/schemas/Chain'
+        index:
+          type: integer
+        coin:
+          type: string
+        lastNonce:
+          type: integer
+          default: -1
+        wallet:
+          allOf:
+            - $ref: '#/components/schemas/Id'
+          description: The wallet which contains this address
+        coinSpecific:
+          type: object
+          description: Properties which are specific to certain coin types
+          properties:
+            xlm:
+              $ref: '#/components/schemas/PlatformAddressCoinSpecificXlm'
+            txlm:
+              $ref: '#/components/schemas/PlatformAddressCoinSpecificXlm'
+        balance:
+          allOf:
+            - type: object
+            - $ref: '#/components/schemas/PlatformAddressBalance'
+          description: Balance of the address. In case of Eth and Celo, if returnBalancesForToken is passed with includeBalances, then it will return token balance in the address object. This field will be present only when `includeBalances` query param is passed as true.
+        label:
+          $ref: '#/components/schemas/AddressLabel'
+        addressType:
+          $ref: '#/components/schemas/PlatformAddressType'
+    PlatformAddressBalance:
+      type: object
+      properties:
+        updated:
+          type: string
+          description: The last time a transaction affected the balance of this address
+          format: date-time
+        balance:
+          type: integer
+          description: The cleared balance of the address
+          example: 50000
+        balanceString:
+          type: string
+          description: String representation of `balance`. Guaranteed to not lose precision.
+          example: '50000'
+        totalReceived:
+          type: integer
+          description: The total amount received on this address (in the chain's base unit)
+        totalSent:
+          type: integer
+          description: The total amount send from this address (in the chain's base unit)
+        confirmedBalanceString:
+          type: string
+          description: |
+            The total balance of confirmed transactions for the address (in the chain's base unit).
+            Guaranteed to not lose precision.
+          example: '40000'
+        spendableBalanceString:
+          type: string
+          description: |
+            The total balance of the address (in the chain's base unit) which may
+            be used as inputs for creating new transactions in string representation.
+            Guaranteed to not lose precision.
+          example: '40000'
+    PlatformAddressCoinSpecificXlm:
+      type: object
+      properties:
+        memoId:
+          allOf:
+            - $ref: '#/components/schemas/IntegerString'
+            - example: '1'
+          description: Latest memo id generated for the wallet
+        rootAddress:
+          type: string
+          description: Root address of the wallet
+          example: GCTTCPH4IIDK7P72FFAEJ3ZFN6WDHJH6GGMRPHPM56ZWGIQ7B3XTIJAM
+    PlatformAddressString:
+      title: Address
+      type: string
+      example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
+      maxLength: 500
+    PlatformAddressType:
+      type: string
+      example: p2sh
+      enum:
+        - p2sh
+        - p2shP2wsh
+        - p2wsh
+        - p2tr
+        - p2trMusig2
     PlatformPlatformError:
       title: API error
       allOf:
@@ -75037,7 +75145,7 @@ components:
         nodeId:
           $ref: '#/components/schemas/Id'
         receiveAddress:
-          $ref: '#/components/schemas/Address2'
+          $ref: '#/components/schemas/PlatformAddress2'
         recoverable:
           type: boolean
         tags:
@@ -77154,6 +77262,8 @@ components:
               title: ISO Date String
             enterprise:
               $ref: '#/components/schemas/EnterpriseIdNonEmptyString'
+            isCostBasisReport:
+              type: boolean
             isFillsReport:
               type: boolean
             startDate:
@@ -77445,7 +77555,7 @@ components:
             - enterprise
         costBasis:
           type: object
-          description: Cost basis report
+          deprecated: true
           properties:
             account:
               type: string
