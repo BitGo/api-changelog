@@ -26769,7 +26769,10 @@ paths:
   /api/prime/trading/v1/user/current:
     get:
       summary: Get Current User
-      description: Get the current user’s public information.
+      description: |-
+        Get the current user’s public information.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.user.current
       tags:
         - Accounts
@@ -26789,7 +26792,10 @@ paths:
   /api/prime/trading/v1/accounts:
     get:
       summary: List Accounts
-      description: Get the list of trading accounts that the current user belongs to.
+      description: |-
+        Get the list of trading accounts that the current user belongs to.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.accounts
       tags:
         - Accounts
@@ -26814,7 +26820,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/balances:
     get:
       summary: Get Account Balance
-      description: Get balance information about a single trading account.
+      description: |-
+        Get balance information about a single trading account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.accounts.balances
       tags:
         - Accounts
@@ -26849,7 +26858,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/orders:
     get:
       summary: List Orders
-      description: Lists all orders from the given trading account.
+      description: |-
+        Lists all orders from the given trading account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.orders.detail
       tags:
         - Orders
@@ -26924,12 +26936,15 @@ paths:
           $ref: '#/components/responses/internalServerError1'
     post:
       summary: Place Order
-      description: |
-        Places a new order. There are several types of orders available - Market, Limit, TWAP, and SteadyPace (the latter two optionally support a limit price).
+      description: |-
+        Places a new order. There are several types of orders available - Market, Limit, TWAP, SteadyPace, and Stop (the latter three optionally support a limit price).
         Orders can be funded by your account balance or on margin.
         - When an order with funding type "funded" is placed, funds will be reserved from your Go account for the amount of the order. You must have sufficient available balance in your Go account to place a funded order.
         - When an order with funding type "margin" is placed, funds will be reserved from your Margin Trade Account. You must have sufficient available margin (NOP limit) to place a margin order.
-        See our [Trade Guide](/docs/trade-overview) for more details on each order type and funding options. 
+        - Stop orders require a `triggerPrice`. When the market reaches the trigger price, the order is activated. A stop order without a `limitPrice` executes as a market order (stop-market). A stop order with a `limitPrice` places a limit order at the specified price (stop-limit).
+        See our [Trade Guide](/docs/trade-overview) for more details on each order type and funding options.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.orders.add
       tags:
         - Orders
@@ -27105,6 +27120,12 @@ paths:
                     error: backend:trade:marginInsufficientCollateral
                     errorName: backend:trade:marginInsufficientCollateral
                     reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidStopTriggerPrice:
+                  summary: Stop-limit trigger price is on the wrong side of the limit price (buy requires triggerPrice <= limitPrice, sell requires triggerPrice >= limitPrice)
+                  value:
+                    error: backend:trade:invalidStopTriggerPrice key=triggerPrice
+                    errorName: backend:trade:invalidStopTriggerPrice
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
         '401':
           $ref: '#/components/responses/UnauthorizedError1'
         '403':
@@ -27131,7 +27152,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/orders/{orderId}:
     get:
       summary: Get Order
-      description: Get an order by order ID.
+      description: |-
+        Get an order by order ID.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.orders.order
       tags:
         - Orders
@@ -27188,9 +27212,11 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/orders/{orderId}/cancel:
     put:
       summary: Cancel Order
-      description: |
+      description: |-
         Submits a request to cancel a previously placed order. The successful response confirms the request submission only, not the final order cancellation.
         Use the Get Order endpoint or the orders websocket to confirm the final order status.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.orders.order.cancel
       tags:
         - Orders
@@ -27252,7 +27278,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/trades:
     get:
       summary: List Trades
-      description: Lists trades from the trading account. This will include trades that have not yet settled.
+      description: |-
+        Lists trades from the trading account. This will include trades that have not yet settled.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.trades
       tags:
         - Orders
@@ -27360,7 +27389,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/trades/{tradeId}:
     get:
       summary: Get Trade
-      description: Get the details of a single trade by trade id.
+      description: |-
+        Get the details of a single trade by trade id.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.trades.trade
       tags:
         - Orders
@@ -27416,7 +27448,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/currencies:
     get:
       summary: List Currencies
-      description: Gets a list of all available currencies.
+      description: |-
+        Gets a list of all available currencies.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.currencies
       tags:
         - Products
@@ -27443,7 +27478,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/products:
     get:
       summary: List Products
-      description: Gets a list of all available products.
+      description: |-
+        Gets a list of all available products.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.products
       tags:
         - Products
@@ -27470,7 +27508,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/products/{product}/level1:
     get:
       summary: Get Level1 Order Book
-      description: Gets a snapshot of the level1 order book for product
+      description: |-
+        Gets a snapshot of the level1 order book for product.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.products.product.level1
       tags:
         - Order Book
@@ -27597,6 +27638,12 @@ paths:
                     description: Returns a Currency object that consists of the ID, Name, Symbol, Increment, and PlatformSymbol for the instrument
                     items:
                       $ref: '#/components/schemas/Currency'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/transferred:
     get:
       summary: List transferred collateral
@@ -27643,6 +27690,12 @@ paths:
                       balanceValue:
                         quantity: '1000000'
                         currency: USD
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/risksettings:
     get:
       summary: Get margin risk settings
@@ -27695,6 +27748,12 @@ paths:
                   minimumTransferredCollateral:
                     quantity: '50000'
                     currency: USD
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositions:
     get:
       summary: Get net open margin positions
@@ -27724,6 +27783,12 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MarginNetOpenPosition'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositions/snapshot:
     get:
       summary: Get net open positions snapshot
@@ -27768,6 +27833,31 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarginGetNetOpenPositionsSnapshotResponse'
+        '400':
+          description: Bad request - Invalid or missing query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidTransactionDateLt:
+                  summary: transactionDateLt is missing or not a valid RFC3339 timestamp
+                  value:
+                    error: backend:common:invalidArgument key=transactionDateLt
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidUseFutureTransfers:
+                  summary: useFutureTransfers is not a valid boolean
+                  value:
+                    error: backend:common:invalidArgument key=useFutureTransfers
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/activity:
     get:
       summary: Get positions activity
@@ -27843,6 +27933,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/MarginGetPositionsActivityResponse'
+        '400':
+          description: Bad request - Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidType:
+                  summary: Invalid activity type value
+                  value:
+                    error: backend:common:invalidArgument key=type
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidDate:
+                  summary: Date parameter is not a valid RFC3339 timestamp
+                  value:
+                    error: backend:common:invalidArgument key=transactionDateGte
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidLimit:
+                  summary: Limit is not a valid non-negative integer
+                  value:
+                    error: backend:common:invalidArgument key=limit
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositionlimits:
     get:
       summary: Get net open margin position limits
@@ -27864,6 +27985,12 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/MarginNetOpenPositionLimit'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/riskprofile:
     get:
       summary: Get margin risk profile
@@ -27940,6 +28067,12 @@ paths:
                       quantity: '600000'
                       currency: USD
                     marginUtilizationPercentage: '0.85'
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/transfer:
     post:
       summary: Transfer collateral for margin
@@ -27997,6 +28130,41 @@ paths:
                   balanceValue:
                     quantity: '1000000'
                     currency: USD
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidCurrency:
+                  summary: Currency not supported for collateral
+                  value:
+                    error: currency not supported
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidQuantity:
+                  summary: Invalid quantity format
+                  value:
+                    error: invalid quantity
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                insufficientFunds:
+                  summary: Insufficient balance in trust account to transfer collateral
+                  value:
+                    error: backend:trade:insufficientFunds
+                    errorName: backend:trade:insufficientFunds
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/transfer:
     post:
       summary: Transfer margin position
@@ -28063,6 +28231,41 @@ paths:
                       balanceValue:
                         quantity: '1000000'
                         currency: USD
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidCurrency:
+                  summary: Currency not supported
+                  value:
+                    error: currency not supported
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidQuantity:
+                  summary: Quantity is not a positive decimal
+                  value:
+                    error: invalid quantity
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                insufficientFunds:
+                  summary: Insufficient balance in trust account to cover the position
+                  value:
+                    error: backend:trade:insufficientFunds
+                    errorName: backend:trade:insufficientFunds
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/cover:
     post:
       summary: Cover all short margin positions
@@ -28124,6 +28327,35 @@ paths:
                       balanceValue:
                         quantity: '1000000'
                         currency: USD
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidArgument:
+                  summary: Must provide currencies list or all=true
+                  value:
+                    error: backend:common:invalidArgument key=currencies
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidCurrency:
+                  summary: A currency in the list is not supported
+                  value:
+                    error: currency not supported
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close:
     post:
       summary: Close all margin positions
@@ -28161,6 +28393,48 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClosePositionRequestResponse'
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidArgument:
+                  summary: Must provide currencies list or all=true
+                  value:
+                    error: backend:common:invalidArgument key=currencies
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                noPositionsToClose:
+                  summary: No open positions exist to close for specified currencies
+                  value:
+                    error: no positions to close
+                    errorName: backend:common:invalidRequest
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '409':
+          description: Conflict - A pending close position request already exists for this account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                inUse:
+                  summary: Pending close position order already exists
+                  value:
+                    error: pending close position order already exists
+                    errorName: backend:common:inUse
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests:
     get:
       summary: List close position requests
@@ -28222,12 +28496,37 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClosePositionRequestsResponse'
-        default:
-          description: unexpected error
+        '400':
+          description: Bad request - Invalid query parameters
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error1'
+              examples:
+                invalidStatus:
+                  summary: Invalid status filter value
+                  value:
+                    error: backend:common:invalidArgument key=status
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidDate:
+                  summary: Date parameter is not a valid RFC3339 timestamp
+                  value:
+                    error: backend:common:invalidArgument key=dateGte
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidLimit:
+                  summary: Limit is not a valid non-negative integer
+                  value:
+                    error: backend:common:invalidArgument key=limit
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests/{closePositionRequestID}:
     get:
       summary: Get close position request details
@@ -28251,6 +28550,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClosePositionRequestResponse'
+        '400':
+          description: Bad request - Invalid path parameter format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidArgument:
+                  summary: Malformed UUID for closePositionRequestID
+                  value:
+                    error: backend:common:invalidArgument key=closePositionRequestID
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '404':
+          description: Not Found - Close position request does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                notFound:
+                  summary: Close position request not found
+                  value:
+                    error: backend:common:notFound key=closePositionRequestID
+                    errorName: backend:common:notFound
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests/{closePositionRequestID}/orders:
     get:
       summary: List orders for close position request
@@ -28269,11 +28600,30 @@ paths:
             format: uuid
       responses:
         '200':
-          description: List of orders associated with the close position request
+          description: Returns orders associated with the close position request. Returns an empty array if no orders exist yet — this endpoint does not validate that the close-position request itself exists. Use GET .../close/requests/{closePositionRequestID} to confirm the request exists.
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/ClosePositionRequestOrdersResponse'
+        '400':
+          description: Bad request - Invalid path parameter format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidArgument:
+                  summary: Malformed UUID for closePositionRequestID
+                  value:
+                    error: backend:common:invalidArgument key=closePositionRequestID
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests:
     post:
       summary: Create collateral withdrawal request
@@ -28310,6 +28660,54 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollateralWithdrawalRequestResponse'
+        '400':
+          description: Bad request - Invalid parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidCurrency:
+                  summary: Currency not supported for collateral withdrawal
+                  value:
+                    error: currency not supported
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                invalidQuantity:
+                  summary: Invalid quantity format
+                  value:
+                    error: invalid quantity
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                insufficientFunds:
+                  summary: Withdrawal amount exceeds available collateral balance
+                  value:
+                    error: insufficient collateral balance
+                    errorName: backend:trade:insufficientFunds
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '409':
+          description: Conflict - A pending withdrawal request already exists for this currency
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                inUse:
+                  summary: Pending collateral withdrawal request already exists for this currency
+                  value:
+                    error: backend:common:inUse key=Currency
+                    errorName: backend:common:inUse
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
     get:
       summary: List collateral withdrawal requests
       description: List all collateral withdrawal requests for an account.
@@ -28340,6 +28738,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollateralWithdrawalRequestsResponse'
+        '400':
+          description: Bad request - Invalid query parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidStatus:
+                  summary: Invalid status filter value
+                  value:
+                    error: backend:common:invalidArgument key=status
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests/{requestID}:
     get:
       summary: Get collateral withdrawal request
@@ -28363,6 +28780,38 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollateralWithdrawalRequestResponse'
+        '400':
+          description: Bad request - Invalid path parameter format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidParameters:
+                  summary: Malformed UUID for requestID
+                  value:
+                    error: 'invalid UUID length: 10'
+                    errorName: backend:externalAPI:invalidParameters
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '404':
+          description: Not Found - Collateral withdrawal request does not exist
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                notFound:
+                  summary: Collateral withdrawal request not found
+                  value:
+                    error: backend:common:notFound key=requestID
+                    errorName: backend:common:notFound
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests/{requestID}/cancel:
     patch:
       summary: Cancel collateral withdrawal request
@@ -28386,6 +28835,25 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CollateralWithdrawalRequestResponse'
+        '400':
+          description: Bad request - Invalid path parameter format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidParameters:
+                  summary: Malformed UUID for requestID
+                  value:
+                    error: 'invalid UUID length: 10'
+                    errorName: backend:externalAPI:invalidParameters
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/staking/v1/{coin}/wallets/{walletId}/requests/{stakingRequestId}:
     delete:
       tags:
@@ -70659,6 +71127,7 @@ components:
         - $ref: '#/components/schemas/NewLimitOrderRequest'
         - $ref: '#/components/schemas/NewTWAPOrderRequest'
         - $ref: '#/components/schemas/NewSteadyPaceOrderRequest'
+        - $ref: '#/components/schemas/NewStopOrderRequest'
     NewSteadyPaceOrderRequest:
       title: Steady Pace
       required:
@@ -70710,6 +71179,60 @@ components:
           intervalUnit: minute
           subOrderSize: '20000'
           variance: 0.02
+    NewStopOrderRequest:
+      title: Stop
+      required:
+        - product
+        - quantity
+        - quantityCurrency
+        - side
+        - type
+        - triggerPrice
+      type: object
+      properties:
+        clientOrderId:
+          $ref: '#/components/schemas/ClientOrderId'
+        product:
+          type: string
+          description: Product name e.g. BTC-USD
+        type:
+          type: string
+          description: Must be set to "stop" to place a stop order
+        fundingType:
+          $ref: '#/components/schemas/FundingType'
+        side:
+          $ref: '#/components/schemas/Side'
+        quantity:
+          type: string
+          format: decimal
+          description: The quantity of the `quantityCurrency` to buy or sell.
+        quantityCurrency:
+          type: string
+          description: |
+            The quantity currency:
+            - Must be in base currency for sell orders.
+            - Can be in base or quote currency for buy orders.
+            e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
+        triggerPrice:
+          $ref: '#/components/schemas/TriggerPrice'
+        limitPrice:
+          $ref: '#/components/schemas/LimitPrice'
+        timeInForce:
+          type: string
+          enum:
+            - GTC
+          description: |
+            Time in force policy for the order. Only GTC (Good Till Cancelled) is supported for stop orders.
+            If not specified, defaults to GTC.
+      example:
+        clientOrderId: mystoporder1
+        type: stop
+        product: BTC-USD
+        side: sell
+        quantity: '0.5'
+        quantityCurrency: BTC
+        triggerPrice: '48000'
+        limitPrice: '47500'
     NewTWAPOrderRequest:
       title: TWAP
       required:
@@ -71538,6 +72061,8 @@ components:
           description: The average price for the order's trades.
         limitPrice:
           $ref: '#/components/schemas/LimitPrice'
+        triggerPrice:
+          $ref: '#/components/schemas/TriggerPrice'
         duration:
           type: integer
           description: Duration of the order in minutes.
@@ -71583,6 +72108,7 @@ components:
         leavesQuoteQuantity: '0'
         averagePrice: '40697.32'
         limitPrice: null
+        triggerPrice: null
         duration: null
         twapInterval: null
         rtId: null
@@ -71993,6 +72519,7 @@ components:
         - twap
         - limit
         - steady_pace
+        - stop
       description: The type of order to be placed. See our [Trade Guide](/docs/trade-overview) for more details on each order type.
     OrderTypeSummary:
       title: OrderTypeSummary
@@ -87258,6 +87785,15 @@ components:
       required:
         - transfers
         - coin
+    TriggerPrice:
+      type: string
+      format: decimal
+      description: |
+        The trigger price for stop orders. When the market reaches this price, the stop order is activated.
+        - For buy stop-limit orders, `triggerPrice` must be less than or equal to `limitPrice`.
+        - For sell stop-limit orders, `triggerPrice` must be greater than or equal to `limitPrice`.
+        - It always refers to the quote currency.
+      example: '50000.00'
     TrimmedBalance:
       title: TrimmedBalance
       type: object
