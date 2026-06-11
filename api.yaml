@@ -49350,6 +49350,12 @@ components:
             error: Staking license not added for enterprise
             errorName: AccessDenied
             reqId: some-id
+    ForbiddenError3:
+      description: Forbidden - Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/WsError'
     InternalServerError:
       description: Server Error - Transient error please try again
       content:
@@ -98204,6 +98210,19 @@ components:
         strategies:
           type: string
         shares:
+          type: string
+    WsError:
+      type: object
+      required:
+        - error
+        - errorName
+        - reqId
+      properties:
+        error:
+          type: string
+        errorName:
+          type: string
+        reqId:
           type: string
     XRPAddress:
       title: XRP Address
