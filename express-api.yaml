@@ -2166,36 +2166,6 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
-  /api/v2/{coin}/wallet/{walletId}/signermacaroon:
-    post:
-      tags:
-        - Express
-      summary: Lightning - Create signer macaroon
-      operationId: express.lightning.signerMacaroon
-      description: This is only used for self-custody lightning. Create the signer macaroon for the watch-only Lightning Network Daemon (LND) node. This macaroon derives from the signer node admin macaroon and is used by the watch-only node to request signatures from the signer node for operational tasks. Returns the updated wallet with the encrypted signer macaroon in the `coinSpecific` response field.
-      parameters:
-        - $ref: '#/components/parameters/pathLightningCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExpressGenerateSignerMacaroonRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ExpressGenerateWalletResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/unlockwallet:
     post:
       tags:
@@ -2316,6 +2286,65 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/{coin}/wallet/{walletId}/signermacaroon:
+    post:
+      summary: Lightning - Create signer macaroon
+      description: |-
+        This is only used for self-custody lightning. Create the signer macaroon for the watch-only
+        Lightning Network Daemon (LND) node. This macaroon derives from the signer node admin macaroon
+        and is used by the watch-only node to request signatures from the signer node for operational
+        tasks. Returns the updated wallet with the encrypted signer macaroon in the `coinSpecific`
+        response field.
+      operationId: express.lightning.signerMacaroon
+      tags:
+        - Express
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A lightning coin name
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+            example: lnbtc
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body for creating a signer macaroon via Express.
+              properties:
+                passphrase:
+                  type: string
+                  description: Passphrase to decrypt the admin macaroon of the signer node.
+                addIpCaveatToMacaroon:
+                  type: boolean
+                  description: If true, adds an IP caveat to the generated signer macaroon.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExpressGenerateWalletResponse1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/{coin}/wallet/generate:
     post:
       summary: Generate wallet
@@ -3380,6 +3409,21 @@ components:
         - policyRuleId
         - settlementId
         - crossChainRecoveryId
+    PlatformError:
+      title: Api Error
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              description: Error code
+            context:
+              type: object
+              additionalProperties: {}
+              description: Properties that apply to a specific error name
+          required:
+            - context
+        - $ref: '#/components/schemas/PlatformErrorNoName'
     PlatformError3:
       title: API error
       allOf:
@@ -3393,6 +3437,19 @@ components:
               description: Error code
           required:
             - name
+    PlatformErrorNoName:
+      title: PlatformErrorNoName
+      type: object
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+        requestId:
+          type: string
+          description: Client request id
+      required:
+        - error
+        - requestId
     PlatformErrorNoName3:
       type: object
       properties:
@@ -6044,15 +6101,6 @@ components:
           description: address to use for generated outputs. Must be wallet address.
         txFormat:
           $ref: '#/components/schemas/UtxoTransactionFormat'
-    ExpressGenerateSignerMacaroonRequest:
-      type: object
-      properties:
-        passphrase:
-          type: string
-          description: Passphrase to decrypt the admin macaroon of the signer node.
-        addIpCaveatToMacaroon:
-          type: boolean
-          description: If true, adds an IP caveat to the generated signer macaroon.
     ExpressGenerateWalletBackupKeychain:
       title: ExpressGenerateWalletBackupKeychain
       type: object
@@ -7992,6 +8040,23 @@ components:
         - closeAssociatedTokenAccount
         - delegateResource
         - undelegateResource
+    InvalidId:
+      title: InvalidId
+      allOf:
+        - type: object
+          properties:
+            context:
+              type: object
+              properties:
+                id:
+                  type: string
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+              required:
+                - id
+          required:
+            - context
+        - $ref: '#/components/schemas/PlatformErrorNoName'
     InvalidId1:
       allOf:
         - $ref: '#/components/schemas/PlatformErrorNoName3'
@@ -8015,6 +8080,18 @@ components:
                 - InvalidWalletId
           required:
             - name
+    InvalidWalletId1:
+      title: Invalid Wallet ID
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+              enum:
+                - InvalidWalletId
+          required:
+            - name
+        - $ref: '#/components/schemas/InvalidId'
     KeyShareSource:
       type: string
       enum:
