@@ -26942,6 +26942,8 @@ paths:
         - When an order with funding type "funded" is placed, funds will be reserved from your Go account for the amount of the order. You must have sufficient available balance in your Go account to place a funded order.
         - When an order with funding type "margin" is placed, funds will be reserved from your Margin Trade Account. You must have sufficient available margin (NOP limit) to place a margin order.
         - Stop orders require a `triggerPrice`. When the market reaches the trigger price, the order is activated. A stop order without a `limitPrice` executes as a market order (stop-market). A stop order with a `limitPrice` places a limit order at the specified price (stop-limit).
+        - Buy orders can be placed in either base or quote currency. A buy in base currency specifies an exact quantity to purchase (e.g., "buy 1 BTC"), while a buy in quote currency specifies a total spend amount (e.g., "buy $10,000 of BTC"). Similarly, sell orders can be placed in either base or quote currency.
+        - When no `limitPrice` is provided on a base-buy or quote-sell order, the system automatically computes a protective marketable limit price derived from the current reference price. This prevents orders from executing at an unexpectedly unfavorable price. For market (Sweep) orders, the computed limit is valid for a short window to avoid leaving orders open indefinitely if the market moves away.
         See our [Trade Guide](/docs/trade-overview) for more details on each order type and funding options.
 
         **Requires access token scope:** `trade_trade`
@@ -71080,10 +71082,12 @@ components:
         quantityCurrency:
           type: string
           description: |
-            The quantity currency:
-            - Must be in base currency for sell orders.
-            - Can be in base or quote currency for for buy orders
-            e.g. If product is `BTC-USD`, the base currency will be BTC and the quote currency will be `USD`.
+            The quantity currency. Can be in base or quote currency for both buy and sell orders.
+            - Buy orders in base currency specify an exact quantity to purchase.
+            - Buy orders in quote currency specify a total spend amount.
+            - Sell orders in base currency specify an exact quantity to sell.
+            - Sell orders in quote currency specify a target proceeds amount.
+            e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
         limitPrice:
           $ref: '#/components/schemas/LimitPrice'
         duration:
@@ -71129,10 +71133,11 @@ components:
         quantityCurrency:
           type: string
           description: |
-            The quantity currency for the order:
-            - Must be in base currency for sell orders.
-            - Must be in quote currency for buy orders with `fundingType: funded` (default funding type).
-            - Can be in base or quote currency for for buy orders with `fundingType: margin`.
+            The quantity currency for the order. Can be in base or quote currency for both buy and sell orders.
+            - Buy orders in quote currency specify a total spend amount (e.g., "buy $10,000 of BTC").
+            - Buy orders in base currency specify an exact quantity to purchase (e.g., "buy 1 BTC"). When no `limitPrice` is provided, a protective marketable limit is computed automatically.
+            - Sell orders in base currency specify an exact quantity to sell (e.g., "sell 0.5 BTC").
+            - Sell orders in quote currency specify a target proceeds amount (e.g., "sell $500 of BTC"). When no `limitPrice` is provided, a protective marketable limit is computed automatically.
             e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
       example:
         clientOrderId: myorder1
@@ -71176,9 +71181,11 @@ components:
         quantityCurrency:
           type: string
           description: |
-            The quantity currency:
-            - Must be in base currency for sell orders.
-            - Must be in quote currency or if a `limitPrice` is set it must be in base currency for buy orders.
+            The quantity currency. Can be in base or quote currency for both buy and sell orders.
+            - Buy orders in base currency specify an exact quantity to purchase. When no `limitPrice` is provided, a protective marketable limit is computed automatically.
+            - Buy orders in quote currency specify a total spend amount.
+            - Sell orders in base currency specify an exact quantity to sell.
+            - Sell orders in quote currency specify a target proceeds amount. When no `limitPrice` is provided, a protective marketable limit is computed automatically.
             e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
         limitPrice:
           $ref: '#/components/schemas/LimitPrice'
@@ -71229,9 +71236,11 @@ components:
         quantityCurrency:
           type: string
           description: |
-            The quantity currency:
-            - Must be in base currency for sell orders.
-            - Can be in base or quote currency for buy orders.
+            The quantity currency. Can be in base or quote currency for both buy and sell orders.
+            - Buy orders in base currency specify an exact quantity to purchase.
+            - Buy orders in quote currency specify a total spend amount.
+            - Sell orders in base currency specify an exact quantity to sell.
+            - Sell orders in quote currency specify a target proceeds amount.
             e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
         triggerPrice:
           $ref: '#/components/schemas/TriggerPrice'
@@ -71282,9 +71291,11 @@ components:
         quantityCurrency:
           type: string
           description: |
-            The quantity currency:
-            - Must be in base currency for sell orders.
-            - Must be in quote currency or if a `limitPrice` is set it must be in base currency for buy orders.
+            The quantity currency. Can be in base or quote currency for both buy and sell orders.
+            - Buy orders in base currency specify an exact quantity to purchase. When no `limitPrice` is provided, a protective marketable limit is computed automatically.
+            - Buy orders in quote currency specify a total spend amount.
+            - Sell orders in base currency specify an exact quantity to sell.
+            - Sell orders in quote currency specify a target proceeds amount. When no `limitPrice` is provided, a protective marketable limit is computed automatically.
             e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
         limitPrice:
           $ref: '#/components/schemas/LimitPrice'
