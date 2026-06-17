@@ -7,3 +7,10 @@ updates:
     # Wait 7 days after a version is released before updating
     cooldown:
       default-days: 7
+    ignore:
+      # BitGo-owned actions are pinned to major versions only,
+      # so ignore patch and minor updates to reduce toil.
+      - dependency-name: "BitGo/*"
+        update-types:
+          - "version-update:semver-patch"
+          - "version-update:semver-minor"
