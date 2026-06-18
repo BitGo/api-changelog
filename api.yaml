@@ -60019,7 +60019,7 @@ components:
         - AVAXP
         - AVAXC
         - ETH
-        - ETH_P2P
+        - ETH_SSV
         - NEAR
         - SOL
         - DOT
@@ -63258,7 +63258,6 @@ components:
                 - ETH_STAKE
                 - ETH_STAKE_PECTRA
                 - ETH_STAKE_SSV
-                - ETH_STAKE_P2P
                 - LIDO
     EthStakingRequestPOSTBody:
       title: ETH stake
@@ -66816,6 +66815,28 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
+    HbarSwitchValidatorRequestEntityProperties:
+      title: HBAR switch validator staking request entity properties
+      allOf:
+        - $ref: '#/components/schemas/SwitchValidatorRequestEntityProperties'
+        - type: object
+          properties:
+            nodeId:
+              type: integer
+              format: int64
+              description: The destination node ID to switch staking to.
+            walletBalance:
+              allOf:
+                - $ref: '#/components/schemas/IntegerString'
+              description: The wallet balance at the time of the switch request.
+              nullable: true
+            srcNodeId:
+              type: integer
+              format: int64
+              description: The source node ID being switched from.
+              nullable: true
+          required:
+            - nodeId
     HbarUpdateAccountIntent:
       title: HBAR Update Account Intent
       allOf:
@@ -71346,9 +71367,22 @@ components:
           $ref: '#/components/schemas/LimitPrice'
         duration:
           type: integer
-          description: Duration of the limit order in minutes. For orders that are good till cancelled, skip duration and use timeInForce=GTC.
+          description: |
+            Duration of the limit order in minutes. When set, the order uses GTD (Good Till Date) time in force
+            and expires after the specified duration. Cannot be combined with timeInForce=GTC.
+            For orders that are good till cancelled, omit duration and use timeInForce=GTC.
         timeInForce:
-          $ref: '#/components/schemas/TimeInForce'
+          type: string
+          enum:
+            - GTC
+            - IOC
+            - FOK
+            - GTD
+          description: |
+            Time in force policy for limit orders. Supported values: GTC, IOC, FOK, GTD.
+            If not specified, defaults to GTC.
+            When `duration` is provided, the order automatically uses GTD regardless of this field.
+            GTD requires `duration` to be set. GTC cannot be combined with `duration`.
       example:
         clientOrderId: myorder1
         type: limit
@@ -71393,6 +71427,14 @@ components:
             - Sell orders in base currency specify an exact quantity to sell (e.g., "sell 0.5 BTC").
             - Sell orders in quote currency specify a target proceeds amount (e.g., "sell $500 of BTC"). When no `limitPrice` is provided, a protective marketable limit is computed automatically.
             e.g. If product is `BTC-USD`, the base currency will be `BTC` and the quote currency will be `USD`.
+        timeInForce:
+          type: string
+          enum:
+            - IOC
+            - FOK
+          description: |
+            Time in force policy for market orders. Only IOC and FOK are supported.
+            If not specified, defaults to IOC.
       example:
         clientOrderId: myorder1
         type: market
@@ -71505,7 +71547,7 @@ components:
           enum:
             - GTC
           description: |
-            Time in force policy for the order. Only GTC (Good Till Cancelled) is supported for stop orders.
+            Time in force policy for stop orders. Only GTC (Good Till Cancelled) is supported.
             If not specified, defaults to GTC.
       example:
         clientOrderId: mystoporder1
@@ -79022,6 +79064,17 @@ components:
           required:
             - validator
       type: object
+    SeiEvmSwitchValidatorRequestEntityProperties:
+      title: SEIEVM switch validator staking request entity properties
+      allOf:
+        - $ref: '#/components/schemas/SwitchValidatorRequestEntityProperties'
+        - type: object
+          properties:
+            amountInMicro:
+              type: string
+              description: Amount in MICRO (6 decimals) for smart contract calls.
+          required:
+            - amountInMicro
     SeiEvmSwitchValidatorsRequestPOSTBody:
       title: SEIEVM switch validator
       description: |
@@ -82114,6 +82167,8 @@ components:
             - $ref: '#/components/schemas/VetStakingRequestEntityProperties'
             - $ref: '#/components/schemas/WflrClaimRewardsRequestEntityProperties'
             - $ref: '#/components/schemas/StoryStakingRequestEntityProperties'
+            - $ref: '#/components/schemas/SeiEvmSwitchValidatorRequestEntityProperties'
+            - $ref: '#/components/schemas/HbarSwitchValidatorRequestEntityProperties'
       required:
         - id
         - requestingUserId
@@ -82185,7 +82240,6 @@ components:
         - ETH_CLAIM_REWARDS
         - ETH_UNSTAKE
         - ETH_STAKE_SSV
-        - ETH_STAKE_P2P
         - NEAR_STAKE
         - SOL_STAKE
         - SOL_UNSTAKE
@@ -83783,6 +83837,14 @@ components:
         stakedSuiObjectId:
           type: string
           nullable: true
+        srcValidatorAddress:
+          type: string
+          description: The source validator address being switched from.
+          nullable: true
+        destValidatorAddress:
+          type: string
+          description: The destination validator address being switched to.
+          nullable: true
     SuiSwitchTransactionProperties:
       title: SUI Switch Transaction Properties
       allOf:
@@ -83903,6 +83965,14 @@ components:
             delegationId:
               type: string
               description: The delegation ID associated with this switch request.
+              nullable: true
+            srcValidatorAddress:
+              type: string
+              description: The source validator address being switched from.
+              nullable: true
+            destValidatorAddress:
+              type: string
+              description: The destination validator address being switched to.
               nullable: true
     SwitchValidatorSpendableAttributes:
       allOf:
@@ -84456,10 +84526,14 @@ components:
       enum:
         - GTC
         - IOC
+        - FOK
+        - GTD
       description: |
         Time in force policy for the order.
         - GTC (Good Till Cancelled): Order remains active until filled or cancelled.
-        - IOC (Immediate or Cancel): Order must be filled immediately, any unfilled portion is cancelled.
+        - IOC (Immediate or Cancel): Order fills as much as possible immediately, any unfilled remainder is cancelled.
+        - FOK (Fill or Kill): The entire order must be filled immediately or it is cancelled completely. Unlike IOC, no partial fills are accepted.
+        - GTD (Good Till Date): Order remains active until filled, cancelled, or the specified duration expires. Requires `duration` to be set.
     TimeRange:
       type: string
       description: The time range for the data, either hourly or daily.
