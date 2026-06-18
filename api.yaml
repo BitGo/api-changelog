@@ -36582,6 +36582,36 @@ paths:
             example: abc@email.com
             minLength: 1
             pattern: ^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$
+        - name: kycState
+          description: 'Filter by one or more KYC states. Repeatable: ?kycState=approved&kycState=pending'
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - unverified
+                - approved
+                - rejected
+                - pending
+              description: 'Filter by one or more KYC states. Repeatable: ?kycState=approved&kycState=pending'
+        - name: accountType
+          description: Filter by account type (individual or entity).
+          in: query
+          schema:
+            type: string
+            enum:
+              - individual
+              - entity
+        - name: businessModel
+          description: Filter by business model (e.g. cryptoAsAServiceChild).
+          in: query
+          schema:
+            type: string
+            enum:
+              - bitgoAsAService
+              - cryptoAsAServiceParent
+              - cryptoAsAServiceChild
         - name: organizationId
           in: path
           required: true
@@ -36946,6 +36976,53 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '409':
           description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/organization/{organizationId}/enterprises/summary:
+    get:
+      summary: Get enterprise summary for an organization
+      description: Returns counts of CaaS child enterprises grouped by KYC state and account type.
+      operationId: v2.organization.enterprises.summary
+      tags:
+        - Enterprise Management
+      x-internal: false
+      parameters:
+        - name: organizationId
+          description: The organization ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/OrganizationIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterprisesSummaryResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -39641,6 +39718,14 @@ paths:
           in: query
           schema:
             type: string
+        - name: sort
+          description: Sort order for results. `ASC` (default) returns oldest-first; `DESC` returns newest-first
+          in: query
+          schema:
+            type: string
+            enum:
+              - ASC
+              - DESC
       responses:
         '200':
           description: OK
@@ -57104,6 +57189,56 @@ components:
             - operatorId
             - updateId
         - $ref: '#/components/schemas/BaseIntent'
+    CantonEndInvestorOnboardingAcceptIntent:
+      title: Canton End Investor Onboarding Accept Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonEndInvestorOnboardingAccept
+            txRequestId:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonEndInvestorOnboardingOfferIntent:
+      title: Canton End Investor Onboarding Offer Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonEndInvestorOnboardingOffer
+            endInvestorPartyId:
+              type: string
+            comment:
+              type: string
+          required:
+            - intentType
+            - endInvestorPartyId
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonEndInvestorOnboardingRejectIntent:
+      title: Canton End Investor Onboarding Reject Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonEndInvestorOnboardingReject
+            txRequestId:
+              type: string
+            reason:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+            - reason
+        - $ref: '#/components/schemas/BaseIntent'
     CantonPaymentIntent:
       title: CANTON Payment Intent
       allOf:
@@ -62344,6 +62479,33 @@ components:
               - $ref: '#/components/schemas/EnterpriseStub'
       required:
         - enterprises
+    EnterprisesSummaryResponse:
+      title: EnterprisesSummaryResponse
+      type: object
+      properties:
+        totalCount:
+          type: number
+          description: Total number of CaaS child enterprises in the organization.
+          minimum: 0
+        byKycState:
+          allOf:
+            - $ref: '#/components/schemas/KycStateCounts'
+          description: Enterprise counts grouped by KYC state.
+        byAccountTypeAndKycState:
+          type: object
+          description: Enterprise counts grouped by account type and KYC state.
+          properties:
+            individual:
+              $ref: '#/components/schemas/KycStateCounts'
+            entity:
+              $ref: '#/components/schemas/KycStateCounts'
+          required:
+            - individual
+            - entity
+      required:
+        - totalCount
+        - byKycState
+        - byAccountTypeAndKycState
     EntryFunctionABI:
       title: EntryFunctionABI
       type: object
@@ -63696,7 +63858,7 @@ components:
           description: |
             The gas tank (fee) address associated with the enterprise.
     FeeAddressTransferIntent:
-      title: FeeAddressTransferIntent
+      title: Fee Address Transfer Intent
       allOf:
         - type: object
           properties:
@@ -67638,6 +67800,9 @@ components:
         - allocationRequest
         - cantonCommand
         - allocationAllocate
+        - cantonEndInvestorOnboardingOffer
+        - cantonEndInvestorOnboardingAccept
+        - cantonEndInvestorOnboardingReject
         - defi-deposit
         - defi-redeem
         - defi-approve
@@ -68063,6 +68228,43 @@ components:
           required:
             - name
         - $ref: '#/components/schemas/InvalidId'
+    IotaBuildOptions:
+      title: IOTA Build Options
+      allOf:
+        - type: object
+          properties:
+            feeOptions:
+              $ref: '#/components/schemas/IotaFeeOptions'
+            lockedAmount:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - feeOptions
+            - lockedAmount
+        - $ref: '#/components/schemas/BaseIntent'
+    IotaConsolidateIntent:
+      title: IOTA Consolidate Intent
+      allOf:
+        - $ref: '#/components/schemas/AccountBaseConsolidateIntent'
+        - $ref: '#/components/schemas/IotaBuildOptions'
+    IotaFeeOptions:
+      title: IOTA Fee Options
+      type: object
+      properties:
+        gasLimit:
+          type: number
+      required:
+        - gasLimit
+    IotaPaymentIntent:
+      title: IOTA Payment Intent
+      allOf:
+        - type: object
+          properties:
+            unspents:
+              $ref: '#/components/schemas/optionalStringArray'
+          required:
+            - unspents
+        - $ref: '#/components/schemas/PaymentIntent'
+        - $ref: '#/components/schemas/IotaBuildOptions'
     Ip:
       type: string
       format: ipv4
@@ -68584,6 +68786,24 @@ components:
         - inreview
         - flagged
         - flagged_retry_allowed
+    KycStateCounts:
+      title: KycStateCounts
+      type: object
+      description: Count of enterprises per enterprise KYC state. All known states are present; absent states default to 0.
+      properties:
+        unverified:
+          type: number
+        approved:
+          type: number
+        rejected:
+          type: number
+        pending:
+          type: number
+      required:
+        - unverified
+        - approved
+        - rejected
+        - pending
     LegalIdentifiers:
       title: LegalIdentifiers
       type: object
@@ -72935,6 +73155,7 @@ components:
               - enableMobileDownloadBanner
               - enableTrxMpc
               - enterpriseLogoUpload
+              - cantonByov
         distributedCustody:
           nullable: true
           allOf:
@@ -85279,6 +85500,9 @@ components:
         - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
         - $ref: '#/components/schemas/CantonTransferOfferWithdrawnIntent'
         - $ref: '#/components/schemas/CantonTransferRejectIntent'
+        - $ref: '#/components/schemas/CantonEndInvestorOnboardingOfferIntent'
+        - $ref: '#/components/schemas/CantonEndInvestorOnboardingAcceptIntent'
+        - $ref: '#/components/schemas/CantonEndInvestorOnboardingRejectIntent'
         - $ref: '#/components/schemas/ClaimIntent'
         - $ref: '#/components/schemas/CosmosContractCallIntent'
         - $ref: '#/components/schemas/CosmosPaymentIntent'
@@ -85311,6 +85535,8 @@ components:
         - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
         - $ref: '#/components/schemas/HypeevmEnableBridgingIntent'
         - $ref: '#/components/schemas/IcpPaymentIntent'
+        - $ref: '#/components/schemas/IotaConsolidateIntent'
+        - $ref: '#/components/schemas/IotaPaymentIntent'
         - $ref: '#/components/schemas/LightningPaymentIntent'
         - $ref: '#/components/schemas/MmiSignMessageIntent'
         - $ref: '#/components/schemas/MmiSignTransactionIntent'
