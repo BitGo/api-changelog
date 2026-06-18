@@ -10307,6 +10307,11 @@ paths:
             type: string
             minLength: 1
             maxLength: 255
+        - name: forUserId
+          in: query
+          description: Narrows results to documents created for the given BitGo public user ID; always scoped to the authenticated user
+          schema:
+            $ref: '#/components/schemas/ForUserId'
         - name: limit
           in: query
           description: 'Maximum number of documents to return (default: 20, max: 100)'
@@ -30878,6 +30883,9 @@ paths:
                     - penny-drop
                     - video-id
                   description: The verification flow to switch to.
+                includeSdkToken:
+                  type: boolean
+                  description: When true, generates and returns a Sumsub Mobile SDK access token alongside the WebSDK URL.
               required:
                 - verificationType
       responses:
@@ -30891,6 +30899,8 @@ paths:
                   url:
                     type: string
                   expiresAt:
+                    type: string
+                  sdkToken:
                     type: string
                 required:
                   - url
@@ -31052,6 +31062,9 @@ paths:
                     - vi
                     - zu
                   description: Language code for the Sumsub WebSDK UI (ISO 639-1). Defaults to en.
+                includeSdkToken:
+                  type: boolean
+                  description: When true, generates and returns a Sumsub Mobile SDK access token alongside the WebSDK URL.
               required:
                 - userId
                 - enterpriseId
@@ -31077,6 +31090,8 @@ paths:
                         type: string
                       expiresAt:
                         type: string
+                      sdkToken:
+                        type: string
                     required:
                       - idvId
                       - status
@@ -31094,6 +31109,8 @@ paths:
                       url:
                         type: string
                       expiresAt:
+                        type: string
+                      sdkToken:
                         type: string
                     required:
                       - idvId
@@ -59087,6 +59104,8 @@ components:
           $ref: '#/components/schemas/DocumentSubTypeDetailed'
         metadata:
           $ref: '#/components/schemas/Metadata'
+        forUserId:
+          $ref: '#/components/schemas/ForUserId'
       required:
         - documentType
       title: CreateDocumentRequest
@@ -60849,6 +60868,10 @@ components:
           type: string
           nullable: true
           description: Enterprise associated with the document when created, or null for legacy documents
+        forUserId:
+          type: string
+          nullable: true
+          description: BitGo public user ID the document was created for, or null when not attributed
         createdAt:
           type: string
           format: date-time
@@ -60864,6 +60887,7 @@ components:
         - subType
         - status
         - enterpriseId
+        - forUserId
         - createdAt
         - files
       title: DocumentSummary
@@ -64325,6 +64349,11 @@ components:
             - amount
             - validator
             - duration
+    ForUserId:
+      type: string
+      pattern: ^[a-zA-Z0-9]{32}$
+      title: ForUserId
+      description: BitGo public user ID the document is created for; exactly 32 alphanumeric characters
     ForbiddenErrorResponse:
       required:
         - error
@@ -64739,6 +64768,10 @@ components:
           type: string
           nullable: true
           description: Enterprise associated with the document when created, or null for legacy documents
+        forUserId:
+          type: string
+          nullable: true
+          description: BitGo public user ID the document was created for, or null when not attributed
         metadata:
           type: object
           additionalProperties:
@@ -64763,6 +64796,7 @@ components:
         - documentTypeLabel
         - status
         - enterpriseId
+        - forUserId
         - files
         - createdAt
         - updatedAt
