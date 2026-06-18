@@ -60019,7 +60019,7 @@ components:
         - AVAXP
         - AVAXC
         - ETH
-        - ETH_P2P
+        - ETH_SSV
         - NEAR
         - SOL
         - DOT
@@ -63258,7 +63258,6 @@ components:
                 - ETH_STAKE
                 - ETH_STAKE_PECTRA
                 - ETH_STAKE_SSV
-                - ETH_STAKE_P2P
                 - LIDO
     EthStakingRequestPOSTBody:
       title: ETH stake
@@ -66816,6 +66815,28 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
+    HbarSwitchValidatorRequestEntityProperties:
+      title: HBAR switch validator staking request entity properties
+      allOf:
+        - $ref: '#/components/schemas/SwitchValidatorRequestEntityProperties'
+        - type: object
+          properties:
+            nodeId:
+              type: integer
+              format: int64
+              description: The destination node ID to switch staking to.
+            walletBalance:
+              allOf:
+                - $ref: '#/components/schemas/IntegerString'
+              description: The wallet balance at the time of the switch request.
+              nullable: true
+            srcNodeId:
+              type: integer
+              format: int64
+              description: The source node ID being switched from.
+              nullable: true
+          required:
+            - nodeId
     HbarUpdateAccountIntent:
       title: HBAR Update Account Intent
       allOf:
@@ -79043,6 +79064,17 @@ components:
           required:
             - validator
       type: object
+    SeiEvmSwitchValidatorRequestEntityProperties:
+      title: SEIEVM switch validator staking request entity properties
+      allOf:
+        - $ref: '#/components/schemas/SwitchValidatorRequestEntityProperties'
+        - type: object
+          properties:
+            amountInMicro:
+              type: string
+              description: Amount in MICRO (6 decimals) for smart contract calls.
+          required:
+            - amountInMicro
     SeiEvmSwitchValidatorsRequestPOSTBody:
       title: SEIEVM switch validator
       description: |
@@ -82135,6 +82167,8 @@ components:
             - $ref: '#/components/schemas/VetStakingRequestEntityProperties'
             - $ref: '#/components/schemas/WflrClaimRewardsRequestEntityProperties'
             - $ref: '#/components/schemas/StoryStakingRequestEntityProperties'
+            - $ref: '#/components/schemas/SeiEvmSwitchValidatorRequestEntityProperties'
+            - $ref: '#/components/schemas/HbarSwitchValidatorRequestEntityProperties'
       required:
         - id
         - requestingUserId
@@ -82206,7 +82240,6 @@ components:
         - ETH_CLAIM_REWARDS
         - ETH_UNSTAKE
         - ETH_STAKE_SSV
-        - ETH_STAKE_P2P
         - NEAR_STAKE
         - SOL_STAKE
         - SOL_UNSTAKE
@@ -83804,6 +83837,14 @@ components:
         stakedSuiObjectId:
           type: string
           nullable: true
+        srcValidatorAddress:
+          type: string
+          description: The source validator address being switched from.
+          nullable: true
+        destValidatorAddress:
+          type: string
+          description: The destination validator address being switched to.
+          nullable: true
     SuiSwitchTransactionProperties:
       title: SUI Switch Transaction Properties
       allOf:
@@ -83924,6 +83965,14 @@ components:
             delegationId:
               type: string
               description: The delegation ID associated with this switch request.
+              nullable: true
+            srcValidatorAddress:
+              type: string
+              description: The source validator address being switched from.
+              nullable: true
+            destValidatorAddress:
+              type: string
+              description: The destination validator address being switched to.
               nullable: true
     SwitchValidatorSpendableAttributes:
       allOf:
