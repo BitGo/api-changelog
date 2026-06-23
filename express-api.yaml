@@ -3653,9 +3653,13 @@ components:
           properties:
             goStakingRequestId:
               type: string
+              description: Internal coordination identifier for the GO staking request.
           required:
             - goStakingRequestId
         - $ref: '#/components/schemas/BaseIntent'
+      description: |-
+        Base interface for GO wallet staking intents that require a GO staking
+        request identifier (e.g. admin/internal go-unstake flows such as Sui).
     BaseIntent:
       title: Intent
       type: object
@@ -4310,6 +4314,21 @@ components:
           allOf:
             - $ref: '#/components/schemas/AddressString3'
           description: Required for CSPR. The validator address used to delegate or undelegate.
+    CaasOrganizationInviteInviterInfo:
+      title: CaasOrganizationInviteInviterInfo
+      type: object
+      description: Inviter snapshot on CaaS org add-invite `inviterInfo` and enterprise invite `invitedBy`. Not used for UMS `genericRequest`.
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        fullName:
+          type: string
+      required:
+        - id
+        - email
+        - fullName
     CantonAllocationAllocateIntent:
       title: Canton Allocation Allocate Intent
       allOf:
@@ -4319,6 +4338,38 @@ components:
               type: string
               enum:
                 - allocationAllocate
+            txRequestId:
+              type: string
+          required:
+            - intentType
+            - txRequestId
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonAllocationOfferWithdrawnIntent:
+      title: Canton Allocation Offer Withdrawn Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - allocationOfferWithdrawn
+            transferOfferId:
+              type: string
+            token:
+              type: string
+          required:
+            - intentType
+            - transferOfferId
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonAllocationRejectIntent:
+      title: Canton Allocation Reject Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - allocationReject
             txRequestId:
               type: string
           required:
@@ -4361,6 +4412,8 @@ components:
             settleBefore:
               type: string
             comment:
+              type: string
+            requestedAt:
               type: string
           required:
             - intentType
@@ -4530,6 +4583,37 @@ components:
             - intentType
             - txRequestId
             - reason
+        - $ref: '#/components/schemas/BaseIntent'
+    CantonParticipantOnboardingRequestIntent:
+      title: Canton Participant Onboarding Request Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonParticipantOnboardingRequest
+            operator:
+              type: string
+            provider:
+              type: string
+            compliance:
+              type: string
+            registrar:
+              type: string
+            clientOnboarder:
+              type: string
+            expirationIso:
+              type: string
+            comment:
+              type: string
+          required:
+            - intentType
+            - operator
+            - provider
+            - compliance
+            - registrar
+            - clientOnboarder
         - $ref: '#/components/schemas/BaseIntent'
     CantonPaymentIntent:
       title: CANTON Payment Intent
@@ -5349,6 +5433,7 @@ components:
               type: string
               enum:
                 - enableToken
+              description: Must be "enableToken".
             enableTokens:
               type: array
               items:
@@ -5360,6 +5445,7 @@ components:
                     $ref: '#/components/schemas/optionalString'
                 required:
                   - name
+                description: One or more token entries specifying which tokens to enable.
           required:
             - intentType
             - enableTokens
@@ -7861,7 +7947,7 @@ components:
               type: string
               enum:
                 - goUnstake
-              description: Unstake and transfer funds from a staking wallet to a go account.
+              description: Must be "goUnstake".
             recipients:
               type: array
               items:
@@ -7876,10 +7962,15 @@ components:
                 required:
                   - address
                   - amount
+                description: The recipients to send unstaked funds to.
           required:
             - intentType
             - recipients
-        - $ref: '#/components/schemas/BaseGoStakeIntent'
+        - $ref: '#/components/schemas/BaseIntent'
+      description: |-
+        Base intent for GO wallet unstaking operations. Chain-specific go-unstake
+        intents (e.g. Sol, Sui) compose this and declare `goStakingRequestId`
+        according to their own requirements (optional for Sol, required for Sui).
     HbarUpdateAccountIntent:
       title: HBAR Update Account Intent
       allOf:
@@ -8051,9 +8142,12 @@ components:
         - allocationRequest
         - cantonCommand
         - allocationAllocate
+        - allocationOfferWithdrawn
+        - allocationReject
         - cantonEndInvestorOnboardingOffer
         - cantonEndInvestorOnboardingAccept
         - cantonEndInvestorOnboardingReject
+        - cantonParticipantOnboardingRequest
         - defi-deposit
         - defi-redeem
         - defi-approve
@@ -9276,18 +9370,7 @@ components:
                 id:
                   type: string
                 invitedBy:
-                  type: object
-                  properties:
-                    email:
-                      type: string
-                    fullName:
-                      type: string
-                    id:
-                      type: string
-                  required:
-                    - email
-                    - fullName
-                    - id
+                  $ref: '#/components/schemas/CaasOrganizationInviteInviterInfo'
                 name:
                   type: string
                 requiredVerificationStep:
@@ -10578,22 +10661,31 @@ components:
               type: string
               enum:
                 - authorize
+              description: Must be "authorize".
             transactionMessage:
               type: string
+              description: The pre-signed serialized transaction message, validated by the platform against the provided address fields.
             stakeAccount:
               type: string
+              description: The on-chain stake account whose authority is being transferred.
             oldWithdrawPublicKey:
               type: string
+              description: The current withdrawal authority public key.
             newWithdrawPublicKey:
               type: string
+              description: The new withdrawal authority public key.
             lockupPublicKey:
               type: string
+              description: The lockup authority public key.
             nonceAccount:
               type: string
+              description: The durable nonce account used for this transaction.
             nonceAuthority:
               type: string
+              description: The authority of the nonce account.
             blockhash:
               type: string
+              description: The recent blockhash used in the transaction message.
           required:
             - intentType
             - transactionMessage
@@ -10606,13 +10698,16 @@ components:
             - blockhash
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Transfer the withdrawal and lockup authority of a SOL stake account to new public keys on Solana. The transactionMessage must be a pre-signed serialized transaction validated by the platform against all provided address fields. Spending policy is not evaluated for this intent. Requires the solStakingAuthorize enterprise feature flag.
     SolBuildOptions:
       title: SolBuildOptions
       allOf:
         - type: object
           properties:
             memo:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: Memo string for the transaction. The key must be present; pass an empty string (or omit the value) if unused.
           required:
             - memo
         - $ref: '#/components/schemas/AccountBaseBuildOptions'
@@ -10646,11 +10741,13 @@ components:
           properties:
             stakingAddress:
               type: string
+              description: The on-chain stake account address to withdraw from.
           required:
             - stakingAddress
         - $ref: '#/components/schemas/WithdrawIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: Withdraw the balance from a deactivated SOL stake account back to the wallet on Solana. The stake account must have been deactivated (unstaked) before claiming. Spending policy is not evaluated for this intent.
     SolClaimIntent1:
       title: SOL Claim Intent
       allOf:
@@ -10674,13 +10771,17 @@ components:
               type: string
               enum:
                 - closeAssociatedTokenAccount
+              description: Must be "closeAssociatedTokenAccount".
             recipients:
-              $ref: '#/components/schemas/solCloseAssociatedTokenAccountRecipients'
+              allOf:
+                - $ref: '#/components/schemas/solCloseAssociatedTokenAccountRecipients'
+              description: One or more zero-balance ATAs to close. Each entry must have amount.value === "0", must not carry tokenName or tokenData, and all entries must share the same on-chain owner. Maximum 27 ATAs per transaction.
           required:
             - intentType
             - recipients
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Close one or more zero-balance SPL Associated Token Accounts (ATAs) on Solana and recover their rent lamports to the wallet root address. All ATAs must have a zero token balance (consolidate tokens first), share the same on-chain owner, and be owned by this wallet. Maximum 27 distinct ATAs per transaction. Spending policy is not evaluated for this intent.
     SolCloseAssociatedTokenAccountIntent1:
       title: SOL Close Associated Token Account Intent
       allOf:
@@ -10704,11 +10805,13 @@ components:
       title: SOL Consolidate Intent
       allOf:
         - $ref: '#/components/schemas/AccountBaseConsolidateIntent'
+      description: Sweep native SOL and SPL token balances from a receive address into the wallet's root address on Solana. The platform automatically calculates transferable amounts, reserving rent-exempt minimums and transaction fees.
     SolCreateAssociatedTokenAccountIntent:
       title: SOL Create Associated Token Account Intent
       allOf:
         - $ref: '#/components/schemas/EnableTokenIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Initialize one or more Associated Token Accounts (ATAs) on Solana so the wallet can receive SPL tokens. All entries in enableTokens must target the same wallet address. Spending policy is not evaluated for this intent.
     SolCreateAssociatedTokenAccountIntent1:
       title: SOL Create Associated Token Account Intent
       allOf:
@@ -10725,6 +10828,7 @@ components:
               type: string
               enum:
                 - customTx
+              description: Must be "customTx". For legacy (non-versioned) transactions only; use SolVersionedCustomTxIntent for versioned transactions.
             solInstructions:
               type: array
               items:
@@ -10732,6 +10836,7 @@ components:
                 properties:
                   programId:
                     type: string
+                    description: The program ID to invoke.
                   keys:
                     type: array
                     items:
@@ -10739,25 +10844,32 @@ components:
                       properties:
                         pubkey:
                           type: string
+                          description: The account public key.
                         isSigner:
                           type: boolean
+                          description: Whether this account is a signer.
                         isWritable:
                           type: boolean
+                          description: Whether this account is writable.
                       required:
                         - pubkey
                         - isSigner
                         - isWritable
+                      description: Account keys referenced by this instruction.
                   data:
                     type: string
+                    description: Instruction data encoded as base58 or hex.
                 required:
                   - programId
                   - keys
                   - data
+                description: Array of raw Solana program instructions to include in the transaction. Use for legacy (non-versioned) transactions only.
           required:
             - intentType
             - solInstructions
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Submit a custom Solana transaction using raw legacy program instructions. Use this intent for legacy (non-versioned) transactions; for versioned transactions (address lookup tables, v0 messages) use the customTx intent with solVersionedTransactionData instead. Wallets without the enableSolCustomTx flag require a second admin approval before the transaction is processed.
     SolDeactivateIntent:
       title: SOL Deactivate Intent
       allOf:
@@ -10767,16 +10879,20 @@ components:
               type: string
               enum:
                 - deactivate
+              description: Must be "deactivate".
             stakingAddresses:
-              $ref: '#/components/schemas/optionalStringArray'
+              allOf:
+                - $ref: '#/components/schemas/optionalStringArray'
+              description: Batch of stake account addresses to deactivate. Provide either this or stakingAddress.
             stakingAddress:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: A single stake account address to deactivate. Provide either this or stakingAddresses.
           required:
             - intentType
-            - stakingAddresses
-            - stakingAddress
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Deactivate one or more SOL stake accounts on Solana to begin the cooldown period before funds can be claimed. No value is transferred. Provide either stakingAddress (single account) or stakingAddresses (batch). After cooldown completes, use the claim intent to withdraw. Spending policy is not evaluated for this intent. Requires the solStakingAuthorize enterprise feature flag.
     SolDelegateIntent:
       title: SOL Delegate Intent
       allOf:
@@ -10786,29 +10902,42 @@ components:
               type: string
               enum:
                 - delegate
+              description: Must be "delegate".
             validatorAddress:
               type: string
+              description: The validator vote account address to delegate to.
             stakingAddresses:
-              $ref: '#/components/schemas/optionalStringArray'
+              allOf:
+                - $ref: '#/components/schemas/optionalStringArray'
+              description: Batch of stake account addresses to delegate. Provide either this or stakingAddress.
             stakingAddress:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: A single stake account address to delegate. Provide either this or stakingAddresses.
           required:
             - intentType
             - validatorAddress
-            - stakingAddresses
-            - stakingAddress
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Delegate one or more deactivated SOL stake accounts to a validator on Solana. No value is transferred; this intent re-activates an existing stake account under a new or the same validator. Provide either stakingAddress (single account) or stakingAddresses (batch). Spending policy is not evaluated for this intent. Requires the solStakingAuthorize enterprise feature flag.
     SolGoUnstakeIntent:
-      title: SolGoUnstakeIntent
+      title: SOL Go Unstake Intent
       allOf:
+        - type: object
+          properties:
+            goStakingRequestId:
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: Internal coordination identifier for the GO staking request. Accepted by the schema but only processed on admin/internal routes — external API consumers should omit this field.
         - $ref: '#/components/schemas/GoUnstakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Unstake SOL via the GO wallet program on Solana and transfer the proceeds to the specified recipients. This intent uses the same transfer path as the payment intent.
     SolPaymentIntent:
-      title: SolPaymentIntent
+      title: SOL Payment Intent
       allOf:
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Transfer native SOL or SPL tokens to one or more recipients on Solana. For token transfers, the recipient amount symbol must use the "sol:tokenName" format (e.g. "sol:usdc"). Native SOL recipients must not be Associated Token Account (ATA) addresses.
     SolStakeIntent:
       title: SOL Stake Intent
       allOf:
@@ -10816,6 +10945,7 @@ components:
           properties:
             validatorAddress:
               type: string
+              description: The validator vote account address to stake SOL with.
             isMarinade:
               type: boolean
               deprecated: true
@@ -10825,11 +10955,13 @@ components:
                 - NATIVE
                 - MARINADE
                 - JITO
+              description: 'The staking provider type. Accepted values: "NATIVE", "MARINADE", "JITO". Supersedes the deprecated isMarinade field.'
           required:
             - validatorAddress
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
         - $ref: '#/components/schemas/BaseIntentWithAmount'
+      description: Stake SOL to a validator on Solana by creating a new stake account. The platform generates an ephemeral keypair for the stake account and whitelists it on the wallet. Requires the enterprise to have staking permissions. Supports native, Marinade liquid, and Jito staking via the stakingType field.
     SolStakeIntent1:
       title: SOL Stake Intent
       allOf:
@@ -10851,8 +10983,10 @@ components:
           properties:
             stakingAddress:
               type: string
+              description: The stake account address to deactivate.
             amount:
               type: object
+              description: 'For partial unstake: the amount to remove from the stake account. Must be provided together with remainingStakingAmount.'
               properties:
                 symbol:
                   type: string
@@ -10863,6 +10997,7 @@ components:
                 - value
             remainingStakingAmount:
               type: object
+              description: 'For partial unstake: the amount to keep in the existing stake account after the split. Must be provided together with amount.'
               properties:
                 symbol:
                   type: string
@@ -10880,6 +11015,7 @@ components:
                 - NATIVE
                 - MARINADE
                 - JITO
+              description: 'The staking provider type. Accepted values: "NATIVE", "MARINADE", "JITO". Supersedes the deprecated isMarinade field.'
             recipients:
               type: array
               items:
@@ -10894,10 +11030,12 @@ components:
                 required:
                   - address
                   - amount
+                description: 'Required for Marinade unstaking: the recipient address to receive the unstaked SOL.'
           required:
             - stakingAddress
         - $ref: '#/components/schemas/UnstakeIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Begin deactivating a SOL stake account on Solana. For native staking, the stake account enters a cooldown period before funds can be claimed. For partial unstakes, provide both amount and remainingStakingAmount to split the stake account. Supports native, Marinade liquid, and Jito staking via the stakingType field. Requires the enterprise to have staking permissions.
     SolUnstakeIntent1:
       title: SOL Unstake Intent
       allOf:
@@ -10938,8 +11076,10 @@ components:
               type: string
               enum:
                 - customTx
+              description: Must be "customTx". Presence of solVersionedTransactionData distinguishes this from legacy SolCustomTxIntent at runtime.
             solVersionedTransactionData:
               type: object
+              description: Versioned transaction data in Solana v0 message format. Presence of this field indicates a versioned transaction.
               properties:
                 versionedInstructions:
                   type: array
@@ -10948,16 +11088,20 @@ components:
                     properties:
                       programIdIndex:
                         type: number
+                        description: Index into the staticAccountKeys array identifying the program to invoke.
                       accountKeyIndexes:
                         type: array
                         items:
                           type: number
+                          description: Indexes into the combined account keys (static + lookup) for this instruction.
                       data:
                         type: string
+                        description: Instruction data encoded as base58 or hex.
                     required:
                       - programIdIndex
                       - accountKeyIndexes
                       - data
+                    description: The program instructions for this versioned transaction.
                 addressLookupTables:
                   type: array
                   items:
@@ -10965,37 +11109,47 @@ components:
                     properties:
                       accountKey:
                         type: string
+                        description: The on-chain address of the lookup table account.
                       writableIndexes:
                         type: array
                         items:
                           type: number
+                          description: Indexes of writable accounts in the lookup table.
                       readonlyIndexes:
                         type: array
                         items:
                           type: number
+                          description: Indexes of read-only accounts in the lookup table.
                     required:
                       - accountKey
                       - writableIndexes
                       - readonlyIndexes
+                    description: Address lookup tables to extend the number of accounts beyond the static limit. Required when using account lookup tables in a v0 transaction.
                 staticAccountKeys:
                   type: array
                   items:
                     type: string
+                    description: The static account keys referenced by this transaction.
                 messageHeader:
                   type: object
+                  description: Solana message header specifying the number of required signers and read-only accounts.
                   properties:
                     numRequiredSignatures:
                       type: number
+                      description: Number of signatures required for this transaction.
                     numReadonlySignedAccounts:
                       type: number
+                      description: Number of read-only accounts that require signatures.
                     numReadonlyUnsignedAccounts:
                       type: number
+                      description: Number of read-only accounts that do not require signatures.
                   required:
                     - numRequiredSignatures
                     - numReadonlySignedAccounts
                     - numReadonlyUnsignedAccounts
                 recentBlockhash:
                   type: string
+                  description: Optional recent blockhash; when provided the platform uses it instead of fetching a durable nonce.
               required:
                 - versionedInstructions
                 - addressLookupTables
@@ -11006,6 +11160,7 @@ components:
             - solVersionedTransactionData
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+      description: Submit a custom Solana versioned (v0) transaction with optional address lookup tables. Use this intent for versioned transactions; for legacy instruction-based transactions use the customTx intent with solInstructions instead. When recentBlockhash is provided, the platform uses it directly without fetching a durable nonce. Wallets without the enableSolCustomTx flag require a second admin approval before the transaction is processed.
     StakeClaimRewardsIntent:
       title: StakeClaimRewardsIntent
       allOf:
@@ -11210,6 +11365,7 @@ components:
       title: SuiGoUnstakeIntent
       allOf:
         - $ref: '#/components/schemas/GoUnstakeIntent'
+        - $ref: '#/components/schemas/BaseGoStakeIntent'
         - $ref: '#/components/schemas/SuiBuildOptions'
     SuiPaymentIntent:
       title: SUI Payment Intent
@@ -11700,6 +11856,8 @@ components:
         - $ref: '#/components/schemas/BscUnDelegateIntent'
         - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
         - $ref: '#/components/schemas/CantonAllocationAllocateIntent'
+        - $ref: '#/components/schemas/CantonAllocationOfferWithdrawnIntent'
+        - $ref: '#/components/schemas/CantonAllocationRejectIntent'
         - $ref: '#/components/schemas/CantonAllocationRequestIntent'
         - $ref: '#/components/schemas/CantonCosignDelegationAcceptIntent'
         - $ref: '#/components/schemas/CantonCosignDelegationProposalIntent'
@@ -11712,6 +11870,7 @@ components:
         - $ref: '#/components/schemas/CantonEndInvestorOnboardingOfferIntent'
         - $ref: '#/components/schemas/CantonEndInvestorOnboardingAcceptIntent'
         - $ref: '#/components/schemas/CantonEndInvestorOnboardingRejectIntent'
+        - $ref: '#/components/schemas/CantonParticipantOnboardingRequestIntent'
         - $ref: '#/components/schemas/ClaimIntent'
         - $ref: '#/components/schemas/CosmosContractCallIntent'
         - $ref: '#/components/schemas/CosmosPaymentIntent'
@@ -13414,6 +13573,7 @@ components:
               type: string
               enum:
                 - unstake
+              description: Must be "unstake".
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
@@ -14483,6 +14643,7 @@ components:
               type: string
               enum:
                 - claim
+              description: Must be "claim".
             amount:
               type: object
               properties:
