@@ -13492,6 +13492,53 @@ paths:
               schema:
                 type: object
                 properties: {}
+  /api/notifications/v1/webhooks/{webhookId}/oauth-config:
+    put:
+      tags:
+        - Notification Webhooks
+      summary: Upsert webhook OAuth config
+      description: Creates or updates the OAuth 2.0 client credentials configuration for a webhook. The client secret is encrypted at rest using KMS when the oauth-kms-enabled feature flag is active.
+      operationId: upsertOAuthConfig
+      parameters:
+        - name: webhookId
+          in: path
+          description: The unique identifier of the webhook to configure OAuth for
+          required: true
+          schema:
+            type: string
+      requestBody:
+        description: OAuth 2.0 client credentials configuration to associate with the webhook
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpsertWebhookOAuthConfigRequest'
+        required: true
+      responses:
+        '200':
+          description: OAuth config upserted successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWebhookOAuthConfigResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+        '500':
+          description: Unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
   /api/notifications/v1/user/subscriptions:
     get:
       tags:
@@ -13925,6 +13972,28 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
+  /api/notifications/v1/external/unsubscribe:
+    post:
+      tags:
+        - User Management Notification
+      summary: Perform one-click email unsubscribe (RFC 8058)
+      description: Processes an RFC 8058 one-click unsubscribe request and unsubscribes the user from the email notification category encoded in the token.
+      operationId: oneClickUnsubscribe
+      requestBody:
+        description: RFC 8058 one-click unsubscribe request body. Must contain List-Unsubscribe=One-Click.
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/UnsubscribeFormBody'
+        required: true
+      responses:
+        '200':
+          description: Unsubscribed successfully
+        '400':
+          description: Invalid or expired token, or non-compliant RFC 8058 request body
+        '500':
+          description: Failed to update subscriptions
       x-internal: false
   /api/notifications/v1/user/notification-thresholds:
     get:
@@ -32723,6 +32792,7 @@ paths:
                     - cusd
                     - fyusd
                     - qxmp
+                    - scaasacme
                     - usd
               - type: string
                 enum:
@@ -32732,6 +32802,7 @@ paths:
                   - cusd
                   - fyusd
                   - qxmp
+                  - scaasacme
                   - usd
             example: usd1
         - name: type
@@ -32778,10 +32849,13 @@ paths:
                     - expired
                     - triggering_mint_request
                     - completed_mint_request
+                    - triggering_mint_offer
+                    - completed_mint_offer
                     - triggering_mint_accept
                     - completed_mint_accept
                     - triggering_mint_transfer
                     - failed_to_mint_request
+                    - failed_to_mint_offer
                     - failed_to_mint_accept
                     - failed_to_mint_transfer
                     - triggering_burn_request
@@ -32816,10 +32890,13 @@ paths:
                   - expired
                   - triggering_mint_request
                   - completed_mint_request
+                  - triggering_mint_offer
+                  - completed_mint_offer
                   - triggering_mint_accept
                   - completed_mint_accept
                   - triggering_mint_transfer
                   - failed_to_mint_request
+                  - failed_to_mint_offer
                   - failed_to_mint_accept
                   - failed_to_mint_transfer
                   - triggering_burn_request
@@ -32961,6 +33038,7 @@ paths:
                                   - treasuryMintTransfer
                                   - treasuryBurnTransfer
                                   - mintRequest
+                                  - mintOffer
                                   - mintAccept
                                   - mintTransfer
                                   - burnRequest
@@ -33123,6 +33201,7 @@ paths:
                     - cusd
                     - fyusd
                     - qxmp
+                    - scaasacme
               - type: string
                 enum:
                   - gousd
@@ -33131,6 +33210,7 @@ paths:
                   - cusd
                   - fyusd
                   - qxmp
+                  - scaasacme
             example: usd1
         - name: chain
           description: Blockchain network identifier to filter summary
@@ -52584,6 +52664,7 @@ components:
               - cusd
               - fyusd
               - qxmp
+              - scaasacme
               - usd
             description: Base asset for the token
             example: usd1
@@ -66595,6 +66676,30 @@ components:
         offset:
           type: integer
           format: int32
+    GetWebhookOAuthConfigResponse:
+      required:
+        - clientId
+        - createdAt
+        - scope
+        - tokenUrl
+        - updatedAt
+        - webhookId
+      type: object
+      properties:
+        webhookId:
+          type: string
+        tokenUrl:
+          type: string
+        clientId:
+          type: string
+        scope:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
     GlobalGoStakingRequestStatus:
       type: string
       description: |
@@ -72589,10 +72694,13 @@ components:
             - expired
             - triggering_mint_request
             - completed_mint_request
+            - triggering_mint_offer
+            - completed_mint_offer
             - triggering_mint_accept
             - completed_mint_accept
             - triggering_mint_transfer
             - failed_to_mint_request
+            - failed_to_mint_offer
             - failed_to_mint_accept
             - failed_to_mint_transfer
             - triggering_burn_request
@@ -72683,6 +72791,7 @@ components:
                       - treasuryMintTransfer
                       - treasuryBurnTransfer
                       - mintRequest
+                      - mintOffer
                       - mintAccept
                       - mintTransfer
                       - burnRequest
@@ -72849,10 +72958,13 @@ components:
             - expired
             - triggering_mint_request
             - completed_mint_request
+            - triggering_mint_offer
+            - completed_mint_offer
             - triggering_mint_accept
             - completed_mint_accept
             - triggering_mint_transfer
             - failed_to_mint_request
+            - failed_to_mint_offer
             - failed_to_mint_accept
             - failed_to_mint_transfer
             - triggering_burn_request
@@ -90892,6 +91004,15 @@ components:
           type: string
           format: bigInteger
           description: Maximum amount of staked funds that can be unstaked at this time.
+    UnsubscribeFormBody:
+      required:
+        - List-Unsubscribe
+      type: object
+      properties:
+        List-Unsubscribe:
+          type: string
+          description: RFC 8058 one-click unsubscribe form value. Must be 'One-Click'.
+          example: One-Click
     UnsupportedTokenRecipientEntryItem:
       title: UnsupportedTokenRecipientEntryItem
       type: object
@@ -91293,6 +91414,26 @@ components:
         - pending
         - overdue
         - delinquent
+    UpsertWebhookOAuthConfigRequest:
+      required:
+        - clientId
+        - clientSecret
+        - scope
+        - tokenUrl
+      type: object
+      properties:
+        tokenUrl:
+          minLength: 1
+          type: string
+        clientId:
+          minLength: 1
+          type: string
+        clientSecret:
+          minLength: 1
+          type: string
+        scope:
+          minLength: 1
+          type: string
     User:
       type: object
       properties:
