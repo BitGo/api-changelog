@@ -14900,6 +14900,13 @@ paths:
           in: path
         - schema:
             type: string
+            description: The ID of the organization that owns the enterprise
+          required: true
+          description: The ID of the organization that owns the enterprise
+          name: organizationId
+          in: query
+        - schema:
+            type: string
             enum:
               - ARS
               - AUD
@@ -15101,11 +15108,7 @@ paths:
       parameters:
         - schema:
             type: string
-          required: true
-          name: organizationId
-          in: query
-        - schema:
-            type: string
+            minLength: 1
           required: true
           name: searchTerm
           in: query
@@ -15131,6 +15134,20 @@ paths:
             type: string
           required: false
           name: limit
+          in: query
+        - schema:
+            type: string
+            description: The ID of the organization
+          required: true
+          description: The ID of the organization
+          name: organizationId
+          in: query
+        - schema:
+            type: string
+            description: Optional alias for organizationId; if provided, must match organizationId
+          required: false
+          description: Optional alias for organizationId; if provided, must match organizationId
+          name: orgId
           in: query
       responses:
         '200':
@@ -15871,6 +15888,21 @@ paths:
               )
             name: Python with HMAC
             install: pip install requests
+      parameters:
+        - schema:
+            type: string
+            description: The ID of the organization
+          required: true
+          description: The ID of the organization
+          name: orgId
+          in: query
+        - schema:
+            type: string
+            description: Optional alias for orgId; if provided, must match orgId
+          required: false
+          description: Optional alias for orgId; if provided, must match orgId
+          name: organizationId
+          in: query
       responses:
         '200':
           description: ''
@@ -15998,6 +16030,10 @@ paths:
                   minLength: 1
                 orgId:
                   type: string
+                  description: The ID of the organization
+                organizationId:
+                  type: string
+                  description: Optional alias for orgId; if provided, must match orgId
               required:
                 - searchTerm
                 - orgId
@@ -16109,13 +16145,22 @@ paths:
       parameters:
         - schema:
             type: string
+          required: false
+          name: id
+          in: query
+        - schema:
+            type: string
+            description: The ID of the organization
           required: true
+          description: The ID of the organization
           name: orgId
           in: query
         - schema:
             type: string
+            description: Optional alias for orgId; if provided, must match orgId
           required: false
-          name: id
+          description: Optional alias for orgId; if provided, must match orgId
+          name: organizationId
           in: query
       responses:
         '200':
@@ -21262,6 +21307,22 @@ paths:
           required: false
           name: product
           in: query
+        - schema:
+            type: string
+            pattern: ^\d+$
+            description: Maximum number of orders to return in this page
+          required: false
+          description: Maximum number of orders to return in this page
+          name: limit
+          in: query
+        - schema:
+            type: string
+            pattern: ^\d+$
+            description: Number of orders to skip before starting this page
+          required: false
+          description: Number of orders to skip before starting this page
+          name: offset
+          in: query
       responses:
         '200':
           description: ''
@@ -21388,6 +21449,9 @@ paths:
                         - filledQuoteQuantity
                         - averagePrice
                         - canceledByUserId
+                  nextOffset:
+                    type: number
+                    description: Offset to use for the next page when the current page is full
                 required:
                   - data
   /api/org/orders/{orderId}:
@@ -21481,12 +21545,20 @@ paths:
           name: orderId
           in: path
         - schema:
+            type: string
+            description: The ID of the organization that owns the trade order
+          required: true
+          description: The ID of the organization that owns the trade order
+          name: organizationId
+          in: query
+        - schema:
             type: object
             properties:
               orderId:
                 type: string
             required:
               - orderId
+            deprecated: true
           required: true
           name: params
           in: query
@@ -21700,6 +21772,35 @@ paths:
               )
             name: Python with HMAC
             install: pip install requests
+      parameters:
+        - schema:
+            type: string
+            description: The ID of the organization that owns the trade order
+          required: true
+          description: The ID of the organization that owns the trade order
+          name: organizationId
+          in: query
+        - schema:
+            type: string
+            description: The ID of the trade order to list fills for
+          required: true
+          description: The ID of the trade order to list fills for
+          name: orderId
+          in: query
+        - schema:
+            type: string
+            description: Maximum number of fills to return in this page
+          required: false
+          description: Maximum number of fills to return in this page
+          name: limit
+          in: query
+        - schema:
+            type: string
+            description: Number of fills to skip before starting this page
+          required: false
+          description: Number of fills to skip before starting this page
+          name: offset
+          in: query
       responses:
         '200':
           description: ''
@@ -22067,6 +22168,7 @@ paths:
               - USD
               - UYU
               - ZAR
+              - KRW
           required: false
           name: currency
           in: query
@@ -22443,6 +22545,7 @@ paths:
               - USD
               - UYU
               - ZAR
+              - KRW
           required: false
           name: currency
           in: query
@@ -22807,11 +22910,13 @@ paths:
                     - admin
                     - member
                     - customer
+                    - serviceUser
               - type: string
                 enum:
                   - admin
                   - member
                   - customer
+                  - serviceUser
           required: false
           name: role
           in: query
