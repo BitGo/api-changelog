@@ -13493,6 +13493,51 @@ paths:
                 type: object
                 properties: {}
   /api/notifications/v1/webhooks/{webhookId}/oauth-config:
+    get:
+      tags:
+        - Notification Webhooks
+      summary: Get webhook OAuth configuration
+      description: Retrieves the OAuth configuration for a specific webhook. Secrets are excluded from the response.
+      operationId: getOAuthConfig
+      parameters:
+        - name: webhookId
+          in: path
+          description: The webhook ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OAuth configuration retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWebhookOAuthConfigResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+        '404':
+          description: OAuth configuration not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
     put:
       tags:
         - Notification Webhooks
@@ -13520,6 +13565,45 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/GetWebhookOAuthConfigResponse'
+        '400':
+          description: Invalid request parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+        '500':
+          description: Unexpected error occurred
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
+    delete:
+      tags:
+        - Notification Webhooks
+      summary: Delete webhook OAuth configuration
+      description: Removes the OAuth configuration for a specific webhook, invalidates the config cache, and evicts cached access tokens.
+      operationId: deleteOAuthConfig
+      parameters:
+        - name: webhookId
+          in: path
+          description: The webhook ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OAuth configuration deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
         '400':
           description: Invalid request parameters
           content:
@@ -13824,6 +13908,52 @@ paths:
                 $ref: '#/components/schemas/BadRequestErrorResponse'
         '500':
           description: Unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ServerErrorResponse'
+      x-internal: false
+  /api/notifications/v1/webhooks/{webhookId}/unblockurl:
+    post:
+      tags:
+        - Notification Webhooks
+      summary: Unblock a webhook URL
+      description: Removes the webhook's destination URL from the blocked list and clears its failure counter.
+      operationId: unblockWebhookUrl
+      parameters:
+        - name: webhookId
+          in: path
+          description: The webhook ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Webhook URL unblocked successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UnblockWebhookUrlResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BadRequestErrorResponse'
+        '403':
+          description: Access denied
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ForbiddenErrorResponse'
+        '404':
+          description: Webhook not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NotFoundErrorResponse'
+        '500':
+          description: Unexpected error occurred
           content:
             application/json:
               schema:
@@ -90758,6 +90888,13 @@ components:
           enum:
             - 401
       description: Unauthorized error response
+    UnblockWebhookUrlResponse:
+      required:
+        - webhookId
+      type: object
+      properties:
+        webhookId:
+          type: string
     UndelegateIntent:
       title: UndelegateIntent
       allOf:
