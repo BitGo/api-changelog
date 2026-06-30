@@ -30970,6 +30970,7 @@ paths:
                     enum:
                       - penny-drop
                       - video-id
+                      - liveness-only
                   userId:
                     type: string
                   enterpriseId:
@@ -31056,10 +31057,11 @@ paths:
                   enum:
                     - penny-drop
                     - video-id
+                    - liveness-only
                   description: The verification flow to switch to.
                 includeSdkToken:
                   type: boolean
-                  description: When true, generates and returns a Sumsub Mobile SDK access token alongside the WebSDK URL. Only supported for video-id verification — returns 400 if combined with verificationType 'penny-drop' (MobileSDK does not support the penny-drop flow).
+                  description: When true, generates and returns a Sumsub Mobile SDK access token alongside the WebSDK URL. Not supported for penny-drop verification — returns 400 if combined with verificationType 'penny-drop' (MobileSDK does not support the penny-drop flow).
               required:
                 - verificationType
       responses:
@@ -31171,7 +31173,8 @@ paths:
                   enum:
                     - penny-drop
                     - video-id
-                  description: The verification flow to use. 'penny-drop' requires a bank transfer step. 'video-id' uses a video identification step instead.
+                    - liveness-only
+                  description: The verification flow to use. 'penny-drop' requires a bank transfer step. 'video-id' uses a video identification step. 'liveness-only' uses a liveness check only.
                 sumsubShareToken:
                   type: string
                   minLength: 1
@@ -31238,7 +31241,7 @@ paths:
                   description: Language code for the Sumsub WebSDK UI (ISO 639-1). Defaults to en.
                 includeSdkToken:
                   type: boolean
-                  description: When true, generates and returns a Sumsub Mobile SDK access token alongside the WebSDK URL. Only supported for video-id verification — returns 400 if combined with verificationType 'penny-drop' (MobileSDK does not support the penny-drop flow).
+                  description: When true, generates and returns a Sumsub Mobile SDK access token alongside the WebSDK URL. Not supported for penny-drop verification — returns 400 if combined with verificationType 'penny-drop' (MobileSDK does not support the penny-drop flow).
               required:
                 - userId
                 - enterpriseId
