@@ -29310,6 +29310,7 @@ paths:
                 - $ref: '#/components/schemas/PolUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/PolyxStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/PolyxUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/PolyxSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/RethRocketStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/RethRocketUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/SeiStakingRequestPOSTBody'
@@ -29491,8 +29492,12 @@ paths:
                 $ref: '#/components/examples/PolUnStakingRequestPOSTBodyExample'
               PolyxStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/PolyxStakingRequestPOSTBodyExample'
+              PolyxMultiValidatorStakingRequestPOSTBodyExample:
+                $ref: '#/components/examples/PolyxMultiValidatorStakingRequestPOSTBodyExample'
               PolyxUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/PolyxUnStakingRequestPOSTBodyExample'
+              PolyxSwitchValidatorRequestPOSTBodyExample:
+                $ref: '#/components/examples/PolyxSwitchValidatorRequestPOSTBodyExample'
               RethRocketStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/RethRocketStakingRequestPOSTBodyExample'
               RethRocketUnStakingRequestPOSTBodyExample:
@@ -29695,6 +29700,8 @@ paths:
                   $ref: '#/components/examples/PolyxStakingRequestWithoutDelegationsExample'
                 PolyxUnStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/PolyxUnStakingRequestWithoutDelegationsExample'
+                PolyxSwitchValidatorRequestWithoutDelegationsExample:
+                  $ref: '#/components/examples/PolyxSwitchValidatorRequestWithoutDelegationsExample'
                 RethRocketStakingRequestWithoutDelegationsExample:
                   $ref: '#/components/examples/RethRocketStakingRequestWithoutDelegationsExample'
                 RethRocketUnStakingRequestWithoutDelegationsExample:
@@ -47431,12 +47438,23 @@ components:
             modifiedBy: 5d1a5f2c8f0a9c001a5f2c8f0ad00000
             evaluationId: 306258df-dcab-489e-a9fe-ff28ce9fa312
         nextBatchPrevId: 5
-    PolyxStakingRequestPOSTBodyExample:
-      summary: Polyx Staking Request POST Body Example
+    PolyxMultiValidatorStakingRequestPOSTBodyExample:
+      summary: Polyx Staking Request POST Body Example (multi-validator nomination)
       value:
         clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
         amount: '10000000000'
         type: STAKE
+        validators:
+          - 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+          - 5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
+          - 5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy
+    PolyxStakingRequestPOSTBodyExample:
+      summary: Polyx Staking Request POST Body Example (single validator)
+      value:
+        clientId: e055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        amount: '10000000000'
+        type: STAKE
+        validator: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
     PolyxStakingRequestWithoutDelegationsExample:
       summary: Polyx Staking Request Example
       value:
@@ -47453,6 +47471,30 @@ components:
         statusModifiedDate: 2022-01-10T14:32:28.000Z
         status: NEW
         amount: '10000000000'
+    PolyxSwitchValidatorRequestPOSTBodyExample:
+      summary: Polyx Switch Validator Request POST Body Example (multi-validator nomination)
+      value:
+        clientId: polyx-switch-001
+        type: SWITCH_VALIDATORS
+        validators:
+          - 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+          - 5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty
+    PolyxSwitchValidatorRequestWithoutDelegationsExample:
+      summary: Polyx Switch Validator Request Example
+      value:
+        id: a155adbc-66a3-4ccd-9a9d-726a05bca0cf
+        clientId: polyx-switch-001
+        requestUserId: 6092e75c451052000636831deb797bd1
+        enterpriseId: 61c0ff41174c4e0007ae78b2a0bea1ec
+        walletId: 63110fc78b108e00071df2d3c3879dd0
+        withdrawalAddress: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
+        walletType: custodial
+        type: SWITCH_VALIDATOR
+        coin: polyx
+        createdDate: 2024-01-10T14:32:28.000Z
+        statusModifiedDate: 2024-01-10T14:32:28.000Z
+        status: NEW
+        amount: '0'
     PolyxUnStakingRequestPOSTBodyExample:
       summary: Polyx UnStaking Request POST Body Example
       value:
@@ -77330,6 +77372,16 @@ components:
       allOf:
         - $ref: '#/components/schemas/DelegationProperties'
         - type: object
+          properties:
+            validators:
+              type: object
+              description: |
+                Map of nominated validator addresses to their provider type.
+                Contains all currently nominated validators for this delegation.
+                Empty for legacy delegations created before multi-validator support.
+              additionalProperties:
+                type: string
+                description: Provider type for the validator (e.g. FIGMENT, UNKNOWN).
     PolyxPreApproveAssetIntent:
       title: POLYX Pre-Approve Asset Intent
       allOf:
@@ -77404,14 +77456,48 @@ components:
           properties:
             validatorAddress:
               type: string
-              description: Validator address.
+              description: |
+                Single validator address. Null for multi-validator nominations where the
+                validators list is used instead. Retained for backward compatibility.
+              nullable: true
+            validators:
+              type: array
+              description: |
+                List of nominated validator addresses. Present for all requests after
+                multi-validator support was introduced. Contains a single entry for
+                single-validator requests.
+              items:
+                type: string
+              nullable: true
           required:
             - validatorAddress
     PolyxStakingRequestPOSTBody:
       title: POLYX stake
+      description: |
+        Request to stake POLYX tokens on Polymesh.
+
+        **Single-validator staking:** Provide either `validator` or a single-element `validators` list.
+
+        **Multi-validator nomination:** Provide a `validators` list with up to 16 unique addresses.
+        This nominates multiple validators simultaneously. The `validator` field must be omitted when
+        using a multi-element `validators` list.
+
+        **Re-stake to existing delegation:** If a validator is not specified and an active delegation
+        already exists, the existing validator(s) are reused automatically.
       allOf:
         - $ref: '#/components/schemas/StakingRequestPOSTBody'
       type: object
+      properties:
+        validators:
+          description: |
+            List of validator addresses to nominate. Supports up to 16 unique addresses.
+            Mutually exclusive with `validator` when list has more than one entry.
+          type: array
+          items:
+            type: string
+          minItems: 1
+          maxItems: 16
+          nullable: true
     PolyxStakingTransactionProperties:
       title: PolyX Staking Transaction Properties
       allOf:
@@ -77440,6 +77526,99 @@ components:
             - validators
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
+    PolyxSwitchValidatorRequestEntityProperties:
+      title: Polyx switch validator request entity properties
+      description: Entity properties for a POLYX switch validator (nominate) request.
+      allOf:
+        - $ref: '#/components/schemas/StakingRequestEntityProperties'
+        - type: object
+          properties:
+            validators:
+              type: array
+              description: The new set of validator addresses to nominate. 1–16 entries.
+              items:
+                type: string
+              minItems: 1
+              maxItems: 16
+            delegationId:
+              type: string
+              description: ID of the delegation being updated. Resolved automatically if absent.
+              format: uuid
+              nullable: true
+          required:
+            - validators
+    PolyxSwitchValidatorTransactionProperties:
+      title: PolyX Switch Validator Transaction Properties
+      description: Transaction properties for a POLYX nominate (switch validator) operation.
+      allOf:
+        - $ref: '#/components/schemas/StakingTransactionProperties'
+        - type: object
+          properties:
+            amount:
+              type: string
+              description: Always "0" — nominate-only, no balance movement.
+              example: '0'
+            validators:
+              type: array
+              description: The new set of validator addresses submitted to the Polymesh nominate extrinsic.
+              items:
+                type: string
+              minItems: 1
+              maxItems: 16
+    PolyxSwitchValidatorsRequestPOSTBody:
+      title: POLYX switch validator
+      type: object
+      description: |
+        Request to switch the nomination set for an active POLYX staking delegation.
+
+        **Nominate-only operation:** No balance movement occurs. The existing delegation is updated
+        in-place to use the new validator set after the transaction is confirmed on-chain.
+
+        **Multi-validator support:** Provide a `validators` list with 1–16 unique addresses to
+        nominate multiple validators simultaneously. Use a single-element list or the `validator`
+        field to nominate a single validator.
+
+        **Constraints:**
+        - The delegation must be ACTIVE with delegated balance > 0.
+        - No full unstake may be in progress.
+        - No pending stake may be in progress.
+        - The new validator set must differ from the current nomination set.
+        - Only one switch validator request may be in-flight at a time per wallet.
+      required:
+        - type
+        - validators
+      properties:
+        clientId:
+          type: string
+          description: Optional client-defined identifier to detect duplicate requests.
+          maxLength: 256
+          nullable: true
+        type:
+          type: string
+          enum:
+            - SWITCH_VALIDATORS
+          description: Type of request. Must be SWITCH_VALIDATORS.
+        delegationId:
+          type: string
+          description: Optional ID of the active delegation to switch. Resolved automatically if omitted.
+          format: uuid
+          nullable: true
+        validator:
+          type: string
+          description: |
+            Single validator address to nominate. Mutually exclusive with `validators` when `validators`
+            has more than one entry. Normalized into `validators` if provided alone.
+          nullable: true
+        validators:
+          type: array
+          description: |
+            List of validator addresses to nominate. Supports 1–16 unique addresses.
+            Required when nominating multiple validators. Mutually exclusive with `validator` when
+            list has more than one entry.
+          items:
+            type: string
+          minItems: 1
+          maxItems: 16
     PolyxUnStakingRequestPOSTBody:
       title: POLYX unstake
       allOf:
@@ -82733,6 +82912,7 @@ components:
             - $ref: '#/components/schemas/TaoStakingRequestEntityProperties'
             - $ref: '#/components/schemas/TaoSwitchValidatorRequestEntityProperties'
             - $ref: '#/components/schemas/PolyxStakingRequestEntityProperties'
+            - $ref: '#/components/schemas/PolyxSwitchValidatorRequestEntityProperties'
             - $ref: '#/components/schemas/ICPStakingRequestEntityProperties'
             - $ref: '#/components/schemas/AvaxcStakingRequestEntityProperties'
             - $ref: '#/components/schemas/AvaxcUnstakingRequestEntityProperties'
@@ -82859,6 +83039,7 @@ components:
         - TAO_SWITCH
         - POLYX_STAKE
         - POLYX_UNSTAKE
+        - POLYX_SWITCH_VALIDATOR
         - ICP
         - AVAXC_STAKE
         - AVAXC_UNSTAKE
@@ -83391,6 +83572,7 @@ components:
         - $ref: '#/components/schemas/TaoSwitchValidatorTransactionProperties'
         - $ref: '#/components/schemas/PolyxStakingTransactionProperties'
         - $ref: '#/components/schemas/PolyxUnstakingTransactionProperties'
+        - $ref: '#/components/schemas/PolyxSwitchValidatorTransactionProperties'
         - $ref: '#/components/schemas/ICPStakingTransactionProperties'
         - $ref: '#/components/schemas/SomiUnstakingTransactionProperties'
         - $ref: '#/components/schemas/AvaxcStakingTransactionProperties'
@@ -83450,6 +83632,7 @@ components:
         - TAO_SWITCH
         - POLYX_STAKE
         - POLYX_UNSTAKE
+        - POLYX_SWITCH_VALIDATOR
         - ICP_STAKE
         - COREDAO_CLAIM_REWARDS
         - AVAXC_STAKE
