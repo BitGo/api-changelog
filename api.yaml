@@ -54566,6 +54566,16 @@ components:
         bankAccountId:
           type: string
           description: The bank account used for the transfer. This also determines the bank rails used for the transfer.
+        counterparty:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Information about the counterparty of the transfer. The available fields vary by bank rail and region (e.g. name, financial institution, country). The counterparty account number is masked, exposing only the last four characters (e.g. "*****7890"). Null until counterparty details are available, typically once the transfer has settled.
+          example:
+            name: Jane Doe
+            accountNumber: '*****7890'
+            financialInstitution: COBADEFFXXX
+            country: DE
         createdAt:
           type: string
           format: date-time
