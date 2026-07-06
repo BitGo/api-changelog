@@ -14110,6 +14110,13 @@ paths:
       summary: Perform one-click email unsubscribe (RFC 8058)
       description: Processes an RFC 8058 one-click unsubscribe request and unsubscribes the user from the email notification category encoded in the token.
       operationId: oneClickUnsubscribe
+      parameters:
+        - name: request-id
+          in: header
+          description: Optional client-supplied request ID used for log correlation and tracing
+          required: false
+          schema:
+            type: string
       requestBody:
         description: RFC 8058 one-click unsubscribe request body. Must contain List-Unsubscribe=One-Click.
         content:
@@ -14122,6 +14129,8 @@ paths:
           description: Unsubscribed successfully
         '400':
           description: Invalid or expired token, or non-compliant RFC 8058 request body
+        '429':
+          description: Too many unsubscribe requests from this IP
         '500':
           description: Failed to update subscriptions
       x-internal: false
