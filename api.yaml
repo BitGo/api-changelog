@@ -24718,6 +24718,32 @@ paths:
         If there is a transaction between two BitGo wallets, then two transfers will be created, one for wallet A,
         and one for wallet B. Transfer A will only annotate the walletId on entries where the address belongs to
         wallet A. Transfer B will only annotate the walletId on entries where the address belongs to wallet B.
+
+        **Go Account / OFC transfers (front/backing transfer model):**
+
+        For Go Account (OFC) wallets, a withdrawal is represented as two transfers:
+
+        1. **Front transfer** — the record returned by this endpoint. Its `txid` and
+           `normalizedTxHash` hold an internal BitGo front-transfer hash (e.g. prefixed
+           with the OFC coin identifier). This value does **not** appear on any block
+           explorer.
+        2. **Backing transfer** — the actual on-chain transaction that settles the
+           withdrawal. The on-chain transaction hash is stored in the front transfer's
+           `metadata` array under the key `onChainTxId`.
+
+        When reconciling a Go Account withdrawal against an on-chain explorer or an
+        external ledger, use `metadata[].onChainTxId` rather than the top-level `txid`.
+        The `onChainTxId` entry is absent while the transfer is in state `signed`; it is
+        populated once the transfer reaches state `confirmed`. Poll until
+        `state === 'confirmed'` before reading this field.
+
+        For standard `ofc_deposit` transfers (non-lightning) the top-level `txid` and
+        `metadata[].onChainTxId` are identical. For OFC lightning deposits the payment
+        hash is stored under `metadata[].lightningPaymentHash` instead; `onChainTxId` is
+        not present on lightning deposits.
+
+        See the `subType` field for whether a transfer is an `ofc_withdrawal`,
+        `ofc_deposit`, `ofc_book_transfer`, `ofc_stake`, or `ofc_unstake`.
       operationId: v2.wallet.gettransfer
       parameters:
         - $ref: '#/components/parameters/pathCoin'
@@ -87259,6 +87285,19 @@ components:
           $ref: '#/components/schemas/Id'
         txid:
           $ref: '#/components/schemas/TxId'
+        normalizedTxHash:
+          type: string
+          description: |
+            A normalized form of `txid` used for deduplication. For most coins this is
+            identical to `txid`. For account-model coins (e.g. ETH and its tokens) it may
+            differ from `txid` when the transaction is regenerated. For lightning
+            transfers, `normalizedTxHash` is identical to `txid` (no transformation is
+            applied).
+
+            **Go Account / OFC withdrawals:** Like `txid`, this field holds the internal
+            front-transfer hash, not the on-chain hash. Use `metadata[].onChainTxId` for
+            the on-chain transaction hash.
+          example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
         txidType:
           type: string
           description: The type of the transaction id
@@ -87409,12 +87448,61 @@ components:
           description: Whether this transfer represents an unlock operation
         metadata:
           type: array
-          description: Additional metadata associated with the transfer
+          description: |
+            Key-value pairs carrying additional metadata about the transfer. The same key
+            may appear more than once.
+
+            Known keys (alphabetical). This list reflects all keys defined in
+            the current server release; additional keys may be added in future
+            releases without a breaking-change notice.
+
+            - `backingTransferBroadcastTimestamp` — Timestamp (ISO 8601) at which
+              the backing on-chain transaction was broadcast to the network.
+            - `lightningPaymentHash` — **(OFC lightning transfers only)** The
+              Lightning Network payment hash for the transfer. Present on both
+              `ofc_withdrawal` and `ofc_deposit` lightning transfers; for
+              `ofc_deposit` lightning transfers this key is used instead of
+              `onChainTxId`.
+            - `onChainTxId` — **(Go Account / OFC non-lightning transfers only)**
+              The on-chain transaction hash of the backing transfer. For
+              `ofc_withdrawal` transfers this key is absent while the transfer is
+              in state `signed`; it is populated once the transfer reaches state
+              `confirmed` (i.e. once the backing on-chain transaction is
+              confirmed). Poll until `state === 'confirmed'` before reading this
+              field. Use this value — not the top-level `txid` — when reconciling
+              against a block explorer or external ledger. For standard
+              `ofc_deposit` transfers (non-lightning) this value equals the
+              top-level `txid`.
+            - `replacedBy` — Transfer ID of the transfer that replaced this entry.
+            - `replaces` — Transfer ID of the transfer this entry replaces.
+            - `reversedBy` — Transfer ID of the transfer that reversed this entry.
+            - `reverses` — Transfer ID of the transfer this entry reverses.
+            - `rtId` — Internal routed-transaction ID linking a front transfer to its
+              backing Go Account routed transaction.
+            - `stablecoinTxType` — Transaction type for stablecoin transfers (e.g.
+              `mint`, `reward`, `burn`).
+            - `tokenizationUniquenessId` — **(Tokenization withdrawals only)**
+              Internal identifier used to prevent double-spends on a tokenization
+              withdrawal. Derived from the tokenization order ID; not guaranteed to
+              equal the order ID in rare same-merchant/same-amount/same-instant
+              collisions.
           items:
             type: object
             properties:
               key:
                 type: string
+                description: The metadata key name. See the `metadata` array description for documented values. Additional keys may be present.
+                x-extensible-enum:
+                  - backingTransferBroadcastTimestamp
+                  - lightningPaymentHash
+                  - onChainTxId
+                  - replacedBy
+                  - replaces
+                  - reversedBy
+                  - reverses
+                  - rtId
+                  - stablecoinTxType
+                  - tokenizationUniquenessId
               value:
                 type: string
         sendAccounting:
@@ -90958,7 +91046,15 @@ components:
       example: 01000000000101d58f82d996dd872012675adadf4606734906b25a413f6e2ee535c0c10aef96020000000000ffffffff028de888000000000017a914c91aa24f65827eecec775037d886f2952b73cbe48740420f000000000017a9149304d18497b9bfe9532778a0f06d9fff3b3befaf870500473044022023d7210ba6d8bbd7a28b8af226f40f7235caab79156f93f9c9969fc459ea7f73022050fbdca788fba3de686b66b3501853695ff9d6f375867470207d233b099576e001000069522103d4788cda52f91c1f6c82eb91491ca76108c9c5f0839bc4f02eccc55fedb3311c210391bcef9dcc89570a79ba3c7514e65cd48e766a8868eca2769fa9242fdcc796662102ef3c5ebac4b54df70dea1bb2655126368be10ca0462382fcb730e55cddd2dd6a53aec8b11400
     TxId:
       type: string
-      description: The on-chain transaction id
+      description: |
+        The on-chain transaction id.
+
+        **Go Account / OFC wallets:** For `ofc_withdrawal` transfers the top-level `txid`
+        (and `normalizedTxHash`) is the internal front-transfer hash, not the on-chain
+        transaction hash. The on-chain hash is available in `metadata[].onChainTxId` once
+        the transfer reaches state `confirmed`. For standard `ofc_deposit` transfers
+        (non-lightning) all three values are identical. For OFC lightning deposits the
+        payment hash is in `metadata[].lightningPaymentHash`; `onChainTxId` is absent.
       example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
     TxUsdThresholdRuleCondition:
       title: TxUsdThresholdRuleCondition
