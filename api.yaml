@@ -59426,7 +59426,8 @@ components:
       properties:
         expireAt:
           type: string
-          description: Expiration timestamp of the delegation.
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          description: Expiration date of the delegation in ISO 8601 yyyy-MM-dd format (e.g. "2025-01-01"). Raw epoch seconds are not accepted.
         rewardAddress:
           type: string
           description: Address to receive staking rewards.
@@ -83993,6 +83994,11 @@ components:
           description: Indicates that staking amounts are fixed per tier/option and should be auto-filled from the selected option's amount field. When true, the UI should prefill and make the amount field readonly.
           type: boolean
           default: false
+        conversionRates:
+          description: Map of netUID to alpha-to-TAO conversion rate (string-encoded BigInteger). Used to display TAO equivalent amounts in the staking form.
+          type: object
+          additionalProperties:
+            type: string
     StakingSpendableBreakdown:
       type: object
       description: Breakdown of staking spendable amounts, including balances, fees, and limits.
@@ -91886,6 +91892,11 @@ components:
           description: Supported unstaking sub-types with their own spendable attributes.
           items:
             $ref: '#/components/schemas/UnstakingSubTypeSpendableAttributes'
+        conversionRates:
+          description: Map of netUID to alpha-to-TAO conversion rate (string-encoded BigInteger). Used to display TAO equivalent amounts in the unstaking form.
+          type: object
+          additionalProperties:
+            type: string
     UnauthorizedErrorResponse:
       required:
         - error
