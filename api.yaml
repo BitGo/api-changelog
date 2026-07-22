@@ -764,192 +764,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/enterprise/{enterpriseId}/user:
-    delete:
-      tags:
-        - Enterprise
-      summary: Remove user from enterprise
-      operationId: v2.enterprise.user.remove
-      parameters:
-        - $ref: '#/components/parameters/pathEnterpriseId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/DeleteEnterpriseUser'
-      responses:
-        '200':
-          description: OK
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  pendingApprovals:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/PlatformPendingApproval'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformPlatformError'
-                  - $ref: '#/components/schemas/PlatformInvalidEnterpriseId'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformPlatformError'
-    post:
-      summary: Add user to enterprise
-      operationId: v2.enterprise.user.add
-      tags:
-        - User
-      parameters:
-        - name: enterpriseId
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/EnterpriseIdString'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              allOf:
-                - type: object
-                  properties:
-                    permission:
-                      oneOf:
-                        - $ref: '#/components/schemas/EnterpriseUserPermission'
-                        - type: array
-                          items:
-                            type: string
-                            enum:
-                              - admin
-                              - auditor
-                            description: |-
-                              This type represents the permissions that can be assigned to a user when adding them to an enterprise
-
-                              1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
-                              2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
-                    videoIdUser:
-                      type: boolean
-                    invite:
-                      type: boolean
-                - oneOf:
-                    - type: object
-                      properties:
-                        username:
-                          type: string
-                          description: The username of a user that should be added to the enteprrise
-                          format: email
-                        videoIdUser:
-                          type: boolean
-                      required:
-                        - username
-                    - type: object
-                      properties:
-                        usernames:
-                          type: array
-                          items:
-                            type: string
-                            description: Thes Username of a User that should be added to the Enterprise
-                        videoIdUser:
-                          type: boolean
-                      required:
-                        - usernames
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-    put:
-      summary: Update users role in an enterprise
-      description: Update a users role in an enterprise. Must be an enterprise manager to perform this action.
-      operationId: v2.enterprise.user.update
-      tags:
-        - User Management
-      parameters:
-        - name: userId
-          description: ''
-          in: query
-          required: true
-          schema:
-            type: string
-            example: 59cd72485007a239fb00282ed480da1f
-            minLength: 1
-            pattern: ^[0-9a-f]{32}$
-        - name: role
-          in: query
-          required: true
-          schema:
-            $ref: '#/components/schemas/EnterpriseUserRole'
-        - name: enterpriseId
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/EnterpriseIdString'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                title: JSON
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidOrganizationId'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/pendingapprovals/{approvalId}:
     put:
       tags:
@@ -24000,7 +23814,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId'
         '404':
           description: Not Found
           content:
@@ -24037,7 +23851,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId'
         '404':
           description: Not Found
           content:
@@ -24068,7 +23882,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId'
         '404':
           description: Not Found
           content:
@@ -24143,7 +23957,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId'
         '404':
           description: Not Found
           content:
@@ -24186,7 +24000,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId'
         '404':
           description: Not Found
           content:
@@ -24923,7 +24737,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId'
         '403':
           description: Forbidden
           content:
@@ -25025,7 +24839,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId'
         '403':
           description: Forbidden
           content:
@@ -26178,81 +25992,6 @@ paths:
                   properties:
                     videoApprovers:
                       $ref: '#/components/schemas/VideoApprovers'
-      responses:
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval1'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-  /api/v2/{coin}/wallet/{walletId}/tx/send:
-    post:
-      tags:
-        - Wallet
-      summary: Send a half-signed transaction
-      operationId: v2.wallet.tx.send
-      description: |
-        Send a half-signed transaction to BitGo for final signing (using the BitGo key) and broadcasting.
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SendTransaction'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TransactionResponse'
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval1'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-                  - $ref: '#/components/schemas/DuplicateSequenceId'
-                  - $ref: '#/components/schemas/InvalidOFAC'
-        '423':
-          description: Locked
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformErrorNoName3'
-  /api/v2/{coin}/wallet/{walletId}/trustline/initiate:
-    post:
-      tags:
-        - Wallet
-      summary: Initiate a trustline transaction
-      operationId: v2.wallet.trustline.initiate
-      description: Initiate an unsigned trustline transaction to create a pending approval. Trustline transactions manage trusted tokens on the account. Available for Stellar. Use only with custodial wallets.
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/InitiateTrustlineParams'
       responses:
         '202':
           description: Accepted
@@ -35169,6 +34908,70 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/enableBridging:
+    post:
+      summary: Enable bridging for a wallet
+      description: |-
+        Checks the wallet's native balance and requests gas-tank funding if needed.
+        Returns 400 if the coin does not support the enableBridging feature.
+        Returns 500 if a downstream service (indexer or gas-tank-service) fails.
+      operationId: v2.coin.wallet.enableBridging
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: coin
+          description: The coin identifier
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The BitGo wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: No request body parameters required
+              properties: {}
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnableBridgingApiResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/forwarders/balances:
     get:
       summary: List forwarder addresses and balances
@@ -35239,6 +35042,10 @@ paths:
           application/json:
             schema:
               type: object
+              description: |-
+                Freeze Wallet Request Body
+
+                Parameters for freezing a wallet, including duration and optional metadata.
               properties:
                 duration:
                   nullable: true
@@ -35642,6 +35449,101 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/trustline/initiate:
+    post:
+      summary: Initiate a trustline transaction
+      description: |-
+        Initiate an unsigned trustline transaction to create a pending approval.
+        Trustline transactions manage trusted tokens on the account. Available for Stellar.
+        Use only with custodial wallets.
+      operationId: v2.wallet.trustline.initiate
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+            example: txlm
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for initiating a trustline transaction.
+                Specifies trustlines to add or remove on a Stellar custodial wallet account.
+              properties:
+                trustlines:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: object
+                    description: List of trustlines to manage on the account.
+                    properties:
+                      token:
+                        type: string
+                        description: One of the supported coin types for Stellar tokens listed in Coin-specific-implementation
+                        example: txlm:BST-GBQTIOS3XGHB7LVYGBKQVJGCZ3R4JL5E4CBSWJ5ALIJUHBKS6263644L
+                      action:
+                        type: string
+                        enum:
+                          - add
+                          - remove
+                      limit:
+                        allOf:
+                          - $ref: '#/components/schemas/IntegerString11'
+                        description: String representation of the amount to limit in base units (stroops)
+                        example: '2000000'
+                        pattern: ^-?\d+$
+                    required:
+                      - token
+                      - action
+                memo:
+                  type: object
+                  description: The memo contains optional extra information that can also be used to identify payments in Stellar.
+                  properties:
+                    type:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                    - type
+                    - value
+                comment:
+                  type: string
+                  description: Optional metadata (only persisted in BitGo) to be applied to the transaction. Use this to add transaction-specific information such as the transaction's purpose or another identifier that you want to reference later. The value is shown in the UI in the transfer listing page.
+                  maxLength: 256
+              required:
+                - trustlines
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/{coin}/wallet/{walletId}/tx/changeFee:
     post:
       summary: Change Fee
@@ -35714,6 +35616,404 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/tx/send:
+    post:
+      summary: Send a half-signed transaction
+      description: |-
+        Send a half-signed transaction to BitGo for final signing (using the BitGo key)
+        and broadcasting.
+      operationId: v2.wallet.tx.send
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: coin
+          description: Coin or token identifier (e.g. btc, tbtc, eth)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for sending a half-signed transaction.
+                Combines BuildParams with send-specific fields.
+              properties:
+                type:
+                  type: string
+                  description: |-
+                    Required for transactions from MPC wallets. "acceleration" speeds up transactions with a certain nonce by adjusting the gas setting.
+                    "accountSet" is for XRP AccountSet transactions. "consolidate" combines multiple UTXO inputs into fewer outputs. "enabletoken" is for SOL.
+                    "fanout" splits UTXO inputs into many smaller outputs (UTXO coins only). "stakingLock" and "stakingUnlock" are for Stacks delegations.
+                    "transfer" is for native-asset transfers. "trustline" is for Stellar trustline transactions.
+                    Possible types include: [acceleration, accountSet, consolidate, enabletoken, fanout, stakingLock, stakingUnlock, transfer, transfertoken, trustline]
+
+                    For AVAX, possible types include: `addValidator`, `export`, and `import`.
+
+                    For XRP, possible types include: `payment` and `accountSet`. The default is `payment`.
+
+                    For STX, type is required.
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address:
+                        type: string
+                        description: The address for which you're proving ownership. This address must belong to the wallet.
+                      message:
+                        type: string
+                        description: Message that is being signed.
+                        example: BIP322 test message.
+                    required:
+                      - address
+                      - message
+                    description: |-
+                      [UTXO only] An array of messages that you sign with the wallet keys using the BIP322 format.
+                      If passed, the `recipients` array must be empty.
+                numBlocks:
+                  type: number
+                  description: |-
+                    (BTC only) The number of blocks required to confirm a transaction. You can use `numBlocks` to estimate the fee rate by targeting confirmation within a given number of blocks.
+                    If both `feeRate` and `numBlocks` are absent, the transaction defaults to 2 blocks for confirmation.
+
+                    Note: The `maxFeeRate` limits the fee rate generated by `numBlocks`.
+                  minimum: 2
+                  maximum: 1000
+                feeRate:
+                  type: number
+                  description: |-
+                    Custom fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte.
+
+                    If the `feeRate` is less than the minimum required network fee, then the minimum fee applies. For example, 1000 sat/kvByte, a flat 1000 microAlgos, or a flat 10 drops of xrp. For XRP, the actual fee is usually 4.5 times the open ledger fee.
+
+                    Note: The `feeRate` overrides the `maxFeeRate` and `minFeeRate`.
+                  example: 10000
+                maxFeeRate:
+                  type: number
+                  description: |-
+                    (BTC only) The maximum fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte.
+                    The `maxFeeRate` limits the fee rate generated by both `feeMultiplier` and `numBlocks`.
+
+                    Note: The `feeRate` overrides the `maxFeeRate`.
+                  example: 20000
+                feeMultiplier:
+                  oneOf:
+                    - type: number
+                    - type: string
+                  description: |-
+                    (UTXO only) Custom multiplier to the `feeRate`. The resulting fee rate is limited by the `maxFeeRate`.
+                    For replace-by-fee (RBF) transactions (that include `rbfTxIds`), the `feeMultiplier` must be greater than 1, since it's an absolute fee multiplier to the transaction being replaced.
+
+                    Note: The `maxFeeRate` limits the fee rate generated by `feeMultiplier`.
+                  example: '1.5'
+                minConfirms:
+                  type: number
+                  description: |-
+                    The unspent selection for the transaction will only consider unspents with at least this many confirmations to be used as inputs.
+                    Does not apply to change outputs unless used in combination with `enforceMinConfirmsForChange`.
+                enforceMinConfirmsForChange:
+                  type: boolean
+                  default: false
+                  description: When set to true, will enforce minConfirms for change outputs.
+                gasPrice:
+                  type: number
+                  description: Custom gas price to be used for sending the transaction. Only for ETH and ERC20 tokens.
+                eip1559:
+                  type: object
+                  description: EIP-1559 transaction parameters. Only for ETH and ERC20 tokens.
+                  properties:
+                    maxFeePerGas:
+                      allOf:
+                        - $ref: '#/components/schemas/NumberLike'
+                      description: Max total gasPrice for EIP1559 transactions. Only for ETH and ERC20 tokens.
+                    maxPriorityFeePerGas:
+                      allOf:
+                        - $ref: '#/components/schemas/NumberLike'
+                      description: Max priority tip price for EIP1559 transactions. Only for ETH and ERC20 tokens.
+                  required:
+                    - maxFeePerGas
+                    - maxPriorityFeePerGas
+                gasLimit:
+                  type: number
+                  description: Custom gas limit to be used for sending the transaction. Only for ETH and ERC20 tokens.
+                targetWalletUnspents:
+                  type: number
+                  default: 1000
+                  description: |-
+                    Specifies the minimum count of good-sized unspents to maintain in the wallet. Change splitting ceases when the wallet has `targetWalletUnspents` good-sized unspents.
+
+                    **Note**: Wallets that continuously send a high count of transactions will automatically split large change amounts into multiple good-sized change outputs while they have fewer than `targetWalletUnspents` good-sized unspents in their unspent pool. Breaking up large unspents helps to reduce the amount of unconfirmed funds in flight in future transactions, and helps to avoid long chains of unconfirmed transactions. This is especially useful for newly funded wallets or recently refilled send-only wallets.
+                minValue:
+                  type: number
+                  description: Ignore unspents smaller than this amount of base units (e.g. satoshis). For doge, only string is allowed.
+                maxValue:
+                  type: number
+                  description: Ignore unspents larger than this amount of base units (e.g. satoshis). For doge, only string is allowed.
+                sequenceId:
+                  type: string
+                  description: |-
+                    A `sequenceId` is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended.
+                    With a `sequenceId` you can easily reference transfers and transactions—for example, to safely retry sending.
+                    Because the system only confirms one send request per `sequenceId` (and fails all subsequent attempts), you can retry sending without the risk of double spending.
+                    The `sequenceId` is only visible to users on the wallet and is not shared publicly.
+                nonce:
+                  type: string
+                  description: |-
+                    (DOT only) A nonce ID is a number used to protect private communications by preventing replay attacks.
+                    This is an advanced option where users can manually input a new nonce value in order to correct or fill in a missing nonce ID value.
+                  example: '2000000'
+                  pattern: ^-?\d+$
+                noSplitChange:
+                  type: boolean
+                  default: false
+                  description: |-
+                    Set `true` to disable automatic change splitting.
+
+                    Also see: `targetWalletUnspents`
+                unspents:
+                  type: array
+                  items:
+                    type: string
+                    description: Used to explicitly specify the unspents to be used in the input set in the transaction. Each unspent should be in the form `prevTxId:nOutput`.
+                    example: 12b147dd8b4f73c01f72bdbf5b589eea614f3de609ffdbdac84852d6505cf8a3:1
+                changeAddress:
+                  type: string
+                  description: Specifies a custom destination address for the transaction's change output(s)
+                  example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
+                  maxLength: 250
+                txFormat:
+                  type: string
+                  enum:
+                    - legacy
+                    - psbt
+                    - psbt-lite
+                  default: legacy
+                  description: |-
+                    [UTXO only] Format of the returned transaction hex serialization.
+                    `legacy` for serialized transaction in custom bitcoinjs-lib format. `psbt` for BIP174 serialized transaction
+                  example: psbt
+                instant:
+                  type: boolean
+                  description: (DASH only) Specifies whether or not to use Dash's "InstantSend" feature when sending a transaction.
+                memo:
+                  type: object
+                  description: |-
+                    Extra transaction information for CSPR, EOS, HBAR, RUNE, STX, TON, XLM, and XRP. Required for XLM transactions.
+
+                    Note: For XRP this is the destination tag (DT), for CSPR this is the transfer ID and for ALGO this is the message field.
+                  properties:
+                    type:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                    - type
+                    - value
+                comment:
+                  type: string
+                  description: An optional memo for the transaction.
+                  maxLength: 256
+                destinationChain:
+                  type: string
+                  description: (AVAXC and AVAXP only) Destination chain for an AVAX import/export transaction. One of [P, C].
+                sourceChain:
+                  type: string
+                  description: (AVAXC and AVAXP only) Source chain for an AVAX import/export transaction. One of [P, C].
+                addressType:
+                  type: string
+                  deprecated: true
+                  description: |-
+                    DEPRECATED - use `changeAddressType`.
+                    The type of address to create for change. One of `p2sh`, `p2shP2wsh`, `p2wsh`, or `p2tr`.
+                  example: p2sh
+                changeAddressType:
+                  oneOf:
+                    - $ref: '#/components/schemas/AddressType3'
+                    - $ref: '#/components/schemas/ChangeAddressTypes1'
+                  description: |-
+                    The address type for the change address. One of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`,
+                    or an ordered array of those address types (`ChangeAddressTypes`).
+                  example: p2sh
+                startTime:
+                  type: string
+                  description: Unix timestamp in seconds.nanoseconds format, denoting the start of the validity window. Only for HBAR transactions.
+                  example: '1714067129.1020603'
+                consolidateId:
+                  type: string
+                  description: (ALGO/TEZOS only) Consolidation ID of this consolidation transaction.
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+                lastLedgerSequence:
+                  type: number
+                  description: (XRP only) Absolute max ledger the transaction should be accepted in, whereafter it will be rejected
+                ledgerSequenceDelta:
+                  type: number
+                  description: (XRP only) Relative ledger height (in relation to the current ledger) that the transaction should be accepted in, whereafter it will be rejected
+                cpfpTxIds:
+                  type: array
+                  items:
+                    type: string
+                    description: The list of transactions to bump with a Child-Pays-For-Parent transaction (currently only bumping one tx is supported).
+                cpfpFeeRate:
+                  type: number
+                  description: |-
+                    The desired effective fee rate of the accelerated transaction in base units per kilobyte (e.g. satoshi/kB), the unconfirmed transactions it depends on, and the newly created Child-Pays-For-Parent transaction.
+                    Must be higher than the current effective fee rate of the target transaction.
+                rbfTxIds:
+                  type: array
+                  items:
+                    type: string
+                    description: The list of transactions to accelerate using Replace-By-Fee (RBF) for UTXO coins (currently accelerating only one tx is supported).
+                isReplaceableByFee:
+                  type: boolean
+                  description: It is used to mark an UTXO transaction eligible for Replace-By-Fee (RBF) later.
+                maxFee:
+                  type: number
+                  description: |-
+                    Limits the amount of satoshis that can be used for fees in a Child-Pays-For-Parent (CPFP) transaction. CPFP transactions accelerate the targeted transaction and all of the unconfirmed transactions the targeted transaction depends on.
+                    `maxFee` is required for all CPFP transactions as it allows users to set a safety net that will halt CPFP attempts that exceed the expected cost.
+                  minimum: 0
+                strategy:
+                  type: string
+                  description: Optional unspent selection strategy to use. One of `RANDOM`, `FIFO` or `BNB`.
+                  maxLength: 20
+                validFromBlock:
+                  type: number
+                  description: Optional block this transaction is valid from
+                validToBlock:
+                  type: number
+                  description: Optional block this transaction is valid until
+                trustlines:
+                  type: array
+                  items:
+                    type: object
+                    description: List of trustlines to manage on the account. Available for Stellar.
+                    properties:
+                      action:
+                        type: string
+                        enum:
+                          - add
+                          - remove
+                      limit:
+                        allOf:
+                          - $ref: '#/components/schemas/IntegerString1'
+                        description: String representation of the amount to limit in base units (stroops)
+                        example: '2000000'
+                        pattern: ^-?\d+$
+                      token:
+                        type: string
+                        description: One of the supported coin types for Stellar tokens listed in Coin-specific-implementation
+                        example: txlm:BST-GBQTIOS3XGHB7LVYGBKQVJGCZ3R4JL5E4CBSWJ5ALIJUHBKS6263644L
+                stakingOptions:
+                  oneOf:
+                    - $ref: '#/components/schemas/SendTransactionCSPRStakingOptions'
+                    - $ref: '#/components/schemas/SendTransactionSTXStakingOptions'
+                  description: Required object for staking. Only for CSPR and STX.
+                unstakingOptions:
+                  type: object
+                  description: Options needed to unstake EOS assets
+                  properties:
+                    from:
+                      type: string
+                      description: The name or address of the account that originally staked assets
+                    receiver:
+                      type: string
+                      description: The name or address of the account that had assets staked to
+                    unstakeCpuQuantity:
+                      type: string
+                      description: The string amount of assets to unstake from CPU and asset symbol separated by a space (e.g. '100 EOS')
+                      example: 100 EOS
+                    unstakeNetQuantity:
+                      type: string
+                      description: The string amount of assets to unstake from Net and asset symbol separated by a space (e.g. '100 EOS')
+                      example: 100 EOS
+                refundOptions:
+                  type: object
+                  description: Options needed to refund unstaked EOS assets if automatic refund fails
+                  properties:
+                    address:
+                      type: string
+                      description: The name or address of the account that originally unstaked assets
+                messageKey:
+                  type: string
+                  description: |-
+                    Optional parameter that takes a hexadecimal value to set `messagekey` for an XRP `accountSet` transaction.
+                    Recipients field should be empty when `messageKey` is set.
+                reservation:
+                  type: object
+                  description: Optional parameter for UTXO coins to automatically reserve the unspents that are used in the build. Useful for Cold wallets. If using, must set expireTime.
+                  properties:
+                    expireTime:
+                      type: string
+                      description: Required. The time that the unspent reservations should expire.
+                      format: date-time
+                  required:
+                    - expireTime
+                halfSigned:
+                  type: object
+                  description: The half-signed transaction. The request must include this or a txHex.
+                  properties:
+                    txHex:
+                      type: string
+                      description: The half-signed transaction hex.
+                txHex:
+                  type: string
+                  description: The half-signed, serialized transaction hex. Alternative to sending halfSigned.
+                txRequestId:
+                  type: string
+                  description: The transaction request id.
+                suppressBroadcast:
+                  type: boolean
+                  description: Do not broadcast the transaction after signing.
+                videoApprovers:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    description: A list of public ids of users that should do the video id verification for the transaction that is being sent or initiated.
+                    pattern: ^[0-9a-f]{32}$
+                    example: 59cd72485007a239fb00282ed480da1f
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionResponse1'
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/DuplicateSequenceId'
+                  - $ref: '#/components/schemas/InvalidOFAC'
+        '423':
+          description: Locked
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformErrorNoName'
   /api/v2/{coin}/wallet/{walletId}/undelegateResources/build:
     post:
       summary: Build bulk resource undelegation transactions
@@ -36008,8 +36308,6 @@ paths:
               - type: array
                 items:
                   type: string
-                  x-enumsDeprecated:
-                    - adminUnblockUserEmail
         - name: userId
           description: The user ID to filter by
           in: query
@@ -36137,7 +36435,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
         '404':
           description: Not Found
           content:
@@ -36186,7 +36484,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
         '401':
           description: Unauthorized
           content:
@@ -36220,7 +36518,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
         '401':
           description: Unauthorized
           content:
@@ -36326,7 +36624,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
         '404':
           description: Not Found
           content:
@@ -36380,7 +36678,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
         '404':
           description: Not Found
           content:
@@ -36919,6 +37217,213 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/enterprise/{enterpriseId}/user:
+    delete:
+      summary: Remove user from enterprise
+      description: |-
+        Remove a user from an enterprise. When multiple admins exist, the removal
+        may require approval from other enterprise admins.
+      operationId: v2.enterprise.user.remove
+      tags:
+        - Enterprise
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: The enterprise ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/EnterpriseIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for removing a user from an enterprise.
+                Specifies the username of the user to remove.
+              properties:
+                username:
+                  type: string
+                  description: The username of the user to remove from the enterprise.
+              required:
+                - username
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemoveEnterpriseUserAcceptedResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Add user to enterprise
+      operationId: v2.enterprise.user.add
+      tags:
+        - User
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EnterpriseIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              allOf:
+                - type: object
+                  properties:
+                    permission:
+                      oneOf:
+                        - $ref: '#/components/schemas/EnterpriseUserPermission'
+                        - type: array
+                          items:
+                            type: string
+                            enum:
+                              - admin
+                              - auditor
+                              - wallet.create
+                            description: |-
+                              This type represents the permissions that can be assigned to a user when adding them to an enterprise
+
+                              1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
+                              2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
+                              3. 'wallet.create': Allows the user to create new wallets within an enterprise (UMS granular permission)
+                    videoIdUser:
+                      type: boolean
+                    invite:
+                      type: boolean
+                - oneOf:
+                    - type: object
+                      properties:
+                        username:
+                          type: string
+                          description: The username of a user that should be added to the enteprrise
+                          format: email
+                        videoIdUser:
+                          type: boolean
+                      required:
+                        - username
+                    - type: object
+                      properties:
+                        usernames:
+                          type: array
+                          items:
+                            type: string
+                            description: Thes Username of a User that should be added to the Enterprise
+                        videoIdUser:
+                          type: boolean
+                      required:
+                        - usernames
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    put:
+      summary: Update users role in an enterprise
+      description: Update a users role in an enterprise. Must be an enterprise manager to perform this action.
+      operationId: v2.enterprise.user.update
+      tags:
+        - User Management
+      parameters:
+        - name: userId
+          description: ''
+          in: query
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: role
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/EnterpriseUserRole'
+        - name: enterpriseId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/EnterpriseIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                title: JSON
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidOrganizationId'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}/user/{userId}/signingkey:
     get:
       summary: Get enterprise user signing key
@@ -36958,7 +37463,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidEnterpriseId'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
         '404':
           description: Not Found
           content:
@@ -37748,11 +38253,13 @@ paths:
                     enum:
                       - admin
                       - auditor
+                      - wallet.create
                     description: |-
                       This type represents the permissions that can be assigned to a user when adding them to an enterprise
 
                       1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
                       2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
+                      3. 'wallet.create': Allows the user to create new wallets within an enterprise (UMS granular permission)
               required:
                 - email
       responses:
@@ -37875,13 +38382,33 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/organization/{organizationId}/enterprises/summary:
     get:
-      summary: Get enterprise summary for an organization
-      description: Returns counts of CaaS child enterprises grouped by KYC state and account type.
+      summary: Org enterprise inventory summary for an organization
+      description: |-
+        Returns inventory headline counts plus verification state breakdowns for
+        individual (KYC) and entity (KYB) enterprises
       operationId: v2.organization.enterprises.summary
       tags:
         - Enterprise Management
       x-internal: false
       parameters:
+        - name: businessModel
+          description: |-
+            Filter by one or more business models. Repeatable:
+            ?businessModel=cryptoAsAServiceChild&businessModel=bitgoAsAService
+            When omitted, all enterprises in the org are included in inventory counts.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - bitgoAsAService
+                - cryptoAsAServiceParent
+                - cryptoAsAServiceChild
+              description: |-
+                Filter by one or more business models. Repeatable:
+                ?businessModel=cryptoAsAServiceChild&businessModel=bitgoAsAService
+                When omitted, all enterprises in the org are included in inventory counts.
         - name: organizationId
           description: The organization ID
           in: path
@@ -37896,6 +38423,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/EnterprisesSummaryResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '401':
           description: Unauthorized
           content:
@@ -37980,6 +38513,8 @@ paths:
               - organizationTransactions
               - organizationTrades
               - organizationStaking
+              - organizationHoldingsV2
+              - organizationTransactionsV2
               - quarterly
         - name: status
           description: Only return rports for this report status
@@ -38284,6 +38819,81 @@ paths:
                 organizationTransactions:
                   type: object
                   description: Organization-level Transactions report
+                  properties:
+                    assets:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    endDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    enterprises:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    isAddressReport:
+                      type: boolean
+                    isDetailed:
+                      type: boolean
+                    organization:
+                      type: string
+                      minLength: 1
+                    startDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    wallets:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                        example: 59cd72485007a239fb00282ed480da1f
+                    walletTypes:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                  required:
+                    - endDate
+                    - organization
+                    - startDate
+                organizationHoldingsV2:
+                  type: object
+                  description: |-
+                    Organization-level Holdings report (v2 — reconciled/persisted marts dataset).
+                    Only by-wallet holdings are available for v2; `byWallet: false` is rejected by the
+                    server and `byWallet` is otherwise always treated as `true`. Use `organizationHoldings`
+                    (v1) for org-level (non-per-wallet) holdings.
+                  properties:
+                    byWallet:
+                      type: boolean
+                    enterprises:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    includeStaking:
+                      type: boolean
+                    organization:
+                      type: string
+                      minLength: 1
+                    snapshotDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                  required:
+                    - organization
+                    - snapshotDate
+                organizationTransactionsV2:
+                  type: object
+                  description: |-
+                    Organization-level Transactions report (v2 — reconciled/persisted marts dataset).
+                    Only transaction history is available for v2; `isDetailed` and `isAddressReport` are
+                    rejected by the server. Use `organizationTransactions` (v1) for transfer-detail or
+                    address-level-transfer-detail reports.
                   properties:
                     assets:
                       type: array
@@ -38729,6 +39339,8 @@ paths:
               - accessToken
               - reversal
               - tradeOrder
+              - whitelistApproved
+              - whitelistRejected
         - name: prevId
           in: query
           schema:
@@ -38946,9 +39558,11 @@ paths:
                           - needs review
                           - input error
                           - ssn error
+                          - taxid error
                           - gov id error
                           - ssn verified
                           - gov id verified
+                          - evaluating submission
                           - enrichment
                           - awaiting document upload
                           - records uploaded
@@ -38959,6 +39573,8 @@ paths:
                           - signature submitted
                           - initiating
                           - additional information submitted
+                          - productRequestApproved
+                          - productRequestRejected
                     type:
                       type: string
                       enum:
@@ -39054,6 +39670,36 @@ paths:
                       type: string
                       enum:
                         - idvStatus
+                    url:
+                      type: string
+                      minLength: 1
+                  required:
+                    - type
+                    - url
+                - type: object
+                  title: Whitelist Approved
+                  properties:
+                    label:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - whitelistApproved
+                    url:
+                      type: string
+                      minLength: 1
+                  required:
+                    - type
+                    - url
+                - type: object
+                  title: Whitelist Rejected
+                  properties:
+                    label:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - whitelistRejected
                     url:
                       type: string
                       minLength: 1
@@ -39223,6 +39869,9 @@ paths:
               - twoStepTransfer
               - twoStepDeposit
               - twoStepWithdrawal
+              - pendingDecryption
+              - whitelistApproved
+              - whitelistRejected
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -39368,7 +40017,7 @@ paths:
                       type: string
                       format: UUID
                     identityStatus:
-                      $ref: '#/components/schemas/IdentityStatusEnum'
+                      $ref: '#/components/schemas/IdentityStatus1'
                   required:
                     - identityId
                     - identityStatus
@@ -39552,6 +40201,7 @@ paths:
                     - genericRequest
                     - enterpriseInviteRequest
                     - updateWalletSettingRequest
+                    - updateWalletTagsRequest
         - name: requestResourceType
           description: Filter by generic request resource type
           in: query
@@ -39866,6 +40516,8 @@ paths:
               - organizationTransactions
               - organizationTrades
               - organizationStaking
+              - organizationHoldingsV2
+              - organizationTransactionsV2
               - quarterly
         - name: status
           description: Only return rports for this report status
@@ -40168,6 +40820,81 @@ paths:
                 organizationTransactions:
                   type: object
                   description: Organization-level Transactions report
+                  properties:
+                    assets:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    endDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    enterprises:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    isAddressReport:
+                      type: boolean
+                    isDetailed:
+                      type: boolean
+                    organization:
+                      type: string
+                      minLength: 1
+                    startDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                    wallets:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                        example: 59cd72485007a239fb00282ed480da1f
+                    walletTypes:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                  required:
+                    - endDate
+                    - organization
+                    - startDate
+                organizationHoldingsV2:
+                  type: object
+                  description: |-
+                    Organization-level Holdings report (v2 — reconciled/persisted marts dataset).
+                    Only by-wallet holdings are available for v2; `byWallet: false` is rejected by the
+                    server and `byWallet` is otherwise always treated as `true`. Use `organizationHoldings`
+                    (v1) for org-level (non-per-wallet) holdings.
+                  properties:
+                    byWallet:
+                      type: boolean
+                    enterprises:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                    includeStaking:
+                      type: boolean
+                    organization:
+                      type: string
+                      minLength: 1
+                    snapshotDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                  required:
+                    - organization
+                    - snapshotDate
+                organizationTransactionsV2:
+                  type: object
+                  description: |-
+                    Organization-level Transactions report (v2 — reconciled/persisted marts dataset).
+                    Only transaction history is available for v2; `isDetailed` and `isAddressReport` are
+                    rejected by the server. Use `organizationTransactions` (v1) for transfer-detail or
+                    address-level-transfer-detail reports.
                   properties:
                     assets:
                       type: array
@@ -41910,6 +42637,22 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: customTags
+          description: |-
+            Filter wallets by applied tags (OR semantics). Provide one or more tag
+            values; returns wallets that match any of the supplied tags.
+            Tag matching is case-insensitive — `?customTags=Warm` matches stored `"warm"`.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              description: |-
+                Filter wallets by applied tags (OR semantics). Provide one or more tag
+                values; returns wallets that match any of the supplied tags.
+                Tag matching is case-insensitive — `?customTags=Warm` matches stored `"warm"`.
+              example: '"warm"'
         - name: frozen
           description: |-
             Filter derived wallets by freeze status.
@@ -41994,6 +42737,217 @@ paths:
                 $ref: '#/components/schemas/WalletFeeAddressBalances'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/fiatwithdrawals:
+    get:
+      summary: List fiat withdrawals
+      description: List fiat withdrawals for a specific Go Account wallet.
+      operationId: v2.wallet.fiatWithdrawals.list
+      tags:
+        - Transfer
+      x-internal: false
+      parameters:
+        - name: state
+          description: Filter by fiat withdrawal state.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - confirmationPending
+                - confirmationApproved
+                - confirmationRejected
+              description: Filter by fiat withdrawal state.
+        - name: coin
+          description: Filter by supported fiat currency.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - tfiatusd
+                - tfiateuro
+                - tfiatgbp
+                - tfiatinr
+                - tfiataed
+                - tfiatsgd
+                - fiatusd
+                - fiateuro
+                - fiatgbp
+                - fiataed
+                - fiatsgd
+              description: Filter by supported fiat currency.
+        - name: limit
+          description: Maximum number of results to return. If the result set is truncated, use the "nextBatchPrevId" value to get the next batch.
+          in: query
+          schema:
+            type: string
+            default: '25'
+            minimum: 1
+            maximum: 500
+            format: number
+        - name: prevId
+          description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
+          in: query
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WireWithdrawalsPaginatedResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/fiatwithdrawals/{transferId}/confirm:
+    put:
+      summary: Confirm fiat withdrawal
+      description: |-
+        Approve or reject a pending fiat withdrawal. If approving, the `state` updates to `pendingApproval`,
+        enabling BitGo Trust to wire transfer the funds. If rejecting, the `state` updates to `rejected`,
+        canceling the pending withdrawal.
+      operationId: v2.wallet.fiatWithdrawals.confirm
+      tags:
+        - Transfer
+      x-internal: false
+      parameters:
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+        - name: transferId
+          description: The transfer ID of the fiat withdrawal to confirm
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Confirm Fiat Withdrawal Request Body
+
+                The action to take on a pending fiat withdrawal, with optional validation fields to verify the transfer details before confirming.
+              properties:
+                action:
+                  allOf:
+                    - $ref: '#/components/schemas/WireWithdrawalConfirmationAction'
+                  description: The action to take on a wire withdrawal confirmation. "approve" to confirm the withdrawal, "reject" to reject it.
+                coin:
+                  type: string
+                  enum:
+                    - tfiatusd
+                    - tfiateuro
+                    - tfiatgbp
+                    - tfiatinr
+                    - tfiataed
+                    - tfiatsgd
+                    - fiatusd
+                    - fiateuro
+                    - fiatgbp
+                    - fiataed
+                    - fiatsgd
+                amount:
+                  type: string
+                  description: String representation of the amount to send in base units of the currency.
+                  example: '2000000'
+                  pattern: ^-?\d+$
+                address:
+                  type: string
+                  description: The address to send to.
+                  example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
+                  maxLength: 250
+              required:
+                - action
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
           content:
             application/json:
               schema:
@@ -42998,7 +43952,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/DuplicateSequenceId1'
+                  - $ref: '#/components/schemas/DuplicateSequenceId'
                   - $ref: '#/components/schemas/PlatformError'
         '401':
           description: Unauthorized
@@ -43196,14 +44150,14 @@ paths:
                         properties:
                           from:
                             allOf:
-                              - $ref: '#/components/schemas/SignatureShareType'
+                              - $ref: '#/components/schemas/SignatureShareTypeCodec'
                             description: The source of the signature share.
                           share:
                             type: string
                             description: The signature share
                           to:
                             allOf:
-                              - $ref: '#/components/schemas/SignatureShareType'
+                              - $ref: '#/components/schemas/SignatureShareTypeCodec'
                             description: The recipient of the signature share.
                         required:
                           - from
@@ -43232,14 +44186,14 @@ paths:
                         properties:
                           from:
                             allOf:
-                              - $ref: '#/components/schemas/SignatureShareType'
+                              - $ref: '#/components/schemas/SignatureShareTypeCodec'
                             description: The source of the signature share.
                           share:
                             type: string
                             description: The signature share
                           to:
                             allOf:
-                              - $ref: '#/components/schemas/SignatureShareType'
+                              - $ref: '#/components/schemas/SignatureShareTypeCodec'
                             description: The recipient of the signature share.
                         required:
                           - from
@@ -43266,14 +44220,14 @@ paths:
                         properties:
                           from:
                             allOf:
-                              - $ref: '#/components/schemas/SignatureShareType'
+                              - $ref: '#/components/schemas/SignatureShareTypeCodec'
                             description: The source of the signature share.
                           share:
                             type: string
                             description: The signature share
                           to:
                             allOf:
-                              - $ref: '#/components/schemas/SignatureShareType'
+                              - $ref: '#/components/schemas/SignatureShareTypeCodec'
                             description: The recipient of the signature share.
                         required:
                           - from
@@ -43870,7 +44824,7 @@ paths:
       description: |-
         Approve or reject a pending wire withdrawal. If approving, the `state` updates to `confirmed`, enabling
         BitGo Trust to wire transfer the funds. If rejecting, the `state` updates to `rejected`, canceling
-        the pending wire transfer.
+        the pending wire transfer. This endpoint is deprecated. Use [Confirm fiat withdrawal](https://developers.bitgo.com/api/v2.wallet.fiatWithdrawals.confirm) instead.
       operationId: v2.wallet.wireWithdrawals.confirm
       tags:
         - Transfer
@@ -43891,6 +44845,10 @@ paths:
           application/json:
             schema:
               type: object
+              description: |-
+                Confirm Fiat Withdrawal Request Body
+
+                The action to take on a pending fiat withdrawal, with optional validation fields to verify the transfer details before confirming.
               properties:
                 action:
                   allOf:
@@ -43962,7 +44920,7 @@ paths:
   /api/v2/wallet/{walletId}/wirewithdrawals/confirm:
     get:
       summary: List account wire withdrawals
-      description: List wire withdrawals for a specific Go Account wallet.
+      description: List wire withdrawals for a specific Go Account wallet. This endpoint is deprecated. Use [List fiat withdrawals](https://developers.bitgo.com/api/v2.wallet.fiatWithdrawals.list) instead.
       operationId: v2.wallet.wireWithdrawals.get
       tags:
         - Transfer
@@ -44164,7 +45122,7 @@ paths:
           in: query
           schema:
             oneOf:
-              - $ref: '#/components/schemas/WalletType'
+              - $ref: '#/components/schemas/WalletTypes'
               - type: array
                 items:
                   type: string
@@ -44379,6 +45337,22 @@ paths:
           schema:
             type: boolean
             default: false
+        - name: customTags
+          description: |-
+            Filter wallets by applied tags (OR semantics). Provide one or more tag
+            values; returns wallets that match any of the supplied tags.
+            Tag matching is case-insensitive — `?customTags=Warm` matches stored `"warm"`.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              description: |-
+                Filter wallets by applied tags (OR semantics). Provide one or more tag
+                values; returns wallets that match any of the supplied tags.
+                Tag matching is case-insensitive — `?customTags=Warm` matches stored `"warm"`.
+              example: '"warm"'
       responses:
         '200':
           description: OK
@@ -51798,6 +52772,45 @@ components:
             - $ref: '#/components/schemas/Id'
           description: platform public id for an address
         address:
+          $ref: '#/components/schemas/PlatformAddressString'
+        chain:
+          $ref: '#/components/schemas/Chain'
+        index:
+          type: integer
+        coin:
+          type: string
+        lastNonce:
+          type: integer
+          default: -1
+        wallet:
+          allOf:
+            - $ref: '#/components/schemas/Id'
+          description: The wallet which contains this address
+        coinSpecific:
+          type: object
+          description: Properties which are specific to certain coin types
+          properties:
+            xlm:
+              $ref: '#/components/schemas/AddressCoinSpecificXlm'
+            txlm:
+              $ref: '#/components/schemas/AddressCoinSpecificXlm'
+        balance:
+          allOf:
+            - type: object
+            - $ref: '#/components/schemas/AddressBalance'
+          description: Balance of the address. In case of Eth and Celo, if returnBalancesForToken is passed with includeBalances, then it will return token balance in the address object. This field will be present only when `includeBalances` query param is passed as true.
+        label:
+          $ref: '#/components/schemas/AddressLabel'
+        addressType:
+          $ref: '#/components/schemas/PlatformAddressType'
+    Address21:
+      type: object
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/Id'
+          description: platform public id for an address
+        address:
           $ref: '#/components/schemas/AddressString3'
         chain:
           $ref: '#/components/schemas/Chain'
@@ -52116,6 +53129,17 @@ components:
           required:
             - options
             - type
+    AddressType3:
+      title: AddressType
+      type: string
+      enum:
+        - p2sh
+        - p2shP2wsh
+        - p2wsh
+        - p2tr
+        - p2trMusig2
+      description: platform.yaml `components/schemas/AddressType`
+      example: p2sh
     AddressWithBalanceQueryResult:
       title: AddressWithBalanceQueryResult
       type: object
@@ -52304,6 +53328,7 @@ components:
                 - enterpriseId
                 - walletId
                 - organizationId
+                - linkAccountId
           required:
             - item
         verifyItems:
@@ -52323,6 +53348,7 @@ components:
         - enterpriseId
         - walletId
         - organizationId
+        - linkAccountId
     AggregatorSourceType:
       title: AggregatorSourceType
       type: string
@@ -53221,6 +54247,39 @@ components:
                     - inquirySubType
                     - inquiryType
                   description: Associated inquiries
+              securityControlEvents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    control:
+                      type: string
+                      description: The security control that was evaluated
+                    date:
+                      type: string
+                      description: The date the event was recorded
+                      format: date-time
+                      title: ISO Date String
+                    ip:
+                      type: string
+                      description: The IP address of the user
+                    message:
+                      type: string
+                      description: Message from the security control
+                    result:
+                      type: string
+                      enum:
+                        - allowed
+                        - blocked
+                      description: Whether the user was allowed or blocked
+                    user:
+                      type: string
+                      description: The user who triggered the security control check
+                  required:
+                    - date
+                    - result
+                    - user
+                  description: Security control events recorded during approval enforcement
             required:
               - id
               - creator
@@ -54041,8 +55100,6 @@ components:
     AuditLogType1:
       title: AuditLogType
       type: string
-      x-enumsDeprecated:
-        - adminUnblockUserEmail
     AuditableItem:
       type: object
       properties:
@@ -55392,6 +56449,11 @@ components:
           type: object
           additionalProperties:
             type: number
+        allowedCoins:
+          type: array
+          items:
+            type: string
+            description: Coin families this enterprise is restricted to. When set, only listed coins are available for wallet creation and transactions. Absent or empty means no restriction.
         featureFlags:
           type: array
           items:
@@ -55645,6 +56707,7 @@ components:
               - Go Lightning
               - Trade FIX API
               - Go Staking
+              - Link
             description: Requested BitGo Products
         isContractedClient:
           type: boolean
@@ -57826,6 +58889,17 @@ components:
         - bitgoAsAService
         - cryptoAsAServiceParent
         - cryptoAsAServiceChild
+    ByAccountTypeAndVerificationState:
+      title: ByAccountTypeAndVerificationState
+      type: object
+      properties:
+        individual:
+          $ref: '#/components/schemas/VerificationStateCounts'
+        entity:
+          $ref: '#/components/schemas/VerificationStateCounts'
+      required:
+        - individual
+        - entity
     ByovDelegationProperties:
       allOf:
         - $ref: '#/components/schemas/DelegationProperties'
@@ -58006,6 +59080,37 @@ components:
                 - allocationAllocate
             txRequestId:
               type: string
+            updateId:
+              type: string
+            operatorId:
+              type: string
+            contractId:
+              nullable: true
+              type: string
+            tradeId:
+              type: string
+            transferLegId:
+              type: string
+            senderPartyId:
+              type: string
+            receiverPartyId:
+              type: string
+            amount:
+              type: string
+            token:
+              type: string
+            receiveToken:
+              type: string
+            receiveAmount:
+              type: string
+            allocateBefore:
+              type: string
+            settleBefore:
+              type: string
+            comment:
+              type: string
+            requestedAt:
+              type: string
           required:
             - intentType
             - txRequestId
@@ -58037,6 +59142,37 @@ components:
               enum:
                 - allocationReject
             txRequestId:
+              type: string
+            updateId:
+              type: string
+            operatorId:
+              type: string
+            contractId:
+              nullable: true
+              type: string
+            tradeId:
+              type: string
+            transferLegId:
+              type: string
+            senderPartyId:
+              type: string
+            receiverPartyId:
+              type: string
+            amount:
+              type: string
+            token:
+              type: string
+            receiveToken:
+              type: string
+            receiveAmount:
+              type: string
+            allocateBefore:
+              type: string
+            settleBefore:
+              type: string
+            comment:
+              type: string
+            requestedAt:
               type: string
           required:
             - intentType
@@ -58174,6 +59310,8 @@ components:
                 - cosignDelegationAccept
             txRequestId:
               type: string
+            operatorId:
+              type: string
           required:
             - intentType
             - txRequestId
@@ -58212,6 +59350,8 @@ components:
                 - cantonEndInvestorOnboardingAccept
             txRequestId:
               type: string
+            participantPartyId:
+              type: string
           required:
             - intentType
             - txRequestId
@@ -58226,6 +59366,8 @@ components:
               enum:
                 - cantonEndInvestorOnboardingOffer
             endInvestorPartyId:
+              type: string
+            participantPartyId:
               type: string
             comment:
               type: string
@@ -58245,6 +59387,8 @@ components:
             txRequestId:
               type: string
             reason:
+              type: string
+            participantPartyId:
               type: string
           required:
             - intentType
@@ -58562,6 +59706,22 @@ components:
       items:
         $ref: '#/components/schemas/AddressType1'
       description: The address types for the change address. Order by preference and BitGo uses the first available. Any subset of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`.
+    ChangeAddressTypes1:
+      title: ChangeAddressTypes
+      type: array
+      items:
+        type: string
+        enum:
+          - p2sh
+          - p2shP2wsh
+          - p2wsh
+          - p2tr
+          - p2trMusig2
+        description: |-
+          platform.yaml `components/schemas/ChangeAddressTypes`
+          The address types for the change address. Order by preference and BitGo uses the first available.
+          Any subset of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`.
+        example: p2sh
     ChangeFeeResponse:
       title: ChangeFeeResponse
       type: object
@@ -60880,6 +62040,24 @@ components:
         - default
       description: |
         (UTXO only) The default script type to use for change for this wallet. Per transaction, you override the default with the `changeAddressType` parameter. If `default` is provided, it will clear the `changeAddressType` default on the wallet. Note that each UTXO coin has different address types available. For example, Only BTC supports `p2tr`.
+    DefiApproveIntent:
+      title: DefiApproveIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - defi-approve
+            vaultId:
+              type: string
+            amount:
+              type: string
+          required:
+            - intentType
+            - vaultId
+            - amount
+        - $ref: '#/components/schemas/BaseIntent'
     DefiDepositIntent:
       title: DefiDepositIntent
       allOf:
@@ -60894,8 +62072,6 @@ components:
             amount:
               type: string
             operationId:
-              type: string
-            clientIdempotencyKey:
               type: string
           required:
             - intentType
@@ -60920,6 +62096,24 @@ components:
             - intentType
             - protocol
             - amount
+        - $ref: '#/components/schemas/BaseIntent'
+    DefiWithdrawIntent:
+      title: DefiWithdrawIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - defi-withdraw
+            vaultId:
+              type: string
+            shareTokenAmount:
+              type: string
+          required:
+            - intentType
+            - vaultId
+            - shareTokenAmount
         - $ref: '#/components/schemas/BaseIntent'
     DelegateIntent:
       title: DelegateIntent
@@ -61143,13 +62337,6 @@ components:
           type: string
         message:
           type: string
-    DeleteEnterpriseUser:
-      type: object
-      properties:
-        username:
-          type: string
-      required:
-        - username
     DeployAddressAndForwardTokenResponse:
       title: DeployAddressAndForwardTokenResponse
       type: object
@@ -62538,18 +63725,6 @@ components:
     DuplicateSequenceId:
       title: Duplicate SequenceId
       allOf:
-        - $ref: '#/components/schemas/PlatformError3'
-        - properties:
-            name:
-              type: string
-              description: Error code
-              enum:
-                - DuplicateSequenceId
-          required:
-            - name
-    DuplicateSequenceId1:
-      title: Duplicate SequenceId
-      allOf:
         - type: object
           properties:
             name:
@@ -62792,6 +63967,37 @@ components:
       type: string
       description: Phone number for emergencies
       example: '+11234567890'
+    EnableBridgingApiResponse:
+      title: EnableBridgingApiResponse
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - funded
+            - funding_initiated
+            - funding_pending
+            - already_funded_insufficient
+          description: Current funding status
+        currentBalance:
+          type: string
+          description: Current native balance of the wallet's base address in base units
+        minimumRequired:
+          type: string
+          description: Minimum native balance required for bridging in base units
+        fundingJobId:
+          type: string
+          description: Gas-tank-service funding job ID — present when status is funding_initiated or funding_pending
+        estimatedConfirmationSeconds:
+          type: number
+          description: Estimated seconds for the funding transaction to confirm
+        message:
+          type: string
+          description: Human-readable message, typically retry guidance or error explanation
+      required:
+        - status
+        - currentBalance
+        - minimumRequired
     EnableTokenIntent:
       title: EnableTokenIntent
       allOf:
@@ -62868,6 +64074,7 @@ components:
                 enum:
                   - admin
                   - auditor
+                  - wallet.create
                 description: Permissions of the User on the Enterprise
             isBeneficialOwner:
               type: boolean
@@ -63034,6 +64241,39 @@ components:
         - migratedToNewPolicyService
         - policiesLocked
         - umsMappingComplete
+    EnterpriseInventoryCounts:
+      title: EnterpriseInventoryCounts
+      type: object
+      description: Headline enterprise inventory counts for the organization matching the applied filter.
+      properties:
+        totalCount:
+          type: number
+          description: Non-deleted enterprises matching the filter (activeCount + archivedCount).
+          minimum: 0
+        activeCount:
+          type: number
+          description: Non-deleted, non-archived enterprises matching the filter.
+          minimum: 0
+        archivedCount:
+          type: number
+          description: Non-deleted, archived enterprises matching the filter.
+          minimum: 0
+        frozenCount:
+          type: number
+          description: |-
+            Non-deleted enterprises matching the filter with an active freeze (freeze.expires >= now).
+            May overlap with activeCount or archivedCount.
+          minimum: 0
+        deletedCount:
+          type: number
+          description: Soft-deleted enterprises matching the filter.
+          minimum: 0
+      required:
+        - totalCount
+        - activeCount
+        - archivedCount
+        - frozenCount
+        - deletedCount
     EnterpriseKitName:
       type: object
       properties:
@@ -63280,11 +64520,13 @@ components:
       enum:
         - admin
         - auditor
+        - wallet.create
       description: |-
         This type represents the permissions that can be assigned to a user when adding them to an enterprise
 
         1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
         2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
+        3. 'wallet.create': Allows the user to create new wallets within an enterprise (UMS granular permission)
     EnterpriseUserRole:
       title: EnterpriseUserRole
       oneOf:
@@ -63536,29 +64778,25 @@ components:
       title: EnterprisesSummaryResponse
       type: object
       properties:
-        totalCount:
-          type: number
-          description: Total number of CaaS child enterprises in the organization.
-          minimum: 0
-        byKycState:
+        inventory:
+          $ref: '#/components/schemas/EnterpriseInventoryCounts'
+        byVerificationState:
           allOf:
-            - $ref: '#/components/schemas/KycStateCounts'
-          description: Enterprise counts grouped by KYC state.
-        byAccountTypeAndKycState:
-          type: object
-          description: Enterprise counts grouped by account type and KYC state.
-          properties:
-            individual:
-              $ref: '#/components/schemas/KycStateCounts'
-            entity:
-              $ref: '#/components/schemas/KycStateCounts'
-          required:
-            - individual
-            - entity
+            - $ref: '#/components/schemas/VerificationStateCounts'
+          description: |-
+            Verification state counts across all non-deleted enterprises matching the filter.
+            Unknown verification states are excluded here but still counted in inventory.totalCount.
+        byAccountTypeAndVerificationState:
+          allOf:
+            - $ref: '#/components/schemas/ByAccountTypeAndVerificationState'
+          description: |-
+            Verification state counts split by account type (individual KYC, entity KYB).
+            Missing or unknown accountType values are excluded here but still counted in
+            inventory.totalCount and byVerificationState.
       required:
-        - totalCount
-        - byKycState
-        - byAccountTypeAndKycState
+        - inventory
+        - byVerificationState
+        - byAccountTypeAndVerificationState
     EntryFunctionABI:
       title: EntryFunctionABI
       type: object
@@ -66325,6 +67563,10 @@ components:
               items:
                 type: object
                 properties:
+                  activityMetadata:
+                    type: object
+                    additionalProperties: {}
+                    description: Cosmos group governance metadata (e.g. MsgSubmitProposal details) emitted by the Generic Indexer
                   address:
                     type: string
                     description: An address affected by this Transfer
@@ -66789,10 +68031,8 @@ components:
                 - staking_eth_block_reward
                 - staking_bera_withdrawal
                 - staking_bera_block_reward
+                - defi_deposit
               description: Transfer subtype
-              x-enumsDeprecated:
-                - staking_eth_partial_withdrawal
-                - staking_eth_full_withdrawal
             tags:
               type: array
               items:
@@ -68460,8 +69700,8 @@ components:
         - signature submitted
         - initiating
         - additional information submitted
-    IdentityStatusEnum:
-      title: IdentityStatusEnum
+    IdentityStatus1:
+      title: IdentityStatus
       type: string
       enum:
         - created
@@ -68470,9 +69710,11 @@ components:
         - needs review
         - input error
         - ssn error
+        - taxid error
         - gov id error
         - ssn verified
         - gov id verified
+        - evaluating submission
         - enrichment
         - awaiting document upload
         - records uploaded
@@ -68483,6 +69725,8 @@ components:
         - signature submitted
         - initiating
         - additional information submitted
+        - productRequestApproved
+        - productRequestRejected
     IdentityUpdateResponse:
       title: IdentityUpdateResponse
       type: object
@@ -68714,30 +69958,6 @@ components:
         - requirements
         - finalizeSubmission
       title: IndividualIdentityResponse
-    InitiateTrustlineParams:
-      type: object
-      properties:
-        memo:
-          type: object
-          properties:
-            type:
-              type: string
-            value:
-              type: string
-          description: |
-            The memo contains optional extra information that can also be used to identify payments in Stellar.
-        comment:
-          type: string
-          description: |
-            Optional metadata (only persisted in BitGo) to be applied to the transaction. Use this to add transaction-specific information such as the transaction's purpose or another identifier that you want to reference later. The value is shown in the UI in the transfer listing page.
-          maxLength: 256
-        trustlines:
-          type: array
-          items:
-            $ref: '#/components/schemas/Trustline'
-          description: List of trustlines to manage on the account.
-      required:
-        - trustlines
     InitiatorIsAllowedToApproveActionParameter:
       title: Initiator is allowed to approve
       type: object
@@ -68835,6 +70055,7 @@ components:
       enum:
         - withdrawalLivenessCheck
         - managePolicyLivenessCheck
+        - govIdSelfie
     InquiryType:
       title: InquiryType
       type: string
@@ -68860,6 +70081,18 @@ components:
       type: string
       pattern: ^-?\d+$
       example: '2000000'
+    IntegerString1:
+      title: IntegerString
+      type: string
+      description: platform.yaml `components/schemas/IntegerString`
+      example: '2000000'
+      pattern: ^-?\d+$
+    IntegerString11:
+      title: IntegerString1
+      type: string
+      description: platform.yaml `components/schemas/IntegerString`
+      example: '2000000'
+      pattern: ^-?\d+$
     IntentType:
       title: IntentType
       type: string
@@ -68928,6 +70161,7 @@ components:
         - defi-deposit
         - defi-redeem
         - defi-approve
+        - defi-withdraw
         - delegateResource
         - undelegateResource
         - export
@@ -69193,8 +70427,20 @@ components:
                 - InvalidAddress
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
     InvalidEnterpriseId:
+      title: Invalid enterprise ID
+      allOf:
+        - $ref: '#/components/schemas/InvalidId'
+        - properties:
+            name:
+              type: string
+              description: Error code
+              enum:
+                - InvalidEnterpriseId
+          required:
+            - name
+    InvalidEnterpriseId1:
       title: Invalid Enterprise ID
       allOf:
         - type: object
@@ -69205,20 +70451,19 @@ components:
                 - InvalidEnterpriseId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId'
-    InvalidEnterpriseId1:
-      title: Invalid enterprise ID
-      allOf:
         - $ref: '#/components/schemas/InvalidId1'
-        - properties:
-            name:
-              type: string
-              description: Error code
-              enum:
-                - InvalidEnterpriseId
-          required:
-            - name
     InvalidId:
+      allOf:
+        - $ref: '#/components/schemas/PlatformErrorNoName3'
+        - properties:
+            context:
+              type: object
+              properties:
+                id:
+                  $ref: '#/components/schemas/Id'
+          required:
+            - context
+    InvalidId1:
       title: InvalidId
       allOf:
         - type: object
@@ -69235,33 +70480,23 @@ components:
           required:
             - context
         - $ref: '#/components/schemas/PlatformErrorNoName'
-    InvalidId1:
-      allOf:
-        - $ref: '#/components/schemas/PlatformErrorNoName3'
-        - properties:
-            context:
-              type: object
-              properties:
-                id:
-                  $ref: '#/components/schemas/Id'
-          required:
-            - context
     InvalidOFAC:
       title: Address error
       allOf:
-        - $ref: '#/components/schemas/PlatformErrorNoName3'
-        - properties:
+        - type: object
+          properties:
             name:
               type: string
-              description: Error code
               enum:
                 - AddressError
+              description: Error code
             error:
               type: string
               description: Human-readable error message
-              example: Address cannot be used
           required:
             - name
+            - error
+        - $ref: '#/components/schemas/PlatformErrorNoName'
     InvalidOrganizationId:
       title: Invalid Organization ID
       allOf:
@@ -69273,7 +70508,7 @@ components:
                 - InvalidOrganizationId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
     InvalidPaymentHash:
       title: Invalid Payment Hash
       allOf:
@@ -69285,7 +70520,7 @@ components:
                 - InvalidPaymentHash
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
     InvalidPaymentId:
       title: Invalid Payment Id
       allOf:
@@ -69297,11 +70532,11 @@ components:
                 - InvalidPaymentId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
     InvalidTransferId:
       title: Invalid transfer ID
       allOf:
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
         - properties:
             name:
               type: string
@@ -69321,11 +70556,11 @@ components:
                 - InvalidTxId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
     InvalidUserId:
       title: Invalid user ID
       allOf:
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
         - properties:
             name:
               type: string
@@ -69337,7 +70572,7 @@ components:
     InvalidWalletId:
       title: Invalid wallet id
       allOf:
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
         - properties:
             name:
               type: string
@@ -69357,7 +70592,7 @@ components:
                 - InvalidWalletId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
     IotaBuildOptions:
       title: IOTA Build Options
       allOf:
@@ -69716,6 +70951,9 @@ components:
               - prfSalt
         migratedFrom:
           type: string
+        parent:
+          type: string
+          description: The id of the parent key this key was derived from, if any
       required:
         - id
         - pub
@@ -70045,24 +71283,6 @@ components:
         - inreview
         - flagged
         - flagged_retry_allowed
-    KycStateCounts:
-      title: KycStateCounts
-      type: object
-      description: Count of enterprises per enterprise KYC state. All known states are present; absent states default to 0.
-      properties:
-        unverified:
-          type: number
-        approved:
-          type: number
-        rejected:
-          type: number
-        pending:
-          type: number
-      required:
-        - unverified
-        - approved
-        - rejected
-        - pending
     LegalIdentifiers:
       title: LegalIdentifiers
       type: object
@@ -70770,6 +71990,9 @@ components:
               wallet:
                 type: string
                 example: cold
+              safeId:
+                type: string
+                description: Safe ID — populated only on safe-scoped webhook subscriptions.
               url:
                 type: string
               hash:
@@ -71224,10 +72447,21 @@ components:
               enterpriseCount:
                 type: number
                 description: The number of enterprises in the organization
+              role:
+                allOf:
+                  - $ref: '#/components/schemas/OrganizationRole'
+                description: The user's role within the organization
+              businessModel:
+                nullable: true
+                allOf:
+                  - $ref: '#/components/schemas/OrganizationBusinessModel'
+                description: The business model of the organization, null when not set
             required:
               - id
               - name
               - enterpriseCount
+              - role
+              - businessModel
       required:
         - organizations
     ListWalletShareRequestResponse:
@@ -73224,6 +74458,7 @@ components:
       properties:
         needsKeyReshareAfterPasswordReset:
           type: boolean
+          deprecated: true
         pendingSystemInitialization:
           type: boolean
           description: |-
@@ -74188,12 +75423,7 @@ components:
               - autoLiquidation
               - tradeFixApi
               - goStaking
-            x-enumsDeprecated:
-              - portfolioAPI
-              - portfolioBasic
-              - portfolioProfessional
-              - portfolioInstitutional
-              - tax
+              - link
         labels:
           type: array
           items:
@@ -74455,6 +75685,7 @@ components:
               - enterpriseLogoUpload
               - cantonByov
               - disableBridging
+              - enableSignTypedStructuredData
         distributedCustody:
           nullable: true
           allOf:
@@ -74539,6 +75770,7 @@ components:
             enum:
               - DAppConnections
               - KycExemption
+              - FiatWithdrawalConfirmAPI
             description: Organization-level licenses
         businessModel:
           nullable: true
@@ -74563,6 +75795,8 @@ components:
         - organizationTransactions
         - organizationTrades
         - organizationStaking
+        - organizationHoldingsV2
+        - organizationTransactionsV2
         - userAccess
     OrganizationWebhookResponse:
       title: OrganizationWebhookResponse
@@ -74704,6 +75938,8 @@ components:
         - accessToken
         - reversal
         - tradeOrder
+        - whitelistApproved
+        - whitelistRejected
     OsmoClaimRewardsRequestPOSTBody:
       title: Osmosis (OSMO) Claim Rewards Request
       type: object
@@ -75481,6 +76717,39 @@ components:
               - inquirySubType
               - inquiryType
             description: Associated inquiries
+        securityControlEvents:
+          type: array
+          items:
+            type: object
+            properties:
+              control:
+                type: string
+                description: The security control that was evaluated
+              date:
+                type: string
+                description: The date the event was recorded
+                format: date-time
+                title: ISO Date String
+              ip:
+                type: string
+                description: The IP address of the user
+              message:
+                type: string
+                description: Message from the security control
+              result:
+                type: string
+                enum:
+                  - allowed
+                  - blocked
+                description: Whether the user was allowed or blocked
+              user:
+                type: string
+                description: The user who triggered the security control check
+            required:
+              - date
+              - result
+              - user
+            description: Security control events recorded during approval enforcement
       required:
         - id
         - creator
@@ -75920,6 +77189,7 @@ components:
               enum:
                 - admin
                 - auditor
+                - wallet.create
               description: The permissions associated with the update
             userId:
               type: string
@@ -76071,6 +77341,7 @@ components:
               enum:
                 - admin
                 - auditor
+                - wallet.create
               description: The permissions associated with the invite
             userId:
               type: string
@@ -76088,6 +77359,21 @@ components:
               required:
                 - newValue
                 - oldValue
+        updateWalletTagsRequest:
+          type: object
+          properties:
+            action:
+              allOf:
+                - $ref: '#/components/schemas/WalletTagsAction'
+              description: Whether to add or remove the specified tags
+            customTags:
+              type: array
+              items:
+                type: string
+                description: The specific tags being added or removed
+          required:
+            - action
+            - customTags
       required:
         - type
     PendingApprovalPolicyRuleRequest:
@@ -76297,6 +77583,7 @@ components:
         - genericRequest
         - enterpriseInviteRequest
         - updateWalletSettingRequest
+        - updateWalletTagsRequest
     PendingApprovalUpdateApprovalsRequiredRequest:
       title: Update approvals required request
       type: object
@@ -76434,91 +77721,6 @@ components:
       properties:
         contact:
           $ref: '#/components/schemas/PlatformGeographicAddress'
-    PlatformAddress2:
-      type: object
-      properties:
-        id:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: platform public id for an address
-        address:
-          $ref: '#/components/schemas/PlatformAddressString'
-        chain:
-          $ref: '#/components/schemas/Chain'
-        index:
-          type: integer
-        coin:
-          type: string
-        lastNonce:
-          type: integer
-          default: -1
-        wallet:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: The wallet which contains this address
-        coinSpecific:
-          type: object
-          description: Properties which are specific to certain coin types
-          properties:
-            xlm:
-              $ref: '#/components/schemas/PlatformAddressCoinSpecificXlm'
-            txlm:
-              $ref: '#/components/schemas/PlatformAddressCoinSpecificXlm'
-        balance:
-          allOf:
-            - type: object
-            - $ref: '#/components/schemas/PlatformAddressBalance'
-          description: Balance of the address. In case of Eth and Celo, if returnBalancesForToken is passed with includeBalances, then it will return token balance in the address object. This field will be present only when `includeBalances` query param is passed as true.
-        label:
-          $ref: '#/components/schemas/AddressLabel'
-        addressType:
-          $ref: '#/components/schemas/PlatformAddressType'
-    PlatformAddressBalance:
-      type: object
-      properties:
-        updated:
-          type: string
-          description: The last time a transaction affected the balance of this address
-          format: date-time
-        balance:
-          type: integer
-          description: The cleared balance of the address
-          example: 50000
-        balanceString:
-          type: string
-          description: String representation of `balance`. Guaranteed to not lose precision.
-          example: '50000'
-        totalReceived:
-          type: integer
-          description: The total amount received on this address (in the chain's base unit)
-        totalSent:
-          type: integer
-          description: The total amount send from this address (in the chain's base unit)
-        confirmedBalanceString:
-          type: string
-          description: |
-            The total balance of confirmed transactions for the address (in the chain's base unit).
-            Guaranteed to not lose precision.
-          example: '40000'
-        spendableBalanceString:
-          type: string
-          description: |
-            The total balance of the address (in the chain's base unit) which may
-            be used as inputs for creating new transactions in string representation.
-            Guaranteed to not lose precision.
-          example: '40000'
-    PlatformAddressCoinSpecificXlm:
-      type: object
-      properties:
-        memoId:
-          allOf:
-            - $ref: '#/components/schemas/IntegerString'
-            - example: '1'
-          description: Latest memo id generated for the wallet
-        rootAddress:
-          type: string
-          description: Root address of the wallet
-          example: GCTTCPH4IIDK7P72FFAEJ3ZFN6WDHJH6GGMRPHPM56ZWGIQ7B3XTIJAM
     PlatformAddressString:
       title: Address
       type: string
@@ -76753,18 +77955,29 @@ components:
         state: NY
         postalCode: '10005'
         country: USA
-    PlatformInvalidEnterpriseId:
-      title: Invalid enterprise ID
-      allOf:
-        - $ref: '#/components/schemas/PlatformInvalidId'
-        - properties:
-            name:
-              type: string
-              description: Error code
-              enum:
-                - InvalidEnterpriseId
-          required:
-            - name
+    PlatformIdentityStatus:
+      type: string
+      enum:
+        - approved
+        - declined
+        - input error
+        - ssn error
+        - gov id error
+        - ssn verified
+        - gov id verified
+        - evaluating submission
+        - awaiting document upload
+        - records uploaded
+        - in review
+        - incomplete verifications
+        - awaiting signature
+        - signature submitted
+        - initiating
+        - additional information submitted
+    PlatformIntegerString:
+      type: string
+      pattern: ^-?\d+$
+      example: '2000000'
     PlatformInvalidId:
       allOf:
         - $ref: '#/components/schemas/PlatformPlatformErrorNoName'
@@ -77218,7 +78431,7 @@ components:
           $ref: '#/components/schemas/ApprovalsRequired'
         balanceString:
           allOf:
-            - $ref: '#/components/schemas/IntegerString'
+            - $ref: '#/components/schemas/PlatformIntegerString'
           description: Total balance in base units (e.g. Satoshis)
         buildDefaults:
           $ref: '#/components/schemas/WalletBuildDefaults'
@@ -77277,7 +78490,7 @@ components:
         nodeId:
           $ref: '#/components/schemas/Id'
         receiveAddress:
-          $ref: '#/components/schemas/PlatformAddress2'
+          $ref: '#/components/schemas/Address2'
         recoverable:
           type: boolean
         tags:
@@ -77286,7 +78499,7 @@ components:
             $ref: '#/components/schemas/Id'
         spendableBalanceString:
           allOf:
-            - $ref: '#/components/schemas/IntegerString'
+            - $ref: '#/components/schemas/PlatformIntegerString'
           description: Spendable balance in base units (e.g. Satoshis)
         unspentCount:
           type: number
@@ -77382,7 +78595,7 @@ components:
         identityStatus:
           type: array
           items:
-            $ref: '#/components/schemas/IdentityStatus'
+            $ref: '#/components/schemas/PlatformIdentityStatus'
           description: If present, only identity status changes from the list will trigger notifications. If not present, all identity status changes will trigger notifications.
         userKycState:
           type: array
@@ -79418,6 +80631,440 @@ components:
           $ref: '#/components/schemas/Id'
       required:
         - userId
+    RemoveEnterpriseUserAcceptedResponse:
+      title: RemoveEnterpriseUserAcceptedResponse
+      type: object
+      properties:
+        pendingApprovals:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol.
+                example: btc
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              walletType:
+                type: string
+              walletSubType:
+                type: string
+                description: The subtype of the wallet (e.g., custodialHot)
+              wallets:
+                type: array
+                items:
+                  type: string
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+                  description: The wallets of the pending approval
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organization:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organizationName:
+                type: string
+                description: The organization name
+              bitgoOrg:
+                type: string
+                description: The BitGo organization
+              creator:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              createDate:
+                type: string
+                description: The creation date of the pending approval
+                format: date-time
+                title: ISO Date String
+              approvedDate:
+                type: string
+                description: The date when the approval was granted
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                description: The date when the approval was last updated (any update, not just processing)
+                format: date-time
+                title: ISO Date String
+              keyCurve:
+                type: string
+                enum:
+                  - secp256k1
+                  - ed25519
+                  - bls12_381
+                description: The key curve of the coin attached to this pending approval
+              info:
+                allOf:
+                  - $ref: '#/components/schemas/PendingApprovalInfo'
+                description: Information about the pending approval
+              state:
+                allOf:
+                  - $ref: '#/components/schemas/PendingApprovalState'
+                description: The state of the pending approval
+              scope:
+                type: string
+                enum:
+                  - enterprise
+                  - wallet
+                  - organization
+                  - global
+                description: What kind of entity the Pending Approval is tied to
+              userIds:
+                type: array
+                items:
+                  type: string
+                  description: All the Users who should see this Pending Approval
+              approvalsRequired:
+                type: number
+                example: 1
+                minimum: 1
+              walletLabel:
+                type: string
+                description: Label for the wallet
+              addressLabels:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      $ref: '#/components/schemas/AddressString'
+                    label:
+                      type: string
+                      description: The label
+                    walletLabel:
+                      type: string
+                      description: The wallet label
+                  required:
+                    - address
+                    - label
+                  description: Address labels of recipients in this Pending Approval
+              resolvers:
+                type: array
+                items:
+                  type: object
+                  description: Resolvers for the pending approval
+                  properties:
+                    autoApproved:
+                      type: boolean
+                      description: Whether the resolution was auto approved
+                    date:
+                      type: string
+                      description: The date of resolution
+                      format: date-time
+                      title: ISO Date String
+                    resolutionAction:
+                      type: string
+                      enum:
+                        - approve
+                        - reject
+                        - skip
+                        - fail
+                      description: Action taken during resolution
+                    resolutionMemo:
+                      type: string
+                      description: Memo regarding the resolution
+                    resolutionType:
+                      allOf:
+                        - $ref: '#/components/schemas/PendingApprovalStatePending'
+                      description: The type of resolution
+                    user:
+                      type: string
+                      description: The user who resolved the approval
+                    videoApprover:
+                      type: string
+                      description: The approver of the video resolution
+                    videoException:
+                      type: string
+                      description: Exception details for the video
+                    videoLink:
+                      type: string
+                      description: Link to the resolution video
+                  required:
+                    - resolutionType
+              approvers:
+                type: array
+                items:
+                  type: string
+                  description: List of approvers
+              singleRunResults:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    ruleId:
+                      type: string
+                      description: The rule ID
+                    triggered:
+                      type: boolean
+                      description: Whether the rule was triggered
+                  description: Results from single run checks
+              txRequestId:
+                type: string
+                description: Transaction request ID
+                example: 123e4567-e89b-12d3-a456-426614174000
+                format: uuid
+              videoId:
+                type: object
+                description: ID for the video related to the approval
+                properties:
+                  date:
+                    type: string
+                    description: The date of the video ID
+                    format: date-time
+                    title: ISO Date String
+                  user:
+                    type: string
+                    description: The user associated with the video ID
+                  videoApprover:
+                    type: string
+                    description: The approver of the video
+                  videoException:
+                    type: string
+                    description: The exception related to the video
+                  videoLink:
+                    type: string
+                    description: The link to the video
+              version:
+                type: number
+                description: Version of the pending approval
+              policyEvaluationId:
+                type: string
+                description: ID for the policy evaluation
+              actions:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    approvers:
+                      type: array
+                      items:
+                        type: string
+                        description: The approvers of the action
+                    excludedApprovers:
+                      type: array
+                      items:
+                        type: string
+                        description: Users that are eligible approvers but cannot approve (e.g. already approved or the initiator)
+                    id:
+                      type: string
+                      description: The ID of the action
+                    name:
+                      type: string
+                      description: The name of the action
+                    operator:
+                      type: string
+                      enum:
+                        - AND
+                        - OR
+                      description: The operator of the action
+                    parameters:
+                      allOf:
+                        - $ref: '#/components/schemas/PolicyActionParameters'
+                      description: The parameters of the action
+                    resolvers:
+                      type: array
+                      items:
+                        type: object
+                        description: The resolvers of the action
+                        properties:
+                          autoApproved:
+                            type: boolean
+                            description: Whether the resolution was auto approved
+                          date:
+                            type: string
+                            description: The date of resolution
+                            format: date-time
+                            title: ISO Date String
+                          resolutionAction:
+                            type: string
+                            enum:
+                              - approve
+                              - reject
+                              - skip
+                              - fail
+                            description: Action taken during resolution
+                          resolutionMemo:
+                            type: string
+                            description: Memo regarding the resolution
+                          resolutionType:
+                            allOf:
+                              - $ref: '#/components/schemas/PendingApprovalStatePending'
+                            description: The type of resolution
+                          user:
+                            type: string
+                            description: The user who resolved the approval
+                          videoApprover:
+                            type: string
+                            description: The approver of the video resolution
+                          videoException:
+                            type: string
+                            description: Exception details for the video
+                          videoLink:
+                            type: string
+                            description: Link to the resolution video
+                        required:
+                          - resolutionType
+                    status:
+                      allOf:
+                        - $ref: '#/components/schemas/EvaluatedPolicyActionStatus'
+                      description: The status of the action
+                  required:
+                    - id
+                    - name
+                    - parameters
+                    - status
+                  description: List of actions taken
+              resolutionOrder:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    actions:
+                      type: array
+                      items:
+                        type: string
+                        minLength: 1
+                  required:
+                    - actions
+                  description: Order of resolution
+              useLegacyPolicyEngine:
+                type: boolean
+                description: Flag to use legacy policy engine
+              videoCallId:
+                type: string
+                description: ID for the video call
+              lastUpdated:
+                type: string
+                description: The last date the approval was processing
+                format: date-time
+                title: ISO Date String
+              freeze:
+                type: object
+                description: The freeze state
+                properties:
+                  actions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        reason:
+                          type: string
+                        state:
+                          type: string
+                          enum:
+                            - frozen
+                            - unFrozen
+                        time:
+                          type: string
+                          format: date-time
+                          title: ISO Date String
+                        userId:
+                          type: string
+                        username:
+                          type: string
+                  state:
+                    type: string
+                    enum:
+                      - frozen
+                      - unFrozen
+              memo:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    text:
+                      type: string
+                      description: The text of the memo
+                    time:
+                      type: string
+                      description: The time the memo was created
+                      format: date-time
+                      title: ISO Date String
+                    userId:
+                      type: string
+                      description: The user ID of the admin who created the memo
+                    username:
+                      type: string
+                      description: The username of the admin who created the memo
+                  required:
+                    - text
+                    - time
+                    - userId
+                    - username
+                  description: Admin memos attached to this pending approval
+              associatedInquiries:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    inquiryId:
+                      type: string
+                    inquiryStatus:
+                      $ref: '#/components/schemas/InquiryStatus'
+                    inquirySubType:
+                      $ref: '#/components/schemas/InquirySubType'
+                    inquiryType:
+                      $ref: '#/components/schemas/InquiryType'
+                  required:
+                    - inquiryId
+                    - inquiryStatus
+                    - inquirySubType
+                    - inquiryType
+                  description: Associated inquiries
+              securityControlEvents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    control:
+                      type: string
+                      description: The security control that was evaluated
+                    date:
+                      type: string
+                      description: The date the event was recorded
+                      format: date-time
+                      title: ISO Date String
+                    ip:
+                      type: string
+                      description: The IP address of the user
+                    message:
+                      type: string
+                      description: Message from the security control
+                    result:
+                      type: string
+                      enum:
+                        - allowed
+                        - blocked
+                      description: Whether the user was allowed or blocked
+                    user:
+                      type: string
+                      description: The user who triggered the security control check
+                  required:
+                    - date
+                    - result
+                    - user
+                  description: Security control events recorded during approval enforcement
+            required:
+              - id
+              - creator
+              - createDate
+              - info
+              - state
+              - scope
+            description: Pending approvals created when additional admin approval is required.
+      required:
+        - pendingApprovals
     ReportFormatType:
       title: ReportFormatType
       type: string
@@ -79638,6 +81285,81 @@ components:
         organizationTransactions:
           type: object
           description: Organization-level Transactions report
+          properties:
+            assets:
+              type: array
+              items:
+                type: string
+                minLength: 1
+            endDate:
+              type: string
+              format: date-time
+              title: ISO Date String
+            enterprises:
+              type: array
+              items:
+                type: string
+                minLength: 1
+            isAddressReport:
+              type: boolean
+            isDetailed:
+              type: boolean
+            organization:
+              type: string
+              minLength: 1
+            startDate:
+              type: string
+              format: date-time
+              title: ISO Date String
+            wallets:
+              type: array
+              items:
+                type: string
+                minLength: 1
+                example: 59cd72485007a239fb00282ed480da1f
+            walletTypes:
+              type: array
+              items:
+                type: string
+                minLength: 1
+          required:
+            - endDate
+            - organization
+            - startDate
+        organizationHoldingsV2:
+          type: object
+          description: |-
+            Organization-level Holdings report (v2 — reconciled/persisted marts dataset).
+            Only by-wallet holdings are available for v2; `byWallet: false` is rejected by the
+            server and `byWallet` is otherwise always treated as `true`. Use `organizationHoldings`
+            (v1) for org-level (non-per-wallet) holdings.
+          properties:
+            byWallet:
+              type: boolean
+            enterprises:
+              type: array
+              items:
+                type: string
+                minLength: 1
+            includeStaking:
+              type: boolean
+            organization:
+              type: string
+              minLength: 1
+            snapshotDate:
+              type: string
+              format: date-time
+              title: ISO Date String
+          required:
+            - organization
+            - snapshotDate
+        organizationTransactionsV2:
+          type: object
+          description: |-
+            Organization-level Transactions report (v2 — reconciled/persisted marts dataset).
+            Only transaction history is available for v2; `isDetailed` and `isAddressReport` are
+            rejected by the server. Use `organizationTransactions` (v1) for transfer-detail or
+            address-level-transfer-detail reports.
           properties:
             assets:
               type: array
@@ -80226,6 +81948,62 @@ components:
           type: object
           description: Required data needed to evaluate the Filtering Condition.
           additionalProperties: true
+    STXStakingFunctionArgOptional:
+      title: STXStakingFunctionArgOptional
+      type: object
+      description: STX staking function argument with type optional.
+      properties:
+        type:
+          type: string
+          enum:
+            - optional
+          default: optional
+          description: Type of argument. Use the default.
+        val:
+          $ref: '#/components/schemas/STXStakingOptionalVal'
+      required:
+        - type
+        - val
+    STXStakingFunctionArgPrincipal:
+      title: STXStakingFunctionArgPrincipal
+      type: object
+      description: STX staking function argument with type principal.
+      properties:
+        type:
+          type: string
+          enum:
+            - principal
+          default: principal
+          description: Type of argument. Use the default.
+        val:
+          type: string
+          description: Address of the validator
+      required:
+        - type
+        - val
+    STXStakingFunctionArgUint128:
+      title: STXStakingFunctionArgUint128
+      type: object
+      description: STX staking function argument with type uint128.
+      properties:
+        type:
+          type: string
+          enum:
+            - uint128
+          default: uint128
+          description: Type of argument. Use the default.
+        val:
+          type: string
+          description: Amount in micro-stx
+      required:
+        - type
+        - val
+    STXStakingOptionalVal:
+      title: STXStakingOptionalVal
+      oneOf:
+        - type: string
+        - $ref: '#/components/schemas/STXStakingTuple'
+      description: Value for an optional STX staking function argument.
     STXStakingOptions:
       title: STX
       type: object
@@ -80326,6 +82104,82 @@ components:
                                 val:
                                   type: string
                                   description: The BTC Address version.
+    STXStakingTuple:
+      title: STXStakingTuple
+      type: object
+      description: Tuple nested inside an optional STX staking function argument.
+      properties:
+        type:
+          type: string
+          enum:
+            - tuple
+          default: tuple
+          description: Type of argument. Use the default.
+        val:
+          allOf:
+            - $ref: '#/components/schemas/STXStakingTupleVal'
+          description: 'The 2 objects are required and in the order expressed: hashbytes, then version.'
+          minItems: 2
+          maxItems: 2
+      required:
+        - type
+        - val
+    STXStakingTupleHashbytes:
+      title: STXStakingTupleHashbytes
+      type: object
+      description: BTC address hash buffer within an STX staking tuple.
+      properties:
+        key:
+          type: string
+          enum:
+            - hashbytes
+          default: hashbytes
+          description: Tuple field name.
+        type:
+          type: string
+          enum:
+            - buffer
+          default: buffer
+          description: Type of argument. Use the default.
+        val:
+          type: string
+          description: The BTC Address hash.
+      required:
+        - key
+        - type
+        - val
+    STXStakingTupleVal:
+      title: STXStakingTupleVal
+      type: array
+      items:
+        oneOf:
+          - $ref: '#/components/schemas/STXStakingTupleHashbytes'
+          - $ref: '#/components/schemas/STXStakingTupleVersion'
+        description: Ordered pair of hashbytes and version within an STX staking tuple value.
+    STXStakingTupleVersion:
+      title: STXStakingTupleVersion
+      type: object
+      description: BTC address version buffer within an STX staking tuple.
+      properties:
+        key:
+          type: string
+          enum:
+            - version
+          default: version
+          description: Tuple field name.
+        type:
+          type: string
+          enum:
+            - buffer
+          default: buffer
+          description: Type of argument. Use the default.
+        val:
+          type: string
+          description: The BTC Address version.
+      required:
+        - key
+        - type
+        - val
     ScheduledDate:
       type: string
       format: date-time
@@ -80580,33 +82434,46 @@ components:
         - $ref: '#/components/schemas/SolSendQueue'
         - $ref: '#/components/schemas/SuiSendQueue'
         - $ref: '#/components/schemas/EthereumTx'
-    SendTransaction:
-      title: Sent Transaction
-      allOf:
-        - $ref: '#/components/schemas/BuildParams'
-        - type: object
-          description: Include buildParams from the build request to be stored in case of rebuilding.
+    SendTransactionCSPRStakingOptions:
+      title: SendTransactionCSPRStakingOptions
       type: object
-      description: This endpoint broadcasts half-signed transactions.
+      description: CSPR staking options for delegate or undelegate transactions.
       properties:
-        comment:
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Required for CSPR. String representation of the amount to stake or unstake in base units (motes).
+        validator:
+          allOf:
+            - $ref: '#/components/schemas/AddressString'
+          description: Required for CSPR. The validator address used to delegate or undelegate.
+      required:
+        - amount
+        - validator
+    SendTransactionSTXStakingOptions:
+      title: SendTransactionSTXStakingOptions
+      type: object
+      description: STX staking options for delegate or revoke-delegate transactions.
+      properties:
+        contractName:
           type: string
-          description: An optional memo for the transaction.
-          maxLength: 256
-        halfSigned:
-          type: object
-          properties:
-            txHex:
-              type: string
-          description: The half-signed transaction. The request must include this or a txHex.
-        txHex:
+          default: pox-3
+          description: The STX staking contract name. Use pox-3.
+        functionName:
           type: string
-          description: The half-signed, serialized transaction hex. Alternative to sending halfSigned.
-        sequenceId:
-          type: string
-          description: Your own unique ID
-        videoApprovers:
-          $ref: '#/components/schemas/VideoApprovers'
+          description: STX staking contract function.
+        functionArgs:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/STXStakingFunctionArgUint128'
+              - $ref: '#/components/schemas/STXStakingFunctionArgPrincipal'
+              - $ref: '#/components/schemas/STXStakingFunctionArgOptional'
+            description: The 4 Objects are required and in the order expressed.
+      required:
+        - contractName
+        - functionName
+        - functionArgs
     SepaAccountResponseProps:
       title: SepaAccountResponseProps
       type: object
@@ -81556,17 +83423,24 @@ components:
         - user
         - backup
         - bitgo
+    SignatureShareTypeCodec:
+      title: SignatureShareTypeCodec
+      type: string
+      enum:
+        - user
+        - backup
+        - bitgo
     SignatureShareWithoutVssProof:
       title: SignatureShareWithoutVssProof
       type: object
       properties:
         from:
           allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
+            - $ref: '#/components/schemas/SignatureShareTypeCodec'
           description: The source of the signature share.
         to:
           allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
+            - $ref: '#/components/schemas/SignatureShareTypeCodec'
           description: The recipient of the signature share.
         share:
           type: string
@@ -81595,6 +83469,9 @@ components:
               wallet:
                 type: string
                 example: cold
+              safeId:
+                type: string
+                description: Safe ID — populated only on safe-scoped webhook subscriptions.
               url:
                 type: string
               hash:
@@ -81674,6 +83551,9 @@ components:
               wallet:
                 type: string
                 example: cold
+              safeId:
+                type: string
+                description: Safe ID — populated only on safe-scoped webhook subscriptions.
               url:
                 type: string
               hash:
@@ -81921,6 +83801,8 @@ components:
         - organizationTransactions
         - organizationTrades
         - organizationStaking
+        - organizationHoldingsV2
+        - organizationTransactionsV2
         - quarterly
     SolAddress:
       title: Sol Address
@@ -87153,8 +89035,10 @@ components:
         - $ref: '#/components/schemas/CosmosStakeIntent'
         - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
         - $ref: '#/components/schemas/CosmosUnstakeIntent'
+        - $ref: '#/components/schemas/DefiApproveIntent'
         - $ref: '#/components/schemas/DefiDepositIntent'
         - $ref: '#/components/schemas/DefiRedeemIntent'
+        - $ref: '#/components/schemas/DefiWithdrawIntent'
         - $ref: '#/components/schemas/DotConsolidateIntent'
         - $ref: '#/components/schemas/DotCreateAccountIntent'
         - $ref: '#/components/schemas/DotPaymentIntent'
@@ -87365,6 +89249,47 @@ components:
         isCanceled:
           type: boolean
           description: True, if the transaction request is canceled.
+        initiatedByDAppClient:
+          type: boolean
+          description: True when the txRequest was initiated by a dApp OAuth client (e.g. Narval).
+        txChannel:
+          type: object
+          description: Immutable DeFi / marketplace channel classification (DEFI-300).
+          properties:
+            clientId:
+              type: string
+              description: OAuth dApp client id (Narval).
+            connector:
+              type: string
+              enum:
+                - narval
+                - walletconnect
+              description: External entry connector (narval, walletconnect). Omitted for internal BitGo flows.
+            defiAction:
+              type: string
+              enum:
+                - approve
+                - deposit
+                - withdraw
+            protocol:
+              type: string
+              enum:
+                - morpho
+                - aave
+                - concrete
+              description: DeFi protocol (morpho, aave, concrete).
+            source:
+              $ref: '#/components/schemas/TxChannelSource'
+            type:
+              $ref: '#/components/schemas/TxChannelType'
+            vaultId:
+              type: string
+            walletConnectRequestId:
+              type: string
+              description: defi-service walletconnect_requests.id when supplied on the intent.
+          required:
+            - source
+            - type
       required:
         - txRequestId
         - walletId
@@ -87945,19 +89870,24 @@ components:
       required:
         - serializedTxHex
         - signableHex
-    TransactionResponse:
+    TransactionResponse1:
+      title: TransactionResponse
       type: object
       properties:
         transfer:
-          $ref: '#/components/schemas/Transfer'
+          allOf:
+            - $ref: '#/components/schemas/Transfer1'
+          description: The transfer record created for this transaction.
         txid:
           type: string
-          description: The transaction's unique identifier
+          description: The transaction's unique identifier.
         tx:
           type: string
-          description: The encoded transaction, either base64 for XLM or hex for other coins
+          description: The encoded transaction, either base64 for XLM or hex for other coins.
         status:
-          $ref: '#/components/schemas/TransferState'
+          allOf:
+            - $ref: '#/components/schemas/TransferState1'
+          description: The state of the transfer.
     TransactionState:
       title: TransactionState
       type: string
@@ -88567,6 +90497,10 @@ components:
               isReward:
                 type: boolean
                 description: Indicates if this entry is a reward
+              activityMetadata:
+                type: object
+                additionalProperties: {}
+                description: Cosmos group governance metadata (e.g. MsgSubmitProposal details) emitted by the Generic Indexer
             required:
               - address
             description: An array of objects describing the change in address balances made as a result of this Transfer
@@ -88810,10 +90744,8 @@ components:
             - staking_eth_block_reward
             - staking_bera_withdrawal
             - staking_bera_block_reward
+            - defi_deposit
           description: Transfer subtype
-          x-enumsDeprecated:
-            - staking_eth_partial_withdrawal
-            - staking_eth_full_withdrawal
         txRequestId:
           type: string
           description: Associated transaction request ID
@@ -90402,6 +92334,17 @@ components:
           type: object
       required:
         - address
+    TxChannelSource:
+      title: TxChannelSource
+      type: string
+      enum:
+        - internal
+        - external
+    TxChannelType:
+      title: TxChannelType
+      type: string
+      enum:
+        - defi
     TxDetails:
       title: TxDetails
       type: object
@@ -90542,6 +92485,10 @@ components:
                     isReward:
                       type: boolean
                       description: Indicates if this entry is a reward
+                    activityMetadata:
+                      type: object
+                      additionalProperties: {}
+                      description: Cosmos group governance metadata (e.g. MsgSubmitProposal details) emitted by the Generic Indexer
                   required:
                     - address
                   description: An array of objects describing the change in address balances made as a result of this Transfer
@@ -90785,10 +92732,8 @@ components:
                   - staking_eth_block_reward
                   - staking_bera_withdrawal
                   - staking_bera_block_reward
+                  - defi_deposit
                 description: Transfer subtype
-                x-enumsDeprecated:
-                  - staking_eth_partial_withdrawal
-                  - staking_eth_full_withdrawal
               txRequestId:
                 type: string
                 description: Associated transaction request ID
@@ -91755,6 +93700,39 @@ components:
                     - inquirySubType
                     - inquiryType
                   description: Associated inquiries
+              securityControlEvents:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    control:
+                      type: string
+                      description: The security control that was evaluated
+                    date:
+                      type: string
+                      description: The date the event was recorded
+                      format: date-time
+                      title: ISO Date String
+                    ip:
+                      type: string
+                      description: The IP address of the user
+                    message:
+                      type: string
+                      description: Message from the security control
+                    result:
+                      type: string
+                      enum:
+                        - allowed
+                        - blocked
+                      description: Whether the user was allowed or blocked
+                    user:
+                      type: string
+                      description: The user who triggered the security control check
+                  required:
+                    - date
+                    - result
+                    - user
+                  description: Security control events recorded during approval enforcement
             required:
               - id
               - creator
@@ -93177,11 +95155,13 @@ components:
                   enum:
                     - admin
                     - auditor
+                    - wallet.create
                   description: |-
                     This type represents the permissions that can be assigned to a user when adding them to an enterprise
 
                     1. 'admin': Add/remove users, Create wallets, Manage enterprise policies, Add Bank Accounts, Receive invitations to wallets
                     2. 'auditor': View audit logs across the enterprise, Receive invitations to wallets
+                    3. 'wallet.create': Allows the user to create new wallets within an enterprise (UMS granular permission)
               id:
                 type: string
               beneficialOwner:
@@ -93315,7 +95295,7 @@ components:
           items:
             $ref: '#/components/schemas/Unspent'
         walletAddressDetails:
-          $ref: '#/components/schemas/Address2'
+          $ref: '#/components/schemas/Address21'
     UtxoWallet:
       title: Utxo Wallet
       type: object
@@ -96788,6 +98768,26 @@ components:
         - pending
         - removed
         - revise
+    VerificationStateCounts:
+      title: VerificationStateCounts
+      type: object
+      description: |-
+        Count of enterprises per verification state (KYC for individual, KYB for entity).
+        All known states are always present; absent states default to 0.
+      properties:
+        unverified:
+          type: number
+        approved:
+          type: number
+        rejected:
+          type: number
+        pending:
+          type: number
+      required:
+        - unverified
+        - approved
+        - rejected
+        - pending
     VerifiedKycState:
       type: string
       enum:
@@ -97627,7 +99627,7 @@ components:
             type: string
         type:
           allOf:
-            - $ref: '#/components/schemas/WalletType'
+            - $ref: '#/components/schemas/WalletTypes'
           description: The type describes who owns the keys to the wallet and how they are stored. "cold" wallets are wallets where the private key of the user key is stored exclusively outside of BitGo's system. "custodial" means that this wallet is a cold wallet where BitGo owns the keys. Only customers of the BitGo Trust can create this kind of wallet. "custodialPaired" means that this is a hot wallet that is owned by the customer but it will be linked to a cold (custodial) wallet where BitGo owns the keys. This option is only available to customers of BitGo Inc. BitGo stores an encrypted private key for the user key of "hot" wallets. "trading" wallets are trading accounts where the coin is "ofc". "distributedCustody" means You manage one key and another key agent manages the second key. BitGo manages the third key
         subType:
           $ref: '#/components/schemas/WalletSubType'
@@ -97734,6 +99734,13 @@ components:
               - value
         receiveAddress:
           $ref: '#/components/schemas/WalletAddress'
+        customTags:
+          type: array
+          items:
+            type: string
+            description: |-
+              Object Tagging V1: free-form string labels applied to this wallet.
+              Absent when the wallet has no custom tags; never an empty array.
       required:
         - allowBackupKeySigning
         - approvalsRequired
@@ -97819,7 +99826,7 @@ components:
         nodeId:
           $ref: '#/components/schemas/Id'
         receiveAddress:
-          $ref: '#/components/schemas/Address2'
+          $ref: '#/components/schemas/Address21'
         recoverable:
           type: boolean
         tags:
@@ -98688,7 +100695,7 @@ components:
                   type: string
               type:
                 allOf:
-                  - $ref: '#/components/schemas/WalletType'
+                  - $ref: '#/components/schemas/WalletTypes'
                 description: The type describes who owns the keys to the wallet and how they are stored. "cold" wallets are wallets where the private key of the user key is stored exclusively outside of BitGo's system. "custodial" means that this wallet is a cold wallet where BitGo owns the keys. Only customers of the BitGo Trust can create this kind of wallet. "custodialPaired" means that this is a hot wallet that is owned by the customer but it will be linked to a cold (custodial) wallet where BitGo owns the keys. This option is only available to customers of BitGo Inc. BitGo stores an encrypted private key for the user key of "hot" wallets. "trading" wallets are trading accounts where the coin is "ofc". "distributedCustody" means You manage one key and another key agent manages the second key. BitGo manages the third key
               subType:
                 $ref: '#/components/schemas/WalletSubType'
@@ -98795,6 +100802,13 @@ components:
                     - value
               receiveAddress:
                 $ref: '#/components/schemas/WalletAddress'
+              customTags:
+                type: array
+                items:
+                  type: string
+                  description: |-
+                    Object Tagging V1: free-form string labels applied to this wallet.
+                    Absent when the wallet has no custom tags; never an empty array.
             required:
               - allowBackupKeySigning
               - approvalsRequired
@@ -99238,17 +101252,12 @@ components:
         - $ref: '#/components/schemas/TezosWallet'
         - $ref: '#/components/schemas/SolWallet'
         - $ref: '#/components/schemas/LightningCoinWallet'
-    WalletType:
-      title: WalletType
+    WalletTagsAction:
+      title: WalletTagsAction
       type: string
       enum:
-        - backing
-        - cold
-        - custodial
-        - custodialPaired
-        - hot
-        - advanced
-        - trading
+        - add
+        - remove
     WalletTypeCondition:
       title: Wallet type
       type: object
@@ -99381,6 +101390,17 @@ components:
         - trading
         - distributedCustody
         - advanced
+    WalletTypes:
+      title: WalletTypes
+      type: string
+      enum:
+        - backing
+        - cold
+        - custodial
+        - custodialPaired
+        - hot
+        - advanced
+        - trading
     WalletUnspentsResponse:
       title: WalletUnspentsResponse
       type: object
@@ -99662,6 +101682,7 @@ components:
         - twoStepTransfer
         - twoStepDeposit
         - twoStepWithdrawal
+        - pendingDecryption
     WalletsResponse:
       type: object
       properties:
@@ -100142,6 +102163,7 @@ components:
         - wallet
         - enterprise
         - organization
+        - safe
     WebhookState:
       title: WebhookState
       type: string
@@ -100188,6 +102210,9 @@ components:
         - twoStepTransfer
         - twoStepDeposit
         - twoStepWithdrawal
+        - pendingDecryption
+        - whitelistApproved
+        - whitelistRejected
     WebhookTypeBlock:
       type: string
       enum:
