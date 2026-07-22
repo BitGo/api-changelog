@@ -92738,6 +92738,9 @@ components:
           $ref: '#/components/schemas/CustomChangeKeySignatures'
         coinSpecific:
           $ref: '#/components/schemas/WalletUpdateCoinSpecific'
+        userKeySigningRequired:
+          type: boolean
+          description: (OFC wallets only) Toggle whether the wallet requires a user-key signature for every transaction. Requires OTP unlock and wallet-admin permission; multi-admin wallets create a pending approval. Only valid for OFC (Go Account) wallets.
     UpdateWalletShareResponse:
       title: UpdateWalletShareResponse
       type: object
@@ -98123,9 +98126,11 @@ components:
       properties:
         needsKeyReshareAfterPasswordReset:
           type: boolean
+          deprecated: true
           description: |
-            True if all users need to recover the user key. Set to true after a successful
-            password reset with support.
+            Deprecated: legacy password-reset recovery flag. Retained only for
+            backward compatibility and will be removed in a future release. Do not
+            rely on its presence or value.
         pendingSystemInitialization:
           type: boolean
           description: |
@@ -98188,6 +98193,9 @@ components:
           $ref: '#/components/schemas/WalletCreateCoinSpecificLnbtc'
         tlnbtc:
           $ref: '#/components/schemas/WalletCreateCoinSpecificLnbtc'
+        userKeySigningRequired:
+          type: boolean
+          description: (OFC wallets only) Whether the wallet requires a user-key signature for every transaction. When false, BitGo KMS co-signs without user-key participation. Sending it for any other coin returns 400. When omitted the server resolves the default (true for CaaS enterprises).
     WalletCreateCoinSpecificLnbtc:
       type: object
       properties:
