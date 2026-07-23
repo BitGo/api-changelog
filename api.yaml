@@ -13306,6 +13306,1886 @@ paths:
               schema:
                 type: object
                 properties: {}
+  /api/link/v1/enterprises/{enterpriseId}/accounts:
+    get:
+      summary: List Link accounts
+      description: Lists Link accounts for an enterprise with filtering, pagination, and sorting.
+      operationId: V1GetAccountsRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: limit
+          description: Maximum number of results to return per page. Defaults to 50.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
+            example: '50'
+        - name: offset
+          description: Number of results to skip before returning. Defaults to 0.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
+            example: '0'
+        - name: venueId
+          description: Filter accounts by venue identifier.
+          in: query
+          schema:
+            type: string
+            example: COINBASE_EXCHANGE
+            minLength: 1
+        - name: name
+          description: Filter accounts by name (case-insensitive partial match).
+          in: query
+          schema:
+            type: string
+            example: My Coinbase
+            minLength: 1
+        - name: description
+          description: Filter accounts by description (case-insensitive partial match).
+          in: query
+          schema:
+            type: string
+            example: trading
+            minLength: 1
+        - name: status
+          description: Filter by one or more account statuses.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - active
+                - inactive
+                - deleted
+                - pending_credentials
+              description: Filter by one or more account statuses.
+              example: '"active"'
+        - name: sortBy
+          description: Sort field. Defaults to name.
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - name
+              - createdDate
+            example: name
+        - name: orderDirection
+          description: Sort direction. Defaults to asc.
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: asc
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetAccountsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+    post:
+      summary: Create a Link account
+      description: Creates a new account for the given enterprise at the specified venue.
+      operationId: V1PostAccountRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: New Link Account details
+              properties:
+                venueId:
+                  type: string
+                  description: The venue for which the account is being created. This should be a valid venue identifier returned by the GET /venues endpoint.
+                  example: COINBASE_EXCHANGE
+                  minLength: 1
+                credentials:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      accessLevels:
+                        type: array
+                        items:
+                          type: string
+                          enum:
+                            - read_write
+                          description: Must be `['read_write']`. Readonly credentials are not supported for Link milestone 2.
+                      wrappedKey:
+                        type: string
+                        minLength: 1
+                      iv:
+                        type: string
+                        minLength: 1
+                      tag:
+                        type: string
+                        minLength: 1
+                      masterKeyVersion:
+                        type: number
+                      credentials:
+                        type: string
+                        minLength: 1
+                      expirationDate:
+                        type: string
+                        format: date-time
+                        title: ISO Date String
+                    required:
+                      - accessLevels
+                      - wrappedKey
+                      - iv
+                      - tag
+                      - masterKeyVersion
+                      - credentials
+                    description: |-
+                      An array of credentials to associate with the new account. Each credential should include the access level,
+                      encrypted credentials, and envelope encryption fields. See the CredentialInput type for details.
+                name:
+                  type: string
+                  description: A unique name for the account. This is used to identify the account in BitGo and must be unique within your enterprise.
+                  example: My Coinbase Account
+                  minLength: 1
+                description:
+                  type: string
+                  description: An optional description for the account. This can be any string and is not required to be unique.
+                  example: This account is used for trading on Coinbase.
+                  minLength: 1
+                whitelistingEnabled:
+                  type: boolean
+                  description: |-
+                    Optional flag to indicate if whitelisting is enabled on the venue. This means withdrawals can only happen to
+                    previously whitelisted addresses.
+                  example: false
+                parentAccount:
+                  type: string
+                  description: |-
+                    An optional parent account id to link this account to. This is used for sub-accounts under a main account.
+                    The parent account must already exist in BitGo.
+                  example: aba3a693-4f28-4523-8e53-85a3df22a608
+                  title: uuid
+              required:
+                - venueId
+                - credentials
+                - name
+                - description
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PostAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}:
+    delete:
+      summary: Delete a Link account
+      description: |-
+        Soft-deletes a Link account. Blocks deletion if the account has active
+        sub-accounts or pending transfers.
+      operationId: V1DeleteAccountRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: accountId
+          description: The account ID to delete.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            title: uuid
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1DeleteAccountResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+    get:
+      summary: Get a Link account
+      description: Retrieves a single Link account by id for an enterprise.
+      operationId: V1GetAccountRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: accountId
+          description: The account ID to retrieve.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            title: uuid
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+    patch:
+      summary: Update a Link account
+      description: |-
+        Updates a Link account's details. Supports updating name, description,
+        status, credentials, and whitelisting flag.
+      operationId: V1PatchAccountRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: accountId
+          description: The account ID to update.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            title: uuid
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Updated Link Account details
+              properties:
+                name:
+                  type: string
+                  description: Updated account name. Must be unique within the enterprise, max 60 characters.
+                  example: My Coinbase Account v2
+                  minLength: 1
+                description:
+                  type: string
+                  description: Updated account description. Max 256 characters.
+                  example: Updated description
+                  minLength: 1
+                status:
+                  type: string
+                  enum:
+                    - active
+                    - inactive
+                  description: Updated account status. Only active or inactive allowed.
+                  example: inactive
+                credentials:
+                  type: array
+                  items:
+                    type: object
+                    description: |-
+                      Updated credentials. All existing credentials must be provided (all-or-none).
+                      Each credential must include its id.
+                    properties:
+                      credentials:
+                        type: string
+                        minLength: 1
+                      expirationDate:
+                        type: string
+                        format: date-time
+                        title: ISO Date String
+                      id:
+                        type: string
+                        description: Credential id (returned by POST/GET account)
+                        title: uuid
+                      iv:
+                        type: string
+                        minLength: 1
+                      masterKeyVersion:
+                        type: number
+                      tag:
+                        type: string
+                        minLength: 1
+                      wrappedKey:
+                        type: string
+                        minLength: 1
+                    required:
+                      - credentials
+                      - id
+                      - iv
+                      - masterKeyVersion
+                      - tag
+                      - wrappedKey
+                whitelistingEnabled:
+                  type: boolean
+                  description: Updated whitelisting flag.
+                  example: true
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PatchAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}/addresses:
+    post:
+      summary: Generate a deposit address
+      description: |-
+        Generates a new deposit address for the given Link account and asset.
+        If the venue does not support address generation, returns the existing
+        active deposit address.
+      operationId: V1PostAddressRoute
+      tags:
+        - Link Addresses
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: accountId
+          description: The account ID to generate a deposit address for.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            title: uuid
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Generate deposit address request body
+              properties:
+                genericAsset:
+                  type: string
+                  description: |-
+                    Network-agnostic generic asset (e.g. "usdc", "btc"). Combined with
+                    `network` to identify a specific asset on a specific chain.
+                  example: usdc
+                  minLength: 1
+                network:
+                  type: string
+                  description: |-
+                    Blockchain network the deposit address should belong to (e.g. "eth",
+                    "sol", "bitcoin"). Must be a network supported by the account's venue
+                    for the given `genericAsset`.
+                  example: eth
+                  minLength: 1
+              required:
+                - genericAsset
+                - network
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PostAddressResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}/transfers:
+    post:
+      summary: Initiate a transfer from a Link account
+      description: |-
+        The destination kind is selected by `destination.kind` and dispatched
+        server-side. Supported kinds today: on-chain address (`'address'`) and
+        BitGo wallet (`'wallet'`).
+      operationId: V1PostTransferRoute
+      tags:
+        - Link Transfers
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: accountId
+          description: The source Link account id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            title: uuid
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Transfer initiation request body. Carries the amount, the asset to move
+                (as a `(genericAsset, network)` pair), the optional venue sub-account
+                bucket, and the discriminated `destination` describing where the funds
+                should land.
+              properties:
+                externalId:
+                  type: string
+                  description: |-
+                    Client-supplied idempotency key, scoped to the source `accountId`.
+
+                    Two requests with the same `externalId` and identical hard fields
+                    (amount, asset, network, destination, …) resolve to the same
+                    `LinkTransfer` — the second call is reconciled against the first and
+                    the venue is **not** charged twice. A retry that disagrees on any
+                    hard field returns 409 `TransferIdempotencyConflict`.
+
+                    Required. Callers should generate a stable identifier (e.g. UUIDv4)
+                    per logical transfer and reuse it across retries.
+                  minLength: 1
+                amount:
+                  type: string
+                  description: Amount to withdraw in Big Units (always positive — direction is implied).
+                genericAsset:
+                  type: string
+                  description: |-
+                    Generic asset symbol (chain-agnostic, e.g. `usdc`). Paired with `network`
+                    the service resolves a venue-specific raw asset. Using a generic-asset +
+                    network pair (rather than a BitGo concrete symbol) lets the endpoint
+                    support assets BitGo doesn't yet carry a concrete symbol for.
+                  minLength: 1
+                accountSubType:
+                  type: string
+                  description: |-
+                    Optional venue sub-account / bucket (e.g. `SPOT` vs `MARGIN`). Required
+                    for venues that hold balances across multiple sub-types where the caller
+                    needs to disambiguate which bucket to debit. When omitted, the venue's
+                    default sub-account is used.
+                  minLength: 1
+                destination:
+                  allOf:
+                    - $ref: '#/components/schemas/TransferDestination'
+                  description: Destination — discriminated by `kind`. See `TransferDestination`.
+                venueOtp:
+                  type: string
+                  description: |-
+                    Venue-specific one-time password (TOTP code). Required only when the
+                    venue has OTP withdrawal protection enabled. When omitted and the venue
+                    requires OTP, the transfer is created with `status: "failed_retriable"`
+                    and `reason.code: "OtpRequired"`. Call the retry endpoint with a fresh
+                    code to proceed.
+                  minLength: 1
+              required:
+                - externalId
+                - amount
+                - genericAsset
+                - destination
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1TransferResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}/transfers/{transferId}/retry:
+    post:
+      summary: Retry a failed_retriable transfer
+      description: |-
+        Re-submit a transfer that stalled with `status: "failed_retriable"`.
+        Returns 409 `TransferNotRetriable` when the transfer is not in
+        `failed_retriable` status.
+      operationId: V1PostRetryTransferRoute
+      tags:
+        - Link Transfers
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: accountId
+          description: The source Link account id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            title: uuid
+        - name: transferId
+          description: The transfer id to retry.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a609
+            title: uuid
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Retry request body. All fields are optional.
+              properties:
+                venueOtp:
+                  type: string
+                  description: |-
+                    Venue-specific one-time password (TOTP code).
+                    Required for failed_retriable transfers with reason.code of 'OtpRequired', or 'OtpInvalidError'.
+                  minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1TransferResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/addresses:
+    get:
+      summary: List addresses
+      description: |-
+        Returns a paginated list of addresses for the enterprise. Results are
+        scoped to the caller's `link.account.view` permission. Supports filtering
+        by accountIds, type, status, asset, and network.
+      operationId: V1GetAddressesRoute
+      tags:
+        - Link Addresses
+      x-internal: false
+      parameters:
+        - name: limit
+          description: Maximum number of results to return per page. Defaults to 50.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
+            example: '50'
+        - name: offset
+          description: Number of results to skip before returning. Defaults to 0.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
+            example: '0'
+        - name: accountIds
+          description: Filter addresses to one or more accounts within the enterprise.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Filter addresses to one or more accounts within the enterprise.
+              example: '"aba3a693-4f28-4523-8e53-85a3df22a608"'
+        - name: type
+          description: Filter by address type.
+          in: query
+          schema:
+            type: string
+            enum:
+              - deposit
+              - withdrawal
+            example: deposit
+        - name: status
+          description: Filter by address status.
+          in: query
+          schema:
+            type: string
+            enum:
+              - active
+              - inactive
+            example: active
+        - name: asset
+          description: |-
+            Filter by asset identifier. Must match the exact value stored in the
+            database (as returned by VAS, e.g. "usdc", "btc").
+          in: query
+          schema:
+            type: string
+            example: usdc
+            minLength: 1
+        - name: genericAsset
+          description: Filter by network-agnostic asset identifier (e.g. "usdc", "btc").
+          in: query
+          schema:
+            type: string
+            example: usdc
+            minLength: 1
+        - name: network
+          description: Filter by blockchain network identifier (e.g. "eth", "sol", "bitcoin").
+          in: query
+          schema:
+            type: string
+            example: eth
+            minLength: 1
+        - name: sortBy
+          description: Sort field. Defaults to createdDate.
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - createdDate
+            example: createdDate
+        - name: orderDirection
+          description: Sort direction. Defaults to desc (newest first).
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: desc
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetAddressesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/assets/balances:
+    get:
+      summary: Get enterprise asset balances — aggregated by asset across all permitted accounts
+      description: |-
+        Returns the latest balance per asset (genericAsset) summed across all permitted accounts
+        in the enterprise. One entry per asset; no per-account breakdown.
+      operationId: V1GetEnterpriseAssetBalancesRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: accountIds
+          description: |-
+            Optional list of account IDs. When provided, returns aggregated balances only for these accounts
+            and their sub-accounts; when omitted, returns balances for all permitted accounts.
+          in: query
+          schema:
+            type: array
+            example:
+              - aba3a693-4f28-4523-8e53-85a3df22a608
+            items:
+              type: string
+              title: uuid
+              description: |-
+                Optional list of account IDs. When provided, returns aggregated balances only for these accounts
+                and their sub-accounts; when omitted, returns balances for all permitted accounts.
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetEnterpriseAssetBalancesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/balances:
+    get:
+      summary: Get permitted accounts balances for an enterprise
+      description: |-
+        Returns the latest balance snapshots per asset for permitted accounts. When optional query
+        param `accountIds` is provided, returns balances only for those account IDs; when omitted,
+        returns all permitted accounts in the enterprise. Optional `venue` restricts accounts by
+        `venueId`; optional repeated `genericAsset` restricts balance rows to those `genericAsset` values.
+        Each account includes its permitted sub-account balances. Returns an empty array if no
+        accounts are found.
+      operationId: V1GetEnterpriseAccountsBalancesRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: accountIds
+          description: |-
+            Optional list of account IDs. When provided, returns balances only for these accounts;
+            when omitted, returns all permitted accounts.
+          in: query
+          schema:
+            type: array
+            example:
+              - aba3a693-4f28-4523-8e53-85a3df22a608
+            items:
+              type: string
+              title: uuid
+              description: |-
+                Optional list of account IDs. When provided, returns balances only for these accounts;
+                when omitted, returns all permitted accounts.
+        - name: venue
+          description: When provided, only accounts at this venue (`Account.venueId`) are included.
+          in: query
+          schema:
+            type: string
+            example: COINBASE_EXCHANGE
+            minLength: 1
+        - name: genericAsset
+          description: When provided (repeat param), only balances whose `genericAsset` is in this list are returned.
+          in: query
+          schema:
+            type: array
+            example:
+              - usdc
+              - btc
+            items:
+              type: string
+              minLength: 1
+              description: When provided (repeat param), only balances whose `genericAsset` is in this list are returned.
+        - name: displayAsset
+          description: |-
+            When provided (repeat param), only balances whose `displayAsset` is in this list are returned.
+            displayAsset equals genericAsset when mapped, otherwise rawAsset.
+          in: query
+          schema:
+            type: array
+            example:
+              - usdc
+              - XXBT
+            items:
+              type: string
+              minLength: 1
+              description: |-
+                When provided (repeat param), only balances whose `displayAsset` is in this list are returned.
+                displayAsset equals genericAsset when mapped, otherwise rawAsset.
+        - name: searchLabel
+          description: Case-insensitive partial match against account name. Filters accounts whose name contains the value.
+          in: query
+          schema:
+            type: string
+            example: trading
+            minLength: 1
+        - name: limit
+          description: Maximum number of results to return per page. Defaults to 50.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
+            example: '50'
+        - name: offset
+          description: Number of results to skip before returning. Defaults to 0.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
+            example: '0'
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetEnterpriseAccountsBalancesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/on-chain-destinations:
+    get:
+      summary: List on-chain destinations for a given asset/network
+      description: |-
+        Mirrors VAS's `GET /on-chain-destinations`. Given a `(genericAsset, network)` pair,
+        returns enterprise Link accounts the caller has `link.account.view` on that can
+        on-chain-deposit at that asset/network. Has no source — used by the BitGo-wallet
+        source flow, where the source has no Link venue context. Excludes accounts with
+        `status != active`.
+      operationId: V1GetOnChainDestinationsRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: genericAsset
+          description: Network-agnostic asset family.
+          in: query
+          required: true
+          schema:
+            type: string
+            example: usdc
+            minLength: 1
+        - name: network
+          description: Network identifier.
+          in: query
+          required: true
+          schema:
+            type: string
+            example: sol
+            minLength: 1
+        - name: name
+          description: Filter destinations by name (case-insensitive partial match).
+          in: query
+          schema:
+            type: string
+            example: My Coinbase
+            minLength: 1
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetOnChainDestinationsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/permissions:
+    get:
+      summary: Get the caller's Link permissions
+      description: |-
+        Returns the calling user's effective Link permissions for the enterprise:
+        the enterprise-wide `bitgo.link.admin` flag plus effective account-level
+        admin / transfer / view scopes. Reveals only the caller's own permissions.
+      operationId: V1GetLinkPermissionsRoute
+      tags:
+        - Link Permissions
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetLinkPermissionsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/sources:
+    get:
+      summary: List Link accounts eligible as withdrawal sources
+      description: |-
+        Returns one row per `(account, accountSubType)` for accounts the caller has
+        `link.account.transfer` on, with non-zero `available` balance for the given
+        asset. When `asset` is supplied, additionally filters to rows whose venue
+        supports `(genericAsset, network)` for withdrawals (capability lookup, not
+        the on/off `withdraw_disabled` gate). Excludes accounts whose `status != active`.
+
+        Exactly one of `asset` / `genericAsset` is required.
+      operationId: V1GetSourcesRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: genericAsset
+          description: |-
+            Network-agnostic asset family (e.g. "usdc"). When omitted (along with `network`),
+            the endpoint returns accounts with a positive balance in any asset.
+          in: query
+          schema:
+            type: string
+            example: usdc
+            minLength: 1
+        - name: network
+          description: |-
+            BitGo network identifier (e.g. "sol", "eth"). Requires `genericAsset`. When supplied,
+            only venues that support the (genericAsset, network) pair are included.
+          in: query
+          schema:
+            type: string
+            example: sol
+            minLength: 1
+        - name: name
+          description: Filter sources by name (case-insensitive partial match).
+          in: query
+          schema:
+            type: string
+            example: My Coinbase
+            minLength: 1
+        - name: limit
+          description: Maximum number of results to return per page. Defaults to 50.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
+            example: '50'
+        - name: offset
+          description: Number of results to skip before returning. Defaults to 0.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
+            example: '0'
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetSourcesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/transfer-destinations:
+    get:
+      summary: List destinations reachable from a Link-account source
+      description: |-
+        Mirrors VAS's `GET /venues/{venueId}/transfer-destinations`. Returns enterprise Link
+        accounts the caller has `link.account.view` on that the given Link-account source
+        can transfer to. Link calls VAS `GET /venues/{venueId}/transfer-destinations` and
+        splits the result into two segments: off-chain (`internalDestinations`, with subtype
+        entries) and on-chain (`externalDestinations`, no subtype). Same-hierarchy accounts
+        are excluded from the external segment since they are already covered by the
+        internal segment. The response envelope carries `sourceSupportsOnChainWithdrawal`
+        from VAS so BFF can decide whether to surface BitGo-wallet / external-address
+        destinations alongside. Excludes accounts with `status != active`.
+      operationId: V1GetTransferDestinationsRoute
+      tags:
+        - Link Accounts
+      x-internal: false
+      parameters:
+        - name: sourceLinkAccountId
+          description: The Link account id of the source.
+          in: query
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            minLength: 1
+        - name: sourceAccountSubType
+          description: The source's account subtype.
+          in: query
+          required: true
+          schema:
+            type: string
+            example: SPOT
+            minLength: 1
+        - name: genericAsset
+          description: Network-agnostic asset family.
+          in: query
+          required: true
+          schema:
+            type: string
+            example: usdc
+            minLength: 1
+        - name: name
+          description: Filter destinations by name (case-insensitive partial match).
+          in: query
+          schema:
+            type: string
+            example: My Coinbase
+            minLength: 1
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetTransferDestinationsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/transfers:
+    get:
+      summary: List transfers
+      description: Lists transfers for an enterprise with filtering, pagination, and sorting.
+      operationId: V1GetTransfersRoute
+      tags:
+        - Link Transfers
+      x-internal: false
+      parameters:
+        - name: limit
+          description: Maximum number of results to return per page. Defaults to 50.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 50
+            example: '50'
+        - name: offset
+          description: Number of results to skip before returning. Defaults to 0.
+          in: query
+          required: true
+          schema:
+            oneOf:
+              - type: string
+              - type: number
+                enum:
+                  - 0
+            example: '0'
+        - name: accountIds
+          description: Filter transfers to one or more accounts within the enterprise.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              title: uuid
+              description: Filter transfers to one or more accounts within the enterprise.
+              example: '"aba3a693-4f28-4523-8e53-85a3df22a608"'
+        - name: status
+          description: Filter by one or more transfer statuses.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              enum:
+                - pending_policy_evaluation
+                - processing
+                - pending_approval
+                - pending
+                - completed
+                - failed
+                - failed_retriable
+                - canceled
+                - rejected
+              description: Filter by one or more transfer statuses.
+              example: '"completed"'
+        - name: genericAsset
+          description: Filter by generic asset identifier.
+          in: query
+          schema:
+            type: string
+            example: btc
+            minLength: 1
+        - name: fromType
+          description: Filter by source entity type.
+          in: query
+          schema:
+            type: string
+            enum:
+              - address
+              - bitgo_wallet
+              - link_account
+              - venue_account
+            example: address
+        - name: toType
+          description: Filter by destination entity type.
+          in: query
+          schema:
+            type: string
+            enum:
+              - address
+              - bitgo_wallet
+              - link_account
+              - venue_account
+            example: bitgo_wallet
+        - name: type
+          description: |-
+            Filter by transfer direction relative to the account.
+            "send" returns withdrawals (negative amount), "receive" returns deposits (positive amount).
+          in: query
+          schema:
+            type: string
+            enum:
+              - send
+              - receive
+            example: send
+        - name: startDate
+          description: Return transfers created on or after this date (ISO 8601).
+          in: query
+          schema:
+            type: string
+            example: '2024-01-01T00:00:00.000Z'
+            format: date-time
+            title: ISO Date String
+        - name: endDate
+          description: Return transfers created on or before this date (ISO 8601).
+          in: query
+          schema:
+            type: string
+            example: '2024-12-31T23:59:59.999Z'
+            format: date-time
+            title: ISO Date String
+        - name: orderDirection
+          description: Sort direction for sortTimestamp (venue creation time, falls back to ingestion time). Defaults to desc.
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - asc
+              - desc
+            example: desc
+        - name: searchLabel
+          description: 'Case-insensitive search across transfer fields: transfer ID, fromId, toId, fromName, and toName.'
+          in: query
+          schema:
+            type: string
+            example: abc123
+            minLength: 1
+        - name: toAddress
+          description: |-
+            Filter to transfers whose on-chain destination address matches this value (exact match).
+            Joins through the crypto-detail relation; transfers without a crypto detail are excluded
+            when this filter is set.
+          in: query
+          schema:
+            type: string
+            example: TQrZ9wBLXKnNF8WiyQqMnxQyG3MJC4mYQv
+            minLength: 1
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetTransfersResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/transfers/{transferId}:
+    get:
+      summary: Get transfer by ID
+      description: Retrieves a single transfer by its ID for an enterprise.
+      operationId: V1GetTransferByIdRoute
+      tags:
+        - Link Transfers
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: transferId
+          description: The transfer ID to retrieve.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            title: uuid
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1TransferResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/notifications/v1/webhooks/{webhookId}/oauth-config:
     get:
       tags:
@@ -52948,6 +54828,14 @@ components:
     AccountId:
       type: string
       description: The ID of the account
+    AccountStatus:
+      title: AccountStatus
+      type: string
+      enum:
+        - active
+        - inactive
+        - deleted
+        - pending_credentials
     AccountType:
       title: AccountType
       type: string
@@ -53666,6 +55554,12 @@ components:
           description: Total number of addresses returned in this response
       required:
         - coin
+    AddressStatus:
+      title: AddressStatus
+      type: string
+      enum:
+        - active
+        - inactive
     AddressString:
       title: AddressString
       type: string
@@ -53700,6 +55594,12 @@ components:
         - $ref: '#/components/schemas/TronAddress'
         - $ref: '#/components/schemas/XRPAddress'
         - $ref: '#/components/schemas/TonAddress'
+    AddressType:
+      title: AddressType
+      type: string
+      enum:
+        - deposit
+        - withdrawal
     AddressType1:
       type: string
       example: p2sh
@@ -62356,6 +64256,15 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
+    CryptoTransferStatus:
+      title: CryptoTransferStatus
+      type: string
+      enum:
+        - unconfirmed
+        - confirmed
+        - failed
+        - canceled
+        - unknown
     CsprDelegationProperties:
       title: CSPR Delegation Properties
       allOf:
@@ -91832,6 +93741,26 @@ components:
         - type
         - valueString
         - wallet
+    TransferAccountDestination:
+      title: TransferAccountDestination
+      type: object
+      description: |-
+        Internal Link account destination — moves funds between two Link accounts at
+        the same venue via VAS `initiate-transfer`.
+      properties:
+        kind:
+          type: string
+          enum:
+            - account
+        accountId:
+          type: string
+          title: uuid
+        accountSubType:
+          type: string
+          minLength: 1
+      required:
+        - kind
+        - accountId
     TransferAction:
       title: TransferAction
       type: string
@@ -91850,6 +93779,33 @@ components:
         - replacing
         - reversed
         - abandoned
+    TransferAddressDestination:
+      title: TransferAddressDestination
+      type: object
+      description: |-
+        On-chain address destination — withdraws to an arbitrary blockchain address.
+
+        `memo` is optional and used by chains that require an extra routing tag
+        (XRP destination tag, XLM memo, BNB memo, etc.).
+      properties:
+        kind:
+          type: string
+          enum:
+            - address
+        toAddress:
+          type: string
+          minLength: 1
+        network:
+          type: string
+          description: Network identifier (e.g. `ethereum`, `bitcoin`).
+          minLength: 1
+        memo:
+          type: string
+          minLength: 1
+      required:
+        - kind
+        - toAddress
+        - network
     TransferAmountCondition:
       title: Amount
       type: object
@@ -91937,6 +93893,16 @@ components:
           $ref: '#/components/schemas/TransferAmountConditionParameters'
         operator:
           $ref: '#/components/schemas/OperatorType'
+    TransferDestination:
+      title: TransferDestination
+      oneOf:
+        - $ref: '#/components/schemas/TransferAddressDestination'
+        - $ref: '#/components/schemas/TransferWalletDestination'
+        - $ref: '#/components/schemas/TransferAccountDestination'
+      description: |-
+        Discriminated union of every supported transfer destination. New destination
+        kinds (internal Link account, etc.) join this union as separate variants —
+        the service dispatches on `kind` to pick the per-kind subroutine.
     TransferDestinationTypeCondition:
       title: Destination
       type: object
@@ -92212,6 +94178,19 @@ components:
         - `reversed`: The transfer was reversed (e.g., when a withdrawal offer is rejected in multi-step transfers).
         - `signed`: The transfer was approved by an admin (if required) and then signed by BitGo.
         - `unconfirmed`: The signed transaction was sent to the network, and is pending on-chain validation.
+    TransferStatus:
+      title: TransferStatus
+      type: string
+      enum:
+        - pending_policy_evaluation
+        - processing
+        - pending_approval
+        - pending
+        - completed
+        - failed
+        - failed_retriable
+        - canceled
+        - rejected
     TransferStatus1:
       title: TransferStatus
       type: string
@@ -92347,6 +94326,30 @@ components:
           $ref: '#/components/schemas/TransferVelocityLimitConditionParameters'
         operator:
           $ref: '#/components/schemas/OperatorType'
+    TransferWalletDestination:
+      title: TransferWalletDestination
+      type: object
+      description: |-
+        BitGo wallet destination — withdraws to the on-chain deposit address that
+        Wallet Platform exposes for the given walletId + asset. The caller never
+        needs to know the actual on-chain address; the service resolves it via WP
+        before submitting to VAS.
+      properties:
+        kind:
+          type: string
+          enum:
+            - wallet
+        walletId:
+          type: string
+          minLength: 1
+        network:
+          type: string
+          description: Network identifier (e.g. `ethereum`, `bitcoin`).
+          minLength: 1
+      required:
+        - kind
+        - walletId
+        - network
     TransferWebhookCoinConditionParameter:
       type: object
       description: The asset to check the transfer against to determine if a webhook payload should be sent.
@@ -96126,6 +98129,177 @@ components:
           type: boolean
         freezeDepositsFromShielded:
           type: boolean
+    V1AccountResponse:
+      title: V1AccountResponse
+      type: object
+      properties:
+        id:
+          type: string
+          title: uuid
+        venueId:
+          type: string
+          minLength: 1
+        credentials:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                title: uuid
+              accessLevels:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - read
+                    - write
+                    - read_write
+              expirationDate:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - accessLevels
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+        name:
+          type: string
+          minLength: 1
+        description:
+          type: string
+          minLength: 1
+        whitelistingEnabled:
+          type: boolean
+        parentAccount:
+          type: string
+          title: uuid
+        users:
+          type: array
+          items:
+            type: object
+            properties:
+              permissions:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - link.account.admin
+                    - link.account.transfer
+                    - link.account.view
+              userId:
+                type: string
+                minLength: 1
+            required:
+              - permissions
+              - userId
+        createdDate:
+          type: string
+          format: date-time
+          title: ISO Date String
+        modifiedDate:
+          type: string
+          format: date-time
+          title: ISO Date String
+      required:
+        - id
+        - venueId
+        - credentials
+        - status
+        - name
+        - description
+        - whitelistingEnabled
+        - createdDate
+        - modifiedDate
+    V1AccountWithSubAccountsResponse:
+      title: V1AccountWithSubAccountsResponse
+      allOf:
+        - type: object
+          properties:
+            subAccounts:
+              type: array
+              items:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    title: uuid
+                  venueId:
+                    type: string
+                    minLength: 1
+                  credentials:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          title: uuid
+                        accessLevels:
+                          type: array
+                          items:
+                            type: string
+                            enum:
+                              - read
+                              - write
+                              - read_write
+                        expirationDate:
+                          type: string
+                          minLength: 1
+                      required:
+                        - id
+                        - accessLevels
+                  status:
+                    $ref: '#/components/schemas/AccountStatus'
+                  name:
+                    type: string
+                    minLength: 1
+                  description:
+                    type: string
+                    minLength: 1
+                  whitelistingEnabled:
+                    type: boolean
+                  parentAccount:
+                    type: string
+                    title: uuid
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        permissions:
+                          type: array
+                          items:
+                            type: string
+                            enum:
+                              - link.account.admin
+                              - link.account.transfer
+                              - link.account.view
+                        userId:
+                          type: string
+                          minLength: 1
+                      required:
+                        - permissions
+                        - userId
+                  createdDate:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  modifiedDate:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                required:
+                  - id
+                  - venueId
+                  - credentials
+                  - status
+                  - name
+                  - description
+                  - whitelistingEnabled
+                  - createdDate
+                  - modifiedDate
+        - $ref: '#/components/schemas/V1AccountResponse'
     V1AllocationGetOutput:
       title: V1AllocationGetOutput
       type: object
@@ -97436,6 +99610,10 @@ components:
       allOf:
         - $ref: '#/components/schemas/V1DeallocationReleasedPayload'
         - $ref: '#/components/schemas/V1ErrorPayload'
+    V1DeleteAccountResponse:
+      allOf:
+        - title: V1DeleteAccountResponse
+        - $ref: '#/components/schemas/V1AccountResponse'
     V1DeleteBankAccountResponse:
       title: V1DeleteBankAccountResponse
       allOf:
@@ -97700,6 +99878,172 @@ components:
         - updatedAt
         - lossSLAAlertSent
         - gainSLAAlertSent
+    V1GetAccountResponse:
+      allOf:
+        - title: V1GetAccountResponse
+        - $ref: '#/components/schemas/V1AccountWithSubAccountsResponse'
+    V1GetAccountsResponse:
+      title: V1GetAccountsResponse
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  subAccounts:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          title: uuid
+                        venueId:
+                          type: string
+                          minLength: 1
+                        credentials:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              id:
+                                type: string
+                                title: uuid
+                              accessLevels:
+                                type: array
+                                items:
+                                  type: string
+                                  enum:
+                                    - read
+                                    - write
+                                    - read_write
+                              expirationDate:
+                                type: string
+                                minLength: 1
+                            required:
+                              - id
+                              - accessLevels
+                        status:
+                          $ref: '#/components/schemas/AccountStatus'
+                        name:
+                          type: string
+                          minLength: 1
+                        description:
+                          type: string
+                          minLength: 1
+                        whitelistingEnabled:
+                          type: boolean
+                        parentAccount:
+                          type: string
+                          title: uuid
+                        users:
+                          type: array
+                          items:
+                            type: object
+                            properties:
+                              permissions:
+                                type: array
+                                items:
+                                  type: string
+                                  enum:
+                                    - link.account.admin
+                                    - link.account.transfer
+                                    - link.account.view
+                              userId:
+                                type: string
+                                minLength: 1
+                            required:
+                              - permissions
+                              - userId
+                        createdDate:
+                          type: string
+                          format: date-time
+                          title: ISO Date String
+                        modifiedDate:
+                          type: string
+                          format: date-time
+                          title: ISO Date String
+                      required:
+                        - id
+                        - venueId
+                        - credentials
+                        - status
+                        - name
+                        - description
+                        - whitelistingEnabled
+                        - createdDate
+                        - modifiedDate
+              - $ref: '#/components/schemas/V1AccountResponse'
+        total:
+          type: number
+          description: |-
+            Total number of accounts matching the filter across all pages (same for every page).
+            Use with limit/offset for pagination.
+      required:
+        - accounts
+        - total
+    V1GetAddressesResponse:
+      title: V1GetAddressesResponse
+      type: object
+      properties:
+        addresses:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                title: uuid
+              accountId:
+                type: string
+                title: uuid
+              name:
+                type: string
+                minLength: 1
+              type:
+                $ref: '#/components/schemas/AddressType'
+              status:
+                $ref: '#/components/schemas/AddressStatus'
+              address:
+                type: string
+                minLength: 1
+              asset:
+                type: string
+                minLength: 1
+              genericAsset:
+                type: string
+                minLength: 1
+              network:
+                type: string
+                minLength: 1
+              tag:
+                type: string
+                minLength: 1
+              createdDate:
+                type: string
+                format: date-time
+                title: ISO Date String
+              modifiedDate:
+                type: string
+                format: date-time
+                title: ISO Date String
+            required:
+              - id
+              - accountId
+              - name
+              - type
+              - status
+              - address
+              - network
+              - createdDate
+              - modifiedDate
+        total:
+          type: number
+      required:
+        - addresses
+        - total
     V1GetBankAccountResponse:
       title: V1GetBankAccountResponse
       allOf:
@@ -97727,6 +100071,424 @@ components:
       required:
         - memoId
         - bankAccounts
+    V1GetEnterpriseAccountsBalancesResponse:
+      title: V1GetEnterpriseAccountsBalancesResponse
+      type: object
+      description: Top-level response for GET enterprise accounts balances
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            description: |-
+              Per-account shape in the enterprise balances list. Balances are grouped by funding
+              sub-type at the top level; sub-accounts carry their own sub-type-grouped balances.
+            properties:
+              id:
+                type: string
+                title: uuid
+              venueId:
+                type: string
+                minLength: 1
+              status:
+                $ref: '#/components/schemas/AccountStatus'
+              name:
+                type: string
+                minLength: 1
+              accountSubTypes:
+                type: array
+                items:
+                  type: object
+                  description: |-
+                    One funding sub-type's balances on an account. The sub-type identity (normalized
+                    key + projected raw / label) is carried once at this level; the asset balances live
+                    inside `balances`.
+
+                    Pass-through values (HLD §10.30 — venue raws not yet mapped) carry the raw label in
+                    `accountSubType` and have neither `rawAccountSubType` nor `accountSubTypeLabel`,
+                    since there is no config entry to project from.
+                  properties:
+                    balances:
+                      type: array
+                      items:
+                        type: object
+                        description: |-
+                          Per-asset balance entry within a `V1AccountSubTypeBalance`. Carries only the
+                          asset / amount fields and the snapshot timestamp — sub-type identity lives one
+                          level up on the wrapping `V1AccountSubTypeBalance`.
+                        properties:
+                          rawAsset:
+                            type: string
+                            minLength: 1
+                          genericAsset:
+                            type: string
+                            minLength: 1
+                          displayAsset:
+                            type: string
+                            minLength: 1
+                          asset:
+                            type: string
+                            minLength: 1
+                          network:
+                            type: string
+                            minLength: 1
+                          available:
+                            type: string
+                          locked:
+                            type: string
+                            minLength: 1
+                          total:
+                            type: string
+                            minLength: 1
+                          asOfDate:
+                            type: string
+                            format: date-time
+                            title: ISO Date String
+                        required:
+                          - rawAsset
+                          - displayAsset
+                          - available
+                          - locked
+                          - total
+                          - asOfDate
+                    accountSubType:
+                      type: string
+                      description: |-
+                        Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`). Read directly
+                        from the Link DB column populated by the normalized-balances Kafka consumer.
+                      minLength: 1
+                    rawAccountSubType:
+                      type: string
+                      description: |-
+                        Venue-raw sub-type label, projected from `AccountSubTypeDefinition.rawType` for the matching
+                        `normalized` entry in the venue config. Absent for pass-through values.
+                      minLength: 1
+                    accountSubTypeLabel:
+                      type: string
+                      description: |-
+                        Human-readable sub-type display label, projected from `AccountSubTypeDefinition.displayName`.
+                        Absent when the venue has only one sub-type, or for pass-through values.
+                      minLength: 1
+                  required:
+                    - balances
+                    - accountSubType
+              subAccounts:
+                type: array
+                items:
+                  type: object
+                  description: Sub-account with its balances grouped by funding sub-type.
+                  properties:
+                    id:
+                      type: string
+                      title: uuid
+                    status:
+                      $ref: '#/components/schemas/AccountStatus'
+                    name:
+                      type: string
+                      minLength: 1
+                    accountSubTypes:
+                      type: array
+                      items:
+                        type: object
+                        description: |-
+                          One funding sub-type's balances on an account. The sub-type identity (normalized
+                          key + projected raw / label) is carried once at this level; the asset balances live
+                          inside `balances`.
+
+                          Pass-through values (HLD §10.30 — venue raws not yet mapped) carry the raw label in
+                          `accountSubType` and have neither `rawAccountSubType` nor `accountSubTypeLabel`,
+                          since there is no config entry to project from.
+                        properties:
+                          balances:
+                            type: array
+                            items:
+                              type: object
+                              description: |-
+                                Per-asset balance entry within a `V1AccountSubTypeBalance`. Carries only the
+                                asset / amount fields and the snapshot timestamp — sub-type identity lives one
+                                level up on the wrapping `V1AccountSubTypeBalance`.
+                              properties:
+                                rawAsset:
+                                  type: string
+                                  minLength: 1
+                                genericAsset:
+                                  type: string
+                                  minLength: 1
+                                displayAsset:
+                                  type: string
+                                  minLength: 1
+                                asset:
+                                  type: string
+                                  minLength: 1
+                                network:
+                                  type: string
+                                  minLength: 1
+                                available:
+                                  type: string
+                                locked:
+                                  type: string
+                                  minLength: 1
+                                total:
+                                  type: string
+                                  minLength: 1
+                                asOfDate:
+                                  type: string
+                                  format: date-time
+                                  title: ISO Date String
+                              required:
+                                - rawAsset
+                                - displayAsset
+                                - available
+                                - locked
+                                - total
+                                - asOfDate
+                          accountSubType:
+                            type: string
+                            description: |-
+                              Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`). Read directly
+                              from the Link DB column populated by the normalized-balances Kafka consumer.
+                            minLength: 1
+                          rawAccountSubType:
+                            type: string
+                            description: |-
+                              Venue-raw sub-type label, projected from `AccountSubTypeDefinition.rawType` for the matching
+                              `normalized` entry in the venue config. Absent for pass-through values.
+                            minLength: 1
+                          accountSubTypeLabel:
+                            type: string
+                            description: |-
+                              Human-readable sub-type display label, projected from `AccountSubTypeDefinition.displayName`.
+                              Absent when the venue has only one sub-type, or for pass-through values.
+                            minLength: 1
+                        required:
+                          - balances
+                          - accountSubType
+                  required:
+                    - id
+                    - status
+                    - name
+                    - accountSubTypes
+            required:
+              - id
+              - venueId
+              - status
+              - name
+              - accountSubTypes
+              - subAccounts
+        total:
+          type: number
+      required:
+        - accounts
+        - total
+    V1GetEnterpriseAssetBalancesResponse:
+      title: V1GetEnterpriseAssetBalancesResponse
+      type: object
+      description: Response for GET enterprise asset balances — one entry per asset, aggregated across all accounts.
+      properties:
+        balances:
+          type: array
+          items:
+            type: object
+            description: |-
+              Per-asset balance for GET .../assets/balances (aggregated across accounts and sub-types).
+              No as-of timestamp; no per-sub-type fields — entries roll up across every sub-type for the
+              targeted accounts.
+            properties:
+              rawAsset:
+                type: string
+                minLength: 1
+              genericAsset:
+                type: string
+                minLength: 1
+              displayAsset:
+                type: string
+                minLength: 1
+              asset:
+                type: string
+                minLength: 1
+              network:
+                type: string
+                minLength: 1
+              available:
+                type: string
+              locked:
+                type: string
+                minLength: 1
+              total:
+                type: string
+                minLength: 1
+            required:
+              - rawAsset
+              - displayAsset
+              - available
+              - locked
+              - total
+      required:
+        - balances
+    V1GetLinkPermissionsResponse:
+      title: V1GetLinkPermissionsResponse
+      type: object
+      description: |-
+        The calling user's Link permissions for one enterprise. Each account scope is
+        the permission as resolved by UMS (UMS already includes implied grants — e.g. a
+        `link.account.admin`/`transfer` grant carries the implied `link.account.view`),
+        so consumers only need membership checks. `bitgoLinkAdmin` is a distinct
+        enterprise-wide capability, reported separately and not folded into the scopes.
+      properties:
+        bitgoLinkAdmin:
+          type: boolean
+          description: Enterprise-wide `bitgo.link.admin` grant. Drives non-account-scoped actions (e.g. "+ Link Account").
+        admin:
+          oneOf:
+            - type: object
+              properties:
+                scope:
+                  type: string
+                  enum:
+                    - ALL
+              required:
+                - scope
+            - type: object
+              properties:
+                accounts:
+                  type: array
+                  items:
+                    type: string
+                    title: uuid
+                scope:
+                  type: string
+                  enum:
+                    - LIMITED
+              required:
+                - accounts
+                - scope
+          description: '`link.account.admin` (manage) scope, as resolved by UMS. Omitted when the user has no admin grant.'
+        transfer:
+          oneOf:
+            - type: object
+              properties:
+                scope:
+                  type: string
+                  enum:
+                    - ALL
+              required:
+                - scope
+            - type: object
+              properties:
+                accounts:
+                  type: array
+                  items:
+                    type: string
+                    title: uuid
+                scope:
+                  type: string
+                  enum:
+                    - LIMITED
+              required:
+                - accounts
+                - scope
+          description: '`link.account.transfer` scope, as resolved by UMS. Omitted when the user has no transfer grant.'
+        view:
+          oneOf:
+            - type: object
+              properties:
+                scope:
+                  type: string
+                  enum:
+                    - ALL
+              required:
+                - scope
+            - type: object
+              properties:
+                accounts:
+                  type: array
+                  items:
+                    type: string
+                    title: uuid
+                scope:
+                  type: string
+                  enum:
+                    - LIMITED
+              required:
+                - accounts
+                - scope
+          description: '`link.account.view` scope, as resolved by UMS (includes accounts implied by admin/transfer grants). Omitted when none.'
+      required:
+        - bitgoLinkAdmin
+    V1GetOnChainDestinationsResponse:
+      title: V1GetOnChainDestinationsResponse
+      type: object
+      description: |-
+        Response for `GET /api/link/v1/enterprises/{enterpriseId}/on-chain-destinations`.
+
+        Mirrors VAS's `GET /on-chain-destinations` — given a `(genericAsset, network)`
+        pair, return the enterprise Link accounts the caller can `link.account.view` that
+        can on-chain-deposit at that asset/network. Has no source, so no hierarchy
+        suppression and no `sourceSupportsOnChainWithdrawal` flag.
+
+        Reuses `LinkExternalDestinationRow` from `/transfer-destinations` — on-chain
+        destinations are subtype-less in both responses (the receiving venue routes the
+        deposit internally).
+
+        Not paginated — same rationale as `/transfer-destinations`.
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            description: |-
+              One top-level row in the on-chain (external) destinations segment. No subtype — the
+              destination venue routes the deposit internally; the source cannot dictate a target
+              subtype via on-chain transfer.
+            properties:
+              id:
+                type: string
+                title: uuid
+              name:
+                type: string
+                minLength: 1
+              venueId:
+                type: string
+                minLength: 1
+              venueName:
+                type: string
+                minLength: 1
+              whitelistingEnabled:
+                type: boolean
+              subAccounts:
+                type: array
+                items:
+                  type: object
+                  description: Nested sub-account row under `LinkExternalDestinationRow.subAccounts`.
+                  properties:
+                    id:
+                      type: string
+                      title: uuid
+                    name:
+                      type: string
+                      minLength: 1
+                    venueId:
+                      type: string
+                      minLength: 1
+                    venueName:
+                      type: string
+                      minLength: 1
+                    whitelistingEnabled:
+                      type: boolean
+                  required:
+                    - id
+                    - name
+                    - venueId
+                    - venueName
+                    - whitelistingEnabled
+            required:
+              - id
+              - name
+              - venueId
+              - venueName
+              - whitelistingEnabled
+      required:
+        - accounts
     V1GetSettlementOkPayload:
       title: V1GetSettlementOkPayload
       type: object
@@ -97847,6 +100609,715 @@ components:
         - settlementTransfers
         - settlingDisputes
         - settlementDisputes
+    V1GetSourcesResponse:
+      title: V1GetSourcesResponse
+      type: object
+      description: |-
+        Response for `GET /api/link/v1/enterprises/{enterpriseId}/sources`.
+
+        Pagination is account-level offset/limit. Each `LinkAccountEligibilityRow` corresponds
+        to one account and carries one entry per funding subtype with a positive balance. A
+        response with `accounts.length < limit` means end-of-stream; `accounts.length === limit`
+        means the next offset may produce more accounts.
+      properties:
+        accounts:
+          type: array
+          items:
+            type: object
+            description: |-
+              One top-level row in the withdraw-flow source picker (`GET /sources`). Mirrors the
+              `/accounts` admin nesting pattern: parent accounts may carry nested `subAccounts`,
+              while sub-accounts whose parent is invisible to the caller (no permission) are
+              promoted to top-level (no nesting; the row stands on its own).
+
+              Excludes admin-only fields (`credentials`, `users`, `status`) that don't apply to
+              a picker. The destination picker (`GET /destinations`) uses a separate row type —
+              destinations don't carry balances, and external (on-chain) destinations don't carry
+              `accountSubType` either.
+            properties:
+              id:
+                type: string
+                title: uuid
+              name:
+                type: string
+                minLength: 1
+              venueId:
+                type: string
+                minLength: 1
+              venueName:
+                type: string
+                minLength: 1
+              whitelistingEnabled:
+                type: boolean
+              accountSubTypes:
+                type: array
+                items:
+                  type: object
+                  description: |-
+                    One entry per funding subtype with a positive balance for the requested asset.
+                    May be empty for "shell parent" rows — a top-level parent the caller has visibility
+                    on but with no qualifying balance of its own, included only to host its qualifying
+                    sub-accounts in `subAccounts`.
+                  properties:
+                    balances:
+                      type: array
+                      items:
+                        type: object
+                        description: |-
+                          Per-asset balance entry within a `V1AccountSubTypeBalance`. Carries only the
+                          asset / amount fields and the snapshot timestamp — sub-type identity lives one
+                          level up on the wrapping `V1AccountSubTypeBalance`.
+                        properties:
+                          rawAsset:
+                            type: string
+                            minLength: 1
+                          genericAsset:
+                            type: string
+                            minLength: 1
+                          displayAsset:
+                            type: string
+                            minLength: 1
+                          asset:
+                            type: string
+                            minLength: 1
+                          network:
+                            type: string
+                            minLength: 1
+                          available:
+                            type: string
+                          locked:
+                            type: string
+                            minLength: 1
+                          total:
+                            type: string
+                            minLength: 1
+                          asOfDate:
+                            type: string
+                            format: date-time
+                            title: ISO Date String
+                        required:
+                          - rawAsset
+                          - displayAsset
+                          - available
+                          - locked
+                          - total
+                          - asOfDate
+                    accountSubType:
+                      type: string
+                      description: |-
+                        Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`). Read directly
+                        from the Link DB column populated by the normalized-balances Kafka consumer.
+                      minLength: 1
+                    rawAccountSubType:
+                      type: string
+                      description: |-
+                        Venue-raw sub-type label, projected from `AccountSubTypeDefinition.rawType` for the matching
+                        `normalized` entry in the venue config. Absent for pass-through values.
+                      minLength: 1
+                    accountSubTypeLabel:
+                      type: string
+                      description: |-
+                        Human-readable sub-type display label, projected from `AccountSubTypeDefinition.displayName`.
+                        Absent when the venue has only one sub-type, or for pass-through values.
+                      minLength: 1
+                  required:
+                    - balances
+                    - accountSubType
+              subAccounts:
+                type: array
+                items:
+                  type: object
+                  description: |-
+                    A nested sub-account row under `LinkSourceRow.subAccounts`. Mirrors the top-level
+                    shape minus `subAccounts` and `parentAccountId` — Link's account hierarchy is one
+                    level deep, and the parent is implied by where this row sits in the response.
+                  properties:
+                    id:
+                      type: string
+                      title: uuid
+                    name:
+                      type: string
+                      minLength: 1
+                    venueId:
+                      type: string
+                      minLength: 1
+                    venueName:
+                      type: string
+                      minLength: 1
+                    whitelistingEnabled:
+                      type: boolean
+                    accountSubTypes:
+                      type: array
+                      items:
+                        type: object
+                        description: |-
+                          One entry per funding subtype with a positive balance for the requested asset.
+                          May be empty for "shell parent" rows — a top-level parent the caller has visibility
+                          on but with no qualifying balance of its own, included only to host its qualifying
+                          sub-accounts in `subAccounts`.
+                        properties:
+                          balances:
+                            type: array
+                            items:
+                              type: object
+                              description: |-
+                                Per-asset balance entry within a `V1AccountSubTypeBalance`. Carries only the
+                                asset / amount fields and the snapshot timestamp — sub-type identity lives one
+                                level up on the wrapping `V1AccountSubTypeBalance`.
+                              properties:
+                                rawAsset:
+                                  type: string
+                                  minLength: 1
+                                genericAsset:
+                                  type: string
+                                  minLength: 1
+                                displayAsset:
+                                  type: string
+                                  minLength: 1
+                                asset:
+                                  type: string
+                                  minLength: 1
+                                network:
+                                  type: string
+                                  minLength: 1
+                                available:
+                                  type: string
+                                locked:
+                                  type: string
+                                  minLength: 1
+                                total:
+                                  type: string
+                                  minLength: 1
+                                asOfDate:
+                                  type: string
+                                  format: date-time
+                                  title: ISO Date String
+                              required:
+                                - rawAsset
+                                - displayAsset
+                                - available
+                                - locked
+                                - total
+                                - asOfDate
+                          accountSubType:
+                            type: string
+                            description: |-
+                              Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`). Read directly
+                              from the Link DB column populated by the normalized-balances Kafka consumer.
+                            minLength: 1
+                          rawAccountSubType:
+                            type: string
+                            description: |-
+                              Venue-raw sub-type label, projected from `AccountSubTypeDefinition.rawType` for the matching
+                              `normalized` entry in the venue config. Absent for pass-through values.
+                            minLength: 1
+                          accountSubTypeLabel:
+                            type: string
+                            description: |-
+                              Human-readable sub-type display label, projected from `AccountSubTypeDefinition.displayName`.
+                              Absent when the venue has only one sub-type, or for pass-through values.
+                            minLength: 1
+                        required:
+                          - balances
+                          - accountSubType
+                  required:
+                    - id
+                    - name
+                    - venueId
+                    - venueName
+                    - whitelistingEnabled
+                    - accountSubTypes
+            required:
+              - id
+              - name
+              - venueId
+              - venueName
+              - whitelistingEnabled
+              - accountSubTypes
+      required:
+        - accounts
+    V1GetTransferDestinationsResponse:
+      title: V1GetTransferDestinationsResponse
+      type: object
+      description: |-
+        Response for `GET /api/link/v1/enterprises/{enterpriseId}/transfer-destinations`.
+
+        Mirrors VAS's `GET /venues/{venueId}/transfer-destinations` — given a Link-account
+        source, return the destinations it can transfer to.
+
+        Segments:
+         - `internalDestinations` — off-chain reachable accounts (same-venue), grouped by
+           account with subtype entries. May be empty when no same-venue rail qualifies.
+         - `externalDestinations` — on-chain reachable accounts. May be cross-venue or same-
+           venue but in a different account hierarchy from the source. Same-hierarchy entries
+           are suppressed since they're already covered by the internal segment.
+
+        `sourceSupportsOnChainWithdrawal` is passed through from VAS so BFF can decide whether
+        to include BitGo wallet / external-address destinations alongside the Link-account
+        destinations. It is a property of the source venue, not of the caller's permission
+        scope — always present, even when the caller's `link.account.view` scope yields no
+        Link-account rows.
+
+        Not paginated — the candidate set (enterprise Link accounts at a small number of
+        candidate venues) is bounded, and the upstream VAS call returns the full eligibility
+        list in one response.
+      properties:
+        internalDestinations:
+          type: object
+          properties:
+            accounts:
+              type: array
+              items:
+                type: object
+                description: |-
+                  One top-level row in the off-chain (internal) destinations segment. Mirrors
+                  `LinkSourceRow`'s hierarchical pattern: parent accounts may carry nested `subAccounts`,
+                  while sub-accounts whose parent is invisible to the caller are promoted to top-level.
+                properties:
+                  id:
+                    type: string
+                    title: uuid
+                  name:
+                    type: string
+                    minLength: 1
+                  venueId:
+                    type: string
+                    minLength: 1
+                  venueName:
+                    type: string
+                    minLength: 1
+                  whitelistingEnabled:
+                    type: boolean
+                  accountSubTypes:
+                    type: array
+                    items:
+                      type: object
+                      description: Off-chain reachable subtypes for this account. Always non-empty for emitted rows.
+                      properties:
+                        accountSubType:
+                          type: string
+                          minLength: 1
+                        accountSubTypeLabel:
+                          type: string
+                          minLength: 1
+                      required:
+                        - accountSubType
+                  subAccounts:
+                    type: array
+                    items:
+                      type: object
+                      description: |-
+                        A nested sub-account row under `LinkInternalDestinationRow.subAccounts`. Mirrors the
+                        top-level shape minus `subAccounts` — Link's account hierarchy is one level deep, and
+                        the parent is implied by where this row sits in the response.
+                      properties:
+                        id:
+                          type: string
+                          title: uuid
+                        name:
+                          type: string
+                          minLength: 1
+                        venueId:
+                          type: string
+                          minLength: 1
+                        venueName:
+                          type: string
+                          minLength: 1
+                        whitelistingEnabled:
+                          type: boolean
+                        accountSubTypes:
+                          type: array
+                          items:
+                            type: object
+                            description: Off-chain reachable subtypes for this account. Always non-empty for emitted rows.
+                            properties:
+                              accountSubType:
+                                type: string
+                                minLength: 1
+                              accountSubTypeLabel:
+                                type: string
+                                minLength: 1
+                            required:
+                              - accountSubType
+                      required:
+                        - id
+                        - name
+                        - venueId
+                        - venueName
+                        - whitelistingEnabled
+                        - accountSubTypes
+                required:
+                  - id
+                  - name
+                  - venueId
+                  - venueName
+                  - whitelistingEnabled
+                  - accountSubTypes
+          required:
+            - accounts
+        externalDestinations:
+          type: object
+          properties:
+            accounts:
+              type: array
+              items:
+                type: object
+                description: |-
+                  One top-level row in the on-chain (external) destinations segment. No subtype — the
+                  destination venue routes the deposit internally; the source cannot dictate a target
+                  subtype via on-chain transfer.
+                properties:
+                  id:
+                    type: string
+                    title: uuid
+                  name:
+                    type: string
+                    minLength: 1
+                  venueId:
+                    type: string
+                    minLength: 1
+                  venueName:
+                    type: string
+                    minLength: 1
+                  whitelistingEnabled:
+                    type: boolean
+                  subAccounts:
+                    type: array
+                    items:
+                      type: object
+                      description: Nested sub-account row under `LinkExternalDestinationRow.subAccounts`.
+                      properties:
+                        id:
+                          type: string
+                          title: uuid
+                        name:
+                          type: string
+                          minLength: 1
+                        venueId:
+                          type: string
+                          minLength: 1
+                        venueName:
+                          type: string
+                          minLength: 1
+                        whitelistingEnabled:
+                          type: boolean
+                      required:
+                        - id
+                        - name
+                        - venueId
+                        - venueName
+                        - whitelistingEnabled
+                required:
+                  - id
+                  - name
+                  - venueId
+                  - venueName
+                  - whitelistingEnabled
+          required:
+            - accounts
+        sourceSupportsOnChainWithdrawal:
+          type: boolean
+      required:
+        - internalDestinations
+        - externalDestinations
+        - sourceSupportsOnChainWithdrawal
+    V1GetTransfersResponse:
+      title: V1GetTransfersResponse
+      type: object
+      description: Response for the list transfers endpoint
+      properties:
+        transfers:
+          type: array
+          items:
+            type: object
+            description: Single transfer response object
+            properties:
+              id:
+                type: string
+                title: uuid
+              accountId:
+                type: string
+                title: uuid
+              status:
+                $ref: '#/components/schemas/TransferStatus'
+              amount:
+                type: string
+                minLength: 1
+              genericAsset:
+                type: string
+                minLength: 1
+              rawAsset:
+                type: string
+                minLength: 1
+              displayAsset:
+                type: string
+                minLength: 1
+              rawNetwork:
+                type: string
+                minLength: 1
+              fromAsset:
+                type: string
+                minLength: 1
+              fromNetwork:
+                type: string
+                minLength: 1
+              fromId:
+                type: string
+                minLength: 1
+              fromType:
+                type: string
+                enum:
+                  - address
+                  - bitgo_wallet
+                  - link_account
+                  - venue_account
+              toAsset:
+                type: string
+                minLength: 1
+              toNetwork:
+                type: string
+                minLength: 1
+              toId:
+                type: string
+                minLength: 1
+              toType:
+                type: string
+                enum:
+                  - address
+                  - bitgo_wallet
+                  - link_account
+                  - venue_account
+              initiatedBy:
+                type: string
+                minLength: 1
+              fromName:
+                type: string
+                minLength: 1
+              toName:
+                type: string
+                minLength: 1
+              fromVenueId:
+                type: string
+                minLength: 1
+              toVenueId:
+                type: string
+                minLength: 1
+              accountSubType:
+                type: string
+                description: |-
+                  Normalized sub-account-type for the transfer's owning Link account. Read from the Link DB
+                  column populated by the normalized-transfers Kafka consumer. Absent when the upstream
+                  message omitted a sub-type. For pass-through values (no matching venue-config entry),
+                  this carries the raw venue label and `rawAccountSubType` / `accountSubTypeLabel` are absent.
+                minLength: 1
+              rawAccountSubType:
+                type: string
+                description: Venue-raw sub-type label, projected from venue config. Absent for pass-through values.
+                minLength: 1
+              accountSubTypeLabel:
+                type: string
+                description: Human-readable sub-type display label, projected from venue config. Absent for single-sub-type venues or pass-through values.
+                minLength: 1
+              fromAccountSubType:
+                type: string
+                description: Source-leg normalized sub-account-type. Only set for `link_account` legs that ingested with a sub-type.
+                minLength: 1
+              fromRawAccountSubType:
+                type: string
+                minLength: 1
+              fromAccountSubTypeLabel:
+                type: string
+                minLength: 1
+              toAccountSubType:
+                type: string
+                description: Destination-leg normalized sub-account-type. Only set for `link_account` legs that ingested with a sub-type.
+                minLength: 1
+              toRawAccountSubType:
+                type: string
+                minLength: 1
+              toAccountSubTypeLabel:
+                type: string
+                minLength: 1
+              cryptoDetail:
+                type: object
+                description: Crypto detail response for a transfer
+                properties:
+                  confirmations:
+                    type: number
+                  createdAt:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  feeAmount:
+                    type: string
+                    minLength: 1
+                  feeAsset:
+                    type: string
+                    minLength: 1
+                  feeNetwork:
+                    type: string
+                    minLength: 1
+                  feeRawAsset:
+                    type: string
+                    minLength: 1
+                  feeRawNetwork:
+                    type: string
+                    minLength: 1
+                  fromAddress:
+                    type: string
+                    minLength: 1
+                  hash:
+                    type: string
+                    minLength: 1
+                  id:
+                    type: string
+                    title: uuid
+                  linkTransferId:
+                    type: string
+                    title: uuid
+                  status:
+                    $ref: '#/components/schemas/CryptoTransferStatus'
+                  toAddress:
+                    type: string
+                    minLength: 1
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                required:
+                  - createdAt
+                  - hash
+                  - id
+                  - linkTransferId
+                  - status
+                  - updatedAt
+              bitgoDetail:
+                type: object
+                description: BitGo detail response for a transfer
+                properties:
+                  bitgoWalletAddress:
+                    type: string
+                    minLength: 1
+                  createdAt:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  evaluationId:
+                    type: string
+                    minLength: 1
+                  id:
+                    type: string
+                    title: uuid
+                  linkTransferId:
+                    type: string
+                    title: uuid
+                  pendingApprovalId:
+                    type: string
+                    minLength: 1
+                  transactionRequestId:
+                    type: string
+                    minLength: 1
+                  transferId:
+                    type: string
+                    minLength: 1
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  walletId:
+                    type: string
+                    minLength: 1
+                required:
+                  - createdAt
+                  - id
+                  - linkTransferId
+                  - updatedAt
+              venueDetail:
+                type: object
+                description: Venue detail response for a transfer
+                properties:
+                  createdAt:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  id:
+                    type: string
+                    title: uuid
+                  linkTransferId:
+                    type: string
+                    title: uuid
+                  updatedAt:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  venueCreatedDate:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  venueModifiedDate:
+                    type: string
+                    format: date-time
+                    title: ISO Date String
+                  venueTransactionId:
+                    type: string
+                    minLength: 1
+                  venueTransferId:
+                    type: string
+                    minLength: 1
+                required:
+                  - createdAt
+                  - id
+                  - linkTransferId
+                  - updatedAt
+                  - venueCreatedDate
+                  - venueModifiedDate
+              reason:
+                type: object
+                description: |-
+                  Normalized failure context. Set when `status` is `failed` (terminal)
+                  or `failed_retriable` (the venue rejected this attempt but the same
+                  transfer can be retried under the same `externalId` once external
+                  state changes). `code` is a stable string the caller can branch on;
+                  `message` is a human-readable description from the venue.
+                properties:
+                  code:
+                    type: string
+                    minLength: 1
+                  message:
+                    type: string
+                    minLength: 1
+                required:
+                  - code
+                  - message
+              sortTimestamp:
+                type: string
+                format: date-time
+                title: ISO Date String
+              createdAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+            required:
+              - id
+              - accountId
+              - status
+              - amount
+              - rawAsset
+              - displayAsset
+              - createdAt
+              - updatedAt
+        total:
+          type: number
+          description: |-
+            Total number of transfers matching the filter across all pages (same for every page).
+            Use with limit/offset for pagination.
+      required:
+        - transfers
+        - total
     V1GlobalListingResponse:
       title: V1GlobalListingResponse
       type: object
@@ -98559,6 +102030,10 @@ components:
           description: The complete partner object that was successfully created.
       required:
         - partner
+    V1PatchAccountResponse:
+      allOf:
+        - title: V1PatchAccountResponse
+        - $ref: '#/components/schemas/V1AccountResponse'
     V1PendingApproval:
       type: object
       properties:
@@ -98768,6 +102243,56 @@ components:
           $ref: '#/components/schemas/V1PendingSettlementOutput'
       required:
         - settlement
+    V1PostAccountResponse:
+      allOf:
+        - title: V1PostAccountResponse
+        - $ref: '#/components/schemas/V1AccountResponse'
+    V1PostAddressResponse:
+      title: V1PostAddressResponse
+      type: object
+      properties:
+        id:
+          type: string
+          title: uuid
+        type:
+          type: string
+          minLength: 1
+        status:
+          type: string
+          minLength: 1
+        address:
+          type: string
+          minLength: 1
+        asset:
+          type: string
+          minLength: 1
+        network:
+          type: string
+          minLength: 1
+        genericAsset:
+          type: string
+          minLength: 1
+        tag:
+          type: string
+          minLength: 1
+        createdDate:
+          type: string
+          format: date-time
+          title: ISO Date String
+        modifiedDate:
+          type: string
+          format: date-time
+          title: ISO Date String
+      required:
+        - id
+        - type
+        - status
+        - address
+        - asset
+        - network
+        - genericAsset
+        - createdDate
+        - modifiedDate
     V1RejectedSettlementOutput:
       title: V1RejectedSettlementOutput
       type: object
@@ -99372,6 +102897,289 @@ components:
         type: array
         items:
           $ref: '#/components/schemas/BNMetadata'
+    V1TransferResponse:
+      title: V1TransferResponse
+      type: object
+      description: Single transfer response object
+      properties:
+        id:
+          type: string
+          title: uuid
+        accountId:
+          type: string
+          title: uuid
+        status:
+          $ref: '#/components/schemas/TransferStatus'
+        amount:
+          type: string
+          minLength: 1
+        genericAsset:
+          type: string
+          minLength: 1
+        rawAsset:
+          type: string
+          minLength: 1
+        displayAsset:
+          type: string
+          minLength: 1
+        rawNetwork:
+          type: string
+          minLength: 1
+        fromAsset:
+          type: string
+          minLength: 1
+        fromNetwork:
+          type: string
+          minLength: 1
+        fromId:
+          type: string
+          minLength: 1
+        fromType:
+          type: string
+          enum:
+            - address
+            - bitgo_wallet
+            - link_account
+            - venue_account
+        toAsset:
+          type: string
+          minLength: 1
+        toNetwork:
+          type: string
+          minLength: 1
+        toId:
+          type: string
+          minLength: 1
+        toType:
+          type: string
+          enum:
+            - address
+            - bitgo_wallet
+            - link_account
+            - venue_account
+        initiatedBy:
+          type: string
+          minLength: 1
+        fromName:
+          type: string
+          minLength: 1
+        toName:
+          type: string
+          minLength: 1
+        fromVenueId:
+          type: string
+          minLength: 1
+        toVenueId:
+          type: string
+          minLength: 1
+        accountSubType:
+          type: string
+          description: |-
+            Normalized sub-account-type for the transfer's owning Link account. Read from the Link DB
+            column populated by the normalized-transfers Kafka consumer. Absent when the upstream
+            message omitted a sub-type. For pass-through values (no matching venue-config entry),
+            this carries the raw venue label and `rawAccountSubType` / `accountSubTypeLabel` are absent.
+          minLength: 1
+        rawAccountSubType:
+          type: string
+          description: Venue-raw sub-type label, projected from venue config. Absent for pass-through values.
+          minLength: 1
+        accountSubTypeLabel:
+          type: string
+          description: Human-readable sub-type display label, projected from venue config. Absent for single-sub-type venues or pass-through values.
+          minLength: 1
+        fromAccountSubType:
+          type: string
+          description: Source-leg normalized sub-account-type. Only set for `link_account` legs that ingested with a sub-type.
+          minLength: 1
+        fromRawAccountSubType:
+          type: string
+          minLength: 1
+        fromAccountSubTypeLabel:
+          type: string
+          minLength: 1
+        toAccountSubType:
+          type: string
+          description: Destination-leg normalized sub-account-type. Only set for `link_account` legs that ingested with a sub-type.
+          minLength: 1
+        toRawAccountSubType:
+          type: string
+          minLength: 1
+        toAccountSubTypeLabel:
+          type: string
+          minLength: 1
+        cryptoDetail:
+          type: object
+          description: Crypto detail response for a transfer
+          properties:
+            confirmations:
+              type: number
+            createdAt:
+              type: string
+              format: date-time
+              title: ISO Date String
+            feeAmount:
+              type: string
+              minLength: 1
+            feeAsset:
+              type: string
+              minLength: 1
+            feeNetwork:
+              type: string
+              minLength: 1
+            feeRawAsset:
+              type: string
+              minLength: 1
+            feeRawNetwork:
+              type: string
+              minLength: 1
+            fromAddress:
+              type: string
+              minLength: 1
+            hash:
+              type: string
+              minLength: 1
+            id:
+              type: string
+              title: uuid
+            linkTransferId:
+              type: string
+              title: uuid
+            status:
+              $ref: '#/components/schemas/CryptoTransferStatus'
+            toAddress:
+              type: string
+              minLength: 1
+            updatedAt:
+              type: string
+              format: date-time
+              title: ISO Date String
+          required:
+            - createdAt
+            - hash
+            - id
+            - linkTransferId
+            - status
+            - updatedAt
+        bitgoDetail:
+          type: object
+          description: BitGo detail response for a transfer
+          properties:
+            bitgoWalletAddress:
+              type: string
+              minLength: 1
+            createdAt:
+              type: string
+              format: date-time
+              title: ISO Date String
+            evaluationId:
+              type: string
+              minLength: 1
+            id:
+              type: string
+              title: uuid
+            linkTransferId:
+              type: string
+              title: uuid
+            pendingApprovalId:
+              type: string
+              minLength: 1
+            transactionRequestId:
+              type: string
+              minLength: 1
+            transferId:
+              type: string
+              minLength: 1
+            updatedAt:
+              type: string
+              format: date-time
+              title: ISO Date String
+            walletId:
+              type: string
+              minLength: 1
+          required:
+            - createdAt
+            - id
+            - linkTransferId
+            - updatedAt
+        venueDetail:
+          type: object
+          description: Venue detail response for a transfer
+          properties:
+            createdAt:
+              type: string
+              format: date-time
+              title: ISO Date String
+            id:
+              type: string
+              title: uuid
+            linkTransferId:
+              type: string
+              title: uuid
+            updatedAt:
+              type: string
+              format: date-time
+              title: ISO Date String
+            venueCreatedDate:
+              type: string
+              format: date-time
+              title: ISO Date String
+            venueModifiedDate:
+              type: string
+              format: date-time
+              title: ISO Date String
+            venueTransactionId:
+              type: string
+              minLength: 1
+            venueTransferId:
+              type: string
+              minLength: 1
+          required:
+            - createdAt
+            - id
+            - linkTransferId
+            - updatedAt
+            - venueCreatedDate
+            - venueModifiedDate
+        reason:
+          type: object
+          description: |-
+            Normalized failure context. Set when `status` is `failed` (terminal)
+            or `failed_retriable` (the venue rejected this attempt but the same
+            transfer can be retried under the same `externalId` once external
+            state changes). `code` is a stable string the caller can branch on;
+            `message` is a human-readable description from the venue.
+          properties:
+            code:
+              type: string
+              minLength: 1
+            message:
+              type: string
+              minLength: 1
+          required:
+            - code
+            - message
+        sortTimestamp:
+          type: string
+          format: date-time
+          title: ISO Date String
+        createdAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          format: date-time
+          title: ISO Date String
+      required:
+        - id
+        - accountId
+        - status
+        - amount
+        - rawAsset
+        - displayAsset
+        - createdAt
+        - updatedAt
     V1UpdateBankAccountResponse:
       title: V1UpdateBankAccountResponse
       allOf:
