@@ -24222,139 +24222,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/wallet/{walletId}/policy/rule:
-    post:
-      tags:
-        - Wallet Policy
-      summary: Add wallet-policy rule
-      description: |
-        Adds a rule to a wallet’s policy. A wallet policy’s rules control the
-        conditions under which BitGo will use its single key to sign a
-        transaction. An email notification will be sent to all wallet users
-        when a policy is updated. This email is NOT sent for the first time
-        policy is added.
-      operationId: v2.wallet.createpolicy
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreatePolicyRule'
-            examples:
-              Add Advanced Whitelist Example:
-                value:
-                  id: my-rule-id
-                  type: advancedWhitelist
-                  condition:
-                    add:
-                      type: my-wallet-id
-                      item: my-item-id
-                      metaData:
-                        label: Recipient Wallet
-                  action:
-                    type: getApproval
-                    userIds: []
-              Remove Advanced Whitelist Example:
-                value:
-                  id: my-rule-id
-                  type: advancedWhitelist
-                  condition:
-                    remove: my-address
-                  action:
-                    type: getApproval
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Wallet1'
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval1'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-    put:
-      tags:
-        - Wallet Policy
-      summary: Update wallet-policy rule
-      description: Updates a rule on the policy attached to a wallet
-      operationId: v2.wallet.updatepolicy
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateRemovePolicyRule'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Wallet1'
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval1'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-    delete:
-      tags:
-        - Wallet Policy
-      summary: Delete wallet-policy rule
-      description: Deletes a rule from the policy attached to a wallet
-      operationId: v2.wallet.removepolicy
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateRemovePolicyRule'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Wallet1'
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval1'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/pendingApprovals:
     get:
       tags:
@@ -25964,41 +25831,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WalletConsolidateUnspentsResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-  /api/v2/{coin}/wallet/{walletId}/tx/initiate:
-    post:
-      tags:
-        - Wallet
-      summary: Initiate a transaction
-      operationId: v2.wallet.tx.initiate
-      description: Initiate an unsigned transaction to create a pending approval. This is useful to request funds to be sent from custodial wallets. Use only with custodial wallets.
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: '#/components/schemas/TransactionInitiateRequest'
-                - type: object
-                  properties:
-                    videoApprovers:
-                      $ref: '#/components/schemas/VideoApprovers'
-      responses:
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval1'
         '400':
           description: Bad Request
           content:
@@ -35246,6 +35078,351 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/policy/rule:
+    delete:
+      summary: Delete wallet-policy rule
+      description: |-
+        Deletes a rule from the policy attached to a wallet.
+
+        **Note:** This endpoint uses `DELETE` with a JSON request body (`id`, `type`, `action`,
+        and optional `coin`, `condition`, `lockDate`) to identify the rule to remove. That matches
+        the legacy v2 API and OpenAPI spec. RFC 9110 permits DELETE bodies, but some HTTP
+        clients and proxies do not reliably forward them — typed-router handlers and SDK clients
+        must serialize and send the body.
+      operationId: v2.wallet.removepolicy
+      tags:
+        - Wallet Policy
+      x-internal: false
+      parameters:
+        - name: coin
+          description: Coin or token identifier (e.g. eth, talgo, txlm:token)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for updating or removing a wallet policy rule.
+                The combination of id and coin must uniquely identify the rule when coin is set on the rule.
+
+                Plain field map for `h.httpRequest` — not a codec. Use {@link UpdateRemoveWalletPolicyRuleBodyCodec} to decode.
+              properties:
+                coin:
+                  type: string
+                  description: Coin scope for the rule when the stored rule has a coin set (required for some rule types).
+                  example: btc
+                id:
+                  type: string
+                  description: The id of the rule
+                type:
+                  allOf:
+                    - $ref: '#/components/schemas/UpdateRemovePolicyRuleType'
+                  description: What causes this rule to trigger
+                condition:
+                  oneOf:
+                    - type: object
+                      properties:
+                        add:
+                          $ref: '#/components/schemas/WalletPolicyRuleAdvancedListRuleEntry'
+                      required:
+                        - add
+                    - type: object
+                      properties:
+                        add:
+                          type: string
+                          description: Address to add to the list
+                        metaData:
+                          allOf:
+                            - $ref: '#/components/schemas/WalletPolicyRuleWhitelistAddMetaData'
+                          description: An object with arbitrary metadata about the added address
+                      required:
+                        - add
+                    - type: object
+                      properties:
+                        remove:
+                          oneOf:
+                            - type: string
+                            - $ref: '#/components/schemas/WalletPolicyRuleAdvancedListRuleEntry'
+                          description: Address to remove from the list
+                      required:
+                        - remove
+                    - type: object
+                      properties: {}
+                  description: Parameters for the rule type (e.g. whitelist add/remove)
+                action:
+                  allOf:
+                    - $ref: '#/components/schemas/WalletPolicyRuleAction'
+                  description: What happens when this rule is triggered
+                lockDate:
+                  type: string
+                  description: The time at which this rule becomes immutable
+                  format: date-time
+                  title: ISO Date String
+              required:
+                - id
+                - type
+                - action
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
+    post:
+      summary: Add wallet-policy rule
+      description: |-
+        Adds a rule to a wallet's policy. An email notification is sent to wallet users when
+        the policy is updated (except the first time a policy is added).
+      operationId: v2.wallet.createpolicy
+      tags:
+        - Wallet Policy
+      x-internal: false
+      parameters:
+        - name: coin
+          description: Coin or token identifier (e.g. eth, talgo, txlm:token)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for adding a rule to a wallet policy.
+                Defines the rule id, trigger type, action, and optional condition updates.
+
+                Plain field map for `h.httpRequest` — not a codec. Use {@link CreateWalletPolicyRuleBodyCodec} to decode.
+              properties:
+                coin:
+                  type: string
+                  description: |-
+                    If set, the rule applies only to the given coin or ERC20 token in an Ethereum wallet.
+                    Generally not recommended for advancedWhitelist, allTx, coinAddressWhitelist,
+                    coinAddressBlacklist, or webhook rules.
+                  example: btc
+                id:
+                  type: string
+                  description: Caller-defined rule identifier, unique within the policy
+                type:
+                  allOf:
+                    - $ref: '#/components/schemas/CreatePolicyRuleType'
+                  description: What causes this rule to trigger
+                condition:
+                  oneOf:
+                    - type: object
+                      properties:
+                        add:
+                          $ref: '#/components/schemas/WalletPolicyRuleAdvancedListRuleEntry'
+                      required:
+                        - add
+                    - type: object
+                      properties:
+                        add:
+                          type: string
+                          description: Address to add to the list
+                        metaData:
+                          allOf:
+                            - $ref: '#/components/schemas/WalletPolicyRuleWhitelistAddMetaData'
+                          description: An object with arbitrary metadata about the added address
+                      required:
+                        - add
+                    - type: object
+                      properties:
+                        remove:
+                          oneOf:
+                            - type: string
+                            - $ref: '#/components/schemas/WalletPolicyRuleAdvancedListRuleEntry'
+                          description: Address to remove from the list
+                      required:
+                        - remove
+                    - type: object
+                      properties: {}
+                  description: Parameters for the rule type (e.g. whitelist add/remove)
+                action:
+                  allOf:
+                    - $ref: '#/components/schemas/WalletPolicyRuleAction'
+                  description: What happens when this rule is triggered
+                lockDate:
+                  type: string
+                  description: The time at which this rule becomes immutable
+                  format: date-time
+                  title: ISO Date String
+                generatePolicy:
+                  type: boolean
+                  description: |-
+                    When true or omitted, generates a policy enforcing the whitelist after creation.
+                    When false, no policy is generated.
+              required:
+                - id
+                - type
+                - action
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
+    put:
+      summary: Update wallet-policy rule
+      description: Updates a rule on the policy attached to a wallet.
+      operationId: v2.wallet.updatepolicy
+      tags:
+        - Wallet Policy
+      x-internal: false
+      parameters:
+        - name: coin
+          description: Coin or token identifier (e.g. eth, talgo, txlm:token)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for updating or removing a wallet policy rule.
+                The combination of id and coin must uniquely identify the rule when coin is set on the rule.
+
+                Plain field map for `h.httpRequest` — not a codec. Use {@link UpdateRemoveWalletPolicyRuleBodyCodec} to decode.
+              properties:
+                coin:
+                  type: string
+                  description: Coin scope for the rule when the stored rule has a coin set (required for some rule types).
+                  example: btc
+                id:
+                  type: string
+                  description: The id of the rule
+                type:
+                  allOf:
+                    - $ref: '#/components/schemas/UpdateRemovePolicyRuleType'
+                  description: What causes this rule to trigger
+                condition:
+                  oneOf:
+                    - type: object
+                      properties:
+                        add:
+                          $ref: '#/components/schemas/WalletPolicyRuleAdvancedListRuleEntry'
+                      required:
+                        - add
+                    - type: object
+                      properties:
+                        add:
+                          type: string
+                          description: Address to add to the list
+                        metaData:
+                          allOf:
+                            - $ref: '#/components/schemas/WalletPolicyRuleWhitelistAddMetaData'
+                          description: An object with arbitrary metadata about the added address
+                      required:
+                        - add
+                    - type: object
+                      properties:
+                        remove:
+                          oneOf:
+                            - type: string
+                            - $ref: '#/components/schemas/WalletPolicyRuleAdvancedListRuleEntry'
+                          description: Address to remove from the list
+                      required:
+                        - remove
+                    - type: object
+                      properties: {}
+                  description: Parameters for the rule type (e.g. whitelist add/remove)
+                action:
+                  allOf:
+                    - $ref: '#/components/schemas/WalletPolicyRuleAction'
+                  description: What happens when this rule is triggered
+                lockDate:
+                  type: string
+                  description: The time at which this rule becomes immutable
+                  format: date-time
+                  title: ISO Date String
+              required:
+                - id
+                - type
+                - action
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Wallet'
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/{coin}/wallet/{walletId}/potentialStuckTxs:
     get:
       summary: List stuck transactions
@@ -35612,6 +35789,427 @@ paths:
                 $ref: '#/components/schemas/ChangeFeeResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/tx/initiate:
+    post:
+      summary: Initiate a transaction
+      description: |-
+        Initiate an unsigned transaction to create a pending approval. This is useful
+        to request funds to be sent from custodial wallets. Use only with custodial wallets.
+      operationId: v2.wallet.tx.initiate
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+            example: btc
+        - name: walletId
+          description: The wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for initiating a custodial wallet transaction.
+                Combines BuildParams with recipients and optional video approvers.
+              properties:
+                type:
+                  type: string
+                  description: |-
+                    Required for transactions from MPC wallets. "acceleration" speeds up transactions with a certain nonce by adjusting the gas setting.
+                    "accountSet" is for XRP AccountSet transactions. "consolidate" combines multiple UTXO inputs into fewer outputs. "enabletoken" is for SOL.
+                    "fanout" splits UTXO inputs into many smaller outputs (UTXO coins only). "stakingLock" and "stakingUnlock" are for Stacks delegations.
+                    "transfer" is for native-asset transfers. "trustline" is for Stellar trustline transactions.
+                    Possible types include: [acceleration, accountSet, consolidate, enabletoken, fanout, stakingLock, stakingUnlock, transfer, transfertoken, trustline]
+
+                    For AVAX, possible types include: `addValidator`, `export`, and `import`.
+
+                    For XRP, possible types include: `payment` and `accountSet`. The default is `payment`.
+
+                    For STX, type is required.
+                messages:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address:
+                        type: string
+                        description: The address for which you're proving ownership. This address must belong to the wallet.
+                      message:
+                        type: string
+                        description: Message that is being signed.
+                        example: BIP322 test message.
+                    required:
+                      - address
+                      - message
+                    description: |-
+                      [UTXO only] An array of messages that you sign with the wallet keys using the BIP322 format.
+                      If passed, the `recipients` array must be empty.
+                numBlocks:
+                  type: number
+                  description: |-
+                    (BTC only) The number of blocks required to confirm a transaction. You can use `numBlocks` to estimate the fee rate by targeting confirmation within a given number of blocks.
+                    If both `feeRate` and `numBlocks` are absent, the transaction defaults to 2 blocks for confirmation.
+
+                    Note: The `maxFeeRate` limits the fee rate generated by `numBlocks`.
+                  minimum: 2
+                  maximum: 1000
+                feeRate:
+                  type: number
+                  description: |-
+                    Custom fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte.
+
+                    If the `feeRate` is less than the minimum required network fee, then the minimum fee applies. For example, 1000 sat/kvByte, a flat 1000 microAlgos, or a flat 10 drops of xrp. For XRP, the actual fee is usually 4.5 times the open ledger fee.
+
+                    Note: The `feeRate` overrides the `maxFeeRate` and `minFeeRate`.
+                  example: 10000
+                maxFeeRate:
+                  type: number
+                  description: |-
+                    (BTC only) The maximum fee rate (in base units) per kilobyte (or virtual kilobyte). For example, satoshis per kvByte.
+                    The `maxFeeRate` limits the fee rate generated by both `feeMultiplier` and `numBlocks`.
+
+                    Note: The `feeRate` overrides the `maxFeeRate`.
+                  example: 20000
+                feeMultiplier:
+                  oneOf:
+                    - type: number
+                    - type: string
+                  description: |-
+                    (UTXO only) Custom multiplier to the `feeRate`. The resulting fee rate is limited by the `maxFeeRate`.
+                    For replace-by-fee (RBF) transactions (that include `rbfTxIds`), the `feeMultiplier` must be greater than 1, since it's an absolute fee multiplier to the transaction being replaced.
+
+                    Note: The `maxFeeRate` limits the fee rate generated by `feeMultiplier`.
+                  example: '1.5'
+                minConfirms:
+                  type: number
+                  description: |-
+                    The unspent selection for the transaction will only consider unspents with at least this many confirmations to be used as inputs.
+                    Does not apply to change outputs unless used in combination with `enforceMinConfirmsForChange`.
+                enforceMinConfirmsForChange:
+                  type: boolean
+                  default: false
+                  description: When set to true, will enforce minConfirms for change outputs.
+                gasPrice:
+                  type: number
+                  description: Custom gas price to be used for sending the transaction. Only for ETH and ERC20 tokens.
+                eip1559:
+                  type: object
+                  description: EIP-1559 transaction parameters. Only for ETH and ERC20 tokens.
+                  properties:
+                    maxFeePerGas:
+                      allOf:
+                        - $ref: '#/components/schemas/NumberLike'
+                      description: Max total gasPrice for EIP1559 transactions. Only for ETH and ERC20 tokens.
+                    maxPriorityFeePerGas:
+                      allOf:
+                        - $ref: '#/components/schemas/NumberLike'
+                      description: Max priority tip price for EIP1559 transactions. Only for ETH and ERC20 tokens.
+                  required:
+                    - maxFeePerGas
+                    - maxPriorityFeePerGas
+                gasLimit:
+                  type: number
+                  description: Custom gas limit to be used for sending the transaction. Only for ETH and ERC20 tokens.
+                targetWalletUnspents:
+                  type: number
+                  default: 1000
+                  description: |-
+                    Specifies the minimum count of good-sized unspents to maintain in the wallet. Change splitting ceases when the wallet has `targetWalletUnspents` good-sized unspents.
+
+                    **Note**: Wallets that continuously send a high count of transactions will automatically split large change amounts into multiple good-sized change outputs while they have fewer than `targetWalletUnspents` good-sized unspents in their unspent pool. Breaking up large unspents helps to reduce the amount of unconfirmed funds in flight in future transactions, and helps to avoid long chains of unconfirmed transactions. This is especially useful for newly funded wallets or recently refilled send-only wallets.
+                minValue:
+                  type: number
+                  description: Ignore unspents smaller than this amount of base units (e.g. satoshis). For doge, only string is allowed.
+                maxValue:
+                  type: number
+                  description: Ignore unspents larger than this amount of base units (e.g. satoshis). For doge, only string is allowed.
+                sequenceId:
+                  type: string
+                  description: |-
+                    A `sequenceId` is a unique and arbitrary wallet identifier applied to transfers and transactions at creation. It is optional but highly recommended.
+                    With a `sequenceId` you can easily reference transfers and transactions—for example, to safely retry sending.
+                    Because the system only confirms one send request per `sequenceId` (and fails all subsequent attempts), you can retry sending without the risk of double spending.
+                    The `sequenceId` is only visible to users on the wallet and is not shared publicly.
+                nonce:
+                  type: string
+                  description: |-
+                    (DOT only) A nonce ID is a number used to protect private communications by preventing replay attacks.
+                    This is an advanced option where users can manually input a new nonce value in order to correct or fill in a missing nonce ID value.
+                  example: '2000000'
+                  pattern: ^-?\d+$
+                noSplitChange:
+                  type: boolean
+                  default: false
+                  description: |-
+                    Set `true` to disable automatic change splitting.
+
+                    Also see: `targetWalletUnspents`
+                unspents:
+                  type: array
+                  items:
+                    type: string
+                    description: Used to explicitly specify the unspents to be used in the input set in the transaction. Each unspent should be in the form `prevTxId:nOutput`.
+                    example: 12b147dd8b4f73c01f72bdbf5b589eea614f3de609ffdbdac84852d6505cf8a3:1
+                changeAddress:
+                  type: string
+                  description: Specifies a custom destination address for the transaction's change output(s)
+                  example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
+                  maxLength: 250
+                txFormat:
+                  type: string
+                  enum:
+                    - legacy
+                    - psbt
+                    - psbt-lite
+                  default: legacy
+                  description: |-
+                    [UTXO only] Format of the returned transaction hex serialization.
+                    `legacy` for serialized transaction in custom bitcoinjs-lib format. `psbt` for BIP174 serialized transaction
+                  example: psbt
+                instant:
+                  type: boolean
+                  description: (DASH only) Specifies whether or not to use Dash's "InstantSend" feature when sending a transaction.
+                memo:
+                  type: object
+                  description: |-
+                    Extra transaction information for CSPR, EOS, HBAR, RUNE, STX, TON, XLM, and XRP. Required for XLM transactions.
+
+                    Note: For XRP this is the destination tag (DT), for CSPR this is the transfer ID and for ALGO this is the message field.
+                  properties:
+                    type:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                    - type
+                    - value
+                comment:
+                  type: string
+                  description: An optional memo for the transaction.
+                  maxLength: 256
+                destinationChain:
+                  type: string
+                  description: (AVAXC and AVAXP only) Destination chain for an AVAX import/export transaction. One of [P, C].
+                sourceChain:
+                  type: string
+                  description: (AVAXC and AVAXP only) Source chain for an AVAX import/export transaction. One of [P, C].
+                addressType:
+                  type: string
+                  deprecated: true
+                  description: |-
+                    DEPRECATED - use `changeAddressType`.
+                    The type of address to create for change. One of `p2sh`, `p2shP2wsh`, `p2wsh`, or `p2tr`.
+                  example: p2sh
+                changeAddressType:
+                  oneOf:
+                    - $ref: '#/components/schemas/InitiateTransactionAddressType'
+                    - $ref: '#/components/schemas/InitiateTransactionChangeAddressTypes'
+                  description: |-
+                    The address type for the change address. One of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`,
+                    or an ordered array of those address types (`ChangeAddressTypes`).
+                  example: p2sh
+                startTime:
+                  type: string
+                  description: Unix timestamp in seconds.nanoseconds format, denoting the start of the validity window. Only for HBAR transactions.
+                  example: '1714067129.1020603'
+                consolidateId:
+                  type: string
+                  description: (ALGO/TEZOS only) Consolidation ID of this consolidation transaction.
+                  example: 59cd72485007a239fb00282ed480da1f
+                  pattern: ^[0-9a-f]{32}$
+                lastLedgerSequence:
+                  type: number
+                  description: (XRP only) Absolute max ledger the transaction should be accepted in, whereafter it will be rejected
+                ledgerSequenceDelta:
+                  type: number
+                  description: (XRP only) Relative ledger height (in relation to the current ledger) that the transaction should be accepted in, whereafter it will be rejected
+                cpfpTxIds:
+                  type: array
+                  items:
+                    type: string
+                    description: The list of transactions to bump with a Child-Pays-For-Parent transaction (currently only bumping one tx is supported).
+                cpfpFeeRate:
+                  type: number
+                  description: |-
+                    The desired effective fee rate of the accelerated transaction in base units per kilobyte (e.g. satoshi/kB), the unconfirmed transactions it depends on, and the newly created Child-Pays-For-Parent transaction.
+                    Must be higher than the current effective fee rate of the target transaction.
+                rbfTxIds:
+                  type: array
+                  items:
+                    type: string
+                    description: The list of transactions to accelerate using Replace-By-Fee (RBF) for UTXO coins (currently accelerating only one tx is supported).
+                isReplaceableByFee:
+                  type: boolean
+                  description: It is used to mark an UTXO transaction eligible for Replace-By-Fee (RBF) later.
+                maxFee:
+                  type: number
+                  description: |-
+                    Limits the amount of satoshis that can be used for fees in a Child-Pays-For-Parent (CPFP) transaction. CPFP transactions accelerate the targeted transaction and all of the unconfirmed transactions the targeted transaction depends on.
+                    `maxFee` is required for all CPFP transactions as it allows users to set a safety net that will halt CPFP attempts that exceed the expected cost.
+                  minimum: 0
+                strategy:
+                  type: string
+                  description: Optional unspent selection strategy to use. One of `RANDOM`, `FIFO` or `BNB`.
+                  maxLength: 20
+                validFromBlock:
+                  type: number
+                  description: Optional block this transaction is valid from
+                validToBlock:
+                  type: number
+                  description: Optional block this transaction is valid until
+                trustlines:
+                  type: array
+                  items:
+                    type: object
+                    description: List of trustlines to manage on the account. Available for Stellar.
+                    properties:
+                      action:
+                        type: string
+                        enum:
+                          - add
+                          - remove
+                      limit:
+                        allOf:
+                          - $ref: '#/components/schemas/InitiateTransactionIntegerString'
+                        description: String representation of the amount to limit in base units (stroops)
+                        example: '2000000'
+                        pattern: ^-?\d+$
+                      token:
+                        type: string
+                        description: One of the supported coin types for Stellar tokens listed in Coin-specific-implementation
+                        example: txlm:BST-GBQTIOS3XGHB7LVYGBKQVJGCZ3R4JL5E4CBSWJ5ALIJUHBKS6263644L
+                stakingOptions:
+                  oneOf:
+                    - $ref: '#/components/schemas/InitiateTransactionCSPRStakingOptions'
+                    - $ref: '#/components/schemas/InitiateTransactionSTXStakingOptions'
+                  description: Required object for staking. Only for CSPR and STX.
+                unstakingOptions:
+                  type: object
+                  description: Options needed to unstake EOS assets
+                  properties:
+                    from:
+                      type: string
+                      description: The name or address of the account that originally staked assets
+                    receiver:
+                      type: string
+                      description: The name or address of the account that had assets staked to
+                    unstakeCpuQuantity:
+                      type: string
+                      description: The string amount of assets to unstake from CPU and asset symbol separated by a space (e.g. '100 EOS')
+                      example: 100 EOS
+                    unstakeNetQuantity:
+                      type: string
+                      description: The string amount of assets to unstake from Net and asset symbol separated by a space (e.g. '100 EOS')
+                      example: 100 EOS
+                refundOptions:
+                  type: object
+                  description: Options needed to refund unstaked EOS assets if automatic refund fails
+                  properties:
+                    address:
+                      type: string
+                      description: The name or address of the account that originally unstaked assets
+                messageKey:
+                  type: string
+                  description: |-
+                    Optional parameter that takes a hexadecimal value to set `messagekey` for an XRP `accountSet` transaction.
+                    Recipients field should be empty when `messageKey` is set.
+                reservation:
+                  type: object
+                  description: Optional parameter for UTXO coins to automatically reserve the unspents that are used in the build. Useful for Cold wallets. If using, must set expireTime.
+                  properties:
+                    expireTime:
+                      type: string
+                      description: Required. The time that the unspent reservations should expire.
+                      format: date-time
+                  required:
+                    - expireTime
+                recipients:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address:
+                        allOf:
+                          - $ref: '#/components/schemas/AddressString'
+                        description: The address to send to
+                        example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
+                        maxLength: 500
+                      amount:
+                        allOf:
+                          - $ref: '#/components/schemas/InitiateTransactionRecipientAmount'
+                        description: |-
+                          String representation of the amount to send in base units (satoshis/litoshis/zatoshis/duffs). For doge, only string is allowed.
+                          Passing in 'max' will send the recipient the maximum amount available, minus fees and amounts for other recipients.
+                          Only a single recipient with a 'max' amount is allowed.
+                        example: '2000000'
+                        pattern: ^(-?\d+|max|invoice)$
+                      memo:
+                        oneOf:
+                          - type: string
+                          - $ref: '#/components/schemas/InitiateTransactionMemoObject'
+                        description: |-
+                          A memo for this recipient. Accepts MemoString (Stacks only) or InitiateTransactionMemoObject (CSPR, EOS, HBAR, RUNE, STX, TON, XLM, XRP).
+                          MemoString: a memo for this specific transaction; this format is only available for Stacks.
+                        maxLength: 100
+                    required:
+                      - address
+                      - amount
+                    description: A list of recipient addresses and amounts. Must be present but empty for Child-Pays-For-Parent transactions.
+                videoApprovers:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    description: A list of public ids of users that should do the video id verification for the transaction that is being sent or initiated.
+                    pattern: ^[0-9a-f]{32}$
+                    example: 59cd72485007a239fb00282ed480da1f
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -36151,6 +36749,15 @@ paths:
               description: |-
                 Canton: filter to specific IMS unspent contract ids (repeat param or comma-separated).
                 Ignored for other chains that use this route.
+        - name: token
+          description: |-
+            Canton: filter UTXOs by token name (e.g. "canton:usd1").
+            Omit to return native coin UTXOs only (default, backwards compatible).
+            Ignored for other chains that use this route.
+          in: query
+          schema:
+            type: string
+            minLength: 1
         - name: coin
           in: path
           required: true
@@ -56981,12 +57588,12 @@ components:
       properties:
         from:
           allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
+            - $ref: '#/components/schemas/SignatureShareTypeCodec'
           description: The source of the commitment share
           example: user
         to:
           allOf:
-            - $ref: '#/components/schemas/SignatureShareType'
+            - $ref: '#/components/schemas/SignatureShareTypeCodec'
           description: The recipient of the commitment share.
           example: bitgo
         share:
@@ -61484,36 +62091,6 @@ components:
       required:
         - enterpriseId
         - userId
-    CreatePolicyRule:
-      type: object
-      properties:
-        coin:
-          type: string
-          example: zrx
-          description: |
-            If set, the rule will only apply to the given coin or ERC20 token in an
-            Ethereum wallet. It is generally recommended to not set a coin for policy rules of the following types:
-            `advancedWhitelist`, `allTx`, `coinAddressWhitelist`, `coinAddressBlacklist`, `webhook`.
-        id:
-          type: string
-          description: The id of the rule, must be unique among rules in the policy
-        type:
-          $ref: '#/components/schemas/CreatePolicyRuleTriggers'
-        condition:
-          $ref: '#/components/schemas/PolicyRuleUpdateConditions'
-        action:
-          $ref: '#/components/schemas/PolicyRuleActions'
-        lockDate:
-          type: string
-          description: The time at which this rule becomes immutable
-          format: date-time
-        generatePolicy:
-          type: boolean
-          description: When undefined or set to true, generates a policy enforcing the whitelist (if one has not been generated already) after the whitelist is created. If set to false, no policy will be generated.
-      required:
-        - id
-        - type
-        - action
     CreatePolicyRuleRequest:
       type: object
       description: Create or Update policy rule Request.
@@ -61599,7 +62176,8 @@ components:
             `LOCK_AFTER_DATE`.
           format: date-time
           example: '2023-11-13T14:49:48.830522Z'
-    CreatePolicyRuleTriggers:
+    CreatePolicyRuleType:
+      title: CreatePolicyRuleType
       type: string
       enum:
         - advancedWhitelist
@@ -61609,7 +62187,12 @@ components:
         - coinAddressBlacklist
         - velocityLimit
         - webhook
-      description: What causes this rule to trigger
+      description: |-
+        Rule trigger types accepted on POST (create).
+
+        Intentionally differs from {@link UpdateRemovePolicyRuleType}: create exposes newer names
+        (e.g. `allTxNoFiat`, `coinAddressWhitelist`) while update/delete must accept legacy type
+        strings stored on existing rules (e.g. `bitcoinAddressWhitelist`, `transactionLimit`).
     CreateSendLabel:
       type: object
       properties:
@@ -68021,6 +68604,14 @@ components:
                 - burn_reject
                 - pending_participant_onboarding_request
                 - participant_onboarding_accepted
+                - pending_dtcc_end_investor_invite
+                - end_investor_invite_offer
+                - end_investor_invite_accepted
+                - end_investor_invite_rejected
+                - pending_allocation
+                - allocation_accepted
+                - cosign_delegation_offer
+                - cosign_delegation_accepted
                 - cash_dvp_settled
                 - repo_dvp_open_leg_settled
                 - repo_dvp_close_leg_settled
@@ -69958,6 +70549,240 @@ components:
         - requirements
         - finalizeSubmission
       title: IndividualIdentityResponse
+    InitiateTransactionAddressType:
+      title: InitiateTransactionAddressType
+      type: string
+      enum:
+        - p2sh
+        - p2shP2wsh
+        - p2wsh
+        - p2tr
+        - p2trMusig2
+      description: platform.yaml `components/schemas/AddressType`
+      example: p2sh
+    InitiateTransactionCSPRStakingOptions:
+      title: InitiateTransactionCSPRStakingOptions
+      type: object
+      description: CSPR staking options for delegate or undelegate transactions.
+      properties:
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Required for CSPR. String representation of the amount to stake or unstake in base units (motes).
+        validator:
+          allOf:
+            - $ref: '#/components/schemas/AddressString'
+          description: Required for CSPR. The validator address used to delegate or undelegate.
+      required:
+        - amount
+        - validator
+    InitiateTransactionChangeAddressTypes:
+      title: InitiateTransactionChangeAddressTypes
+      type: array
+      items:
+        type: string
+        enum:
+          - p2sh
+          - p2shP2wsh
+          - p2wsh
+          - p2tr
+          - p2trMusig2
+        description: |-
+          platform.yaml `components/schemas/ChangeAddressTypes`
+          The address types for the change address. Order by preference and BitGo uses the first available.
+          Any subset of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`.
+        example: p2sh
+    InitiateTransactionIntegerString:
+      title: InitiateTransactionIntegerString
+      type: string
+      description: platform.yaml `components/schemas/IntegerString`
+      example: '2000000'
+      pattern: ^-?\d+$
+    InitiateTransactionMemoObject:
+      title: InitiateTransactionMemoObject
+      type: object
+      description: |-
+        Extra transaction information for CSPR, EOS, HBAR, RUNE, STX, TON, XLM, and XRP. Required for XLM transactions.
+
+        Note: For XRP this is the destination tag (DT), for CSPR this is the transfer ID and for ALGO this is the message field.
+      properties:
+        type:
+          type: string
+        value:
+          type: string
+      required:
+        - type
+        - value
+    InitiateTransactionRecipientAmount:
+      title: InitiateTransactionRecipientAmount
+      oneOf:
+        - $ref: '#/components/schemas/NumberLike'
+        - type: string
+          enum:
+            - max
+            - invoice
+      description: |-
+        String representation of the amount to send in base units (satoshis/litoshis/zatoshis/duffs). For doge, only string is allowed.
+        Passing in 'max' will send the recipient the maximum amount available, minus fees and amounts for other recipients.
+        Only a single recipient with a 'max' amount is allowed.
+      example: '2000000'
+      pattern: ^(-?\d+|max|invoice)$
+    InitiateTransactionSTXStakingFunctionArgOptional:
+      title: InitiateTransactionSTXStakingFunctionArgOptional
+      type: object
+      description: STX staking function argument with type optional.
+      properties:
+        type:
+          type: string
+          enum:
+            - optional
+          default: optional
+          description: Type of argument. Use the default.
+        val:
+          $ref: '#/components/schemas/InitiateTransactionSTXStakingOptionalVal'
+      required:
+        - type
+        - val
+    InitiateTransactionSTXStakingFunctionArgPrincipal:
+      title: InitiateTransactionSTXStakingFunctionArgPrincipal
+      type: object
+      description: STX staking function argument with type principal.
+      properties:
+        type:
+          type: string
+          enum:
+            - principal
+          default: principal
+          description: Type of argument. Use the default.
+        val:
+          type: string
+          description: Address of the validator
+      required:
+        - type
+        - val
+    InitiateTransactionSTXStakingFunctionArgUint128:
+      title: InitiateTransactionSTXStakingFunctionArgUint128
+      type: object
+      description: STX staking function argument with type uint128.
+      properties:
+        type:
+          type: string
+          enum:
+            - uint128
+          default: uint128
+          description: Type of argument. Use the default.
+        val:
+          type: string
+          description: Amount in micro-stx
+      required:
+        - type
+        - val
+    InitiateTransactionSTXStakingOptionalVal:
+      title: InitiateTransactionSTXStakingOptionalVal
+      oneOf:
+        - type: string
+        - $ref: '#/components/schemas/InitiateTransactionSTXStakingTuple'
+      description: Value for an optional STX staking function argument.
+    InitiateTransactionSTXStakingOptions:
+      title: InitiateTransactionSTXStakingOptions
+      type: object
+      description: STX staking options for delegate or revoke-delegate transactions.
+      properties:
+        contractName:
+          type: string
+          default: pox-3
+          description: The STX staking contract name. Use pox-3.
+        functionName:
+          type: string
+          description: STX staking contract function.
+        functionArgs:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/InitiateTransactionSTXStakingFunctionArgUint128'
+              - $ref: '#/components/schemas/InitiateTransactionSTXStakingFunctionArgPrincipal'
+              - $ref: '#/components/schemas/InitiateTransactionSTXStakingFunctionArgOptional'
+            description: The 4 Objects are required and in the order expressed.
+      required:
+        - contractName
+        - functionName
+        - functionArgs
+    InitiateTransactionSTXStakingTuple:
+      title: InitiateTransactionSTXStakingTuple
+      type: object
+      description: Tuple nested inside an optional STX staking function argument.
+      properties:
+        type:
+          type: string
+          enum:
+            - tuple
+          default: tuple
+          description: Type of argument. Use the default.
+        val:
+          allOf:
+            - $ref: '#/components/schemas/InitiateTransactionSTXStakingTupleVal'
+          description: 'The 2 objects are required and in the order expressed: hashbytes, then version.'
+          minItems: 2
+          maxItems: 2
+      required:
+        - type
+        - val
+    InitiateTransactionSTXStakingTupleHashbytes:
+      title: InitiateTransactionSTXStakingTupleHashbytes
+      type: object
+      description: BTC address hash buffer within an STX staking tuple.
+      properties:
+        key:
+          type: string
+          enum:
+            - hashbytes
+          default: hashbytes
+          description: Tuple field name.
+        type:
+          type: string
+          enum:
+            - buffer
+          default: buffer
+          description: Type of argument. Use the default.
+        val:
+          type: string
+          description: The BTC Address hash.
+      required:
+        - key
+        - type
+        - val
+    InitiateTransactionSTXStakingTupleVal:
+      title: InitiateTransactionSTXStakingTupleVal
+      type: array
+      items:
+        oneOf:
+          - $ref: '#/components/schemas/InitiateTransactionSTXStakingTupleHashbytes'
+          - $ref: '#/components/schemas/InitiateTransactionSTXStakingTupleVersion'
+        description: Ordered pair of hashbytes and version within an STX staking tuple value.
+    InitiateTransactionSTXStakingTupleVersion:
+      title: InitiateTransactionSTXStakingTupleVersion
+      type: object
+      description: BTC address version buffer within an STX staking tuple.
+      properties:
+        key:
+          type: string
+          enum:
+            - version
+          default: version
+          description: Tuple field name.
+        type:
+          type: string
+          enum:
+            - buffer
+          default: buffer
+          description: Type of argument. Use the default.
+        val:
+          type: string
+          description: The BTC Address version.
+      required:
+        - key
+        - type
+        - val
     InitiatorIsAllowedToApproveActionParameter:
       title: Initiator is allowed to approve
       type: object
@@ -70804,6 +71629,12 @@ components:
             description: Array of issuer orders
       required:
         - orders
+    JsonRecord:
+      title: JsonRecord
+      type: object
+      additionalProperties:
+        title: JSON
+      description: 'OpenAPI `additionalProperties: true` — arbitrary JSON metadata values.'
     KavacosmosStakingRequest:
       title: KAVACOSMOS
       allOf:
@@ -75424,6 +76255,7 @@ components:
               - tradeFixApi
               - goStaking
               - link
+              - defiEarnMarketplace
         labels:
           type: array
           items:
@@ -76778,7 +77610,7 @@ components:
           format: date-time
         info:
           anyOf:
-            - $ref: '#/components/schemas/PendingApprovalTransactionRequest'
+            - $ref: '#/components/schemas/PendingApprovalTransactionRequest1'
             - $ref: '#/components/schemas/PendingApprovalTransactionRequestFull1'
             - $ref: '#/components/schemas/PendingApprovalUserChangeRequest'
             - $ref: '#/components/schemas/PendingApprovalPolicyRuleRequest'
@@ -77492,6 +78324,48 @@ components:
                 type: object
                 properties:
                   address:
+                    $ref: '#/components/schemas/PlatformAddressString'
+                  amount:
+                    $ref: '#/components/schemas/PlatformIntegerOrIntegerString'
+                  data:
+                    type: string
+            requestedAmount:
+              $ref: '#/components/schemas/PlatformIntegerOrIntegerString'
+            sourceWallet:
+              $ref: '#/components/schemas/Id'
+            triggeredPolicy:
+              $ref: '#/components/schemas/Id'
+            validTransaction:
+              type: string
+            validTransactionHash:
+              type: string
+        type:
+          type: string
+          enum:
+            - transactionRequest
+    PendingApprovalTransactionRequest1:
+      title: Transaction request (lite)
+      type: object
+      properties:
+        transactionRequest:
+          type: object
+          properties:
+            buildParams:
+              type: object
+            coinSpecific:
+              type: object
+            comment:
+              type: string
+            fee:
+              $ref: '#/components/schemas/IntegerOrString'
+            isUnsigned:
+              type: boolean
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
                     $ref: '#/components/schemas/AddressString3'
                   amount:
                     $ref: '#/components/schemas/IntegerOrIntegerString'
@@ -77974,6 +78848,12 @@ components:
         - signature submitted
         - initiating
         - additional information submitted
+    PlatformIntegerOrIntegerString:
+      oneOf:
+        - type: string
+          pattern: ^-?\d+$
+          example: '2000000'
+        - type: integer
     PlatformIntegerString:
       type: string
       pattern: ^-?\d+$
@@ -79132,47 +80012,6 @@ components:
         - $ref: '#/components/schemas/TxUsdThresholdRuleCondition'
         - $ref: '#/components/schemas/LimitRuleCondition'
         - $ref: '#/components/schemas/WebhookRuleCondition'
-    PolicyRuleUpdateConditions:
-      title: Type
-      description: Parameters for the type
-      anyOf:
-        - title: Advanced whitelist
-          type: object
-          properties:
-            add:
-              $ref: '#/components/schemas/AdvancedListRuleEntry1'
-          required:
-            - add
-        - title: Whitelist
-          type: object
-          properties:
-            add:
-              description: Address to add to the list
-              oneOf:
-                - type: string
-                - $ref: '#/components/schemas/Id'
-            metaData:
-              type: object
-              description: An object with arbitrary metadata about the added address.
-              properties:
-                addedBy:
-                  type: string
-                  description: Text indicating who added this address to the whitelist
-              additionalProperties: true
-          required:
-            - add
-        - title: Remove address from whitelist
-          type: object
-          properties:
-            remove:
-              description: Address to remove from the list
-              oneOf:
-                - type: string
-                - $ref: '#/components/schemas/Id'
-                - $ref: '#/components/schemas/AdvancedListRuleEntry1'
-          required:
-            - remove
-        - type: object
     PolicyRuleVersions:
       type: object
       description: |
@@ -83416,13 +84255,6 @@ components:
         - from
         - to
         - share
-    SignatureShareType:
-      title: SignatureShareType
-      type: string
-      enum:
-        - user
-        - backup
-        - bitgo
     SignatureShareTypeCodec:
       title: SignatureShareTypeCodec
       type: string
@@ -88971,29 +89803,6 @@ components:
       properties:
         keyDerivationPath:
           type: string
-    TransactionInitiateRequest:
-      allOf:
-        - $ref: '#/components/schemas/BuildParams'
-        - type: object
-          properties:
-            recipients:
-              type: array
-              items:
-                type: object
-                properties:
-                  amount:
-                    allOf:
-                      - $ref: '#/components/schemas/RecipientAmount'
-                    description: String representation of the amount to send in base units (satoshis/litoshis/zatoshis/duffs). For doge, only string is allowed. Passing in 'max' will send the recipient the maximum amount available, minus fees and amounts for other recipients. Only a single recipient with a 'max' amount is allowed.
-                  address:
-                    allOf:
-                      - $ref: '#/components/schemas/AddressString3'
-                    description: The address to send to
-                  memo:
-                    anyOf:
-                      - $ref: '#/components/schemas/MemoString'
-                      - $ref: '#/components/schemas/MemoObject'
-              description: A list of recipient addresses and amounts. Must be present but empty for Child-Pays-For-Parent transactions.
     TransactionIntent:
       title: TransactionIntent
       oneOf:
@@ -90734,6 +91543,14 @@ components:
             - burn_reject
             - pending_participant_onboarding_request
             - participant_onboarding_accepted
+            - pending_dtcc_end_investor_invite
+            - end_investor_invite_offer
+            - end_investor_invite_accepted
+            - end_investor_invite_rejected
+            - pending_allocation
+            - allocation_accepted
+            - cosign_delegation_offer
+            - cosign_delegation_accepted
             - cash_dvp_settled
             - repo_dvp_open_leg_settled
             - repo_dvp_close_leg_settled
@@ -92722,6 +93539,14 @@ components:
                   - burn_reject
                   - pending_participant_onboarding_request
                   - participant_onboarding_accepted
+                  - pending_dtcc_end_investor_invite
+                  - end_investor_invite_offer
+                  - end_investor_invite_accepted
+                  - end_investor_invite_rejected
+                  - pending_allocation
+                  - allocation_accepted
+                  - cosign_delegation_offer
+                  - cosign_delegation_accepted
                   - cash_dvp_settled
                   - repo_dvp_open_leg_settled
                   - repo_dvp_close_leg_settled
@@ -94664,34 +95489,23 @@ components:
           $ref: '#/components/schemas/PinnedWallets'
       required:
         - pinnedWallets
-    UpdateRemovePolicyRule:
-      type: object
-      properties:
-        coin:
-          allOf:
-            - $ref: '#/components/schemas/Coin'
-          description: |
-            Policy rules of types `allTx`, `coinAddressWhitelist`, `coinAddressBlacklist` and `webhook` are recommended to
-            be used without setting a coin so that they will apply to all coins and tokens that could be in a wallet. If
-            your policy rule is of one of these types and has a coin set on it, you also need to set the coin in the body.
-            This is necessary because the id alone may not be sufficient for finding the correct rule to update or delete.
-        id:
-          type: string
-          description: The id of the rule. The combination of id and coin must be unique among rules in the policy.
-        type:
-          $ref: '#/components/schemas/PolicyRuleTriggers'
-        condition:
-          $ref: '#/components/schemas/PolicyRuleUpdateConditions'
-        action:
-          $ref: '#/components/schemas/PolicyRuleActions'
-        lockDate:
-          type: string
-          description: The time at which this rule becomes immutable
-          format: date-time
-      required:
-        - id
-        - type
-        - action
+    UpdateRemovePolicyRuleType:
+      title: UpdateRemovePolicyRuleType
+      type: string
+      enum:
+        - advancedWhitelist
+        - allTx
+        - bitcoinAddressWhitelist
+        - coinAddressWhitelist
+        - coinAddressBlacklist
+        - transactionLimit
+        - velocityLimit
+        - webhook
+      description: |-
+        Rule trigger types accepted on PUT/DELETE (update/remove).
+
+        Intentionally differs from {@link CreatePolicyRuleType}: clients updating or deleting a rule
+        must send the `type` value as persisted on the rule, including legacy names not valid on create.
     UpdateSendLabel:
       type: object
       properties:
@@ -99354,13 +100168,6 @@ components:
           description: Required data needed to configure the Action.
         operator:
           $ref: '#/components/schemas/OperatorType'
-    VideoApprovers:
-      type: array
-      items:
-        $ref: '#/components/schemas/Id'
-      description: |
-        A list of public ids of users that should do the video id verification for the transaction that is being sent or initiated.
-      minItems: 1
     VideoIdUserState:
       title: VideoIdUserState
       type: string
@@ -100937,6 +101744,103 @@ components:
           description: Optional coin used for validator-specific staking.
           type: string
           nullable: true
+    WalletPolicyRuleAction:
+      title: WalletPolicyRuleAction
+      type: object
+      description: Json-compatible policy rule action (PolicyRuleAction uses h.optionalized, which is not Json-safe).
+      properties:
+        type:
+          allOf:
+            - $ref: '#/components/schemas/WalletPolicyRuleActionType'
+          description: What happens when this rule is triggered
+        userIds:
+          type: array
+          items:
+            type: string
+            description: For a final approver action, who can approve
+      required:
+        - type
+    WalletPolicyRuleActionType:
+      title: WalletPolicyRuleActionType
+      type: string
+      enum:
+        - deny
+        - getApproval
+        - getFinalApproval
+        - getCustodianApproval
+        - getIdVerification
+      description: Policy rule action type (`PolicyRuleActions.type` in platform.yaml).
+    WalletPolicyRuleAdvancedListRuleEntry:
+      title: WalletPolicyRuleAdvancedListRuleEntry
+      type: object
+      description: '`AdvancedListRuleEntry` in platform.yaml (Json-safe).'
+      properties:
+        item:
+          type: string
+          description: A valid blockchain address, wallet ID, enterprise ID, or organization ID
+        type:
+          allOf:
+            - $ref: '#/components/schemas/WalletPolicyRuleListEntryType'
+          description: The kind of resource a list rule entry refers to
+        metaData:
+          allOf:
+            - $ref: '#/components/schemas/WalletPolicyRuleAdvancedListRuleEntryMetaData'
+          description: Any data about this entry that is not used to determine when to enforce the policy
+        verificationState:
+          allOf:
+            - $ref: '#/components/schemas/WalletPolicyRuleAdvancedListVerificationState'
+          description: Whether entries have already been verified
+        verifiedBy:
+          allOf:
+            - $ref: '#/components/schemas/WalletPolicyRuleAdvancedListVerificationSource'
+          description: The source that verified this entry
+      required:
+        - item
+        - type
+    WalletPolicyRuleAdvancedListRuleEntryMetaData:
+      title: WalletPolicyRuleAdvancedListRuleEntryMetaData
+      allOf:
+        - type: object
+          properties:
+            label:
+              type: string
+              description: A client-specified label for this entry. Label must be unique or not set.
+            owner:
+              type: string
+              description: The legal owner of the address, wallet, enterprise, or organization.
+            address:
+              type: string
+              description: The address of the receiver wallet if the whitelist is of type 'walletId'.
+        - $ref: '#/components/schemas/JsonRecord'
+    WalletPolicyRuleAdvancedListVerificationSource:
+      title: WalletPolicyRuleAdvancedListVerificationSource
+      type: string
+      enum:
+        - unverifiedRule
+        - fastWithdrawal
+    WalletPolicyRuleAdvancedListVerificationState:
+      title: WalletPolicyRuleAdvancedListVerificationState
+      type: string
+      enum:
+        - unverified
+        - verified
+    WalletPolicyRuleListEntryType:
+      title: WalletPolicyRuleListEntryType
+      type: string
+      enum:
+        - address
+        - walletId
+        - enterpriseId
+      description: '`ListRuleEntryType` in platform.yaml'
+    WalletPolicyRuleWhitelistAddMetaData:
+      title: WalletPolicyRuleWhitelistAddMetaData
+      allOf:
+        - type: object
+          properties:
+            addedBy:
+              type: string
+              description: Text indicating who added this address to the whitelist
+        - $ref: '#/components/schemas/JsonRecord'
     WalletRecoveryIntent:
       title: Wallet Recovery Intent
       allOf:
