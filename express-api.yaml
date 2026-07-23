@@ -5466,7 +5466,7 @@ components:
           format: date-time
         info:
           anyOf:
-            - $ref: '#/components/schemas/PendingApprovalTransactionRequest'
+            - $ref: '#/components/schemas/PendingApprovalTransactionRequest1'
             - $ref: '#/components/schemas/PendingApprovalTransactionRequestFull1'
             - $ref: '#/components/schemas/PendingApprovalUserChangeRequest'
             - $ref: '#/components/schemas/PendingApprovalPolicyRuleRequest'
@@ -5739,6 +5739,48 @@ components:
                 type: object
                 properties:
                   address:
+                    $ref: '#/components/schemas/PlatformAddressString'
+                  amount:
+                    $ref: '#/components/schemas/PlatformIntegerOrIntegerString'
+                  data:
+                    type: string
+            requestedAmount:
+              $ref: '#/components/schemas/PlatformIntegerOrIntegerString'
+            sourceWallet:
+              $ref: '#/components/schemas/Id'
+            triggeredPolicy:
+              $ref: '#/components/schemas/Id'
+            validTransaction:
+              type: string
+            validTransactionHash:
+              type: string
+        type:
+          type: string
+          enum:
+            - transactionRequest
+    PendingApprovalTransactionRequest1:
+      title: Transaction request (lite)
+      type: object
+      properties:
+        transactionRequest:
+          type: object
+          properties:
+            buildParams:
+              type: object
+            coinSpecific:
+              type: object
+            comment:
+              type: string
+            fee:
+              $ref: '#/components/schemas/IntegerOrString'
+            isUnsigned:
+              type: boolean
+            recipients:
+              type: array
+              items:
+                type: object
+                properties:
+                  address:
                     $ref: '#/components/schemas/AddressString3'
                   amount:
                     $ref: '#/components/schemas/IntegerOrIntegerString'
@@ -5857,6 +5899,11 @@ components:
       required:
         - status
         - timestamp
+    PlatformAddressString:
+      title: Address
+      type: string
+      example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
+      maxLength: 500
     PlatformCommitmentShare:
       type: object
       properties:
@@ -5885,6 +5932,12 @@ components:
       type: string
       format: email
       example: user@example.com
+    PlatformIntegerOrIntegerString:
+      oneOf:
+        - type: string
+          pattern: ^-?\d+$
+          example: '2000000'
+        - type: integer
     PlatformPendingApproval:
       title: Pending approval
       type: object
