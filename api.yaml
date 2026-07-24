@@ -51710,6 +51710,7 @@ components:
             apy: '7.00'
             unstakingFee: '4342160'
             unstakingMin: '0'
+            inactiveBalance: null
             unstakeable: false
             permissionAttributes:
               staking:
@@ -57990,6 +57991,24 @@ components:
               type: string
             hyphaRequestId:
               type: string
+            claimedAmount:
+              type: string
+              format: bigInteger
+              nullable: true
+              description: |
+                The actual AVAX amount (in wei) claimed when the unstake withdrawal
+                confirmed on-chain. Null until the WITHDRAW_UNDELEGATED (or REVOKE)
+                transaction is confirmed.
+              example: '1050000000000000000'
+            claimedExchangeRate:
+              type: string
+              format: bigDecimal
+              nullable: true
+              description: |
+                The stAVAX/sAVAX to AVAX exchange rate at claim time, persisted for
+                auditability. Not used to recompute amountInToken, which keeps the
+                actual burned shares. Null until the claim transaction is confirmed.
+              example: '1.0523'
     AvaxpWalletStakingStateAttributes:
       type: object
       properties:
@@ -86970,6 +86989,14 @@ components:
         unstakingMin:
           type: string
           format: bigInteger
+        inactiveBalance:
+          type: string
+          format: bigInteger
+          nullable: true
+          description: |
+            The inactive (deactivating/deactivated) balance of the stake account, if available.
+            Only present for SOL_STAKE delegations when the inactive balance lookup feature flag is enabled.
+            Null when the feature is disabled or the delegation type does not support activation lookups.
         permissionAttributes:
           $ref: '#/components/schemas/WalletStakingPermissionAttributes'
     SolStakingRequest:
