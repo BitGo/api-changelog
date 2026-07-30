@@ -13570,6 +13570,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
         '500':
           description: Internal Server Error
           content:
@@ -15710,8 +15716,8 @@ paths:
     post:
       tags:
         - Notification Webhooks
-      summary: Retrigger webhook notifications
-      description: 'Retriggers a list of webhook notifications by their IDs. Max 25 notifications per request. Note: retriggered webhooks use the original signature. If the webhook secret was rotated since the original send, the signature will be incorrect.'
+      summary: Retrigger specific webhook notifications by ID
+      description: 'Resends a specific set of webhook notifications that you identify by their notification IDs (max 25 per request). Use this endpoint when you already have the exact notification ID(s) you want to resend, for example IDs you read from the ''id'' field of records returned by the notification-history endpoints. Important: ''webhookNotificationIds'' must be notification IDs returned by this API''s own notification-history responses. Do NOT use any ID found inside the delivered webhook payload body (such as a transaction or transfer ID) — those are unrelated identifiers and will fail validation. If you do not have specific notification IDs, or you want to resend everything matching a time window or other filters, use the bulk notifications endpoint (POST /webhooks/notifications) instead. Note: retriggered webhooks use the original signature. If the webhook secret was rotated since the original send, the signature will be incorrect.'
       operationId: retriggerNotifications
       parameters:
         - name: webhookId
@@ -15770,7 +15776,7 @@ paths:
       tags:
         - Notification Webhooks
       summary: Get or retrigger webhook notifications across multiple webhooks
-      description: Retrieves and optionally retriggers paginated notification history for up to 25 webhook IDs with optional filters.
+      description: 'Searches notification history across up to 25 webhooks and, optionally, resends the matches. Use this endpoint when you do not have specific notification IDs on hand and instead want to find (and optionally resend) notifications by criteria such as a time range, wallet, notification type, or coin. A common case is recovering from a downtime window on your endpoint: supply the webhook ID and a start/end time, set ''retrigger'' to true, and every matching notification from that window is resent. If you already know the exact notification ID(s) you want to resend, use the single-webhook retrigger endpoint (POST /webhooks/{webhookId}/notifications/retrigger) instead.'
       operationId: getBulkWebhookNotifications
       requestBody:
         description: Webhook IDs, optional filters, pagination parameters, and whether to retrigger the notifications
@@ -82492,10 +82498,10 @@ components:
           maxItems: 25
           minItems: 1
           type: array
-          description: List of webhook IDs to fetch notifications for (max 25)
+          description: The webhook IDs whose notification history you want to search (max 25). Matching notifications across all listed webhooks are returned together.
           items:
             type: string
-            description: List of webhook IDs to fetch notifications for (max 25)
+            description: The webhook IDs whose notification history you want to search (max 25). Matching notifications across all listed webhooks are returned together.
         filters:
           $ref: '#/components/schemas/BulkWebhookNotificationFilters'
         offset:
@@ -82513,7 +82519,7 @@ components:
           example: 50
         retrigger:
           type: boolean
-          description: 'If true, all matched notifications are retriggered after fetching. Retrigger outcome (success or error) is returned inline on each notification. Subject to per-webhook rate limits (default 50/min). Default: false.'
+          description: 'If true, every notification matched by this request is resent after being fetched. Set this when you want to resend all notifications matching your filters (for example, everything within a time window) without needing their individual notification IDs. The retrigger outcome (success or error) is returned inline on each notification. Subject to per-webhook rate limits (default 50/min). Default: false.'
           example: false
     PostBulkWebhookNotificationsResponse:
       required:
@@ -84636,8 +84642,10 @@ components:
       properties:
         webhookNotificationIds:
           type: array
+          description: The notification IDs to resend (max 25). Each value must be a notification ID taken from the 'id' field of a record returned by the notification-history endpoints. Do NOT use any ID found inside the delivered webhook payload body (such as a transaction or transfer ID) — those are unrelated identifiers and will be rejected.
           items:
             type: string
+            description: The notification IDs to resend (max 25). Each value must be a notification ID taken from the 'id' field of a record returned by the notification-history endpoints. Do NOT use any ID found inside the delivered webhook payload body (such as a transaction or transfer ID) — those are unrelated identifiers and will be rejected.
             format: uuid
     RetriggerWebhookNotificationsResponse:
       required:
@@ -101423,6 +101431,13 @@ components:
                 type: boolean
               supportsWhitelisting:
                 type: boolean
+              supportsExternalDeposits:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - main
+                    - sub
               supportedCredentialAccessLevels:
                 type: array
                 items:
@@ -101495,6 +101510,7 @@ components:
               - status
               - supportsSubAccounts
               - supportsWhitelisting
+              - supportsExternalDeposits
               - supportedCredentialAccessLevels
               - supportedAccountSubTypes
       required:
