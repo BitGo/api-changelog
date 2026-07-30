@@ -13481,7 +13481,7 @@ paths:
                           type: string
                           enum:
                             - read_write
-                          description: Must be `['read_write']`. Readonly credentials are not supported for Link milestone 2.
+                          description: Must be `['read_write']`. Readonly credentials are not currently supported.
                       wrappedKey:
                         type: string
                         minLength: 1
@@ -14266,9 +14266,7 @@ paths:
               - inactive
             example: active
         - name: asset
-          description: |-
-            Filter by asset identifier. Must match the exact value stored in the
-            database (as returned by VAS, e.g. "usdc", "btc").
+          description: Filter by asset identifier (e.g. "usdc", "btc").
           in: query
           schema:
             type: string
@@ -14575,11 +14573,10 @@ paths:
     get:
       summary: List on-chain destinations for a given asset/network
       description: |-
-        Mirrors VAS's `GET /on-chain-destinations`. Given a `(genericAsset, network)` pair,
-        returns enterprise Link accounts the caller has `link.account.view` on that can
-        on-chain-deposit at that asset/network. Has no source — used by the BitGo-wallet
-        source flow, where the source has no Link venue context. Excludes accounts with
-        `status != active`.
+        Given a `(genericAsset, network)` pair, returns enterprise Link accounts the
+        caller has `link.account.view` on that can on-chain-deposit at that asset/network.
+        Has no source — used by the BitGo-wallet source flow, where the source has no
+        Link venue context. Excludes accounts with `status != active`.
       operationId: V1GetOnChainDestinationsRoute
       tags:
         - Link Accounts
@@ -14717,8 +14714,8 @@ paths:
         Returns one row per `(account, accountSubType)` for accounts the caller has
         `link.account.transfer` on, with non-zero `available` balance for the given
         asset. When `asset` is supplied, additionally filters to rows whose venue
-        supports `(genericAsset, network)` for withdrawals (capability lookup, not
-        the on/off `withdraw_disabled` gate). Excludes accounts whose `status != active`.
+        supports withdrawals for the given `(genericAsset, network)` pair. Excludes
+        accounts whose `status != active`.
 
         Exactly one of `asset` / `genericAsset` is required.
       operationId: V1GetSourcesRoute
@@ -14825,15 +14822,14 @@ paths:
     get:
       summary: List destinations reachable from a Link-account source
       description: |-
-        Mirrors VAS's `GET /venues/{venueId}/transfer-destinations`. Returns enterprise Link
-        accounts the caller has `link.account.view` on that the given Link-account source
-        can transfer to. Link calls VAS `GET /venues/{venueId}/transfer-destinations` and
-        splits the result into two segments: off-chain (`internalDestinations`, with subtype
-        entries) and on-chain (`externalDestinations`, no subtype). Same-hierarchy accounts
-        are excluded from the external segment since they are already covered by the
-        internal segment. The response envelope carries `sourceSupportsOnChainWithdrawal`
-        from VAS so BFF can decide whether to surface BitGo-wallet / external-address
-        destinations alongside. Excludes accounts with `status != active`.
+        Returns enterprise Link accounts the caller has `link.account.view` on that the
+        given Link-account source can transfer to, split into two segments: off-chain
+        (`internalDestinations`, with subtype entries) and on-chain (`externalDestinations`,
+        no subtype). Same-hierarchy accounts are excluded from the external segment since
+        they are already covered by the internal segment. The response envelope carries
+        `sourceSupportsOnChainWithdrawal` to indicate whether BitGo-wallet / external-address
+        destinations can also be used alongside the Link-account destinations returned here.
+        Excludes accounts with `status != active`.
       operationId: V1GetTransferDestinationsRoute
       tags:
         - Link Accounts
@@ -15176,6 +15172,63 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/link/v1/enterprises/{enterpriseId}/venues:
+    get:
+      summary: Get supported venues
+      description: Returns a list of supported venues with configuration metadata.
+      operationId: V1GetVenuesRoute
+      tags:
+        - Link Venues
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetVenuesResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -54500,6 +54553,13 @@ components:
       required:
         - enterpriseId
         - version
+    AccessLevel:
+      title: AccessLevel
+      type: string
+      enum:
+        - read
+        - write
+        - read_write
     AccessTokenResponse:
       title: AccessTokenResponse
       type: object
@@ -54843,6 +54903,12 @@ components:
       enum:
         - individual
         - entity
+    AccountType4:
+      title: AccountType
+      type: string
+      enum:
+        - account
+        - sub_account
     Accounts:
       type: array
       items:
@@ -93773,7 +93839,7 @@ components:
       type: object
       description: |-
         Internal Link account destination — moves funds between two Link accounts at
-        the same venue via VAS `initiate-transfer`.
+        the same venue.
       properties:
         kind:
           type: string
@@ -94357,10 +94423,9 @@ components:
       title: TransferWalletDestination
       type: object
       description: |-
-        BitGo wallet destination — withdraws to the on-chain deposit address that
-        Wallet Platform exposes for the given walletId + asset. The caller never
-        needs to know the actual on-chain address; the service resolves it via WP
-        before submitting to VAS.
+        BitGo wallet destination — withdraws to the on-chain deposit address
+        associated with the given walletId + asset. The caller never needs to
+        know the actual on-chain address; the service resolves it automatically.
       properties:
         kind:
           type: string
@@ -100131,9 +100196,9 @@ components:
                     key + projected raw / label) is carried once at this level; the asset balances live
                     inside `balances`.
 
-                    Pass-through values (HLD §10.30 — venue raws not yet mapped) carry the raw label in
-                    `accountSubType` and have neither `rawAccountSubType` nor `accountSubTypeLabel`,
-                    since there is no config entry to project from.
+                    Pass-through values (venue raws not yet mapped to a normalized sub-type) carry the
+                    raw label in `accountSubType` and have neither `rawAccountSubType` nor
+                    `accountSubTypeLabel`, since there is no mapping to project from.
                   properties:
                     balances:
                       type: array
@@ -100180,21 +100245,19 @@ components:
                           - asOfDate
                     accountSubType:
                       type: string
-                      description: |-
-                        Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`). Read directly
-                        from the Link DB column populated by the normalized-balances Kafka consumer.
+                      description: Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`).
                       minLength: 1
                     rawAccountSubType:
                       type: string
                       description: |-
-                        Venue-raw sub-type label, projected from `AccountSubTypeDefinition.rawType` for the matching
-                        `normalized` entry in the venue config. Absent for pass-through values.
+                        Venue-raw sub-type label for the matching normalized sub-type. Absent for
+                        pass-through values.
                       minLength: 1
                     accountSubTypeLabel:
                       type: string
                       description: |-
-                        Human-readable sub-type display label, projected from `AccountSubTypeDefinition.displayName`.
-                        Absent when the venue has only one sub-type, or for pass-through values.
+                        Human-readable sub-type display label. Absent when the venue has only one
+                        sub-type, or for pass-through values.
                       minLength: 1
                   required:
                     - balances
@@ -100222,9 +100285,9 @@ components:
                           key + projected raw / label) is carried once at this level; the asset balances live
                           inside `balances`.
 
-                          Pass-through values (HLD §10.30 — venue raws not yet mapped) carry the raw label in
-                          `accountSubType` and have neither `rawAccountSubType` nor `accountSubTypeLabel`,
-                          since there is no config entry to project from.
+                          Pass-through values (venue raws not yet mapped to a normalized sub-type) carry the
+                          raw label in `accountSubType` and have neither `rawAccountSubType` nor
+                          `accountSubTypeLabel`, since there is no mapping to project from.
                         properties:
                           balances:
                             type: array
@@ -100271,21 +100334,19 @@ components:
                                 - asOfDate
                           accountSubType:
                             type: string
-                            description: |-
-                              Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`). Read directly
-                              from the Link DB column populated by the normalized-balances Kafka consumer.
+                            description: Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`).
                             minLength: 1
                           rawAccountSubType:
                             type: string
                             description: |-
-                              Venue-raw sub-type label, projected from `AccountSubTypeDefinition.rawType` for the matching
-                              `normalized` entry in the venue config. Absent for pass-through values.
+                              Venue-raw sub-type label for the matching normalized sub-type. Absent for
+                              pass-through values.
                             minLength: 1
                           accountSubTypeLabel:
                             type: string
                             description: |-
-                              Human-readable sub-type display label, projected from `AccountSubTypeDefinition.displayName`.
-                              Absent when the venue has only one sub-type, or for pass-through values.
+                              Human-readable sub-type display label. Absent when the venue has only one
+                              sub-type, or for pass-through values.
                             minLength: 1
                         required:
                           - balances
@@ -100448,10 +100509,10 @@ components:
       description: |-
         Response for `GET /api/link/v1/enterprises/{enterpriseId}/on-chain-destinations`.
 
-        Mirrors VAS's `GET /on-chain-destinations` — given a `(genericAsset, network)`
-        pair, return the enterprise Link accounts the caller can `link.account.view` that
-        can on-chain-deposit at that asset/network. Has no source, so no hierarchy
-        suppression and no `sourceSupportsOnChainWithdrawal` flag.
+        Given a `(genericAsset, network)` pair, returns the enterprise Link accounts the
+        caller can `link.account.view` that can on-chain-deposit at that asset/network.
+        Has no source, so no hierarchy suppression and no `sourceSupportsOnChainWithdrawal`
+        flag.
 
         Reuses `LinkExternalDestinationRow` from `/transfer-destinations` — on-chain
         destinations are subtype-less in both responses (the receiving venue routes the
@@ -100731,21 +100792,19 @@ components:
                           - asOfDate
                     accountSubType:
                       type: string
-                      description: |-
-                        Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`). Read directly
-                        from the Link DB column populated by the normalized-balances Kafka consumer.
+                      description: Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`).
                       minLength: 1
                     rawAccountSubType:
                       type: string
                       description: |-
-                        Venue-raw sub-type label, projected from `AccountSubTypeDefinition.rawType` for the matching
-                        `normalized` entry in the venue config. Absent for pass-through values.
+                        Venue-raw sub-type label for the matching normalized sub-type. Absent for
+                        pass-through values.
                       minLength: 1
                     accountSubTypeLabel:
                       type: string
                       description: |-
-                        Human-readable sub-type display label, projected from `AccountSubTypeDefinition.displayName`.
-                        Absent when the venue has only one sub-type, or for pass-through values.
+                        Human-readable sub-type display label. Absent when the venue has only one
+                        sub-type, or for pass-through values.
                       minLength: 1
                   required:
                     - balances
@@ -100828,21 +100887,19 @@ components:
                                 - asOfDate
                           accountSubType:
                             type: string
-                            description: |-
-                              Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`). Read directly
-                              from the Link DB column populated by the normalized-balances Kafka consumer.
+                            description: Normalized sub-account-type identifier (e.g. `SPOT`, `MARGIN`, `UNIFIED`).
                             minLength: 1
                           rawAccountSubType:
                             type: string
                             description: |-
-                              Venue-raw sub-type label, projected from `AccountSubTypeDefinition.rawType` for the matching
-                              `normalized` entry in the venue config. Absent for pass-through values.
+                              Venue-raw sub-type label for the matching normalized sub-type. Absent for
+                              pass-through values.
                             minLength: 1
                           accountSubTypeLabel:
                             type: string
                             description: |-
-                              Human-readable sub-type display label, projected from `AccountSubTypeDefinition.displayName`.
-                              Absent when the venue has only one sub-type, or for pass-through values.
+                              Human-readable sub-type display label. Absent when the venue has only one
+                              sub-type, or for pass-through values.
                             minLength: 1
                         required:
                           - balances
@@ -100869,8 +100926,7 @@ components:
       description: |-
         Response for `GET /api/link/v1/enterprises/{enterpriseId}/transfer-destinations`.
 
-        Mirrors VAS's `GET /venues/{venueId}/transfer-destinations` — given a Link-account
-        source, return the destinations it can transfer to.
+        Given a Link-account source, returns the destinations it can transfer to.
 
         Segments:
          - `internalDestinations` — off-chain reachable accounts (same-venue), grouped by
@@ -100879,15 +100935,13 @@ components:
            venue but in a different account hierarchy from the source. Same-hierarchy entries
            are suppressed since they're already covered by the internal segment.
 
-        `sourceSupportsOnChainWithdrawal` is passed through from VAS so BFF can decide whether
-        to include BitGo wallet / external-address destinations alongside the Link-account
-        destinations. It is a property of the source venue, not of the caller's permission
-        scope — always present, even when the caller's `link.account.view` scope yields no
-        Link-account rows.
+        `sourceSupportsOnChainWithdrawal` indicates whether BitGo wallet / external-address
+        destinations can also be used alongside the Link-account destinations returned here.
+        It is a property of the source venue, not of the caller's permission scope — always
+        present, even when the caller's `link.account.view` scope yields no Link-account rows.
 
         Not paginated — the candidate set (enterprise Link accounts at a small number of
-        candidate venues) is bounded, and the upstream VAS call returns the full eligibility
-        list in one response.
+        candidate venues) is bounded and returned in full in one response.
       properties:
         internalDestinations:
           type: object
@@ -101132,10 +101186,10 @@ components:
               accountSubType:
                 type: string
                 description: |-
-                  Normalized sub-account-type for the transfer's owning Link account. Read from the Link DB
-                  column populated by the normalized-transfers Kafka consumer. Absent when the upstream
-                  message omitted a sub-type. For pass-through values (no matching venue-config entry),
-                  this carries the raw venue label and `rawAccountSubType` / `accountSubTypeLabel` are absent.
+                  Normalized sub-account-type for the transfer's owning Link account. Absent when
+                  a sub-type could not be determined. For pass-through values (no matching venue
+                  configuration), this carries the raw venue label and `rawAccountSubType` /
+                  `accountSubTypeLabel` are absent.
                 minLength: 1
               rawAccountSubType:
                 type: string
@@ -101345,6 +101399,106 @@ components:
       required:
         - transfers
         - total
+    V1GetVenuesResponse:
+      title: V1GetVenuesResponse
+      type: object
+      properties:
+        venues:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              name:
+                type: string
+                minLength: 1
+              description:
+                type: string
+                minLength: 1
+              status:
+                $ref: '#/components/schemas/VenueStatus'
+              supportsSubAccounts:
+                type: boolean
+              supportsWhitelisting:
+                type: boolean
+              supportedCredentialAccessLevels:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    accountType:
+                      $ref: '#/components/schemas/AccountType4'
+                    accessLevels:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          level:
+                            $ref: '#/components/schemas/AccessLevel'
+                          label:
+                            type: string
+                            minLength: 1
+                          description:
+                            type: string
+                            minLength: 1
+                        required:
+                          - level
+                          - label
+                          - description
+                    connectionCredentials:
+                      type: array
+                      items:
+                        type: object
+                        properties:
+                          name:
+                            type: string
+                            minLength: 1
+                          label:
+                            type: string
+                            minLength: 1
+                          description:
+                            type: string
+                            minLength: 1
+                          required:
+                            type: boolean
+                        required:
+                          - name
+                          - label
+                          - description
+                          - required
+                  required:
+                    - accountType
+                    - accessLevels
+                    - connectionCredentials
+              supportedAccountSubTypes:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    normalized:
+                      type: string
+                      minLength: 1
+                    displayName:
+                      type: string
+                      minLength: 1
+                    rawType:
+                      type: string
+                  required:
+                    - normalized
+                    - displayName
+            required:
+              - id
+              - name
+              - description
+              - status
+              - supportsSubAccounts
+              - supportsWhitelisting
+              - supportedCredentialAccessLevels
+              - supportedAccountSubTypes
+      required:
+        - venues
     V1GlobalListingResponse:
       title: V1GlobalListingResponse
       type: object
@@ -103002,10 +103156,10 @@ components:
         accountSubType:
           type: string
           description: |-
-            Normalized sub-account-type for the transfer's owning Link account. Read from the Link DB
-            column populated by the normalized-transfers Kafka consumer. Absent when the upstream
-            message omitted a sub-type. For pass-through values (no matching venue-config entry),
-            this carries the raw venue label and `rawAccountSubType` / `accountSubTypeLabel` are absent.
+            Normalized sub-account-type for the transfer's owning Link account. Absent when
+            a sub-type could not be determined. For pass-through values (no matching venue
+            configuration), this carries the raw venue label and `rawAccountSubType` /
+            `accountSubTypeLabel` are absent.
           minLength: 1
         rawAccountSubType:
           type: string
@@ -103408,6 +103562,12 @@ components:
           type: boolean
           description: true, if multiple values can be provided, i.e. as a list of values. When false only one value can be provided, i.e. a list with more than one element will be rejected.
           example: 'false'
+    VenueStatus:
+      title: VenueStatus
+      type: string
+      enum:
+        - active
+        - inactive
     VerificationState:
       title: VerificationState
       type: string
