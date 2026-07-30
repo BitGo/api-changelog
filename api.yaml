@@ -13570,6 +13570,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
         '500':
           description: Internal Server Error
           content:
@@ -101425,6 +101431,13 @@ components:
                 type: boolean
               supportsWhitelisting:
                 type: boolean
+              supportsExternalDeposits:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - main
+                    - sub
               supportedCredentialAccessLevels:
                 type: array
                 items:
@@ -101497,6 +101510,7 @@ components:
               - status
               - supportsSubAccounts
               - supportsWhitelisting
+              - supportsExternalDeposits
               - supportedCredentialAccessLevels
               - supportedAccountSubTypes
       required:
