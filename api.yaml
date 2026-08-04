@@ -77729,6 +77729,16 @@ components:
         error: backend:common:inUse key=clientOrderId
         errorName: backend:common:inUse
         reqId: unk-nqo97l23l2ofpvgkbb8z
+    OrderFee:
+      title: OrderFee
+      type: object
+      properties:
+        basisPoints:
+          type: number
+          description: Fee charged on the order, in basis points. 0 when no fee is charged.
+          example: 10
+      required:
+        - basisPoints
     OrderHistoryBase:
       title: OrderHistoryBase
       type: object
@@ -78096,12 +78106,17 @@ components:
             - wallet
           description: Type of destination for the order
           example: go_account
+        fee:
+          allOf:
+            - $ref: '#/components/schemas/OrderFee'
+          description: Fee applied to the order.
       required:
         - fromAssetId
         - fromAmount
         - toAssetId
         - toAmount
         - destinationType
+        - fee
     OrderStatus:
       type: string
       enum:
@@ -108229,8 +108244,10 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      bearerFormat: Access Token
       description: BitGo access token
+x-governance:
+  version: '1.0'
 x-tagGroups:
   - name: API reference
     tags:
