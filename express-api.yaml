@@ -4104,7 +4104,7 @@ components:
           description: The type of wallet, defined by key management and signing protocols. 'hot' and 'cold' are both self-managed wallets. If absent, defaults to 'hot'. 'trading' for Go Account wallets.
         passphrase:
           type: string
-          description: Passphrase to be used to encrypt the user key on the wallet
+          description: 'Passphrase to be used to encrypt the user key on the wallet. Optional for Go Account (trading) wallets created with `userKeySigningRequired: false` (passwordless); when supplied for a Go Account, `passcodeEncryptionCode` must also be supplied.'
         userKey:
           type: string
           description: User provided public key
@@ -4124,7 +4124,7 @@ components:
           description: Flag for disabling wallet transaction notifications
         passcodeEncryptionCode:
           type: string
-          description: The passphrase used for decrypting the encrypted wallet passphrase during wallet recovery
+          description: 'The passphrase used for decrypting the encrypted wallet passphrase during wallet recovery. Optional for Go Account (trading) wallets created with `userKeySigningRequired: false` (passwordless); when supplied for a Go Account, `passphrase` must also be supplied.'
         coldDerivationSeed:
           type: string
           description: Seed that derives an extended user key or common keychain for a cold wallet.
@@ -4150,6 +4150,9 @@ components:
         commonKeychain:
           type: string
           description: Common keychain for self-managed cold MPC wallets.
+        userKeySigningRequired:
+          type: boolean
+          description: OFC only. When false, BitGo signs OFC payloads on behalf of the user without requiring a user-key signature. Defaults to true (user must sign).
       required:
         - label
         - enterprise

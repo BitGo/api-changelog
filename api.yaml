@@ -35835,6 +35835,470 @@ paths:
               schema:
                 type: object
                 properties: {}
+  /api/stablecoin/v1/issuer/compliance-request-settings:
+    get:
+      summary: Get Compliance Request Settings
+      description: |-
+        Retrieves the compliance request settings (capability matrix) for each asset+chain pair of a
+        base asset.
+      operationId: stablecoin.v1.issuer.compliance-request-settings.get
+      tags:
+        - Stablecoin
+      x-internal: false
+      parameters:
+        - name: baseAsset
+          description: Base asset to fetch compliance request settings for
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - gousd
+              - usd1
+              - sofid
+              - cusd
+              - fyusd
+              - qxmp
+              - scaasacme
+            example: gousd
+        - name: chain
+          description: Optional chain to narrow the results to a single asset+chain pair
+          in: query
+          schema:
+            type: string
+            example: eth
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceRequestSettingsListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/stablecoin/v1/issuer/compliance-requests:
+    get:
+      summary: List Compliance Requests (Issuer)
+      description: |-
+        Returns a paginated list of compliance requests for the authenticated issuer's assets.
+        List rows omit complianceRequestHistory — use the get-by-id endpoint for the full audit trail.
+      operationId: stablecoin.v1.issuer.compliance-requests.get
+      tags:
+        - Stablecoin
+      x-internal: false
+      parameters:
+        - name: status
+          description: Filter by one or more lifecycle statuses
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ComplianceRequestStatusCodec'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - created
+                    - pending_approval
+                    - approved
+                    - confirmed
+                    - rejected
+                    - cancelled
+                    - failed
+            example: pending_approval
+        - name: sortStatusFirst
+          description: |-
+            Sort requests matching one or more statuses to the top of the results, ahead of the rest
+            (which remain sorted by date)
+          in: query
+          schema:
+            oneOf:
+              - $ref: '#/components/schemas/ComplianceRequestStatusCodec'
+              - type: array
+                items:
+                  type: string
+                  enum:
+                    - created
+                    - pending_approval
+                    - approved
+                    - confirmed
+                    - rejected
+                    - cancelled
+                    - failed
+            example: pending_approval
+        - name: type
+          description: Filter by compliance operation type
+          in: query
+          schema:
+            type: string
+            enum:
+              - freeze
+              - unfreeze
+            example: freeze
+        - name: token
+          description: Filter by token identifier (chain:baseAsset, e.g. eth:gousd)
+          in: query
+          schema:
+            type: string
+            example: eth:gousd
+            minLength: 1
+        - name: assetId
+          description: Filter by asset identifier
+          in: query
+          schema:
+            type: string
+            example: 0438163a-d236-4865-978e-02ee7c2285b7
+            format: uuid
+            title: uuid
+        - name: baseAsset
+          description: Filter by base stablecoin symbol
+          in: query
+          schema:
+            type: string
+            enum:
+              - gousd
+              - usd1
+              - sofid
+              - cusd
+              - fyusd
+              - qxmp
+              - scaasacme
+            example: usd1
+        - name: chain
+          description: Filter by blockchain network
+          in: query
+          schema:
+            type: string
+            example: eth
+            minLength: 1
+        - name: address
+          description: Filter by targeted blockchain address
+          in: query
+          schema:
+            type: string
+            example: '0xd0898d88e2c08b2a95e19441e412c0a708a8bd43'
+            minLength: 1
+        - name: enterpriseId
+          description: Filter by enterprise identifier
+          in: query
+          schema:
+            type: string
+            example: 6437d9f07d6a87000613e6c06e4218d3
+            minLength: 1
+        - name: fromDate
+          description: Include only requests created on or after this timestamp
+          in: query
+          schema:
+            type: string
+            example: '2025-01-01T00:00:00.000Z'
+            format: date-time
+            title: ISO Date String
+        - name: toDate
+          description: Include only requests created on or before this timestamp
+          in: query
+          schema:
+            type: string
+            example: '2025-12-31T23:59:59.999Z'
+            format: date-time
+            title: ISO Date String
+        - name: page
+          description: 1-based page number
+          in: query
+          schema:
+            type: string
+            example: '1'
+            format: number
+        - name: pageSize
+          description: Number of results per page (1–100)
+          in: query
+          schema:
+            type: string
+            example: '25'
+            format: number
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/IssuerComplianceRequestListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+    post:
+      summary: Create Compliance Request (Issuer)
+      description: Submits a freeze or unfreeze compliance request for an address.
+      operationId: stablecoin.v1.issuer.compliance-requests.post
+      tags:
+        - Stablecoin
+      x-internal: false
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: Request body for creating a compliance request (issuer-initiated).
+              properties:
+                address:
+                  type: string
+                  description: Blockchain address targeted by this request
+                  example: '0xd0898d88e2c08b2a95e19441e412c0a708a8bd43'
+                  minLength: 1
+                addressLabel:
+                  type: string
+                  description: Human-readable label for the targeted address — required for all new requests
+                  example: Hot Wallet A
+                  minLength: 1
+                type:
+                  type: string
+                  enum:
+                    - freeze
+                    - unfreeze
+                  description: Type of compliance operation
+                  example: freeze
+                assetId:
+                  type: string
+                  description: Asset identifier
+                  example: 0438163a-d236-4865-978e-02ee7c2285b7
+                  format: uuid
+                  title: uuid
+                comments:
+                  type: string
+                  description: Optional notes about the request
+                  example: Suspicious activity detected
+                  minLength: 1
+              required:
+                - address
+                - addressLabel
+                - type
+                - assetId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceRequestResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/stablecoin/v1/issuer/compliance-requests/{id}:
+    get:
+      summary: Get Issuer's Compliance Request by ID
+      description: |-
+        Returns a single compliance request with its full chronological history for the authenticated
+        issuer's assets. Actor identifiers are masked for issuer-facing callers. Responds 404 when the
+        request does not exist or its asset falls outside the issuer's accessible scope.
+      operationId: stablecoin.v1.issuer.compliance-requests.byId.get
+      tags:
+        - Stablecoin
+      x-internal: false
+      parameters:
+        - name: id
+          description: Compliance request identifier
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 177dc9ed-64a7-4f68-9ba5-8d5b55fe5878
+            format: uuid
+            title: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceRequestResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+  /api/stablecoin/v1/issuer/compliance-requests/{id}/cancel:
+    patch:
+      summary: Cancel Compliance Request (Issuer)
+      description: |-
+        Cancels an active compliance request. Only requests in `created` or `pending_approval` status
+        may be cancelled. If a pending approval exists in the Wallet Platform it is rejected as part
+        of the cancellation.
+      operationId: stablecoin.v1.issuer.compliance-requests.cancel.patch
+      tags:
+        - Stablecoin
+      x-internal: false
+      parameters:
+        - name: id
+          description: Compliance request identifier
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 177dc9ed-64a7-4f68-9ba5-8d5b55fe5878
+            format: uuid
+            title: uuid
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ComplianceRequestResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
   /api/stablecoin/v1/issuer/orders-summary:
     get:
       summary: Get orders summary for issuer (across all enterprises)
@@ -63224,6 +63688,249 @@ components:
       enum:
         - EURegulated
         - EUNonRegulated
+    ComplianceRequestResponse:
+      title: ComplianceRequestResponse
+      type: object
+      description: Detail-view shape — extends ComplianceRequestSummary with the full audit trail.
+      properties:
+        id:
+          type: string
+          description: Unique identifier for the compliance request
+          example: 177dc9ed-64a7-4f68-9ba5-8d5b55fe5878
+          minLength: 1
+          format: uuid
+        type:
+          type: string
+          enum:
+            - freeze
+            - unfreeze
+          description: Type of compliance operation
+          example: freeze
+        status:
+          type: string
+          enum:
+            - created
+            - pending_approval
+            - approved
+            - confirmed
+            - rejected
+            - cancelled
+            - failed
+          description: Current lifecycle status
+          example: pending_approval
+        assetId:
+          type: string
+          description: ID of the asset this request applies to
+          example: 0438163a-d236-4865-978e-02ee7c2285b7
+          minLength: 1
+          format: uuid
+        enterpriseId:
+          type: string
+          description: Enterprise ID of the requester
+          example: 6437d9f07d6a87000613e6c06e4218d3
+          minLength: 1
+        requestSource:
+          type: string
+          enum:
+            - issuer
+            - bitgo
+          description: Source that originated this compliance request; trust-initiated requests are surfaced as 'bitgo'
+          example: issuer
+        baseAsset:
+          type: string
+          enum:
+            - gousd
+            - usd1
+            - sofid
+            - cusd
+            - fyusd
+            - qxmp
+            - scaasacme
+          description: Base stablecoin symbol for the asset
+          example: usd1
+        chain:
+          type: string
+          description: Blockchain network for the asset
+          example: eth
+          minLength: 1
+        address:
+          type: string
+          description: Blockchain address targeted by this request
+          example: '0xd0898d88e2c08b2a95e19441e412c0a708a8bd43'
+          minLength: 1
+        addressLabel:
+          type: string
+          description: Human-readable label for the targeted address
+          example: Hot Wallet A
+          minLength: 1
+        createdAt:
+          type: string
+          description: Timestamp when the request was created
+          example: '2025-06-23T07:28:17.042Z'
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          description: Timestamp when the request was last updated
+          example: '2025-06-23T07:28:17.042Z'
+          format: date-time
+          title: ISO Date String
+        userId:
+          type: string
+          description: ID of the user who created the request; omitted when the maker is bitgo-source on issuer-facing responses
+          example: 6437d9f07d6a87000613e6c06e4218d3
+          minLength: 1
+        comments:
+          type: string
+          description: Optional notes about the request
+          example: Suspicious activity detected
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: Platform pending-approval ID, present after the request is submitted for approval
+          example: pa_123
+          minLength: 1
+        bitgoTransferId:
+          type: string
+          description: BitGo transfer ID, present after the transaction is broadcast
+          example: 6437d9f07d6a87000613e6c06e4218d3
+          minLength: 1
+        transactionHash:
+          type: string
+          description: On-chain transaction hash, present after confirmation
+          example: '0xabcdef1234567890'
+          minLength: 1
+        complianceRequestHistory:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                type: string
+                enum:
+                  - created
+                  - pending_approval
+                  - approved
+                  - confirmed
+                  - rejected
+                  - cancelled
+                  - failed
+                description: Lifecycle status at the time of this history event
+                example: pending_approval
+              actorSource:
+                type: string
+                enum:
+                  - issuer
+                  - bitgo
+                  - system
+                description: Source that performed this action; trust-initiated actions are surfaced as 'bitgo'
+                example: bitgo
+              timestamp:
+                type: string
+                description: Timestamp when this transition occurred
+                example: '2025-06-23T07:28:17.042Z'
+                format: date-time
+                title: ISO Date String
+              actorId:
+                type: string
+                description: ID of the user who performed the action; omitted for system entries and masked for bitgo entries on issuer-facing responses
+                example: 6437d9f07d6a87000613e6c06e4218d3
+                minLength: 1
+            required:
+              - status
+              - actorSource
+              - timestamp
+            description: Ordered audit trail of status transitions, chronological ascending
+      required:
+        - id
+        - type
+        - status
+        - assetId
+        - enterpriseId
+        - requestSource
+        - baseAsset
+        - chain
+        - address
+        - addressLabel
+        - createdAt
+        - updatedAt
+        - complianceRequestHistory
+    ComplianceRequestSettings:
+      title: ComplianceRequestSettings
+      type: object
+      properties:
+        freeze:
+          type: boolean
+          description: Whether the asset+chain pair supports freezing addresses
+          example: true
+        unfreeze:
+          type: boolean
+          description: Whether the asset+chain pair supports unfreezing addresses
+          example: true
+      required:
+        - freeze
+        - unfreeze
+    ComplianceRequestSettingsListResponse:
+      title: ComplianceRequestSettingsListResponse
+      type: object
+      properties:
+        assets:
+          type: array
+          items:
+            type: object
+            properties:
+              assetId:
+                type: string
+                description: Asset identifier
+                example: 0438163a-d236-4865-978e-02ee7c2285b7
+                minLength: 1
+                format: uuid
+              token:
+                type: string
+                description: Token symbol
+                example: eth:gousd
+                minLength: 1
+              chain:
+                type: string
+                description: Blockchain network identifier
+                example: eth
+                minLength: 1
+              baseAsset:
+                type: string
+                enum:
+                  - gousd
+                  - usd1
+                  - sofid
+                  - cusd
+                  - fyusd
+                  - qxmp
+                  - scaasacme
+                description: Base asset
+                example: gousd
+              complianceRequestSettings:
+                allOf:
+                  - $ref: '#/components/schemas/ComplianceRequestSettings'
+                description: Compliance request actions supported for this asset+chain pair
+            required:
+              - assetId
+              - token
+              - chain
+              - baseAsset
+              - complianceRequestSettings
+            description: List of asset+chain configurations with their compliance request settings
+      required:
+        - assets
+    ComplianceRequestStatusCodec:
+      title: ComplianceRequestStatusCodec
+      type: string
+      enum:
+        - created
+        - pending_approval
+        - approved
+        - confirmed
+        - rejected
+        - cancelled
+        - failed
     Condition:
       title: Condition
       oneOf:
@@ -74329,6 +75036,142 @@ components:
           properties: {}
         - $ref: '#/components/schemas/IpiFtsAccountResponseProps'
         - $ref: '#/components/schemas/BankAccountResponseProps'
+    IssuerComplianceRequestListResponse:
+      title: IssuerComplianceRequestListResponse
+      type: object
+      properties:
+        requests:
+          type: array
+          items:
+            type: object
+            description: Paginated list of compliance requests (no history on list rows)
+            properties:
+              id:
+                type: string
+                description: Unique identifier for the compliance request
+                example: 177dc9ed-64a7-4f68-9ba5-8d5b55fe5878
+                minLength: 1
+                format: uuid
+              type:
+                type: string
+                enum:
+                  - freeze
+                  - unfreeze
+                description: Type of compliance operation
+                example: freeze
+              status:
+                type: string
+                enum:
+                  - created
+                  - pending_approval
+                  - approved
+                  - confirmed
+                  - rejected
+                  - cancelled
+                  - failed
+                description: Current lifecycle status
+                example: pending_approval
+              assetId:
+                type: string
+                description: ID of the asset this request applies to
+                example: 0438163a-d236-4865-978e-02ee7c2285b7
+                minLength: 1
+                format: uuid
+              enterpriseId:
+                type: string
+                description: Enterprise ID of the requester
+                example: 6437d9f07d6a87000613e6c06e4218d3
+                minLength: 1
+              requestSource:
+                type: string
+                enum:
+                  - issuer
+                  - bitgo
+                description: Source that originated this compliance request; trust-initiated requests are surfaced as 'bitgo'
+                example: issuer
+              baseAsset:
+                type: string
+                enum:
+                  - gousd
+                  - usd1
+                  - sofid
+                  - cusd
+                  - fyusd
+                  - qxmp
+                  - scaasacme
+                description: Base stablecoin symbol for the asset
+                example: usd1
+              chain:
+                type: string
+                description: Blockchain network for the asset
+                example: eth
+                minLength: 1
+              address:
+                type: string
+                description: Blockchain address targeted by this request
+                example: '0xd0898d88e2c08b2a95e19441e412c0a708a8bd43'
+                minLength: 1
+              addressLabel:
+                type: string
+                description: Human-readable label for the targeted address
+                example: Hot Wallet A
+                minLength: 1
+              createdAt:
+                type: string
+                description: Timestamp when the request was created
+                example: '2025-06-23T07:28:17.042Z'
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                description: Timestamp when the request was last updated
+                example: '2025-06-23T07:28:17.042Z'
+                format: date-time
+                title: ISO Date String
+              userId:
+                type: string
+                description: ID of the user who created the request; omitted when the maker is bitgo-source on issuer-facing responses
+                example: 6437d9f07d6a87000613e6c06e4218d3
+                minLength: 1
+              comments:
+                type: string
+                description: Optional notes about the request
+                example: Suspicious activity detected
+                minLength: 1
+              pendingApprovalId:
+                type: string
+                description: Platform pending-approval ID, present after the request is submitted for approval
+                example: pa_123
+                minLength: 1
+              bitgoTransferId:
+                type: string
+                description: BitGo transfer ID, present after the transaction is broadcast
+                example: 6437d9f07d6a87000613e6c06e4218d3
+                minLength: 1
+              transactionHash:
+                type: string
+                description: On-chain transaction hash, present after confirmation
+                example: '0xabcdef1234567890'
+                minLength: 1
+            required:
+              - id
+              - type
+              - status
+              - assetId
+              - enterpriseId
+              - requestSource
+              - baseAsset
+              - chain
+              - address
+              - addressLabel
+              - createdAt
+              - updatedAt
+        total:
+          type: number
+          description: Total number of matching requests across all pages
+      required:
+        - requests
+        - total
     IssuerOrderResponseBase:
       title: IssuerOrderResponseBase
       allOf:
