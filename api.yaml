@@ -764,79 +764,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/pendingapprovals/{approvalId}:
-    put:
-      tags:
-        - Pending approval
-      summary: Update pending approval
-      description: |
-        Updates the state of a pending approval to `approved` or `rejected`.
-        You can manage pending approvals programmatically by API or with the
-        BigGo web UI. Ensure your authentication token has the proper scope.
-        When creating an access token in the web UI, check the permission,
-        "Update Pending Approvals" (under "Account Settings" &gt; "Developer
-        Options" &gt; "Access Tokens").
-
-        BitGo recommends that you create a webhook policy so that you can
-        automate approving and rejecting transactions.
-      operationId: v2.approval.update
-      parameters:
-        - $ref: '#/components/parameters/pathApprovalId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                otp:
-                  type: string
-                state:
-                  type: string
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformPendingApproval'
-        '202':
-          description: Accepted
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformPendingApproval'
-    get:
-      summary: Get pending approval
-      operationId: v2.approval.get
-      tags:
-        - Pending approval
-      parameters:
-        - name: expandAddressLabels
-          description: If true, adds "addressLabels" to each returned pending approval associated with recipient's addresses
-          in: query
-          schema:
-            type: boolean
-        - name: approvalId
-          description: ''
-          in: path
-          required: true
-          schema:
-            type: string
-            example: 59cd72485007a239fb00282ed480da1f
-            pattern: ^[0-9a-f]{32}$
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PendingApproval'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/user/session:
     get:
       summary: Get session
@@ -38990,6 +38917,7 @@ paths:
                 Combines BuildParams with send-specific fields.
               properties:
                 type:
+                  nullable: true
                   type: string
                   description: |-
                     Required for transactions from MPC wallets. "acceleration" speeds up transactions with a certain nonce by adjusting the gas setting.
@@ -39107,13 +39035,6 @@ paths:
                     With a `sequenceId` you can easily reference transfers and transactions—for example, to safely retry sending.
                     Because the system only confirms one send request per `sequenceId` (and fails all subsequent attempts), you can retry sending without the risk of double spending.
                     The `sequenceId` is only visible to users on the wallet and is not shared publicly.
-                nonce:
-                  type: string
-                  description: |-
-                    (DOT only) A nonce ID is a number used to protect private communications by preventing replay attacks.
-                    This is an advanced option where users can manually input a new nonce value in order to correct or fill in a missing nonce ID value.
-                  example: '2000000'
-                  pattern: ^-?\d+$
                 noSplitChange:
                   type: boolean
                   default: false
@@ -39156,11 +39077,10 @@ paths:
                     type:
                       type: string
                     value:
+                      nullable: true
                       type: string
-                  required:
-                    - type
-                    - value
                 comment:
+                  nullable: true
                   type: string
                   description: An optional memo for the transaction.
                   maxLength: 256
@@ -39194,6 +39114,12 @@ paths:
                   description: (ALGO/TEZOS only) Consolidation ID of this consolidation transaction.
                   example: 59cd72485007a239fb00282ed480da1f
                   pattern: ^[0-9a-f]{32}$
+                invoice:
+                  type: string
+                  description: |-
+                    Lightning invoice to pay. Accepted by the controller but not forwarded to coin-level
+                    build code (absent from buildParamsWhitelist) — included here only to match the shape
+                    clients actually send.
                 lastLedgerSequence:
                   type: number
                   description: (XRP only) Absolute max ledger the transaction should be accepted in, whereafter it will be rejected
@@ -39215,9 +39141,6 @@ paths:
                   items:
                     type: string
                     description: The list of transactions to accelerate using Replace-By-Fee (RBF) for UTXO coins (currently accelerating only one tx is supported).
-                isReplaceableByFee:
-                  type: boolean
-                  description: It is used to mark an UTXO transaction eligible for Replace-By-Fee (RBF) later.
                 maxFee:
                   type: number
                   description: |-
@@ -39301,13 +39224,12 @@ paths:
                   required:
                     - expireTime
                 halfSigned:
-                  type: object
+                  nullable: true
+                  allOf:
+                    - $ref: '#/components/schemas/HalfSigned'
                   description: The half-signed transaction. The request must include this or a txHex.
-                  properties:
-                    txHex:
-                      type: string
-                      description: The half-signed transaction hex.
                 txHex:
+                  nullable: true
                   type: string
                   description: The half-signed, serialized transaction hex. Alternative to sending halfSigned.
                 txRequestId:
@@ -39324,6 +39246,44 @@ paths:
                     description: A list of public ids of users that should do the video id verification for the transaction that is being sent or initiated.
                     pattern: ^[0-9a-f]{32}$
                     example: 59cd72485007a239fb00282ed480da1f
+                recipients:
+                  type: array
+                  items:
+                    title: JSON
+                    description: |-
+                      The recipients for this transaction. Required by policy handling (Lightning invoice check,
+                      enabletoken detection) and passed through `buildParamsWhitelist` to coin-level build code.
+                      Each entry is an object with at minimum `address` (string) and `amount` (number or string).
+                isTestTransaction:
+                  type: boolean
+                  description: |-
+                    When true, gates `validateTestTransaction()` and skips video/liveness verification checks.
+                    Passed through `buildParamsWhitelist` to coin-level build code.
+                previewPendingTxs:
+                  type: boolean
+                  description: |-
+                    When present, overrides automatic preview of pending transactions during `validateAndParseTransaction`.
+                    Auto-injected by the controller when a `pendingApproval` exists.
+                goStakingRequestId:
+                  type: string
+                  description: |-
+                    GO Staking request identifier. Validated against wallet type before pipeline entry.
+                    Must be present for internal staking requests on trading wallets.
+                stakingParams:
+                  type: object
+                  description: |-
+                    Staking metadata passed to `createTransferRecord`. Contains `requestId` and `actionType`;
+                    distinct from `stakingOptions` (which holds coin-level staking parameters).
+                  properties:
+                    actionType:
+                      type: string
+                    requestId:
+                      type: string
+                attestation:
+                  description: |-
+                    WebAuthn attestation payload provided at signing time. Used by the controller for
+                    post-send non-blocking `verifyAttestation` capture. Not passed through `buildParamsWhitelist`.
+                  title: JSON
       responses:
         '200':
           description: OK
@@ -41030,6 +40990,7 @@ paths:
               - accessToken
               - policyBalanceChange
               - reversal
+              - mintOrder
         - name: prevId
           in: query
           schema:
@@ -43210,6 +43171,7 @@ paths:
               - kycResult
               - policyBalanceChange
               - reversal
+              - mintOrder
               - transaction_finality_on_l1
               - stuckTx
               - tradeOrder
@@ -43217,6 +43179,7 @@ paths:
               - twoStepTransfer
               - twoStepDeposit
               - twoStepWithdrawal
+              - endInvestorOnboardingInvite
               - pendingDecryption
               - whitelistApproved
               - whitelistRejected
@@ -43464,6 +43427,7 @@ paths:
               - wallet
               - organization
               - global
+              - safe
         - name: coin
           description: Filter by coin
           in: query
@@ -43576,6 +43540,94 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApprovalListResponse'
+  /api/v2/pendingapprovals/{approvalId}:
+    get:
+      summary: Get pending approval
+      operationId: v2.approval.get
+      tags:
+        - Pending approval
+      parameters:
+        - name: expandAddressLabels
+          description: If true, adds "addressLabels" to each returned pending approval associated with recipient's addresses
+          in: query
+          schema:
+            type: boolean
+        - name: approvalId
+          description: ''
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    put:
+      summary: Update pending approval
+      description: |-
+        Updates the state of a pending approval to `approved` or `rejected`.
+        You can manage pending approvals programmatically by API or with the
+        BitGo web UI. Ensure your authentication token has the proper scope.
+        When creating an access token in the web UI, check the permission,
+        "Update Pending Approvals" (under "Account Settings" > "Developer
+        Options" > "Access Tokens").
+
+        BitGo recommends that you create a webhook policy so that you can
+        automate approving and rejecting transactions.
+      operationId: v2.approval.update
+      tags:
+        - Pending approval
+      x-internal: false
+      parameters:
+        - name: approvalId
+          description: The pending approval ID
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for updating a pending approval.
+                Matches platform.yaml: otp and state (both strings).
+              properties:
+                otp:
+                  type: string
+                  description: Second factor authentication token
+                state:
+                  type: string
+                  description: Pending approval state to apply (e.g. approved or rejected)
+              required:
+                - state
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PendingApproval'
   /api/v2/pendingapprovals/{approvalId}/transfer:
     get:
       summary: Get Transfer By Approval Id
@@ -43600,6 +43652,12 @@ paths:
                 $ref: '#/components/schemas/GetTransferByApprovalIdResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -43776,6 +43834,26 @@ paths:
                       - type
                       - action
                       - condition
+                batch:
+                  type: object
+                  description: Set when this request is one of several splitting a single large submission
+                  properties:
+                    groupId:
+                      allOf:
+                        - $ref: '#/components/schemas/BatchGroupId'
+                      description: Client-generated id (uuid) shared by every request of one split submission
+                    index:
+                      allOf:
+                        - $ref: '#/components/schemas/BatchPosition'
+                      description: 1-based position of this request within the group
+                    total:
+                      allOf:
+                        - $ref: '#/components/schemas/BatchPosition'
+                      description: Total number of requests in the group
+                  required:
+                    - groupId
+                    - index
+                    - total
               required:
                 - updates
       responses:
@@ -46198,7 +46276,7 @@ paths:
       summary: Confirm fiat withdrawal
       description: |-
         Approve or reject a pending fiat withdrawal. If approving, the `state` updates to `pendingApproval`,
-        enabling BitGo Trust to wire transfer the funds. If rejecting, the `state` updates to `rejected`,
+        enabling BitGo Trust to transfer the funds. If rejecting, the `state` updates to `rejected`,
         canceling the pending withdrawal.
       operationId: v2.wallet.fiatWithdrawals.confirm
       tags:
@@ -46832,6 +46910,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/potentialStuckTxs:
     get:
       summary: List stuck transactions for EVM keyring
@@ -47279,6 +47363,27 @@ paths:
                 preview:
                   type: boolean
                   description: When set to true, the transaction request is returned without being stored in the DB.
+                attestation:
+                  type: object
+                  description: WebAuthn assertion authorizing this request in place of an unlock session.
+                  properties:
+                    authenticatorData:
+                      type: string
+                      description: WebAuthn authenticatorData (base64url)
+                    clientDataJSON:
+                      type: string
+                      description: WebAuthn clientDataJSON (base64url)
+                    credentialId:
+                      type: string
+                      description: Passkey credential ID used to locate the registered authenticator public key
+                    signature:
+                      type: string
+                      description: WebAuthn assertion signature (base64url)
+                  required:
+                    - authenticatorData
+                    - clientDataJSON
+                    - credentialId
+                    - signature
               required:
                 - intent
       responses:
@@ -54691,12 +54796,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/ConsolidationCoins'
-    pathApprovalId:
-      name: approvalId
-      in: path
-      required: true
-      schema:
-        $ref: '#/components/schemas/Id'
     pathCoin:
       name: coin
       in: path
@@ -57298,6 +57397,9 @@ components:
                 type: string
                 example: 59cd72485007a239fb00282ed480da1f
                 pattern: ^[0-9a-f]{32}$
+              safeId:
+                type: string
+                description: The safe the pending approval is scoped to
               organizationName:
                 type: string
                 description: The organization name
@@ -57345,6 +57447,7 @@ components:
                   - wallet
                   - organization
                   - global
+                  - safe
                 description: What kind of entity the Pending Approval is tied to
               userIds:
                 type: array
@@ -59804,12 +59907,47 @@ components:
               - user
               - date
               - version
+        otcServicesAgreement:
+          type: array
+          items:
+            type: object
+            description: OTC services agreement schema for enterprise users.
+            properties:
+              user:
+                type: string
+                description: User who accepted the agreement
+              date:
+                oneOf:
+                  - type: string
+                  - type: string
+                    format: date-time
+                    title: ISO Date String
+                  - type: string
+                    format: date
+                    title: Date String
+                description: Date when the agreement was accepted
+              version:
+                type: number
+                description: Version number of the agreement
+              ip:
+                type: string
+                description: IP address of the user
+              bitgoOrg:
+                allOf:
+                  - $ref: '#/components/schemas/BitgoOrg'
+                description: BitGo Organization related to this OTC services agreement
+            required:
+              - user
+              - date
+              - version
         accountType:
           allOf:
             - $ref: '#/components/schemas/AccountType'
           description: Indicates which type of KYC process the enterprise has to complete
         businessModel:
-          $ref: '#/components/schemas/BusinessModel'
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/BusinessModel'
         complianceModel:
           allOf:
             - $ref: '#/components/schemas/ComplianceModel'
@@ -60112,6 +60250,7 @@ components:
               - DeFi
               - Cold Self-Custody
               - Go Network
+              - Go Network - Off Exchange Settlement - OKX
               - Staking
               - Trade
               - Hot Self-Custody
@@ -60576,6 +60715,29 @@ components:
           type: boolean
         tokenConsolidationState: {}
         tokenAddress: {}
+    BatchGroupId:
+      title: BatchGroupId
+      type: string
+      description: |-
+        Client-generated id shared by every request of one split submission.
+
+        Bounded (non-empty, at most {@link MAX_BATCH_GROUP_ID_LENGTH} characters, alphanumeric
+        plus `_`/`-`) because this value is persisted verbatim on the PendingApproval document
+        and on the audit log entry (`ctx.getAudit().setData('batchGroupId', ...)`) — an
+        unbounded or arbitrary-content string would let a caller store a large or
+        control-character-laden value in both places. The restricted charset still admits a
+        UUID v4, which is what clients are expected to send.
+    BatchPosition:
+      title: BatchPosition
+      type: number
+      description: |-
+        Whole-number position or count within a batch.
+
+        Declared here rather than reusing `t.Int` because the OpenAPI generator cannot derive
+        encode/decode types for codecs branded inside io-ts's own declaration file, which fails
+        the generated-spec CI check. Only integrality is enforced at the codec boundary; the
+        `1 <= index <= total` relation stays in the controller so the failure is a descriptive
+        400 rather than a generic decode error.
     BeraDelegateIntent:
       title: Bera Delegate Intent
       allOf:
@@ -68443,6 +68605,7 @@ components:
         - accessToken
         - policyBalanceChange
         - reversal
+        - mintOrder
     EnterprisesPaginatedResponse:
       title: EnterprisesPaginatedResponse
       type: object
@@ -72525,15 +72688,15 @@ components:
                             allOf:
                               - type: object
                                 properties:
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
                                   privateShareProof:
                                     type: string
                                     description: The private share proof
                                   publicShare:
                                     type: string
                                     description: The public share
-                                  vssProof:
-                                    type: string
-                                    description: The VSS proof of the signature share
                               - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                         commitmentShares:
                           type: array
@@ -72573,21 +72736,24 @@ components:
                           allOf:
                             - $ref: '#/components/schemas/TransactionState'
                           description: The current state of the message
+                        messageRaw:
+                          type: string
+                          description: The raw message to be signed
                         signatureShares:
                           type: array
                           items:
                             allOf:
                               - type: object
                                 properties:
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
                                   privateShareProof:
                                     type: string
                                     description: The private share proof
                                   publicShare:
                                     type: string
                                     description: The public share
-                                  vssProof:
-                                    type: string
-                                    description: The VSS proof of the signature share
                               - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                             description: Signature shares for the message
                         privateSignatureShares:
@@ -72596,15 +72762,15 @@ components:
                             allOf:
                               - type: object
                                 properties:
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
                                   privateShareProof:
                                     type: string
                                     description: The private share proof
                                   publicShare:
                                     type: string
                                     description: The public share
-                                  vssProof:
-                                    type: string
-                                    description: The VSS proof of the signature share
                               - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                             description: Private signature shares for the message
                         commitmentShares:
@@ -72647,9 +72813,6 @@ components:
                           description: Date when the message was created
                           format: date-time
                           title: ISO Date String
-                        messageRaw:
-                          type: string
-                          description: The raw message to be signed
                         messageEncoded:
                           type: string
                           description: The encoded message
@@ -73156,6 +73319,33 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: The transfer amount must be greater than the given limit for the condition to trigger
+    HalfSigned:
+      title: HalfSigned
+      type: object
+      properties:
+        txHex:
+          nullable: true
+          type: string
+          description: The half-signed transaction hex.
+        recipients:
+          nullable: true
+          type: array
+          items:
+            title: JSON
+        expireTime:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+        contractSequenceId:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+        operationHash:
+          nullable: true
+          type: string
+        signature:
+          nullable: true
+          type: string
     HalfSignedGoWithdrawal:
       type: object
       required:
@@ -76793,15 +76983,15 @@ components:
                             allOf:
                               - type: object
                                 properties:
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
                                   privateShareProof:
                                     type: string
                                     description: The private share proof
                                   publicShare:
                                     type: string
                                     description: The public share
-                                  vssProof:
-                                    type: string
-                                    description: The VSS proof of the signature share
                               - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                         commitmentShares:
                           type: array
@@ -76841,21 +77031,24 @@ components:
                           allOf:
                             - $ref: '#/components/schemas/TransactionState'
                           description: The current state of the message
+                        messageRaw:
+                          type: string
+                          description: The raw message to be signed
                         signatureShares:
                           type: array
                           items:
                             allOf:
                               - type: object
                                 properties:
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
                                   privateShareProof:
                                     type: string
                                     description: The private share proof
                                   publicShare:
                                     type: string
                                     description: The public share
-                                  vssProof:
-                                    type: string
-                                    description: The VSS proof of the signature share
                               - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                             description: Signature shares for the message
                         privateSignatureShares:
@@ -76864,15 +77057,15 @@ components:
                             allOf:
                               - type: object
                                 properties:
+                                  vssProof:
+                                    type: string
+                                    description: The VSS proof of the signature share
                                   privateShareProof:
                                     type: string
                                     description: The private share proof
                                   publicShare:
                                     type: string
                                     description: The public share
-                                  vssProof:
-                                    type: string
-                                    description: The VSS proof of the signature share
                               - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                             description: Private signature shares for the message
                         commitmentShares:
@@ -76915,9 +77108,6 @@ components:
                           description: Date when the message was created
                           format: date-time
                           title: ISO Date String
-                        messageRaw:
-                          type: string
-                          description: The raw message to be signed
                         messageEncoded:
                           type: string
                           description: The encoded message
@@ -77724,40 +77914,6 @@ components:
       type: string
       maxLength: 100
       description: A memo for this specific transaction. This format is only available for Stacks.
-    Message:
-      type: object
-      properties:
-        coin:
-          type: string
-          description: The coin associated with the wallet.
-        combineSigShare:
-          type: string
-        createdDate:
-          description: The date the message was created.
-          type: string
-          format: date-time
-        messageEncoded:
-          description: The message encoded as a hex string.
-          type: string
-        messageRaw:
-          description: The message as human readable text.
-          type: string
-        signatureShares:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlatformSignatureShare'
-        state:
-          $ref: '#/components/schemas/PlatformTransactionRequestState'
-        txHash:
-          type: string
-          description: The signed hex of the message.
-        updatedDate:
-          description: The date when the message state was updated.
-          type: string
-          format: date-time
-      required:
-        - messageRaw
-        - state
     Message1:
       type: object
       properties:
@@ -79944,6 +80100,7 @@ components:
             type: string
             enum:
               - bitgoNetwork
+              - bitgoNetworkOkx
               - marginTrading
               - metaMaskInstitutional
               - mtGox
@@ -80917,6 +81074,9 @@ components:
           type: string
           example: 59cd72485007a239fb00282ed480da1f
           pattern: ^[0-9a-f]{32}$
+        safeId:
+          type: string
+          description: The safe the pending approval is scoped to
         organizationName:
           type: string
           description: The organization name
@@ -80964,6 +81124,7 @@ components:
             - wallet
             - organization
             - global
+            - safe
           description: What kind of entity the Pending Approval is tied to
         userIds:
           type: array
@@ -81454,41 +81615,6 @@ components:
                     email:
                       type: string
                       description: The email address of the user who invited the user
-    PendingApprovalEnterpriseModificationResponse:
-      title: Enterprise modification request
-      type: object
-      properties:
-        policyRuleRequest:
-          type: object
-          properties:
-            action:
-              type: string
-            updateEnterpriseRequest:
-              type: object
-              properties:
-                type:
-                  type: string
-                  enum:
-                    - updateEnterpriseRequest
-                action:
-                  type: string
-                  enum:
-                    - add
-                    - remove
-                permission:
-                  type: string
-                  enum:
-                    - admin
-                userId:
-                  type: string
-                email:
-                  allOf:
-                    - $ref: '#/components/schemas/PlatformEmail'
-                  description: E-Mail address of newly added users
-        type:
-          type: string
-          enum:
-            - policyRuleRequest
     PendingApprovalEnterpriseModificationResponse1:
       title: Enterprise modification request
       type: object
@@ -81649,6 +81775,20 @@ components:
             action:
               type: string
               description: The action of the policy rule request
+            batch:
+              type: object
+              description: Present when this approval is one batch of a split submission
+              properties:
+                groupId:
+                  type: string
+                index:
+                  type: number
+                total:
+                  type: number
+              required:
+                - groupId
+                - index
+                - total
             update:
               type: object
               description: The update details of the policy rule request (single-wallet)
@@ -82019,48 +82159,6 @@ components:
         - awaitingSignature
         - pendingCustodianApproval
         - pendingManualTrustReview
-    PendingApprovalTransactionRequest:
-      title: Transaction request (lite)
-      type: object
-      properties:
-        transactionRequest:
-          type: object
-          properties:
-            buildParams:
-              type: object
-            coinSpecific:
-              type: object
-            comment:
-              type: string
-            fee:
-              $ref: '#/components/schemas/IntegerOrString'
-            isUnsigned:
-              type: boolean
-            recipients:
-              type: array
-              items:
-                type: object
-                properties:
-                  address:
-                    $ref: '#/components/schemas/PlatformAddressString'
-                  amount:
-                    $ref: '#/components/schemas/PlatformIntegerOrIntegerString'
-                  data:
-                    type: string
-            requestedAmount:
-              $ref: '#/components/schemas/PlatformIntegerOrIntegerString'
-            sourceWallet:
-              $ref: '#/components/schemas/Id'
-            triggeredPolicy:
-              $ref: '#/components/schemas/Id'
-            validTransaction:
-              type: string
-            validTransactionHash:
-              type: string
-        type:
-          type: string
-          enum:
-            - transactionRequest
     PendingApprovalTransactionRequest1:
       title: Transaction request (lite)
       type: object
@@ -82103,35 +82201,6 @@ components:
           type: string
           enum:
             - transactionRequest
-    PendingApprovalTransactionRequestFull:
-      title: Transaction request (full)
-      type: object
-      properties:
-        transactionRequestFull:
-          type: object
-          properties:
-            txRequestId:
-              type: string
-            policyUniqueId:
-              $ref: '#/components/schemas/Id'
-            verificationItems:
-              type: array
-              items:
-                type: string
-            verificationRuleId:
-              type: string
-            videoApprovers:
-              $ref: '#/components/schemas/IdArray'
-            walletRebalanceEventId:
-              $ref: '#/components/schemas/Id'
-            txRequest:
-              $ref: '#/components/schemas/PlatformTransactionRequest'
-          required:
-            - txRequestId
-        type:
-          type: string
-          enum:
-            - transactionRequestFull
     PendingApprovalTransactionRequestFull1:
       title: Transaction request (full)
       type: object
@@ -82369,34 +82438,6 @@ components:
         - BitGo Mena Fze
         - BitGo Custody MENA FZE
         - BitGo India
-    PlatformCommitmentShare:
-      type: object
-      properties:
-        from:
-          allOf:
-            - $ref: '#/components/schemas/KeyShareSource'
-          description: The source of the commitment share.
-        to:
-          allOf:
-            - $ref: '#/components/schemas/KeyShareSource'
-          description: The recipient of the commitment share.
-        share:
-          type: string
-          description: The commitment share.
-        type:
-          allOf:
-            - $ref: '#/components/schemas/CommitmentType'
-            - default: commitment
-          description: The type of the commitment share.
-      required:
-        - from
-        - to
-        - share
-        - type
-    PlatformEmail:
-      type: string
-      format: email
-      example: user@example.com
     PlatformEnterprise:
       type: object
       properties:
@@ -82566,12 +82607,6 @@ components:
         - signature submitted
         - initiating
         - additional information submitted
-    PlatformIntegerOrIntegerString:
-      oneOf:
-        - type: string
-          pattern: ^-?\d+$
-          example: '2000000'
-        - type: integer
     PlatformIntegerString:
       type: string
       pattern: ^-?\d+$
@@ -82622,114 +82657,6 @@ components:
       enum:
         - managed
         - permanent
-    PlatformPendingApproval:
-      title: Pending approval
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/Id'
-        coin:
-          $ref: '#/components/schemas/Coin'
-        wallet:
-          $ref: '#/components/schemas/Id'
-        enterprise:
-          $ref: '#/components/schemas/Id'
-        organization:
-          $ref: '#/components/schemas/Id'
-        creator:
-          $ref: '#/components/schemas/Id'
-        createDate:
-          type: string
-          format: date-time
-        info:
-          anyOf:
-            - $ref: '#/components/schemas/PendingApprovalTransactionRequest'
-            - $ref: '#/components/schemas/PendingApprovalTransactionRequestFull'
-            - $ref: '#/components/schemas/PendingApprovalUserChangeRequest'
-            - $ref: '#/components/schemas/PendingApprovalPolicyRuleRequest'
-            - $ref: '#/components/schemas/PendingApprovalUpdateApprovalsRequiredRequest'
-            - $ref: '#/components/schemas/PendingApprovalEnterpriseModificationResponse'
-            - $ref: '#/components/schemas/PendingApprovalEnterpriseInviteRequest'
-        state:
-          $ref: '#/components/schemas/PlatformPendingApprovalState'
-        scope:
-          description: What kind of entity the Pending Approval is tied to
-          type: string
-          enum:
-            - enterprise
-            - wallet
-        userIds:
-          description: All the Users who should see this Pending Approval
-          type: array
-          items:
-            $ref: '#/components/schemas/Id'
-        approvalsRequired:
-          $ref: '#/components/schemas/ApprovalsRequired'
-        walletLabel:
-          type: string
-        resolvers:
-          type: array
-          items:
-            type: object
-            properties:
-              user:
-                type: string
-              date:
-                type: string
-              resolutionType:
-                type: string
-                enum:
-                  - approved
-                  - awaitingSignature
-                  - pending
-                  - pendingBitGoAdminApproval
-                  - pendingCryptographicApproval
-                  - pendingCustodianApproval
-                  - pendingFinalApproval
-                  - pendingIdVerification
-                  - pendingVideoApproval
-                  - processing
-                  - rejected
-              signatures:
-                type: array
-                items:
-                  type: string
-              videoApprover:
-                type: string
-              videoLink:
-                type: string
-              videoException:
-                type: string
-            required:
-              - user
-              - date
-              - resolutionType
-              - signatures
-        addressLabels:
-          type: array
-          items:
-            $ref: '#/components/schemas/PendingApprovalAddressLabel'
-    PlatformPendingApprovalState:
-      anyOf:
-        - $ref: '#/components/schemas/PlatformPendingApprovalStatePending'
-        - $ref: '#/components/schemas/PlatformPendingApprovalStateResolved'
-    PlatformPendingApprovalStatePending:
-      title: Pending
-      type: string
-      enum:
-        - pending
-        - awaitingSignature
-        - pendingFinalApproval
-        - pendingCustodianApproval
-        - pendingVideoApproval
-        - pendingIdVerification
-    PlatformPendingApprovalStateResolved:
-      title: Resolved
-      type: string
-      enum:
-        - approved
-        - processing
-        - rejected
     PlatformPolicy:
       type: object
       properties:
@@ -82777,196 +82704,6 @@ components:
         - lockDate
         - type
         - action
-    PlatformSignatureShare:
-      type: object
-      properties:
-        from:
-          allOf:
-            - $ref: '#/components/schemas/KeyShareSource'
-          description: The source of the signature share.
-        to:
-          allOf:
-            - $ref: '#/components/schemas/KeyShareSource'
-          description: The recipient of the signature share.
-        share:
-          type: string
-          description: The signature share.
-      required:
-        - from
-        - to
-        - share
-    PlatformTransaction:
-      type: object
-      properties:
-        state:
-          $ref: '#/components/schemas/PlatformTransactionState'
-        unsignedTx:
-          allOf:
-            - $ref: '#/components/schemas/TransactionRequestUnsignedTransaction'
-          description: Holds the unsigned transaction for this transaction in a tx-request.
-        signatureShares:
-          type: array
-          description: Only used for MPC coins. This is used to collect signature shares from and exchange them with the user. Holds the signature shares for this transaction in a tx-request.
-          items:
-            $ref: '#/components/schemas/PlatformSignatureShare'
-        commitmentShares:
-          type: array
-          description: Only used for MPC coins on EdDSA curve. This is used to collect commitment shares from and exchange them with the user. Holds the commitment shares for this transaction in a tx-request.
-          items:
-            $ref: '#/components/schemas/PlatformCommitmentShare'
-        txHash:
-          type: string
-          description: The hash of the transaction from the TxRequest that has been signed and is pending broadcast.
-        bitgoPaillierChallenge:
-          description: BitGo-to-user paillier challenge. Required when signing with ECDSA MPC wallets.
-          type: object
-          properties:
-            p:
-              type: array
-              items:
-                type: string
-      required:
-        - state
-        - unsignedTx
-    PlatformTransactionRequest:
-      anyOf:
-        - $ref: '#/components/schemas/PlatformTransactionRequestLite'
-        - $ref: '#/components/schemas/PlatformTransactionRequestFull'
-      required:
-        - txRequestId
-        - version
-        - latest
-        - walletId
-        - state
-        - date
-        - userId
-        - intent
-    PlatformTransactionRequestBase:
-      type: object
-      properties:
-        txRequestId:
-          type: string
-          description: A unique ID for the TxRequest document across all wallets. The combination of the txRequestId and version will always be unique.
-        version:
-          type: number
-          description: The version of the document. Data changes are done only with inserts and incrementing the version.
-        latest:
-          type: boolean
-          description: A boolean flag that indicates whether the document is the latest version of the TxRequest.
-        walletId:
-          type: string
-          description: The id of the Wallet the TxRequest is for.
-        walletType:
-          allOf:
-            - $ref: '#/components/schemas/WalletTypePublic'
-          description: The type describes who owns the keys to the wallet associated to the TxRequest.
-        enterpriseId:
-          type: string
-          description: If the wallet that owns the TxRequest is owned by an enterprise then this is the Id of said enterprise.
-        state:
-          $ref: '#/components/schemas/PlatformTransactionRequestState'
-        date:
-          allOf:
-            - $ref: '#/components/schemas/DateTime'
-          description: The date and time this version of the TxRequest document was created.
-        createdDate:
-          allOf:
-            - $ref: '#/components/schemas/DateTime'
-          description: The date and time the version 1 TxRequest document was created.
-        userId:
-          type: string
-          description: The Id of the User that produced this version of the TxRequest document. Could have created a new document or updated an existing document.
-        initiatedBy:
-          type: string
-          description: The Id of the User that originally created the TxRequest document (initiated the TxRequest).
-        updatedBy:
-          type: string
-          description: The Id of the User that last updated the TxRequest document. This is an alias for the userId field.
-        intent:
-          $ref: '#/components/schemas/TransactionRequestIntent'
-        intents:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransactionRequestIntent'
-        pendingApprovalId:
-          type: string
-          description: The id of the Pending Approval that was created for the TxRequest if one was required.
-        isCanceled:
-          type: boolean
-          description: True, if the transaction request is canceled.
-      required:
-        - txRequestId
-        - version
-        - latest
-        - walletId
-        - state
-        - date
-        - createdDate
-        - userId
-        - initiatedBy
-        - updatedBy
-        - intents
-    PlatformTransactionRequestFull:
-      title: Full
-      allOf:
-        - $ref: '#/components/schemas/PlatformTransactionRequestBase'
-        - type: object
-          properties:
-            transactions:
-              description: Transaction information.
-              type: array
-              items:
-                $ref: '#/components/schemas/PlatformTransaction'
-            messages:
-              description: Messages for the transaction request.
-              type: array
-              items:
-                $ref: '#/components/schemas/Message'
-      required:
-        - txRequestId
-        - version
-        - latest
-        - walletId
-        - state
-        - date
-        - userId
-        - intent
-        - transactions
-    PlatformTransactionRequestLite:
-      title: Lite
-      allOf:
-        - $ref: '#/components/schemas/PlatformTransactionRequestBase'
-        - type: object
-          properties:
-            unsignedTxs:
-              type: array
-              description: Holds all unsigned transactions that will be used to fulfill the TxRequest for MPC wallets.
-              items:
-                $ref: '#/components/schemas/TransactionRequestUnsignedTransaction'
-            signatureShares:
-              type: array
-              description: Only used for MPC coins. This is used to collect signature shares from and exchange them with the user.
-              items:
-                $ref: '#/components/schemas/PlatformSignatureShare'
-            commitmentShares:
-              type: array
-              description: Only used for MPC coins on EdDSA curve. This is used to collect commitment shares from and exchange them with the user.
-              items:
-                $ref: '#/components/schemas/PlatformCommitmentShare'
-            txHashes:
-              type: array
-              items:
-                type: string
-                description: The hashes of all transactions from the TxRequest that have been signed and are pending broadcast.
-      required:
-        - txRequestId
-        - version
-        - latest
-        - walletId
-        - state
-        - date
-        - userId
-        - intent
     PlatformTransactionRequestState:
       type: string
       enum:
@@ -85313,6 +85050,9 @@ components:
                 type: string
                 example: 59cd72485007a239fb00282ed480da1f
                 pattern: ^[0-9a-f]{32}$
+              safeId:
+                type: string
+                description: The safe the pending approval is scoped to
               organizationName:
                 type: string
                 description: The organization name
@@ -85360,6 +85100,7 @@ components:
                   - wallet
                   - organization
                   - global
+                  - safe
                 description: What kind of entity the Pending Approval is tied to
               userIds:
                 type: array
@@ -87077,6 +86818,15 @@ components:
         - $ref: '#/components/schemas/SolSendQueue'
         - $ref: '#/components/schemas/SuiSendQueue'
         - $ref: '#/components/schemas/EthereumTx'
+    SendQueueEntry:
+      title: SendQueueEntry
+      type: object
+      properties:
+        tx:
+          type: string
+          description: Encoded transaction hex queued for broadcast.
+        id:
+          type: string
     SendTransactionCSPRStakingOptions:
       title: SendTransactionCSPRStakingOptions
       type: object
@@ -93831,6 +93581,9 @@ components:
           description: If the wallet that owns the TxRequest is owned by an enterprise then this is the Id of said enterprise.
           example: 59cd72485007a239fb00282ed480da1f
           pattern: ^[0-9a-f]{32}$
+        organizationId:
+          type: string
+          description: The id of the organization the TxRequest's wallet belongs to.
         state:
           $ref: '#/components/schemas/TransactionRequestState'
         date:
@@ -93870,6 +93623,9 @@ components:
         isCanceled:
           type: boolean
           description: True, if the transaction request is canceled.
+        cancelReason:
+          type: string
+          description: The reason the transaction request was canceled, if applicable.
         initiatedByDAppClient:
           type: boolean
           description: True when the txRequest was initiated by a dApp OAuth client (e.g. Narval).
@@ -94008,15 +93764,15 @@ components:
                       allOf:
                         - type: object
                           properties:
+                            vssProof:
+                              type: string
+                              description: The VSS proof of the signature share
                             privateShareProof:
                               type: string
                               description: The private share proof
                             publicShare:
                               type: string
                               description: The public share
-                            vssProof:
-                              type: string
-                              description: The VSS proof of the signature share
                         - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                   commitmentShares:
                     type: array
@@ -94056,21 +93812,24 @@ components:
                     allOf:
                       - $ref: '#/components/schemas/TransactionState'
                     description: The current state of the message
+                  messageRaw:
+                    type: string
+                    description: The raw message to be signed
                   signatureShares:
                     type: array
                     items:
                       allOf:
                         - type: object
                           properties:
+                            vssProof:
+                              type: string
+                              description: The VSS proof of the signature share
                             privateShareProof:
                               type: string
                               description: The private share proof
                             publicShare:
                               type: string
                               description: The public share
-                            vssProof:
-                              type: string
-                              description: The VSS proof of the signature share
                         - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                       description: Signature shares for the message
                   privateSignatureShares:
@@ -94079,15 +93838,15 @@ components:
                       allOf:
                         - type: object
                           properties:
+                            vssProof:
+                              type: string
+                              description: The VSS proof of the signature share
                             privateShareProof:
                               type: string
                               description: The private share proof
                             publicShare:
                               type: string
                               description: The public share
-                            vssProof:
-                              type: string
-                              description: The VSS proof of the signature share
                         - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
                       description: Private signature shares for the message
                   commitmentShares:
@@ -94130,9 +93889,6 @@ components:
                     description: Date when the message was created
                     format: date-time
                     title: ISO Date String
-                  messageRaw:
-                    type: string
-                    description: The raw message to be signed
                   messageEncoded:
                     type: string
                     description: The encoded message
@@ -94506,9 +94262,698 @@ components:
           type: string
           description: The encoded transaction, either base64 for XLM or hex for other coins.
         status:
-          allOf:
+          oneOf:
             - $ref: '#/components/schemas/TransferState1'
+            - type: string
+              enum:
+                - signed (suppressed)
           description: The state of the transfer.
+        signedMessages:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+                description: The address for which ownership was proved.
+              message:
+                type: string
+                description: The original message that was signed.
+              signedProofTxHex:
+                type: string
+                description: The BIP-322 signed proof transaction hex.
+            required:
+              - address
+              - message
+              - signedProofTxHex
+            description: BIP-322 signed message proofs (returned when `messages` is set instead of `recipients`).
+        sendQueue:
+          allOf:
+            - $ref: '#/components/schemas/SendQueueEntry'
+          description: Send queue entry returned when `silentSignature` is used (internal only).
+        transfers:
+          type: array
+          items:
+            type: object
+            properties:
+              baseValue:
+                type: number
+                description: The value (in base units) sent by this transfer, excluding network fees. BitGo is deprecating this field in the future.
+              baseValueString:
+                type: string
+                description: The value (in base units) sent by this transfer, excluding network fees represented as a string. BitGo is deprecating this field in the future.
+                example: '2000000'
+                pattern: ^-?\d+$
+              coin:
+                $ref: '#/components/schemas/CoinString'
+              comment:
+                nullable: true
+                type: string
+                description: A comment from the user
+              date:
+                type: string
+                description: The date this Transfer was last updated
+                format: date-time
+                title: ISO Date String
+              enterprise:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              organization:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              bitgoOrg:
+                type: string
+                enum:
+                  - BitGo Trust
+                  - BitGo New York
+                  - BitGo Germany
+                  - BitGo Switzerland
+                  - BitGo Europe ApS
+                  - Frankfurt DE Trust
+                  - BitGo Singapore
+                  - BitGo Korea
+                  - BitGo Custody MENA FZE
+                  - BitGo India
+                  - BitGo Sister Trust 1
+                  - BitGo Inc
+              entries:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      description: An address affected by this Transfer
+                      example: 2NAUwNgXaoFj2VVnSEvNLGuez8CfdU2UCMZ
+                    valueString:
+                      type: string
+                      description: The change (in base units) in the address' balance represented as a string
+                      example: '20000'
+                      pattern: '"^-?\d+$"'
+                    isChange:
+                      type: boolean
+                      description: True if this address is a change address (only exists for UTXO coins) and if this is a "send" transfer
+                    wallet:
+                      type: string
+                      description: Only visible when the user has access to the wallet
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                    walletLabel:
+                      type: string
+                      description: |-
+                        The label of the wallet referenced by `wallet`. Only visible when the user has access to that
+                        wallet. Useful for displaying a human-readable destination name (e.g. for sibling enterprise
+                        wallets) instead of a generic external-address fallback.
+                      example: My Cold Wallet
+                    value:
+                      type: number
+                      description: The change (in base units) in the address' balance
+                    nftSymbol:
+                      type: string
+                    type:
+                      type: string
+                      enum:
+                        - flushForwarderTokens
+                        - walletFunding
+                        - walletInitialization
+                        - addressInitialization
+                        - importedOutput
+                        - onchainidWalletLinked
+                        - onchainidClaimAdded
+                        - onchainidClaimRemoved
+                        - AccountCreateContract
+                    isPayGo:
+                      type: boolean
+                      description: True if this address is the BitGo PayGo wallet
+                    token:
+                      type: string
+                      description: If this is a token entry, the token's symbol
+                      example: omg
+                    failed:
+                      type: boolean
+                      description: True if this entry is failed
+                    associatedNativeCoinAddress:
+                      type: string
+                      description: |-
+                        The native coin receive address associated with the solana ATA address.
+                        This is currently present only for BitGo addresses.
+                        This change was done so that there is a mapping between the two addresses in the transfer entries.
+                    isFee:
+                      type: boolean
+                      description: Indicates if this entry is a fee
+                    isInternal:
+                      type: boolean
+                      description: Indicates if this entry is internal
+                    memo:
+                      type: string
+                      description: Memo associated with this entry
+                    rewardAddress:
+                      type: string
+                      description: Reward address associated with this entry
+                    subtype:
+                      type: string
+                      description: Subtype of this entry
+                    backingFeeString:
+                      type: string
+                      description: Backing fee represented as a string
+                    nftId:
+                      type: string
+                      description: NFT ID associated with this entry
+                    tokenContractHash:
+                      type: string
+                      description: Token contract hash associated with this entry
+                    isReward:
+                      type: boolean
+                      description: Indicates if this entry is a reward
+                    activityMetadata:
+                      type: object
+                      additionalProperties: {}
+                      description: Cosmos group governance metadata (e.g. MsgSubmitProposal details) emitted by the Generic Indexer
+                  required:
+                    - address
+                  description: An array of objects describing the change in address balances made as a result of this Transfer
+              history:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    action:
+                      $ref: '#/components/schemas/TransferAction'
+                    comment:
+                      nullable: true
+                      type: string
+                      description: If this history object is of action "commented", this is the comment from the user
+                    date:
+                      type: string
+                      description: The date of this history object
+                      format: date-time
+                      title: ISO Date String
+                    transferId:
+                      type: string
+                      description: The ID of the transfer that this history object is associated with
+                    txid:
+                      type: string
+                      description: The transaction ID of the transaction that this history object is associated with
+                    user:
+                      type: string
+                      example: 59cd72485007a239fb00282ed480da1f
+                      pattern: ^[0-9a-f]{32}$
+                  required:
+                    - action
+                    - date
+                  description: An audit log of events that have happened to the Transfer during its lifecycle
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              pendingApproval:
+                type: string
+              state:
+                $ref: '#/components/schemas/TransferState1'
+              stakingParams:
+                type: object
+                properties:
+                  actionType:
+                    type: string
+                  amount:
+                    type: string
+                  coreDao:
+                    type: object
+                    properties:
+                      amount:
+                        type: string
+                        format: number
+                      expiration:
+                        type: string
+                        format: date-time
+                        title: ISO Date String
+                      fee:
+                        type: number
+                      rewardAddress:
+                        type: string
+                      validator:
+                        type: string
+                      version:
+                        type: number
+                    required:
+                      - amount
+                      - expiration
+                      - fee
+                      - rewardAddress
+                      - validator
+                      - version
+                  receiverAddress:
+                    type: string
+                  requestId:
+                    type: string
+                  resource:
+                    type: string
+                  source:
+                    type: string
+                    enum:
+                      - external
+                      - internal
+                  validator:
+                    type: string
+                required:
+                  - actionType
+                  - requestId
+              txid:
+                type: string
+                description: The on-chain transaction id
+                example: b8a828b98dbf32d9fd1875cbace9640ceb8c82626716b4a64203fdc79bb46d26
+              type:
+                allOf:
+                  - $ref: '#/components/schemas/TransferType2'
+                description: Defines whether or not this Transfer was sent or received by the user
+              usd:
+                type: number
+                description: The amount of USD of this Transfer (will be negative if it's a send)
+              usdRate:
+                type: number
+                description: The USD rate at the time this Transfer was created
+              medianUsdValue:
+                type: number
+                description: The median USD value of this Transfer
+              medianUsdRate:
+                type: number
+                description: The median USD rate at the time this Transfer was created
+              feeUsd:
+                type: number
+                description: The fee USD value for token transfers
+              feeUsdRate:
+                type: number
+                description: The fee coin USD rate for token transfers
+              value:
+                type: number
+                description: The total value (in base units) sent by this Transfer (may be approximate for ETH and other coins where amounts in base units can exceed 2^53 - 1)
+              valueString:
+                type: string
+                description: The total value (in base units) sent by this Transfer represented as a String
+                example: '2000000'
+                pattern: ^-?\d+$
+              wallet:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              walletType:
+                type: string
+                enum:
+                  - backing
+                  - cold
+                  - custodial
+                  - custodialPaired
+                  - hot
+                  - advanced
+                  - trading
+                description: Wallet type
+              replaces:
+                type: array
+                items:
+                  type: string
+                  description: Transaction IDs that this transfer replaces.
+              replacedBy:
+                type: array
+                items:
+                  type: string
+                  description: Transaction IDs that replace this transfer.
+              replacedByTransferId:
+                type: array
+                items:
+                  type: string
+                  description: Transfer IDs that replace this transfer.
+              riskIndicators:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - SELFDESTRUCT
+                  description: Risk indicators for flagged transfers (e.g. SELFDESTRUCT opcode).
+              baseValueWithoutFeesString:
+                type: string
+                description: The value (in base units) sent by this transfer, excluding network fees, represented as a string
+              baseValueWithoutFees:
+                type: number
+                description: The value (in base units) sent by this transfer excluding network fees.
+              coinSpecific:
+                description: Transfer fields specific to each coin type
+              confirmations:
+                type: number
+                description: The number of blocks that have been confirmed since this Transfer's block was confirmed
+              consolidateId:
+                type: string
+                description: Consolidation ID if this transfer is part of a consolidation
+              feeString:
+                nullable: true
+                type: string
+                description: The Transfer's fee (in base units) represented as a String
+              feeCoin:
+                type: string
+                description: The coin used to pay the fee (for cross-chain transactions)
+              sequenceId:
+                type: string
+                description: Unique wallet identifier for preventing double-spends
+              subType:
+                type: string
+                enum:
+                  - ofc_deposit
+                  - ofc_withdrawal
+                  - ofc_book_transfer
+                  - ofc_exchange
+                  - ofc_bn_settlement_transfer
+                  - ofc_bn_allocation
+                  - ofc_trading_order
+                  - ofc_trading_settlement
+                  - ofc_margin_collateral
+                  - ofc_margin_position
+                  - ofc_direct_trade
+                  - ofc_routed
+                  - ofc_fee
+                  - ofc_other
+                  - ofc_unstake
+                  - ofc_financing_liquidation
+                  - receive_from_gastank
+                  - reserved_amount
+                  - utxo_message_signing
+                  - pending_deposit
+                  - pending_deposit_activity
+                  - internal_transfer
+                  - pending_withdrawal_offer
+                  - pending_deposit_offer
+                  - offer_accepted
+                  - offer_rejected
+                  - confirmed_deposit
+                  - confirmed_withdrawal
+                  - deposit_offer_expired
+                  - withdrawal_offer_expired
+                  - withdrawal_offer_rejected
+                  - utxo_expired
+                  - offer_cancelled
+                  - cancel_withdrawal_offer
+                  - mint_request
+                  - mint_offer
+                  - mint_accept
+                  - mint_deposit
+                  - mint_reject
+                  - burn_request
+                  - burn_offer
+                  - burn_accept
+                  - burn_withdraw
+                  - burn_reject
+                  - pending_participant_onboarding_request
+                  - participant_onboarding_accepted
+                  - pending_dtcc_end_investor_invite
+                  - end_investor_invite_offer
+                  - end_investor_invite_accepted
+                  - end_investor_invite_rejected
+                  - pending_allocation
+                  - allocation_accepted
+                  - cosign_delegation_offer
+                  - cosign_delegation_accepted
+                  - cash_dvp_settled
+                  - repo_dvp_open_leg_settled
+                  - repo_dvp_close_leg_settled
+                  - staking_eth_withdrawal
+                  - staking_eth_partial_withdrawal
+                  - staking_eth_full_withdrawal
+                  - staking_eth_mev_reward
+                  - staking_eth_block_reward
+                  - staking_bera_withdrawal
+                  - staking_bera_block_reward
+                  - defi_deposit
+                description: Transfer subtype
+              txRequestId:
+                type: string
+                description: Associated transaction request ID
+              goStakingRequestId:
+                type: string
+                description: Associated GO staking request ID
+              height:
+                type: number
+                description: The height of the block this Transfer was confirmed in (999999999 if unconfirmed)
+              heightId:
+                type: string
+                description: The unique height id of the block
+              instant:
+                type: boolean
+                description: Whether this is an instant transaction
+              instantId:
+                type: string
+                description: The instant transaction ID if applicable
+              isFee:
+                type: boolean
+                description: Whether this transfer represents a fee
+              isReward:
+                type: boolean
+                description: Whether this transfer represents a staking reward
+              isUnlock:
+                type: boolean
+                description: Whether this transfer represents an unlock operation
+              nSegwitInputs:
+                type: number
+                description: DEPRECATED. Number of segwit inputs on the transfer.
+              outputs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      description: The address of the UTXO
+                    blockHeight:
+                      type: number
+                      description: The block this Unspent was created in
+                    chain:
+                      type: number
+                      description: The chain of the UTXO
+                    coinbase:
+                      type: boolean
+                      description: True if this unspent came from the coinbase transaction
+                    id:
+                      type: string
+                      description: The ID of the UTXO
+                    index:
+                      type: number
+                      description: The index of the UTXO
+                    redeemScript:
+                      type: string
+                      description: The redeem script of the UTXO
+                    value:
+                      type: number
+                      description: The value of the UTXO
+                    witnessScript:
+                      type: string
+                      description: The witness script of the UTXO
+              payGoFee:
+                type: number
+                description: The Transfer's BitGo fee (in base units)
+              payGoFeeString:
+                type: string
+                description: The Transfer's BitGo fee (in base units) represented as a String
+              inputs:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    address:
+                      type: string
+                      description: The address of the UTXO
+                    blockHeight:
+                      type: number
+                      description: The block this Unspent was created in
+                    chain:
+                      type: number
+                      description: The chain of the UTXO
+                    coinbase:
+                      type: boolean
+                      description: True if this unspent came from the coinbase transaction
+                    id:
+                      type: string
+                      description: The ID of the UTXO
+                    index:
+                      type: number
+                      description: The index of the UTXO
+                    redeemScript:
+                      type: string
+                      description: The redeem script of the UTXO
+                    value:
+                      type: number
+                      description: The value of the UTXO
+                    witnessScript:
+                      type: string
+                      description: The witness script of the UTXO
+              intendedValueString:
+                type: string
+                description: A string representation (in base units) of the initial value for the transfer. This is present because when a transaction fails on chain, its value is mutated to be zero. This string is immutable and will always be the intended value of the initial transfer regardless of the final state of the transaction.
+              label:
+                type: string
+                description: Address labels (if any) from entries concatenated.
+              metadata:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    key:
+                      type: string
+                    value:
+                      type: string
+                  required:
+                    - key
+                    - value
+                  description: Additional metadata associated with the transfer
+              sendAccounting:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    amount:
+                      type: number
+                    amountString:
+                      type: string
+                    id:
+                      type: string
+                    nOuts:
+                      type: number
+                    type:
+                      type: string
+                  required:
+                    - amountString
+                    - nOuts
+                    - type
+                  description: Accounting breakdown for send transactions
+              tags:
+                type: array
+                items:
+                  type: string
+                  description: The tags to be used on this Transfer (used in Policies)
+              txidType:
+                type: string
+                description: The type of the transaction id
+              usersNotified:
+                type: boolean
+                description: Whether BitGo already sent notifications to the users of the transfer wallet
+              vSize:
+                type: number
+                description: The size of the transaction
+              walletLabel:
+                type: string
+                description: Label of the wallet associated with this transfer
+              enterpriseName:
+                type: string
+                description: Name of the enterprise associated with this transfer
+              elliptic:
+                type: string
+                description: Elliptic risk score information (trust transfers)
+              senderInformationVerified:
+                type: boolean
+                description: Whether sender information has been verified (trust transfers)
+              buildParams:
+                type: object
+                additionalProperties: {}
+                description: Parameters used to build the transaction
+              createdTime:
+                type: string
+                description: The time this transfer was created
+                format: date-time
+                title: ISO Date String
+              approvedTime:
+                type: string
+                description: The time this transfer was approved
+                format: date-time
+                title: ISO Date String
+              rejectedTime:
+                type: string
+                description: The time this transfer was rejected
+                format: date-time
+                title: ISO Date String
+              signedTime:
+                type: string
+                description: The time this transfer was signed
+                format: date-time
+                title: ISO Date String
+              unconfirmedTime:
+                type: string
+                description: The time this transfer became unconfirmed
+                format: date-time
+                title: ISO Date String
+              confirmedTime:
+                type: string
+                description: The time this transfer was confirmed
+                format: date-time
+                title: ISO Date String
+              removedTime:
+                type: string
+                description: The time this transfer was removed
+                format: date-time
+                title: ISO Date String
+              commentedTime:
+                type: string
+                description: The time this transfer was commented on
+                format: date-time
+                title: ISO Date String
+              failedTime:
+                type: string
+                description: The time this transfer failed
+                format: date-time
+                title: ISO Date String
+              regeneratedTime:
+                type: string
+                description: The time this transfer was regenerated
+                format: date-time
+                title: ISO Date String
+              replacedTime:
+                type: string
+                description: The time this transfer was replaced
+                format: date-time
+                title: ISO Date String
+              replacingTime:
+                type: string
+                description: The time this transfer started replacing another
+                format: date-time
+                title: ISO Date String
+              abandonedTime:
+                type: string
+                description: The time this transfer was abandoned
+                format: date-time
+                title: ISO Date String
+              signedDate:
+                type: string
+                description: The date this transfer was signed (legacy field)
+                format: date-time
+                title: ISO Date String
+              customerApprovedTime:
+                type: string
+                description: The time this transfer was approved by the customer (trust transfers)
+                format: date-time
+                title: ISO Date String
+              idVerificationTime:
+                type: string
+                description: The time identity verification was completed (trust transfers)
+                format: date-time
+                title: ISO Date String
+              trustSignedTime:
+                type: string
+                description: The time this transfer was signed by trust (trust transfers)
+                format: date-time
+                title: ISO Date String
+              trustFinalApprovalTime:
+                type: string
+                description: The time this transfer received final trust approval (trust transfers)
+                format: date-time
+                title: ISO Date String
+            required:
+              - coin
+              - date
+              - entries
+              - history
+              - id
+              - state
+              - type
+              - valueString
+              - wallet
+            description: Both the primary transfer and the fee transfer when `requiresFeeTransfer` is true.
     TransactionState:
       title: TransactionState
       type: string
@@ -98080,6 +98525,9 @@ components:
                 type: string
                 example: 59cd72485007a239fb00282ed480da1f
                 pattern: ^[0-9a-f]{32}$
+              safeId:
+                type: string
+                description: The safe the pending approval is scoped to
               organizationName:
                 type: string
                 description: The organization name
@@ -98127,6 +98575,7 @@ components:
                   - wallet
                   - organization
                   - global
+                  - safe
                 description: What kind of entity the Pending Approval is tied to
               userIds:
                 type: array
@@ -99573,7 +100022,7 @@ components:
                 required:
                   - permissions
                   - role
-                description: The organizations the user is a member of
+                deprecated: true
             featureFlags:
               type: array
               items:
@@ -106361,6 +106810,11 @@ components:
             description: |-
               Object Tagging V1: free-form string labels applied to this wallet.
               Absent when the wallet has no custom tags; never an empty array.
+        safe:
+          type: string
+          description: Public id of the safe that minted this wallet. Absent on non-safe wallets.
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
       required:
         - allowBackupKeySigning
         - approvalsRequired
@@ -107429,6 +107883,11 @@ components:
                   description: |-
                     Object Tagging V1: free-form string labels applied to this wallet.
                     Absent when the wallet has no custom tags; never an empty array.
+              safe:
+                type: string
+                description: Public id of the safe that minted this wallet. Absent on non-safe wallets.
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
             required:
               - allowBackupKeySigning
               - approvalsRequired
@@ -108399,6 +108858,7 @@ components:
         - twoStepTransfer
         - twoStepDeposit
         - twoStepWithdrawal
+        - endInvestorOnboardingInvite
         - pendingDecryption
     WalletsResponse:
       type: object
@@ -108920,6 +109380,7 @@ components:
         - kycResult
         - policyBalanceChange
         - reversal
+        - mintOrder
         - transaction_finality_on_l1
         - stuckTx
         - tradeOrder
@@ -108927,6 +109388,7 @@ components:
         - twoStepTransfer
         - twoStepDeposit
         - twoStepWithdrawal
+        - endInvestorOnboardingInvite
         - pendingDecryption
         - whitelistApproved
         - whitelistRejected
