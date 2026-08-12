@@ -45465,6 +45465,69 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/feeTokens:
+    get:
+      summary: List fee-eligible tokens for a wallet
+      description: |-
+        Returns tokens eligible to pay gas fees for the wallet, joined with wallet balances,
+        sorted descending by balance. Zero-balance tokens are included with `disabled: true`.
+        Support is coin-specific — see `CoinWithFeeEligibleTokens` in wallet-platform.
+      operationId: v2.coin.wallet.getFeeTokens
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: coin
+          description: The coin identifier
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The BitGo wallet ID
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetFeeTokensResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/forwarders/balances:
     get:
       summary: List forwarder addresses and balances
@@ -79276,6 +79339,8 @@ components:
                   - id
             stablecoinAgreementLatestVersion:
               type: number
+            otcServicesAgreementLatestVersion:
+              type: number
             hasScimClient:
               type: boolean
               description: Whether the enterprise has a SCIM OAuth client configured
@@ -79434,6 +79499,36 @@ components:
               - fee
       required:
         - assetPairs
+    GetFeeTokensResponse:
+      title: GetFeeTokensResponse
+      type: object
+      properties:
+        feeTokens:
+          type: array
+          items:
+            type: object
+            properties:
+              tokenContractAddress:
+                type: string
+              coin:
+                type: string
+              name:
+                type: string
+              decimalPlaces:
+                type: number
+              balanceString:
+                type: string
+              disabled:
+                type: boolean
+            required:
+              - tokenContractAddress
+              - coin
+              - name
+              - decimalPlaces
+              - balanceString
+              - disabled
+      required:
+        - feeTokens
     GetInvoicesResponse:
       title: GetInvoicesResponse
       type: object
