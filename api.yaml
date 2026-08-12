@@ -13980,6 +13980,9 @@ paths:
                     and `reason.code: "OtpRequired"`. Call the retry endpoint with a fresh
                     code to proceed.
                   minLength: 1
+                notes:
+                  type: string
+                  minLength: 1
               required:
                 - externalId
                 - amount
@@ -15077,6 +15080,96 @@ paths:
           schema:
             type: string
             minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1TransferResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+    patch:
+      summary: Update a transfer
+      description: |-
+        Partially updates an existing transfer. Currently supports updating `notes`
+        only; no other transfer fields can be modified through this endpoint yet.
+      operationId: V1PatchTransferRoute
+      tags:
+        - Link Transfers
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: transferId
+          description: The transfer ID to update.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: aba3a693-4f28-4523-8e53-85a3df22a608
+            title: uuid
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Partial transfer update body. Currently accepts free-form client `notes`.
+                Additional updatable properties may be added to this body over time.
+              properties:
+                notes:
+                  type: string
+                  description: |-
+                    Free-form client notes to associate with the transfer.
+                    Required today — this is the only updatable field on this route.
+                    When omitted in the future alongside other fields, notes are left unchanged.
+                  minLength: 1
+              required:
+                - notes
       responses:
         '200':
           description: OK
@@ -111717,6 +111810,9 @@ components:
                 required:
                   - code
                   - message
+              notes:
+                type: string
+                minLength: 1
               sortTimestamp:
                 type: string
                 format: date-time
@@ -113695,6 +113791,9 @@ components:
           required:
             - code
             - message
+        notes:
+          type: string
+          minLength: 1
         sortTimestamp:
           type: string
           format: date-time
