@@ -51329,6 +51329,7 @@ paths:
               - twoStepDeposit
               - twoStepWithdrawal
               - endInvestorOnboardingInvite
+              - endInvestorOnboardingAccepted
               - pendingDecryption
               - whitelistApproved
               - whitelistRejected
@@ -55876,6 +55877,12 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -100065,6 +100072,30 @@ components:
             - narrow
             - standard
             - wide
+    TaoClaimRootIntent:
+      title: Tao Claim Root Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stakeClaimRewards
+            hotkey:
+              type: string
+            netuid:
+              type: string
+          required:
+            - intentType
+            - hotkey
+            - netuid
+        - $ref: '#/components/schemas/BaseStakeIntent'
+        - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
+      description: |-
+        Claim accrued root network (netuid 0) basket rewards for a hotkey via
+        `SubtensorModule.claimRootWithHotkey(hotkey)`. This claims the full owed
+        basket balance on-chain — there is no `amount` field, unlike the generic
+        `stakeClaimRewards` intents for other coins.
     TaoDelegationProperties:
       title: TAO Delegation Properties
       allOf:
@@ -101650,6 +101681,7 @@ components:
         - $ref: '#/components/schemas/SuiPaymentIntent'
         - $ref: '#/components/schemas/SuiStakingIntent'
         - $ref: '#/components/schemas/SuiUnstakingIntent'
+        - $ref: '#/components/schemas/TaoClaimRootIntent'
         - $ref: '#/components/schemas/TaoStakeIntent'
         - $ref: '#/components/schemas/TaoSwitchValidatorIntent'
         - $ref: '#/components/schemas/TaoTransferStakeIntent'
@@ -117047,6 +117079,7 @@ components:
         - twoStepDeposit
         - twoStepWithdrawal
         - endInvestorOnboardingInvite
+        - endInvestorOnboardingAccepted
         - pendingDecryption
     WalletsResponse:
       type: object
@@ -117577,6 +117610,7 @@ components:
         - twoStepDeposit
         - twoStepWithdrawal
         - endInvestorOnboardingInvite
+        - endInvestorOnboardingAccepted
         - pendingDecryption
         - whitelistApproved
         - whitelistRejected
