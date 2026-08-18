@@ -12134,7 +12134,7 @@ paths:
   /api/identity-service/v1/identities:
     get:
       summary: List KYB Identities
-      description: Retrieve a list of identities created by the authenticated user. Requires User-Id header.
+      description: Retrieve a list of identities. Requires User-Id header. When userId is provided, the endpoint resolves a specific individual identity. Any admin or serviceUser on an organization the individual is registered under can retrieve the result — not just the original creator.
       operationId: identities.get.v1.identities
       tags:
         - Know Your Business (KYB)
@@ -12414,6 +12414,108 @@ paths:
               schema:
                 type: object
                 properties: {}
+  /api/identity-service/v1/identities/{identityId}/associated-people/{associatedPersonId}:
+    delete:
+      summary: Remove Associated Person
+      description: Remove an associated person from a business identity by associated person ID. The identity must not be in review.
+      operationId: identities.delete.v1.identities.id.associated-people.id
+      tags:
+        - Know Your Business (KYB)
+      x-internal: false
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Business identity ID
+        - name: associatedPersonId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: Associated person row ID to remove
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                discriminator:
+                  propertyName: type
+                oneOf:
+                  - $ref: '#/components/schemas/IndividualIdentityResponse'
+                  - $ref: '#/components/schemas/BusinessIdentityResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
   /api/identity-service/v1/identities/{identityId}/documents:
     post:
       summary: Add KYB Documents
@@ -12452,6 +12554,7 @@ paths:
                           - commercialRegister
                           - articlesOfAssociation
                           - certificateOfIncorporation
+                          - certificateOfGoodStanding
                           - certificateOfTrust
                           - certificateOfIncumbency
                           - certificateOfIncumbencyOrShareRegister
@@ -12477,37 +12580,16 @@ paths:
                           - evidenceOfGovernmentOrStateOwnership
                           - secFilingsAsEvidenceOfPublicTradingStatus
                           - foundingTreatyOrEquivalent
-                        description: |-
-                          Type of document being uploaded. Supported document types:
-                          - `governmentId` - The official government-issued identity document for an individual associated with the business (e.g., director, shareholder, or authorized signatory) required for identity verification.
-                          - `commercialRegister` - Official government document that verifies the identity and legitimacy of the business, containing basic information such as the company's name, address, field of activity, shareholders, and capital.
-                          - `articlesOfAssociation` - The Articles of Association are formal legal documents that serve as the company's rulebook, outlining its fundamental structure, purpose, internal operations, and how decisions are made, including details on share capital, director appointments, and shareholder rights.
-                          - `certificateOfIncorporation` - The official document issued by the government registrar that legally recognizes your company's existence and outlines essential information such as its name, purpose, and structure.
-                          - `certificateOfTrust` - A document that verifies the existence of a trust, the identity of the trustee(s), and their authority to act on behalf of the trust.
-                          - `certificateOfIncumbency` - A private legal document issued by the company that verifies the identities and authority of the current directors, officers, and sometimes key shareholders who are authorized to act on behalf of the company in transactions.
-                          - `certificateOfIncumbencyOrShareRegister` - An official document listing current directors, shareholders, and the company's registered address, or a certified document detailing all company shareholders and their respective shareholdings.
-                          - `proofOfPrincipalPlaceOfBusiness` - Document confirming the address of the company's principal place of business (e.g., utility bill or bank account statement no older than 3 months).
-                          - `activeTradeLicense` - The active and valid trade license or equivalent regulatory document issued by the relevant governing authority, proving the business's legal authorization to operate.
-                          - `resolutionToOpenBitgoUaeAccount` - A document confirming the company's internal resolution or decision to open an account with BitGo UAE.
-                          - `resolutionToOpenBitgoSingaporeAccount` - This field is for uploading the corporate resolution document confirming authorization to open an account with BitGo Singapore.
-                          - `proofOfAuthorizedSignatories` - Document confirming the legal authority of the individual(s) authorized to sign contracts and legally binding documents on behalf of the company.
-                          - `memorandumOfAssociation` - The Memorandum of Association is one of the company's constitutional documents. It typically includes the company's name, address, and confirms the initial shareholders agree to form the company and become members.
-                          - `memorandumAndArticlesOfAssociation` - This document serves as the constitutional document of the company, outlining its legal existence, objectives, and internal governing rules.
-                          - `bylawsOrOperatingAgreement` - The company's bylaws or operating agreement. These are governing documents that define the company's structure, operations, and the rights and responsibilities of its members or shareholders.
-                          - `operatingAgreement` - The operating agreement is a key document that outlines the ownership, internal governance, and operating procedures of the business entity.
-                          - `w8` - W-8BEN or W-8BEN-E Form: Used by individuals/institutions to certify foreign status for U.S. tax purposes and to claim treaty benefits for certain types of income (e.g., royalty/passive income, scholarships/fellowships). This form is required to determine the correct rate of tax withholding.
-                          - `w9` - This field collects the IRS Form W-9, "Request for Taxpayer Identification Number and Certification." This document is used to confirm your business's name, address, and Taxpayer Identification Number (TIN) for income reporting purposes.
-                          - `evidenceOfLegalStatus` - Document that confirms your company is currently active and legally authorized to operate in the country or jurisdiction where it was formed. Examples of accepted documents that clearly state or evidence active or good standing include: Certificate of Good Standing, Business Registration or Trade License, Company Registry Extract, Certificate of Incumbency. Note: Documents must be issued within the last 12 months. If an older document is submitted, you may be asked to provide an updated copy.
-                          - `evidenceOfActiveStatus` - A document that verifies the business entity's current legal standing and active operational status, often an extract from a state company registry or equivalent proof of legal existence.
-                          - `proofOfJfsaLicense` - Document required as proof of the business's registration or license with the Japanese Financial Services Agency (JFSA).
-                          - `proofOfGamingLicense` - The official document verifying that your business holds a valid gaming or gambling license issued by the relevant regulatory authority.
-                          - `organizationDocument` - This field is for uploading the business's organization document. This confirms the entity's legal existence and compliance with regulations. Common documents include the certificate of incorporation, articles of association, or recent excerpts from a state company registry.
-                          - `partnershipAgreement` - The official document formalizing a business partnership. This document confirms the legal structure and ownership details of the entity.
-                          - `articlesOfOrganization` - The official document filed with a state to legally form a Limited Liability Company (LLC). It secures the business name and establishes the legal entity.
-                          - `businessLicenseOrRegistration` - This field is for uploading the company's official business license or registration document, which confirms the legal identity and legitimacy of the business.
-                          - `evidenceOfGovernmentOrStateOwnership` - Documentation required to verify if the entity is owned or operated by a government or state organization.
-                          - `secFilingsAsEvidenceOfPublicTradingStatus` - Document field used to collect Securities and Exchange Commission (SEC) filings that serve as evidence of the business entity's public trading status.
-                          - `foundingTreatyOrEquivalent` - The founding treaty or equivalent document serves as official proof of the business entity's legal existence and is often referred to as a Certificate of Incorporation, Articles of Association, or other governing documents, depending on the jurisdiction and business structure.
+                          - proofOfAddress
+                          - sourceOfWealth
+                          - singaporeSupportingDocument
+                          - caseRequiredDocuments
+                          - correspondentAccountCertification
+                          - authorizedSignerForm
+                        description: Type of document being uploaded
+                      documentSubType:
+                        type: string
+                        description: 'Sub-classification within a document type. Required when documentType is singaporeSupportingDocument (valid values: SingaporeSupportingDocumentSubTypeEnum, e.g. computerizedPayslips, bankStatement).'
                     required:
                       - documentId
                       - documentType
@@ -12544,6 +12626,7 @@ paths:
                             - commercialRegister
                             - articlesOfAssociation
                             - certificateOfIncorporation
+                            - certificateOfGoodStanding
                             - certificateOfTrust
                             - certificateOfIncumbency
                             - certificateOfIncumbencyOrShareRegister
@@ -12569,7 +12652,17 @@ paths:
                             - evidenceOfGovernmentOrStateOwnership
                             - secFilingsAsEvidenceOfPublicTradingStatus
                             - foundingTreatyOrEquivalent
+                            - proofOfAddress
+                            - sourceOfWealth
+                            - singaporeSupportingDocument
+                            - caseRequiredDocuments
+                            - correspondentAccountCertification
+                            - authorizedSignerForm
                           description: Type of document being uploaded
+                        documentSubType:
+                          type: string
+                          nullable: true
+                          description: Sub-classification within a document type (e.g., Singapore supporting document subtype).
                         status:
                           type: string
                           enum:
@@ -12608,6 +12701,7 @@ paths:
                             - commercialRegister
                             - articlesOfAssociation
                             - certificateOfIncorporation
+                            - certificateOfGoodStanding
                             - certificateOfTrust
                             - certificateOfIncumbency
                             - certificateOfIncumbencyOrShareRegister
@@ -12633,7 +12727,17 @@ paths:
                             - evidenceOfGovernmentOrStateOwnership
                             - secFilingsAsEvidenceOfPublicTradingStatus
                             - foundingTreatyOrEquivalent
+                            - proofOfAddress
+                            - sourceOfWealth
+                            - singaporeSupportingDocument
+                            - caseRequiredDocuments
+                            - correspondentAccountCertification
+                            - authorizedSignerForm
                           description: Type of document being uploaded
+                        documentSubType:
+                          type: string
+                          nullable: true
+                          description: Sub-classification within a document type.
                         reason:
                           type: string
                           description: Reason for rejection
@@ -12729,6 +12833,7 @@ paths:
                             - commercialRegister
                             - articlesOfAssociation
                             - certificateOfIncorporation
+                            - certificateOfGoodStanding
                             - certificateOfTrust
                             - certificateOfIncumbency
                             - certificateOfIncumbencyOrShareRegister
@@ -12754,7 +12859,17 @@ paths:
                             - evidenceOfGovernmentOrStateOwnership
                             - secFilingsAsEvidenceOfPublicTradingStatus
                             - foundingTreatyOrEquivalent
+                            - proofOfAddress
+                            - sourceOfWealth
+                            - singaporeSupportingDocument
+                            - caseRequiredDocuments
+                            - correspondentAccountCertification
+                            - authorizedSignerForm
                           description: Type of document being uploaded
+                        documentSubType:
+                          type: string
+                          nullable: true
+                          description: Sub-classification within a document type (e.g., Singapore supporting document subtype).
                         status:
                           type: string
                           enum:
@@ -12854,6 +12969,7 @@ paths:
                     - commercialRegister
                     - articlesOfAssociation
                     - certificateOfIncorporation
+                    - certificateOfGoodStanding
                     - certificateOfTrust
                     - certificateOfIncumbency
                     - certificateOfIncumbencyOrShareRegister
@@ -12879,37 +12995,16 @@ paths:
                     - evidenceOfGovernmentOrStateOwnership
                     - secFilingsAsEvidenceOfPublicTradingStatus
                     - foundingTreatyOrEquivalent
-                  description: |-
-                    Type of document being uploaded. Supported document types:
-                    - `governmentId` - The official government-issued identity document for an individual associated with the business (e.g., director, shareholder, or authorized signatory) required for identity verification.
-                    - `commercialRegister` - Official government document that verifies the identity and legitimacy of the business, containing basic information such as the company's name, address, field of activity, shareholders, and capital.
-                    - `articlesOfAssociation` - The Articles of Association are formal legal documents that serve as the company's rulebook, outlining its fundamental structure, purpose, internal operations, and how decisions are made, including details on share capital, director appointments, and shareholder rights.
-                    - `certificateOfIncorporation` - The official document issued by the government registrar that legally recognizes your company's existence and outlines essential information such as its name, purpose, and structure.
-                    - `certificateOfTrust` - A document that verifies the existence of a trust, the identity of the trustee(s), and their authority to act on behalf of the trust.
-                    - `certificateOfIncumbency` - A private legal document issued by the company that verifies the identities and authority of the current directors, officers, and sometimes key shareholders who are authorized to act on behalf of the company in transactions.
-                    - `certificateOfIncumbencyOrShareRegister` - An official document listing current directors, shareholders, and the company's registered address, or a certified document detailing all company shareholders and their respective shareholdings.
-                    - `proofOfPrincipalPlaceOfBusiness` - Document confirming the address of the company's principal place of business (e.g., utility bill or bank account statement no older than 3 months).
-                    - `activeTradeLicense` - The active and valid trade license or equivalent regulatory document issued by the relevant governing authority, proving the business's legal authorization to operate.
-                    - `resolutionToOpenBitgoUaeAccount` - A document confirming the company's internal resolution or decision to open an account with BitGo UAE.
-                    - `resolutionToOpenBitgoSingaporeAccount` - This field is for uploading the corporate resolution document confirming authorization to open an account with BitGo Singapore.
-                    - `proofOfAuthorizedSignatories` - Document confirming the legal authority of the individual(s) authorized to sign contracts and legally binding documents on behalf of the company.
-                    - `memorandumOfAssociation` - The Memorandum of Association is one of the company's constitutional documents. It typically includes the company's name, address, and confirms the initial shareholders agree to form the company and become members.
-                    - `memorandumAndArticlesOfAssociation` - This document serves as the constitutional document of the company, outlining its legal existence, objectives, and internal governing rules.
-                    - `bylawsOrOperatingAgreement` - The company's bylaws or operating agreement. These are governing documents that define the company's structure, operations, and the rights and responsibilities of its members or shareholders.
-                    - `operatingAgreement` - The operating agreement is a key document that outlines the ownership, internal governance, and operating procedures of the business entity.
-                    - `w8` - W-8BEN or W-8BEN-E Form: Used by individuals/institutions to certify foreign status for U.S. tax purposes and to claim treaty benefits for certain types of income (e.g., royalty/passive income, scholarships/fellowships). This form is required to determine the correct rate of tax withholding.
-                    - `w9` - This field collects the IRS Form W-9, "Request for Taxpayer Identification Number and Certification." This document is used to confirm your business's name, address, and Taxpayer Identification Number (TIN) for income reporting purposes.
-                    - `evidenceOfLegalStatus` - Document that confirms your company is currently active and legally authorized to operate in the country or jurisdiction where it was formed. Examples of accepted documents that clearly state or evidence active or good standing include: Certificate of Good Standing, Business Registration or Trade License, Company Registry Extract, Certificate of Incumbency. Note: Documents must be issued within the last 12 months. If an older document is submitted, you may be asked to provide an updated copy.
-                    - `evidenceOfActiveStatus` - A document that verifies the business entity's current legal standing and active operational status, often an extract from a state company registry or equivalent proof of legal existence.
-                    - `proofOfJfsaLicense` - Document required as proof of the business's registration or license with the Japanese Financial Services Agency (JFSA).
-                    - `proofOfGamingLicense` - The official document verifying that your business holds a valid gaming or gambling license issued by the relevant regulatory authority.
-                    - `organizationDocument` - This field is for uploading the business's organization document. This confirms the entity's legal existence and compliance with regulations. Common documents include the certificate of incorporation, articles of association, or recent excerpts from a state company registry.
-                    - `partnershipAgreement` - The official document formalizing a business partnership. This document confirms the legal structure and ownership details of the entity.
-                    - `articlesOfOrganization` - The official document filed with a state to legally form a Limited Liability Company (LLC). It secures the business name and establishes the legal entity.
-                    - `businessLicenseOrRegistration` - This field is for uploading the company's official business license or registration document, which confirms the legal identity and legitimacy of the business.
-                    - `evidenceOfGovernmentOrStateOwnership` - Documentation required to verify if the entity is owned or operated by a government or state organization.
-                    - `secFilingsAsEvidenceOfPublicTradingStatus` - Document field used to collect Securities and Exchange Commission (SEC) filings that serve as evidence of the business entity's public trading status.
-                    - `foundingTreatyOrEquivalent` - The founding treaty or equivalent document serves as official proof of the business entity's legal existence and is often referred to as a Certificate of Incorporation, Articles of Association, or other governing documents, depending on the jurisdiction and business structure.
+                    - proofOfAddress
+                    - sourceOfWealth
+                    - singaporeSupportingDocument
+                    - caseRequiredDocuments
+                    - correspondentAccountCertification
+                    - authorizedSignerForm
+                  description: Type of document being uploaded
+                documentSubType:
+                  type: string
+                  description: Updated sub-classification within the document type.
       responses:
         '200':
           description: '200'
@@ -12931,6 +13026,7 @@ paths:
                       - commercialRegister
                       - articlesOfAssociation
                       - certificateOfIncorporation
+                      - certificateOfGoodStanding
                       - certificateOfTrust
                       - certificateOfIncumbency
                       - certificateOfIncumbencyOrShareRegister
@@ -12956,7 +13052,17 @@ paths:
                       - evidenceOfGovernmentOrStateOwnership
                       - secFilingsAsEvidenceOfPublicTradingStatus
                       - foundingTreatyOrEquivalent
+                      - proofOfAddress
+                      - sourceOfWealth
+                      - singaporeSupportingDocument
+                      - caseRequiredDocuments
+                      - correspondentAccountCertification
+                      - authorizedSignerForm
                     description: Type of document being uploaded
+                  documentSubType:
+                    type: string
+                    nullable: true
+                    description: Sub-classification within a document type (e.g., Singapore supporting document subtype).
                   status:
                     type: string
                     enum:
@@ -13003,51 +13109,6 @@ paths:
                   - error
         '422':
           description: '422'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                  - error
-        '500':
-          description: '500'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
-    delete:
-      summary: Delete KYB Document
-      description: Remove a specific document association from an identity.
-      operationId: identities.delete.v1.identities.id.documents.id
-      tags:
-        - Know Your Business (KYB)
-      parameters:
-        - name: identityId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The unique ID of the identity
-        - name: identityDocumentId
-          in: path
-          required: true
-          schema:
-            type: string
-          description: The unique ID of the document association
-      responses:
-        '204':
-          description: '204'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties: {}
-        '404':
-          description: '404'
           content:
             application/json:
               schema:
@@ -64006,6 +64067,14 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Account'
+    AccreditedInvestorQualifyingCriteria:
+      type: string
+      enum:
+        - income
+        - netAssets
+        - financialAssets
+      title: AccreditedInvestorQualifyingCriteria
+      description: Qualifying criteria for AI status (required when accreditedInvestorOptedIn is true)
     AchAccountResponseProps:
       title: AchAccountResponseProps
       type: object
@@ -65413,6 +65482,16 @@ components:
               description: If this is a Transfer on a UTXO coin, the array of outputs
               items:
                 $ref: '#/components/schemas/Unspent'
+    AnnualIncome:
+      type: string
+      enum:
+        - Under $50,000
+        - $50,001 - $100,000
+        - $100,001 - $300,000
+        - $300,001 - $500,000
+        - $500,001 and over
+      title: AnnualIncome
+      description: Annual income bracket in SGD
     PlatformError:
       title: Api Error
       allOf:
@@ -66354,6 +66433,10 @@ components:
     AssociatedPersonResponse:
       type: object
       properties:
+        associatedPersonId:
+          type: string
+          format: uuid
+          description: Unique identifier for the link between the business identity and this associated individual
         identityId:
           type: string
           description: The individual identity ID of the associated person
@@ -66449,6 +66532,15 @@ components:
                 - vid
                 - visa
                 - wp
+                - computerizedPayslips
+                - incomeTaxAssessment
+                - employmentLetterContract
+                - bankStatement
+                - dptHoldingStatement
+                - investmentHoldingsStatement
+                - titleDeeds
+                - propertyTaxCpfStatement
+                - other
               description: |-
                 Class of government ID. Valid values:
                 cct - Citizenship Certificate,
@@ -66506,7 +66598,6 @@ components:
               required:
                 - street1
                 - city
-                - subdivision
                 - zip
                 - country
             identificationNumber:
@@ -66515,6 +66606,68 @@ components:
             politicallyExposedPerson:
               type: boolean
               description: Whether the individual is a politically exposed person
+            multipleCitizenship:
+              type: array
+              items:
+                type: string
+                description: Country (formatted as ISO 3166-1 alpha-3)
+              description: Additional citizenships beyond primary (ISO 3166-1 alpha-3 codes)
+            sourceOfFundOrigin:
+              type: string
+              maxLength: 500
+              description: Origin of funds to be deposited (e.g., employment, savings)
+            sourceOfFundOriginOfTransfer:
+              type: string
+              maxLength: 500
+              description: 'Specific transfer origin: bank name for fiat, platform/wallet name for digital assets'
+            occupationDetails:
+              type: string
+              maxLength: 500
+              description: Free-text occupation description (required when occupation is self-employed or other)
+            employerName:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+              maxLength: 200
+              description: Name of employer
+            jobTitle:
+              type: string
+              pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+              maxLength: 200
+              description: Job title
+            annualIncome:
+              $ref: '#/components/schemas/AnnualIncome'
+            accountOpeningPurpose:
+              type: string
+              maxLength: 500
+              description: Purpose of opening a BitGo Singapore account
+            sourceOfWealth:
+              $ref: '#/components/schemas/SourceOfWealth'
+            sourceOfWealthDetails:
+              type: string
+              maxLength: 500
+              description: Free-text source of wealth details (required when sourceOfWealth is "other")
+            netWorth:
+              $ref: '#/components/schemas/NetWorth'
+            digitalAssetWalletAddress:
+              type: string
+              maxLength: 200
+              description: Digital asset wallet address (required for high-CRR when source of wealth involves digital assets). Format varies by chain; validated downstream.
+            accreditedInvestorOptedIn:
+              type: boolean
+              description: Whether the individual has opted in as an Accredited Investor under MAS
+            accreditedInvestorQualifyingCriteria:
+              $ref: '#/components/schemas/AccreditedInvestorQualifyingCriteria'
+            raaPassed:
+              type: boolean
+              description: Whether the individual passed the Risk Awareness Assessment (required when accreditedInvestorOptedIn is false)
+            clientAttestationDate:
+              type: string
+              format: date-time
+              description: ISO 8601 date when the CaaS client attested RAA completion (Phase 1 reliance model)
+            clientAttestationReference:
+              type: string
+              maxLength: 200
+              description: CaaS client reference for RAA attestation record (Phase 1 reliance model)
           description: Individual data for the associated person
         userId:
           type: string
@@ -66530,6 +66683,7 @@ components:
             $ref: '#/components/schemas/Document'
           description: Documents associated with the associated person
       required:
+        - associatedPersonId
         - identityId
         - role
         - percentageOwnership
@@ -69144,17 +69298,17 @@ components:
       type: object
       properties:
         month:
-          type: string
-          pattern: ^\d{2}$
           description: birthdate month (MM, e.g. "06")
-        day:
           type: string
           pattern: ^\d{2}$
+        day:
           description: birthdate day (DD, e.g. "15")
+          type: string
+          pattern: ^\d{2}$
         year:
+          description: birthdate year (YYYY, e.g. "1990")
           type: string
           pattern: ^\d{4}$
-          description: birthdate year (YYYY, e.g. "1990")
       required:
         - month
         - day
@@ -70318,7 +70472,6 @@ components:
           required:
             - street1
             - city
-            - subdivision
             - zip
             - country
         mailingAddress:
@@ -70349,7 +70502,6 @@ components:
           required:
             - street1
             - city
-            - subdivision
             - zip
             - country
         billingAddress:
@@ -70380,7 +70532,6 @@ components:
           required:
             - street1
             - city
-            - subdivision
             - zip
             - country
         legalEntityStructure:
@@ -70487,7 +70638,7 @@ components:
             - phoneNumber
         tradeStrategy:
           type: string
-          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\-\.,()"]+$
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&"]+$
           description: Trading strategy of the business
         activeCoinTokens:
           type: string
@@ -70624,6 +70775,11 @@ components:
           items:
             $ref: '#/components/schemas/Document'
           description: List of documents associated with the identity
+        externalVerifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalVerification'
+          description: External verifications (e.g. Persona) for this identity
         finalizeSubmission:
           type: boolean
           description: Whether identity is ready for final submission and requirements validation
@@ -74804,6 +74960,7 @@ components:
             - commercialRegister
             - articlesOfAssociation
             - certificateOfIncorporation
+            - certificateOfGoodStanding
             - certificateOfTrust
             - certificateOfIncumbency
             - certificateOfIncumbencyOrShareRegister
@@ -74829,6 +74986,12 @@ components:
             - evidenceOfGovernmentOrStateOwnership
             - secFilingsAsEvidenceOfPublicTradingStatus
             - foundingTreatyOrEquivalent
+            - proofOfAddress
+            - sourceOfWealth
+            - singaporeSupportingDocument
+            - caseRequiredDocuments
+            - correspondentAccountCertification
+            - authorizedSignerForm
           description: Type of document being uploaded
         status:
           type: string
@@ -78348,6 +78511,39 @@ components:
           - createdAt
           - updatedAt
           - externalSettlementId
+    ExternalVerification:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Internal ID of the external verification
+        provider:
+          type: string
+          description: Provider (e.g. persona, singpass)
+        resourceId:
+          type: string
+          description: Provider resource ID (absent for pending rows)
+        resourceLink:
+          type: string
+          description: Link to the verification session
+        status:
+          type: string
+          enum:
+            - pending
+            - inProgress
+            - completed
+            - failed
+          description: Verification status
+        lastUpdated:
+          type: string
+          format: date-time
+          description: Timestamp when the verification was last updated
+      required:
+        - id
+        - provider
+        - status
+        - lastUpdated
+      title: ExternalVerification
     FastAccountResponseProps:
       title: FastAccountResponseProps
       type: object
@@ -82386,6 +82582,15 @@ components:
             - vid
             - visa
             - wp
+            - computerizedPayslips
+            - incomeTaxAssessment
+            - employmentLetterContract
+            - bankStatement
+            - dptHoldingStatement
+            - investmentHoldingsStatement
+            - titleDeeds
+            - propertyTaxCpfStatement
+            - other
           description: |-
             Class of government ID. Valid values:
             cct - Citizenship Certificate,
@@ -82443,7 +82648,6 @@ components:
           required:
             - street1
             - city
-            - subdivision
             - zip
             - country
         identificationNumber:
@@ -82452,6 +82656,68 @@ components:
         politicallyExposedPerson:
           type: boolean
           description: Whether the individual is a politically exposed person
+        multipleCitizenship:
+          type: array
+          items:
+            type: string
+            description: Country (formatted as ISO 3166-1 alpha-3)
+          description: Additional citizenships beyond primary (ISO 3166-1 alpha-3 codes)
+        sourceOfFundOrigin:
+          type: string
+          maxLength: 500
+          description: Origin of funds to be deposited (e.g., employment, savings)
+        sourceOfFundOriginOfTransfer:
+          type: string
+          maxLength: 500
+          description: 'Specific transfer origin: bank name for fiat, platform/wallet name for digital assets'
+        occupationDetails:
+          type: string
+          maxLength: 500
+          description: Free-text occupation description (required when occupation is self-employed or other)
+        employerName:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+          maxLength: 200
+          description: Name of employer
+        jobTitle:
+          type: string
+          pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ\s'\.\-]+$
+          maxLength: 200
+          description: Job title
+        annualIncome:
+          $ref: '#/components/schemas/AnnualIncome'
+        accountOpeningPurpose:
+          type: string
+          maxLength: 500
+          description: Purpose of opening a BitGo Singapore account
+        sourceOfWealth:
+          $ref: '#/components/schemas/SourceOfWealth'
+        sourceOfWealthDetails:
+          type: string
+          maxLength: 500
+          description: Free-text source of wealth details (required when sourceOfWealth is "other")
+        netWorth:
+          $ref: '#/components/schemas/NetWorth'
+        digitalAssetWalletAddress:
+          type: string
+          maxLength: 200
+          description: Digital asset wallet address (required for high-CRR when source of wealth involves digital assets). Format varies by chain; validated downstream.
+        accreditedInvestorOptedIn:
+          type: boolean
+          description: Whether the individual has opted in as an Accredited Investor under MAS
+        accreditedInvestorQualifyingCriteria:
+          $ref: '#/components/schemas/AccreditedInvestorQualifyingCriteria'
+        raaPassed:
+          type: boolean
+          description: Whether the individual passed the Risk Awareness Assessment (required when accreditedInvestorOptedIn is false)
+        clientAttestationDate:
+          type: string
+          format: date-time
+          description: ISO 8601 date when the CaaS client attested RAA completion (Phase 1 reliance model)
+        clientAttestationReference:
+          type: string
+          maxLength: 200
+          description: CaaS client reference for RAA attestation record (Phase 1 reliance model)
       title: Individual
     IndividualIdentityResponse:
       type: object
@@ -82489,6 +82755,11 @@ components:
           items:
             $ref: '#/components/schemas/Document'
           description: List of documents associated with the identity
+        externalVerifications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExternalVerification'
+          description: External verifications (e.g. Persona) for this identity
         finalizeSubmission:
           type: boolean
           description: Whether identity is ready for final submission and requirements validation
@@ -86309,6 +86580,8 @@ components:
             - data
             - document
             - associatedPerson
+            - agreement
+            - externalVerification
           description: Type of missing requirement
         name:
           type: string
@@ -86675,6 +86948,16 @@ components:
                 $ref: '#/components/schemas/RecipientEntry1'
           required:
             - recipients
+    NetWorth:
+      type: string
+      enum:
+        - Under $100,000
+        - $100,001 - $500,000
+        - $500,001 - $1,000,000
+        - $1,000,001 - $5,000,000
+        - $5,000,001 and over
+      title: NetWorth
+      description: Net worth bracket in SGD (required for high-CRR individuals)
     NetworkAccountBalanceRecordForClient:
       title: NetworkAccountBalanceRecordForClient
       type: object
@@ -87311,6 +87594,7 @@ components:
         - $ref: '#/components/schemas/OktaOAuthSetting'
     Occupation:
       type: string
+      title: Occupation
       enum:
         - Agriculture
         - Art Dealer / Auctioneer / Import / Export Company
@@ -87336,8 +87620,7 @@ components:
         - Student / Unemployed / Retired
         - Traders / Trading (High Frequency, Proprietary, Market Maker)
         - Weapons Dealers
-      title: Occupation
-      description: Occupation category of the individual
+      description: Occupation category. Use OccupationEnum values.
     OfcCoin:
       type: string
       description: Off-chain symbol for the coin.
@@ -94263,6 +94546,7 @@ components:
             - Escrow
             - Escrow - Triparty
             - Distributed Custody
+            - Link
           description: Name of the BitGo product
         bitgoOrg:
           type: string
@@ -94318,6 +94602,8 @@ components:
             - data
             - document
             - associatedPerson
+            - agreement
+            - externalVerification
           description: Type of requirement
         name:
           type: string
@@ -97282,6 +97568,15 @@ components:
               type: object
               additionalProperties:
                 type: string
+    SourceOfWealth:
+      type: string
+      enum:
+        - employmentIncome
+        - inheritance
+        - saleOfBusinessOrProperty
+        - other
+      title: SourceOfWealth
+      description: Source of wealth category (required for high-CRR individuals)
     SpendableAttributes:
       type: object
       properties:
@@ -114794,6 +115089,7 @@ components:
         - Escrow
         - Escrow - Triparty
         - Distributed Custody
+        - Link
       title: WPBitGoProduct
       description: BitGo product types
     WPBitgoOrg:
