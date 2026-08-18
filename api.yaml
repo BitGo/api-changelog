@@ -38825,7 +38825,7 @@ paths:
                 properties: {}
   /api/mint/v1/enterprise/{enterpriseId}/orders:
     get:
-      summary: List exchange orders
+      summary: List orders
       description: |-
         Lists orders for the enterprise. Supports filtering by type, status, asset, and date.
         Supports bulk fetch by ids[]. Excludes stateHistory — use the get-by-id endpoint for full detail.
@@ -38941,7 +38941,7 @@ paths:
                 type: object
                 properties: {}
     post:
-      summary: Create an exchange order
+      summary: Create an order
       description: Submits a new mint or burn order for the enterprise
       operationId: mint.v1.enterprise.orders.create
       tags:
@@ -38995,8 +38995,8 @@ paths:
                 $ref: '#/components/schemas/PostExchangeOrderResponse'
   /api/mint/v1/enterprise/{enterpriseId}/orders/{id}:
     get:
-      summary: Get an exchange order by ID
-      description: Returns a single exchange order including deposit instructions and transaction history
+      summary: Get an order by ID
+      description: Returns a single order including deposit instructions and transaction history
       operationId: mint.v1.enterprise.orders.get
       tags:
         - Mint
@@ -43979,6 +43979,8 @@ paths:
             enum:
               - freeze
               - unfreeze
+              - pause
+              - unpause
             example: freeze
         - name: token
           description: Filter by token identifier (chain:baseAsset, e.g. eth:gousd)
@@ -44125,6 +44127,8 @@ paths:
                   enum:
                     - freeze
                     - unfreeze
+                    - pause
+                    - unpause
                   description: Type of compliance operation
                   example: freeze
                 assetId:
@@ -64065,6 +64069,7 @@ components:
         - getManualSupportReview
         - getSupportManagerApproval
         - getVideoApprovalFromSupport
+        - evaluateFraudRisk
     Actions:
       type: object
       description: |
@@ -64266,6 +64271,13 @@ components:
         isVoteDelegationRequest:
           description: Whether this is a vote delegation request.
           type: boolean
+        subType:
+          description: The ADA staking subtype. Defaults to NATIVE for standard pool delegation. REALFI_SUSDR requires the susdrStaking feature flag.
+          type: string
+          enum:
+            - NATIVE
+            - REALFI_SUSDR
+          default: NATIVE
     AdaStakingTransactionProperties:
       title: ADA Staking Transaction Properties
       allOf:
@@ -72029,6 +72041,8 @@ components:
           enum:
             - freeze
             - unfreeze
+            - pause
+            - unpause
           description: Type of compliance operation
           example: freeze
         status:
@@ -72192,9 +72206,19 @@ components:
           type: boolean
           description: Whether the asset+chain pair supports unfreezing addresses
           example: true
+        pause:
+          type: boolean
+          description: Whether the asset+chain pair supports pausing the contract
+          example: true
+        unpause:
+          type: boolean
+          description: Whether the asset+chain pair supports unpausing the contract
+          example: true
       required:
         - freeze
         - unfreeze
+        - pause
+        - unpause
     ComplianceRequestSettingsListResponse:
       title: ComplianceRequestSettingsListResponse
       type: object
@@ -73526,6 +73550,7 @@ components:
                     - $ref: '#/components/schemas/VideoApprovalActionRequest'
                     - $ref: '#/components/schemas/IdVerificationActionRequest'
                     - $ref: '#/components/schemas/OrganizationAdminActionRequest'
+                    - $ref: '#/components/schemas/LivenessVerificationActionRequest'
         filteringConditions:
           type: array
           description: List of Filtering Conditions that must trigger for the policy rule to be Evaluated.
@@ -78062,6 +78087,7 @@ components:
             - GO_ACCOUNT
             - BLOCKCHAIN_ADDRESS
             - WALLET
+            - BANK_ACCOUNT
           description: Destination type @example "BLOCKCHAIN_ADDRESS"
         amount:
           type: string
@@ -83442,6 +83468,8 @@ components:
                 enum:
                   - freeze
                   - unfreeze
+                  - pause
+                  - unpause
                 description: Type of compliance operation
                 example: freeze
               status:
@@ -85473,6 +85501,41 @@ components:
           type: integer
           description: The pagination offset used in this request.
           example: 0
+    LivenessVerificationActionRequest:
+      title: Base Liveness Verification
+      type: object
+      description: Require liveness verification from a designated set of users.
+      required:
+        - name
+        - parameters
+      properties:
+        name:
+          type: string
+          description: Name of the associated Action.
+          enum:
+            - approvals.bitgo.livenessVerification
+          example: approvals.bitgo.livenessVerification
+        parameters:
+          type: object
+          description: Required data needed to configure the Action.
+          required:
+            - livenessCheckUser
+          properties:
+            livenessCheckUser:
+              type: string
+              description: |
+                Which set of users must complete the liveness check.
+
+                * `transactionInitiator` - The user who initiated the transaction.
+                * `walletAdmins` - The wallet admins.
+                * `videoIdUsers` - Users enrolled in the Video ID program.
+              enum:
+                - transactionInitiator
+                - walletAdmins
+                - videoIdUsers
+              example: transactionInitiator
+        operator:
+          $ref: '#/components/schemas/OperatorType'
     LivenessVerificationFromEnterpriseAdminActionRequest:
       title: Liveness Verification From Enterprise Admins
       type: object
@@ -90319,6 +90382,7 @@ components:
         - pendingManualTrustReview
         - pendingManualSupportReview
         - pendingVideoApprovalFromSupport
+        - pendingFraudRiskEvaluation
     PendingApprovalStatePending1:
       title: Pending
       type: string
@@ -90338,6 +90402,7 @@ components:
         - awaitingSignature
         - pendingCustodianApproval
         - pendingManualTrustReview
+        - pendingFraudRiskEvaluation
     PendingApprovalStateResolved:
       title: Resolved
       type: string
@@ -90354,6 +90419,7 @@ components:
         - awaitingSignature
         - pendingCustodianApproval
         - pendingManualTrustReview
+        - pendingFraudRiskEvaluation
     PendingApprovalTransactionRequest1:
       title: Transaction request (lite)
       type: object
