@@ -43979,6 +43979,8 @@ paths:
             enum:
               - freeze
               - unfreeze
+              - pause
+              - unpause
             example: freeze
         - name: token
           description: Filter by token identifier (chain:baseAsset, e.g. eth:gousd)
@@ -44125,6 +44127,8 @@ paths:
                   enum:
                     - freeze
                     - unfreeze
+                    - pause
+                    - unpause
                   description: Type of compliance operation
                   example: freeze
                 assetId:
@@ -72037,6 +72041,8 @@ components:
           enum:
             - freeze
             - unfreeze
+            - pause
+            - unpause
           description: Type of compliance operation
           example: freeze
         status:
@@ -72200,9 +72206,19 @@ components:
           type: boolean
           description: Whether the asset+chain pair supports unfreezing addresses
           example: true
+        pause:
+          type: boolean
+          description: Whether the asset+chain pair supports pausing the contract
+          example: true
+        unpause:
+          type: boolean
+          description: Whether the asset+chain pair supports unpausing the contract
+          example: true
       required:
         - freeze
         - unfreeze
+        - pause
+        - unpause
     ComplianceRequestSettingsListResponse:
       title: ComplianceRequestSettingsListResponse
       type: object
@@ -83452,6 +83468,8 @@ components:
                 enum:
                   - freeze
                   - unfreeze
+                  - pause
+                  - unpause
                 description: Type of compliance operation
                 example: freeze
               status:
