@@ -16,6 +16,8 @@ tags:
     description: Internal endpoints for retrieving the most recent market price data including OHLC and spot prices. These APIs should only be accessed by internal services.
   - name: Internal Asset Management APIs
     description: Internal endpoints for managing assets and vendor asset mappings. These APIs should only be accessed by internal services.
+  - name: Admin Asset Management APIs
+    description: Admin endpoints for managing assets and vendor asset mappings.
   - name: Admin Historical Prices
     description: Admin endpoints for querying and managing historical price data
   - name: Admin Backfill
@@ -64286,6 +64288,58 @@ components:
               type: string
             dRepId:
               type: string
+              nullable: true
+            stakingType:
+              description: The ADA staking subtype. Defaults to NATIVE for standard pool delegation.
+              type: string
+              enum:
+                - NATIVE
+                - REALFI_SUSDR
+              default: NATIVE
+            susdrBalance:
+              description: sUSDr token balance for REALFI_SUSDR delegations. Null for NATIVE delegations.
+              type: string
+              format: bigInteger
+              nullable: true
+            currentExchangeRate:
+              description: Current sUSDr/USDr exchange rate. Null for NATIVE delegations.
+              type: string
+              format: bigDecimal
+              nullable: true
+            initialExchangeRate:
+              description: sUSDr/USDr exchange rate at delegation creation time. Null for NATIVE delegations.
+              type: string
+              format: bigDecimal
+              nullable: true
+            lastSyncedAt:
+              description: Timestamp of the last balance/exchange rate sync. Null for NATIVE delegations.
+              type: string
+              format: date-time
+              nullable: true
+            pendingOrderTxHash:
+              description: Transaction hash of a pending RealFi order UTxO, if any.
+              type: string
+              nullable: true
+            pendingOrderOutputIndex:
+              description: Output index of a pending RealFi order UTxO, if any.
+              type: integer
+              nullable: true
+            orderStatus:
+              description: Lifecycle status of the most recent RealFi order.
+              type: string
+              enum:
+                - PENDING
+                - SETTLED
+                - CANCELLED
+              nullable: true
+            timelockAddress:
+              description: Timelock native script address holding USDr pending the unstake cooldown.
+              type: string
+              nullable: true
+            unlockSlot:
+              description: Cardano slot number at which the unstake timelock unlocks.
+              type: integer
+              format: int64
               nullable: true
     AdaPaymentIntent:
       title: ADA Payment Intent
