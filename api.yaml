@@ -3428,6 +3428,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ReservedAllocationOrErrorPayload'
+        '502':
+          description: Bad Gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ReservedAllocationOrErrorPayload'
   /api/network/v1/enterprises/{enterpriseId}/clients/connections/{connectionId}/allocations/signing:
     get:
       summary: Get Signing Payload for Client Allocations
@@ -3715,8 +3721,14 @@ paths:
         deallocation amount exceeds available balance.
 
         - 500: Internal Server Error or Reserved Deallocation
-        - Occurs when there's an unexpected server error processing the request.
-        - Examples: Database connection issues, transient network errors.
+        - Occurs when there's an unexpected internal server error processing the request.
+        - Examples: Database connection issues, our own reserve is still pending at BitGo.
+
+        - 502: Bad Gateway or Reserved Deallocation
+        - Occurs when the deallocation is retriable specifically because of an upstream
+        partner/exchange failure or delay, rather than an internal BitGo issue.
+        - Examples: The partner API call failed or timed out, we are still waiting to
+        reserve at the partner.
 
         **Requires access token scopes:** `settlement_network_read`, `settlement_network_write`
       operationId: V1ClientDeallocationsPostRoute
@@ -3845,6 +3857,12 @@ paths:
                 $ref: '#/components/schemas/V1DeallocationReleasedWithErrorPostPayload'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ReservedDeallocationOrErrorPayload'
+        '502':
+          description: Bad Gateway
           content:
             application/json:
               schema:
@@ -113057,8 +113075,10 @@ components:
                 type: boolean
                 description: |-
                   Flag indicating whether the partner has demonstrated operational stability.
-                  Used when partner is initially launched to demonstrate that the partner is still 
+                  Used when partner is initially launched to demonstrate that the partner is still
                   in beta and not yet stable.
+              isLicensedForPartner:
+                type: boolean
             required:
               - id
               - name
@@ -113067,6 +113087,7 @@ components:
               - active
               - trustOrg
               - stablePartner
+              - isLicensedForPartner
             description: Array of partner objects with limited properties and stability indicators.
       required:
         - partners
