@@ -43008,7 +43008,10 @@ paths:
                     - triggering_burn_accept
                     - failed_to_burn_request
                     - failed_to_burn_accept
+                    - pending_policy_approval
+                    - policy_rejected
                     - pending
+                    - pendingApproval
             example: pending
         - name: fromDate
           description: Start date for order search
@@ -43437,6 +43440,8 @@ paths:
                     - triggering_burn_accept
                     - failed_to_burn_request
                     - failed_to_burn_accept
+                    - pending_policy_approval
+                    - policy_rejected
               - type: string
                 enum:
                   - created
@@ -43481,6 +43486,8 @@ paths:
                   - triggering_burn_accept
                   - failed_to_burn_request
                   - failed_to_burn_accept
+                  - pending_policy_approval
+                  - policy_rejected
             example: created
         - name: fromDate
           description: Start date for order search
@@ -43812,11 +43819,15 @@ paths:
                     - created
                     - pending
                     - fulfilled
+                    - pendingApproval
+                    - rejected
               - type: string
                 enum:
                   - created
                   - pending
                   - fulfilled
+                  - pendingApproval
+                  - rejected
             example: created
         - name: groupBy
           description: Time period grouping for time-series data. When provided, returns timeSeries array in response.
@@ -44462,11 +44473,15 @@ paths:
                     - created
                     - pending
                     - fulfilled
+                    - pendingApproval
+                    - rejected
               - type: string
                 enum:
                   - created
                   - pending
                   - fulfilled
+                  - pendingApproval
+                  - rejected
             example: created
         - name: groupBy
           description: Time period grouping for time-series data. When provided, returns timeSeries array in response.
@@ -84137,7 +84152,10 @@ components:
         - triggering_burn_accept
         - failed_to_burn_request
         - failed_to_burn_accept
+        - pending_policy_approval
+        - policy_rejected
         - pending
+        - pendingApproval
     IssuerOrdersResponse:
       title: IssuerOrdersResponse
       type: object
@@ -88353,6 +88371,8 @@ components:
             - triggering_burn_accept
             - failed_to_burn_request
             - failed_to_burn_accept
+            - pending_policy_approval
+            - policy_rejected
           description: Status of the order
           example: created
         timestamp:
@@ -88624,6 +88644,8 @@ components:
             - triggering_burn_accept
             - failed_to_burn_request
             - failed_to_burn_accept
+            - pending_policy_approval
+            - policy_rejected
           description: Current status of the order
           example: fulfilled
         enterpriseId:
@@ -88741,6 +88763,10 @@ components:
             pending:
               $ref: '#/components/schemas/OrderStatusBreakdown'
             fulfilled:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+            pendingApproval:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+            rejected:
               $ref: '#/components/schemas/OrderStatusBreakdown'
       required:
         - amount
