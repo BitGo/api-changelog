@@ -43008,7 +43008,10 @@ paths:
                     - triggering_burn_accept
                     - failed_to_burn_request
                     - failed_to_burn_accept
+                    - pending_policy_approval
+                    - policy_rejected
                     - pending
+                    - pendingApproval
             example: pending
         - name: fromDate
           description: Start date for order search
@@ -43437,6 +43440,8 @@ paths:
                     - triggering_burn_accept
                     - failed_to_burn_request
                     - failed_to_burn_accept
+                    - pending_policy_approval
+                    - policy_rejected
               - type: string
                 enum:
                   - created
@@ -43481,6 +43486,8 @@ paths:
                   - triggering_burn_accept
                   - failed_to_burn_request
                   - failed_to_burn_accept
+                  - pending_policy_approval
+                  - policy_rejected
             example: created
         - name: fromDate
           description: Start date for order search
@@ -43812,11 +43819,15 @@ paths:
                     - created
                     - pending
                     - fulfilled
+                    - pendingApproval
+                    - rejected
               - type: string
                 enum:
                   - created
                   - pending
                   - fulfilled
+                  - pendingApproval
+                  - rejected
             example: created
         - name: groupBy
           description: Time period grouping for time-series data. When provided, returns timeSeries array in response.
@@ -44462,11 +44473,15 @@ paths:
                     - created
                     - pending
                     - fulfilled
+                    - pendingApproval
+                    - rejected
               - type: string
                 enum:
                   - created
                   - pending
                   - fulfilled
+                  - pendingApproval
+                  - rejected
             example: created
         - name: groupBy
           description: Time period grouping for time-series data. When provided, returns timeSeries array in response.
@@ -48332,6 +48347,10 @@ paths:
                 - spotTransfer
                 - delegateResource
                 - undelegateResource
+                - wrapApprove
+                - wrap
+                - unwrap
+                - finalizeUnwrap
               description: If provided, only transaction requests with the specified intent types will be returned.
         - name: excludeIntentTypes
           description: If provided, transaction requests with the specified intent types will be excluded.
@@ -48400,6 +48419,10 @@ paths:
                 - spotTransfer
                 - delegateResource
                 - undelegateResource
+                - wrapApprove
+                - wrap
+                - unwrap
+                - finalizeUnwrap
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: |-
@@ -48631,6 +48654,10 @@ paths:
                 - spotTransfer
                 - delegateResource
                 - undelegateResource
+                - wrapApprove
+                - wrap
+                - unwrap
+                - finalizeUnwrap
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: |-
@@ -49600,6 +49627,12 @@ paths:
       description: |-
         Create an enterprise in the specified organization. Also create a user if it doesn't already exist.
         This endpoint is intended for creating enterprises in Crypto-as-a-Service (CaaS) organizations. For non-CaaS organizations, set isCaaS to false to skip validation.
+
+        By default the new enterprise's initial `kycState` follows the environment: `approved` where KYC
+        is not enforced (testnet-like environments) and `pending` where it is enforced (production, staging).
+        Pass `fullSandboxKyc: true` to simulate the full KYC flow in a non-enforcing environment by starting
+        with `kycState = pending`. Ignored in enforcing environments. KycExemption license takes precedence
+        and overrides to `approved` even when this flag is set.
       operationId: v2.organization.enterprise.create
       tags:
         - Enterprise Management
@@ -49643,6 +49676,13 @@ paths:
                     - individual
                     - entity
                   description: The account type for the enterprise. Defaults to 'individual' if not specified.
+                fullSandboxKyc:
+                  type: boolean
+                  default: false
+                  description: |-
+                    Enterprises are KYC approved at BitGo in our Test environment by default. If you want to
+                    replicate production and start the enterprise with pending KYC, pass this as true. Note: you
+                    will then need to complete KYC/KYB of the enterprise to move it to approved/rejected.
                 thirdPartyIdentifier:
                   type: array
                   items:
@@ -55382,6 +55422,10 @@ paths:
                 - spotTransfer
                 - delegateResource
                 - undelegateResource
+                - wrapApprove
+                - wrap
+                - unwrap
+                - finalizeUnwrap
               description: If provided, only transaction requests with the specified intent types will be returned.
         - name: excludeIntentTypes
           description: If provided, transaction requests with the specified intent types will be excluded.
@@ -55450,6 +55494,10 @@ paths:
                 - spotTransfer
                 - delegateResource
                 - undelegateResource
+                - wrapApprove
+                - wrap
+                - unwrap
+                - finalizeUnwrap
               description: If provided, transaction requests with the specified intent types will be excluded.
         - name: states
           description: |-
@@ -83436,6 +83484,10 @@ components:
         - spotTransfer
         - delegateResource
         - undelegateResource
+        - wrapApprove
+        - wrap
+        - unwrap
+        - finalizeUnwrap
     InternationalWireAccountResponseProps:
       title: InternationalWireAccountResponseProps
       type: object
@@ -84100,7 +84152,10 @@ components:
         - triggering_burn_accept
         - failed_to_burn_request
         - failed_to_burn_accept
+        - pending_policy_approval
+        - policy_rejected
         - pending
+        - pendingApproval
     IssuerOrdersResponse:
       title: IssuerOrdersResponse
       type: object
@@ -88316,6 +88371,8 @@ components:
             - triggering_burn_accept
             - failed_to_burn_request
             - failed_to_burn_accept
+            - pending_policy_approval
+            - policy_rejected
           description: Status of the order
           example: created
         timestamp:
@@ -88587,6 +88644,8 @@ components:
             - triggering_burn_accept
             - failed_to_burn_request
             - failed_to_burn_accept
+            - pending_policy_approval
+            - policy_rejected
           description: Current status of the order
           example: fulfilled
         enterpriseId:
@@ -88704,6 +88763,10 @@ components:
             pending:
               $ref: '#/components/schemas/OrderStatusBreakdown'
             fulfilled:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+            pendingApproval:
+              $ref: '#/components/schemas/OrderStatusBreakdown'
+            rejected:
               $ref: '#/components/schemas/OrderStatusBreakdown'
       required:
         - amount
