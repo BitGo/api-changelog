@@ -49270,9 +49270,12 @@ paths:
             type: string
             minLength: 1
         - name: limit
+          description: Maximum number of webhooks to return per page.
           in: query
           schema:
             type: string
+            default: '25'
+            maximum: 100
             format: number
         - name: enterpriseId
           in: path
@@ -50967,9 +50970,12 @@ paths:
             type: string
             minLength: 1
         - name: limit
+          description: Maximum number of webhooks to return per page.
           in: query
           schema:
             type: string
+            default: '25'
+            maximum: 100
             format: number
         - name: organizationId
           description: ''
@@ -57260,6 +57266,22 @@ paths:
               - BitGo Custody MENA FZE
               - BitGo India
               - BitGo Sister Trust 1
+        - name: customTags
+          description: |-
+            Filter wallets by applied tags (OR semantics). Provide one or more tag
+            values; returns wallets that match any of the supplied tags.
+            Tag matching is case-insensitive — `?customTags=Warm` matches stored `"warm"`.
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              description: |-
+                Filter wallets by applied tags (OR semantics). Provide one or more tag
+                values; returns wallets that match any of the supplied tags.
+                Tag matching is case-insensitive — `?customTags=Warm` matches stored `"warm"`.
+              example: '"warm"'
       responses:
         '200':
           description: OK
