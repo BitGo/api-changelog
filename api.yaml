@@ -49672,6 +49672,12 @@ paths:
                   items:
                     type: string
                     minLength: 1
+                    description: |-
+                      Additional users to grant admin access on the created enterprise.
+                      For Crypto-as-a-Service (CaaS) child enterprises, the organization service
+                      user already has implicit enterprise membership — you do not need to include
+                      it here. Only provide this field if you need to grant admin access to users
+                      beyond the service user.
                     example: 59cd72485007a239fb00282ed480da1f
                 isCaaS:
                   type: boolean
@@ -49711,7 +49717,6 @@ paths:
               required:
                 - email
                 - idempotencyKey
-                - additionalAdmins
       responses:
         '200':
           description: OK
@@ -51501,6 +51506,7 @@ paths:
               - pendingDecryption
               - whitelistApproved
               - whitelistRejected
+              - allocationRequest
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -51946,6 +51952,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PendingApproval'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/pendingapprovals/{approvalId}/transfer:
     get:
       summary: Get Transfer By Approval Id
@@ -52993,7 +53005,16 @@ paths:
       operationId: v2.tss.setting
       tags:
         - Transaction request
-      parameters: []
+      parameters:
+        - name: enterprise
+          description: |-
+            Filter by enterprise. When supplied, EdDSA MPCv2 rollout flags are evaluated in
+            this enterprise's context in addition to the caller's user id.
+          in: query
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
       responses:
         '200':
           description: OK
@@ -55837,6 +55858,12 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
@@ -89151,6 +89178,7 @@ components:
               - enableTrxMpc
               - enterpriseLogoUpload
               - cantonByov
+              - cantonByovMigrate
               - disableBridging
               - enableSignTypedStructuredData
         distributedCustody:
@@ -117699,6 +117727,7 @@ components:
         - endInvestorOnboardingInvite
         - endInvestorOnboardingAccepted
         - pendingDecryption
+        - allocationRequest
     WalletsResponse:
       type: object
       properties:
@@ -118232,6 +118261,7 @@ components:
         - pendingDecryption
         - whitelistApproved
         - whitelistRejected
+        - allocationRequest
     WebhookTypeBlock:
       type: string
       enum:
