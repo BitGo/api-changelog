@@ -64451,6 +64451,8 @@ components:
           properties:
             unspents:
               $ref: '#/components/schemas/optionalStringArray'
+            isAdminSplit:
+              $ref: '#/components/schemas/optionalBoolean'
           required:
             - unspents
         - $ref: '#/components/schemas/PaymentIntent'
@@ -68998,6 +69000,7 @@ components:
 
         Used by:
         - TokenApprovalIntent
+        - WrapApproveIntent
 
         Asset extraction: Extracts tokenName
       properties:
@@ -83436,6 +83439,12 @@ components:
         - defi-redeem
         - defi-approve
         - defi-withdraw
+        - wrap-native
+        - unwrap-native
+        - wrapApprove
+        - wrap
+        - unwrap
+        - finalizeUnwrap
         - delegateResource
         - undelegateResource
         - export
@@ -102262,6 +102271,9 @@ components:
         - $ref: '#/components/schemas/DefiDepositIntent'
         - $ref: '#/components/schemas/DefiRedeemIntent'
         - $ref: '#/components/schemas/DefiWithdrawIntent'
+        - $ref: '#/components/schemas/WrapNativeIntent'
+        - $ref: '#/components/schemas/UnwrapNativeIntent'
+        - $ref: '#/components/schemas/WrapApproveIntent'
         - $ref: '#/components/schemas/DotConsolidateIntent'
         - $ref: '#/components/schemas/DotCreateAccountIntent'
         - $ref: '#/components/schemas/DotPaymentIntent'
@@ -108378,6 +108390,24 @@ components:
           $ref: '#/components/schemas/optionalString'
         decimals:
           $ref: '#/components/schemas/optionalNumber'
+    UnwrapNativeIntent:
+      title: UnwrapNativeIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - unwrap-native
+            vaultId:
+              type: string
+            amount:
+              type: string
+          required:
+            - intentType
+            - vaultId
+            - amount
+        - $ref: '#/components/schemas/BaseIntent'
     UpdateBitgoChallenge:
       title: UpdateBitgoChallenge
       type: object
@@ -118874,6 +118904,47 @@ components:
           type: string
         shares:
           type: string
+    WrapApproveIntent:
+      title: Intent for ERC-7984 wrapApprove (shield allowance)
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - wrapApprove
+              description: Must be "wrapApprove".
+            amount:
+              type: string
+              description: Exact approve amount in underlying base units (positive integer string).
+          required:
+            - intentType
+            - amount
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/BaseIntentWithTokenName'
+      description: |-
+        Approve an underlying ERC-20 for an ERC-7984 confidential wrapper (shield phase-1).
+        Client-created; WP mints wrapLinkId / wrapLinkExpiresAt on the txnReq.
+
+        `tokenName` is the confidential wrapper (e.g. `hteth:cusdt`), not the underlying.
+    WrapNativeIntent:
+      title: WrapNativeIntent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - wrap-native
+            vaultId:
+              type: string
+            amount:
+              type: string
+          required:
+            - intentType
+            - vaultId
+            - amount
+        - $ref: '#/components/schemas/BaseIntent'
     WsError:
       type: object
       required:
