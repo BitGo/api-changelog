@@ -39293,6 +39293,8 @@ paths:
                 - $ref: '#/components/schemas/FlrPStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/HashStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/HashUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/HypeEvmStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/HypeEvmUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveClaimRewardsRequestPOSTBody'
@@ -72209,6 +72211,7 @@ components:
         - ETH
         - FLRP
         - HASH
+        - HYPEEVM
         - INJECTIVE
         - MATIC
         - NEAR
@@ -82320,6 +82323,164 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: A hot wallet
+    HypeEvmStakingRequest:
+      title: HYPEEVM
+      description: A HyperEVM STAKE request. The staking request properties are serialized inline, so `amount`, `validatorAddress`, and `objectType` appear at the top level.
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest1'
+      type: object
+      properties:
+        amount:
+          description: Amount to stake in wei.
+          type: string
+          example: '20000000000000000'
+        validatorAddress:
+          description: The Hyperliquid validator address the request delegates to.
+          type: string
+          example: '0x1a53253c11881a8daa0dd41801af436530c14be8'
+        objectType:
+          description: Always BASE_WITH_VALIDATOR_ADDRESS for a HyperEVM stake request.
+          type: string
+          enum:
+            - BASE_WITH_VALIDATOR_ADDRESS
+        delegations:
+          type: array
+          items:
+            $ref: '#/components/schemas/StakingDelegation'
+          minItems: 0
+          maxItems: 1
+        transactions:
+          description: The 3 staking transactions - authorize, authorize_validator, and delegate. Empty until BitGo builds them.
+          type: array
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+          minItems: 0
+          maxItems: 3
+      required:
+        - amount
+        - validatorAddress
+        - objectType
+    HypeEvmStakingRequestPOSTBody:
+      title: HYPEEVM stake
+      description: |
+        Request to stake HYPE on HyperEVM.
+
+        **L1 activation required:** Delegation is a HyperCore (Hyperliquid L1) action, so the
+        wallet's base address must already exist on L1 before a staking request is accepted.
+        HyperEVM and Hyperliquid L1 share the same address, and activation requires at least one
+        L1 transaction. Send a small amount of HYPE (for example, 0.001 HYPE) to the address on
+        L1 to activate it.
+
+        **Reusing delegations:** Staking again to a validator you already delegate to reuses the
+        existing delegation; staking to a different validator creates an additional one.
+
+        **Transactions:** BitGo generates 3 sequential transactions per request - `authorize`,
+        `authorize_validator`, and `delegate`. Each becomes ready only after the previous confirms.
+
+        **Fields not used by HyperEVM:** `gasPrice`, `duration`, and `delegationRequests` are
+        ignored, and `delegationId` must be omitted on a STAKE request.
+      type: object
+      properties:
+        clientId:
+          description: Optional user-generated identifier to detect duplicated requests.
+          type: string
+          maxLength: 256
+          nullable: true
+        type:
+          description: Staking request type. Always 'STAKE' for this endpoint.
+          type: string
+          enum:
+            - STAKE
+          example: STAKE
+        amount:
+          description: Amount to stake in wei (18 decimals). Minimum 10000000000 wei (0.00000001 HYPE). Hyperliquid L1 uses 8 decimals, so the amount is truncated to L1 precision - use whole multiples of 10^10 wei to avoid losing precision.
+          type: string
+          example: '20000000000000000'
+        validator:
+          description: The Hyperliquid validator address to delegate to, in EVM (0x) format. Must be an active validator on chain, otherwise the request is rejected.
+          type: string
+          example: '0x1a53253c11881a8daa0dd41801af436530c14be8'
+      required:
+        - type
+        - amount
+        - validator
+    HypeEvmUnStakingRequest:
+      title: HYPEEVM unstake
+      description: A HyperEVM UNSTAKE request. `validatorAddress` is not returned - the validator is carried on the delegation.
+      allOf:
+        - $ref: '#/components/schemas/StakingRequest1'
+      type: object
+      properties:
+        amount:
+          description: Amount to unstake in wei.
+          type: string
+          example: '10000000000000000'
+        objectType:
+          description: Always UNSTAKE for a HyperEVM unstake request.
+          type: string
+          enum:
+            - UNSTAKE
+        delegations:
+          type: array
+          items:
+            $ref: '#/components/schemas/StakingDelegation'
+          minItems: 1
+          maxItems: 1
+        transactions:
+          description: The 3 unstaking transactions - undelegate, queue_withdrawals, and withdraw_undelegated.
+          type: array
+          items:
+            $ref: '#/components/schemas/StakingTransaction'
+          minItems: 0
+          maxItems: 3
+      required:
+        - amount
+        - objectType
+    HypeEvmUnStakingRequestPOSTBody:
+      title: HYPEEVM unstake
+      description: |
+        Request to unstake HYPE on HyperEVM. One delegation is unstaked per request.
+
+        **Delegation lock:** A delegation cannot be undelegated until 1 day after it was created.
+
+        **Cooldown:** After undelegating, funds enter Hyperliquid's 7-day withdrawal queue before
+        being returned to the HyperEVM wallet. The delegation stays active during the cooldown,
+        with the amount tracked in `pendingUnstake`.
+
+        **Transactions:** BitGo generates 3 sequential transactions per request - `undelegate`,
+        `queue_withdrawals`, and `withdraw_undelegated`.
+
+        **Partial and concurrent unstakes:** Partial unstaking is supported, and a new unstake can
+        be started while an earlier one is still in cooldown, as long as
+        `delegated - pendingUnstake - amount >= 0`.
+
+        **Fields not used by HyperEVM:** `validator` must be omitted - the validator is resolved
+        from the delegation - and `gasPrice`, `duration`, and `delegationRequests` are ignored.
+      type: object
+      properties:
+        clientId:
+          description: Optional user-generated identifier to detect duplicated requests.
+          type: string
+          maxLength: 256
+          nullable: true
+        type:
+          description: Staking request type. Always 'UNSTAKE' for this endpoint.
+          type: string
+          enum:
+            - UNSTAKE
+          example: UNSTAKE
+        amount:
+          description: Amount to unstake in wei (18 decimals). Minimum 10000000000 wei (0.00000001 HYPE).
+          type: string
+          example: '10000000000000000'
+        delegationId:
+          description: The ID of the delegation to unstake from. Required for HyperEVM.
+          type: string
+          example: afd7d4be-d174-4c3b-a413-cea1fdc48e68
+      required:
+        - type
+        - amount
+        - delegationId
     HypeevmBridgeFundsIntent:
       title: Hypeevm Bridge Funds Intent
       allOf:
@@ -98869,6 +99030,7 @@ components:
         - WFLR_UNSTAKE
         - FLRP_STAKE
         - SOMI_STAKE
+        - BASE_WITH_VALIDATOR_ADDRESS
         - STORY_STAKE
         - VET_STAKE
         - WFLR_CLAIM_REWARDS
@@ -98896,6 +99058,8 @@ components:
         - $ref: '#/components/schemas/EigenStakingRequest'
         - $ref: '#/components/schemas/EthStakingRequest'
         - $ref: '#/components/schemas/HashStakingRequest'
+        - $ref: '#/components/schemas/HypeEvmStakingRequest'
+        - $ref: '#/components/schemas/HypeEvmUnStakingRequest'
         - $ref: '#/components/schemas/InjectiveStakingRequest'
         - $ref: '#/components/schemas/MaticStakingRequest'
         - $ref: '#/components/schemas/NearStakingRequest'
@@ -99517,6 +99681,8 @@ components:
         - undelegate
         - withdraw_undelegated
         - authorize
+        - authorize_validator
+        - queue_withdrawals
         - ''
     StakingValidator:
       type: object
@@ -99665,6 +99831,10 @@ components:
         delegated:
           description: The delegated staked amount in base units.
           type: string
+        pendingUnstakeWithdrawal:
+          description: Internal-wallet-only amount of delegated whose EIGEN unstake TX2 (WITHDRAW_UNDELEGATED) is pending (broadcast and awaiting confirmation). WalletPlatform uses this to calculate effectiveDelegated = max(delegated - pendingUnstakeWithdrawal, 0). This is distinct from HypeEVM properties.pendingWithdrawal. When the Flipt flag staking_pending-withdrawal-eigen_enable is disabled (the default), this field is 0.
+          type: string
+          nullable: true
         pendingUnstake:
           description: The amount that is actively being unstaked.
           type: string
