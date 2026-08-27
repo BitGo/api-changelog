@@ -46385,6 +46385,26 @@ paths:
           in: query
           schema:
             type: string
+        - name: minUnconfirmedMinutes
+          description: |-
+            Only return UTXO transactions that have been unconfirmed for longer than this
+            many minutes. Ignored for non-UTXO coins. If `minUnconfirmedBlocks` is also
+            supplied, a transaction is returned if it satisfies either threshold.
+          in: query
+          schema:
+            type: string
+            example: '30'
+            format: number
+        - name: minUnconfirmedBlocks
+          description: |-
+            Only return UTXO transactions that have been unconfirmed for longer than this
+            many blocks. Ignored for non-UTXO coins. If `minUnconfirmedMinutes` is also
+            supplied, a transaction is returned if it satisfies either threshold.
+          in: query
+          schema:
+            type: string
+            example: '3'
+            format: number
         - name: walletId
           in: path
           required: true
@@ -54654,6 +54674,7 @@ paths:
         Approve or reject a pending fiat withdrawal. If approving, the `state` updates to `pendingApproval`,
         enabling BitGo Trust to transfer the funds. If rejecting, the `state` updates to `rejected`,
         canceling the pending withdrawal.
+        Note: This endpoint is scoped for only Crypto-As-A-Service (CaaS) clients.
       operationId: v2.wallet.fiatWithdrawals.confirm
       tags:
         - Transfer
