@@ -10317,6 +10317,18 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: limit
+          description: Page size. Defaults to 100, clamped to a maximum of 1000. Values below 1 are rejected.
+          in: query
+          schema:
+            type: string
+            format: integer
+        - name: cursor
+          description: Opaque cursor from a previous response's `nextCursor`. Omit for the first page.
+          in: query
+          schema:
+            type: string
+            minLength: 1
       responses:
         '200':
           description: OK
@@ -82618,8 +82630,14 @@ components:
             required:
               - id
               - status
+        nextCursor:
+          nullable: true
+          type: string
+          minLength: 1
+          description: Cursor for the next page, or null when this page is the last one. Treat as opaque.
       required:
         - identities
+        - nextCursor
     IdentityOccupation:
       title: IdentityOccupation
       type: string
