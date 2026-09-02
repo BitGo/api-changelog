@@ -46434,7 +46434,9 @@ paths:
   /api/v2/{coin}/wallet/{walletId}/resourcedelegations:
     get:
       summary: Get resource delegations
-      description: Retrieves outgoing and incoming resource delegation information for a TRON wallet
+      description: |-
+        Retrieves outgoing and incoming resource delegation information for a TRON wallet.
+        Optional `address` query param filters by counterparty (receiverAddress for outgoing, ownerAddress for incoming).
       operationId: v2.wallet.getResourceDelegations
       tags:
         - Wallet
@@ -46448,6 +46450,14 @@ paths:
             enum:
               - outgoing
               - incoming
+        - name: address
+          description: |-
+            Counterparty address to search by (exact match, TRON base58check format).
+            For type=outgoing matches receiverAddress; for type=incoming matches ownerAddress.
+            When type is omitted, both directions are filtered. Omit this param to list all wallet delegations.
+          in: query
+          schema:
+            type: string
         - name: resource
           description: 'Filter by resource type (case-insensitive: ENERGY, energy, BANDWIDTH, bandwidth)'
           in: query
@@ -46460,7 +46470,9 @@ paths:
             type: string
             format: number
         - name: nextBatchPrevId
-          description: Pagination cursor from previous response
+          description: |-
+            Pagination cursor from previous response.
+            Callers MUST also specify type when paginating; combining this with address and omitting type returns 400.
           in: query
           schema:
             type: string
@@ -46487,6 +46499,12 @@ paths:
                 $ref: '#/components/schemas/GetResourceDelegationsResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -48094,6 +48112,62 @@ paths:
           content:
             application/json:
               schema: {}
+  /api/v2/enterprise/{enterpriseId}/organization:
+    get:
+      summary: Get organization metadata by enterprise
+      description: |-
+        Returns the metadata of the organization linked to the enterprise.
+        The caller must be a member of the enterprise. To get the full organization
+        details, use /api/v2/organization/{organizationId} instead.
+      operationId: v2.enterprise.organization.get
+      tags:
+        - Enterprise
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: The public ID of the enterprise whose linked organization metadata to fetch.
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/EnterpriseIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetEnterpriseOrganizationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}/pin/count:
     get:
       summary: Get pinned wallet count
@@ -80012,6 +80086,14 @@ components:
         - message
       title: GetDocumentsUnauthorizedError
       description: Generic error response
+    GetEnterpriseOrganizationResponse:
+      title: GetEnterpriseOrganizationResponse
+      type: object
+      properties:
+        organization:
+          $ref: '#/components/schemas/OrganizationMetadata'
+      required:
+        - organization
     GetEnterpriseResponse:
       title: GetEnterpriseResponse
       allOf:
@@ -89515,6 +89597,19 @@ components:
       type: string
       example: 59cd72485007a239fb00282ed480da1f
       pattern: ^[0-9a-f]{32}$
+    OrganizationMetadata:
+      title: OrganizationMetadata
+      type: object
+      properties:
+        id:
+          type: string
+          description: The organization ID
+        name:
+          type: string
+          description: The organization name
+      required:
+        - id
+        - name
     OrganizationMutableParameters:
       title: OrganizationMutableParameters
       type: object
