@@ -42967,6 +42967,304 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/travel-rule/v1/vasps:
+    get:
+      summary: List VASPs
+      description: List all virtual asset service providers (VASPs) currently verified by BitGo.
+      operationId: travel.rule.vasps.list
+      tags:
+        - Travel Rule
+      x-internal: false
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: offset
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: id
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: name
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: source
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: status
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: parent
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: domain
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: email
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: jurisdiction
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: refreshVasps
+          in: query
+          schema:
+            type: boolean
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListVaspResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+  /api/travel-rule/v1/vasps/suggestions:
+    get:
+      summary: Get VASP suggestions
+      description: Get suggested virtual asset service providers (VASPs) based on walletAddress.
+      operationId: travel.rule.vasps.suggestions
+      tags:
+        - Travel Rule
+      x-internal: false
+      parameters:
+        - name: walletId
+          in: query
+          schema:
+            type: string
+        - name: walletAddress
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: enterpriseId
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: coin
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VaspGetResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+  /api/travel-rule/v1/whitelist:
+    post:
+      summary: Whitelist address
+      description: |-
+        Unified CaaS-facing endpoint that absorbs the multi-step compliance
+        orchestration (WP policy rule, VASP lookup or registration, PII storage)
+        into a single declarative request. The server branches internally across
+        policy-only, known-VASP and new-VASP flows.
+      operationId: travel.rule.whitelist.post
+      tags:
+        - Travel Rule
+      x-internal: false
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Request body for the unified `POST /api/travel-rule/v1/whitelist` endpoint.
+
+                `enterpriseId` is required so that the upstream `needsEnterpriseAccess`
+                middleware (`src/util/needsEnterpriseAccess.ts`) can verify the caller has
+                access to the targeted enterprise before the handler runs.
+
+                `vaspId` and `newVasp` are mutually exclusive — exactly one (or neither, in
+                the case of a BitGo-wallet-id `address` or a `restrictWhitelist=off` org)
+                must be supplied. The XOR check lives in the handler so we can return a
+                targeted 400 with a clear message instead of an opaque decode error.
+              properties:
+                enterpriseId:
+                  type: string
+                  minLength: 1
+                walletId:
+                  type: string
+                  minLength: 1
+                coin:
+                  type: string
+                  minLength: 1
+                address:
+                  type: string
+                  minLength: 1
+                custodyType:
+                  $ref: '#/components/schemas/PostWhitelistCustodyType'
+                label:
+                  type: string
+                vaspId:
+                  type: string
+                  minLength: 1
+                newVasp:
+                  type: object
+                  properties:
+                    domain:
+                      type: string
+                      minLength: 1
+                    name:
+                      type: string
+                      minLength: 1
+                  required:
+                    - domain
+                    - name
+                pii:
+                  type: object
+                  description: |-
+                    CaaS-facing PII payload. Optional on the request; the server skips storage
+                    entirely when the resolved VASP source is TRUST (TRUST handles PII out-of-band).
+                  properties:
+                    address:
+                      type: string
+                    businessName:
+                      type: string
+                    country:
+                      type: string
+                    firstName:
+                      type: string
+                    lastName:
+                      type: string
+                    ownershipType:
+                      type: string
+                      enum:
+                        - self
+                        - individual
+                        - business
+                  required:
+                    - ownershipType
+              required:
+                - enterpriseId
+                - walletId
+                - coin
+                - address
+                - custodyType
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostWhitelistResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+  /api/travel-rule/v1/whitelist-address-status:
+    get:
+      summary: Get whitelist address status
+      description: Get the status of a whitelisted address.
+      operationId: travel.rule.whitelist.addressStatus.get
+      tags:
+        - Travel Rule
+      x-internal: false
+      parameters:
+        - name: address
+          in: query
+          schema:
+            type: string
+        - name: walletId
+          in: query
+          schema:
+            type: string
+        - name: enterpriseId
+          in: query
+          schema:
+            type: string
+        - name: verificationStatus
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetWhitelistStatusListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
   /api/stablecoin/v1/{token}/constants:
     get:
       summary: Get Token Constants
@@ -65543,6 +65841,21 @@ components:
         - p2trMusig2
       description: platform.yaml `components/schemas/AddressType`
       example: p2sh
+    AddressWhitelistStatus:
+      title: AddressWhitelistStatus
+      oneOf:
+        - type: string
+        - type: string
+          enum:
+            - UNVERIFIED
+            - PENDING
+            - EXPIRED
+            - VERIFIED
+            - IN_RETRY
+            - DECLINED
+            - RESCINDED
+            - REJECTED
+            - DENIED_BY_CODEVASP
     AddressWithBalanceQueryResult:
       title: AddressWithBalanceQueryResult
       type: object
@@ -66201,6 +66514,19 @@ components:
               description: Error code
           required:
             - name
+    PlatformError4:
+      title: PlatformError
+      allOf:
+        - type: object
+          properties:
+            name:
+              type: string
+            context:
+              type: object
+              additionalProperties: {}
+          required:
+            - context
+        - $ref: '#/components/schemas/PlatformErrorNoName4'
     PlatformErrorNoName:
       title: PlatformErrorNoName
       type: object
@@ -66234,6 +66560,17 @@ components:
         requestId:
           type: string
           description: Client request id
+      required:
+        - error
+        - requestId
+    PlatformErrorNoName4:
+      title: PlatformErrorNoName
+      type: object
+      properties:
+        error:
+          type: string
+        requestId:
+          type: string
       required:
         - error
         - requestId
@@ -82529,6 +82866,81 @@ components:
         updatedAt:
           type: string
           format: date-time
+    GetWhitelistStatusListResponse:
+      title: GetWhitelistStatusListResponse
+      type: object
+      properties:
+        whitelistResponse:
+          type: array
+          items:
+            type: object
+            properties:
+              status:
+                $ref: '#/components/schemas/AddressWhitelistStatus'
+              verifiedSource:
+                $ref: '#/components/schemas/VerificationSource'
+              address:
+                type: string
+              receiveAddress:
+                type: string
+              label:
+                type: string
+              coin:
+                type: string
+              amount:
+                type: string
+              walletId:
+                type: string
+              userId:
+                type: string
+              smallDepositTest:
+                type: object
+                properties:
+                  amount:
+                    type: string
+                  expiryTime:
+                    type: string
+                  failureReason:
+                    type: string
+                  retries:
+                    type: number
+                required:
+                  - amount
+                  - expiryTime
+                  - failureReason
+                  - retries
+              vaspDetails:
+                type: object
+                properties:
+                  vaspDomain:
+                    type: string
+                  vaspId:
+                    type: string
+                  vaspName:
+                    type: string
+                required:
+                  - vaspDomain
+                  - vaspId
+                  - vaspName
+              pendingApprovalId:
+                type: string
+              coolDownPeriod:
+                type: string
+              updatedAt:
+                type: string
+            required:
+              - status
+              - verifiedSource
+              - address
+              - receiveAddress
+              - label
+              - coin
+              - amount
+              - walletId
+              - userId
+              - updatedAt
+      required:
+        - whitelistResponse
     GlobalGoStakingRequestStatus:
       type: string
       description: |
@@ -86988,6 +87400,57 @@ components:
               - businessModel
       required:
         - organizations
+    ListVaspResponse:
+      title: ListVaspResponse
+      type: object
+      description: ListVaspResponse extends the base type
+      properties:
+        vasps:
+          type: array
+          items:
+            type: object
+            properties:
+              id:
+                type: string
+                minLength: 1
+              vaspId:
+                type: string
+              name:
+                type: string
+                minLength: 1
+              domain:
+                type: string
+                minLength: 1
+              createdAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              updatedAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              email:
+                type: string
+                minLength: 1
+              status:
+                $ref: '#/components/schemas/VaspStatus'
+              source:
+                $ref: '#/components/schemas/VaspSource'
+              jurisdiction:
+                type: string
+                minLength: 1
+              parent:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - name
+              - createdAt
+              - updatedAt
+              - status
+              - source
+      required:
+        - vasps
     ListWalletShareRequestResponse:
       title: ListWalletShareRequestResponse
       type: object
@@ -94011,6 +94474,31 @@ components:
         - status
         - selectedIdClass
         - fileUploads
+    PostWhitelistCustodyType:
+      title: PostWhitelistCustodyType
+      type: string
+      enum:
+        - hosted
+        - self
+    PostWhitelistResponse:
+      title: PostWhitelistResponse
+      type: object
+      properties:
+        whitelistId:
+          type: string
+          minLength: 1
+        status:
+          $ref: '#/components/schemas/PostWhitelistStatus'
+      required:
+        - whitelistId
+        - status
+    PostWhitelistStatus:
+      title: PostWhitelistStatus
+      type: string
+      enum:
+        - approved
+        - pending_vasp
+        - pending_prodops_review
     PreviewGoStakingRequest:
       type: object
       required:
@@ -106589,6 +107077,14 @@ components:
         - BitGo Korea
         - BitGo Custody MENA FZE
         - BitGo Sister Trust 1
+    TrustProofQuality:
+      title: TrustProofQuality
+      type: string
+      enum:
+        - SIGNED
+        - UNSIGNED_IOU_CLAIM
+        - UNSIGNED
+        - NO_PROOF
     TrustedTokenState:
       title: TrustedTokenState
       type: string
@@ -115444,6 +115940,50 @@ components:
         - type
         - percent
         - minimum
+    VaspGetResponse:
+      title: VaspGetResponse
+      type: object
+      properties:
+        vaspId:
+          type: string
+        name:
+          type: string
+        internalVasp:
+          type: boolean
+        proofQuality:
+          $ref: '#/components/schemas/TrustProofQuality'
+        source:
+          type: string
+          enum:
+            - TRUST_BULLETIN_BOARD
+      required:
+        - vaspId
+        - name
+    VaspSource:
+      title: VaspSource
+      oneOf:
+        - type: string
+        - type: string
+          enum:
+            - MANUAL
+            - TRUST
+            - TRUSTHUB
+            - CODEVASP
+      description: |-
+        Represents the source of a VASP (Virtual Asset Service Provider).
+        It can be either one of the predefined VaspSourceEnum values or a string.
+    VaspStatus:
+      title: VaspStatus
+      oneOf:
+        - type: string
+        - type: string
+          enum:
+            - UNVERIFIED
+            - PENDING
+            - APPROVED
+            - VERIFIED
+            - REJECTED
+            - MERGED
     VelocityAmountConditionParameter:
       title: Amount
       type: object
@@ -115534,6 +116074,18 @@ components:
       enum:
         - active
         - inactive
+    VerificationSource:
+      title: VerificationSource
+      oneOf:
+        - type: string
+        - type: string
+          enum:
+            - TRUST
+            - KNOWN_VASP
+            - SDT
+            - SIGNATURE
+            - UNKNOWN_VASP
+            - POLICY_ONLY
     VerificationState:
       title: VerificationState
       type: string
