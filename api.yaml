@@ -39342,6 +39342,7 @@ paths:
                 - $ref: '#/components/schemas/TaoUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TaoSwitchValidatorRequestPOSTBody'
                 - $ref: '#/components/schemas/TaoSwitchNetuidRequestPOSTBody'
+                - $ref: '#/components/schemas/TaoClaimRewardsRequestPOSTBody'
                 - $ref: '#/components/schemas/TiaStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TiaUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/TiaClaimRewardsRequestPOSTBody'
@@ -39552,6 +39553,8 @@ paths:
                 $ref: '#/components/examples/TaoSwitchValidatorRequestPOSTBodyExample'
               TaoSwitchNetuidRequestPOSTBodyExample:
                 $ref: '#/components/examples/TaoSwitchNetuidRequestPOSTBodyExample'
+              TaoClaimRewardsRequestPOSTBodyExample:
+                $ref: '#/components/examples/TaoClaimRewardsRequestPOSTBodyExample'
               TiaStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/TiaStakingRequestPOSTBodyExample'
               TiaUnStakingRequestPOSTBodyExample:
@@ -62021,6 +62024,12 @@ components:
         statusModifiedDate: 2022-01-10T14:32:28.000Z
         status: NEW
         amount: '10012000000'
+    TaoClaimRewardsRequestPOSTBodyExample:
+      summary: Example TAO Claim Rewards Request
+      value:
+        clientId: 123e4567-e89b-12d3-a456-426614174009
+        type: CLAIM_REWARDS
+        delegationId: tao-delegation-1
     TaoDelegationResultsExample:
       summary: Tao Delegation Results Example
       value:
@@ -62049,6 +62058,8 @@ components:
             pendingReserved: '0'
             apy: '0'
             unstakeable: true
+            claimable: true
+            claimableRewards: '8463576'
             switchable: true
             maxSwitch: '1008463576'
             minSwitch: '1'
@@ -64516,29 +64527,29 @@ components:
               type: string
               nullable: true
             stakingType:
-              description: The ADA staking subtype. Defaults to NATIVE for standard pool delegation.
+              description: Legacy field. Prefer coin ada:usdr/tada:usdr for RealFi. Nullable; no longer written for new rows.
               type: string
               enum:
                 - NATIVE
                 - REALFI_SUSDR
-              default: NATIVE
+              nullable: true
             susdrBalance:
-              description: sUSDr token balance for REALFI_SUSDR delegations. Null for NATIVE delegations.
+              description: sUSDr token balance for RealFi (ada:usdr) delegations. Null for native ADA.
               type: string
               format: bigInteger
               nullable: true
             currentExchangeRate:
-              description: Current sUSDr/USDr exchange rate. Null for NATIVE delegations.
+              description: Current sUSDr/USDr exchange rate. Null for native ADA.
               type: string
               format: bigDecimal
               nullable: true
             initialExchangeRate:
-              description: sUSDr/USDr exchange rate at delegation creation time. Null for NATIVE delegations.
+              description: sUSDr/USDr exchange rate at delegation creation time. Null for native ADA.
               type: string
               format: bigDecimal
               nullable: true
             lastSyncedAt:
-              description: Timestamp of the last balance/exchange rate sync. Null for NATIVE delegations.
+              description: Timestamp of the last balance/exchange rate sync. Null for native ADA.
               type: string
               format: date-time
               nullable: true
@@ -64759,13 +64770,6 @@ components:
         isVoteDelegationRequest:
           description: Whether this is a vote delegation request.
           type: boolean
-        subType:
-          description: The ADA staking subtype. Defaults to NATIVE for standard pool delegation. REALFI_SUSDR requires the susdrStaking feature flag.
-          type: string
-          enum:
-            - NATIVE
-            - REALFI_SUSDR
-          default: NATIVE
     AdaStakingTransactionProperties:
       title: ADA Staking Transaction Properties
       allOf:
@@ -100749,6 +100753,25 @@ components:
             - narrow
             - standard
             - wide
+    TaoClaimRewardsRequestPOSTBody:
+      title: TAO Claim Rewards Request
+      type: object
+      description: |
+        Request to claim staking rewards for TAO root network delegations.
+
+        **Key Features:**
+        - Root-only: only delegations on the root network (netUID 0) can claim rewards. Stakes on
+          subnets (netUID 1-128) are not claimable.
+        - Requires delegationId to identify the root delegation to claim rewards from.
+        - Amount synchronization: the requested amount is set automatically to the rewards owed
+          (in rao) by the delegation's root basket position, so no amount needs to be provided.
+        - Dust threshold: claims below the minimum claim threshold (default 500000 rao =
+          0.0005 TAO) are rejected. Smaller amounts keep accruing on-chain until the threshold
+          is met.
+        - Restake on claim: claimed TAO is restaked on the root network, so the staked balance
+          may increase rather than the liquid wallet balance.
+      allOf:
+        - $ref: '#/components/schemas/ClaimRewardsRequestPOSTBody'
     TaoClaimRootIntent:
       title: Tao Claim Root Intent
       allOf:
