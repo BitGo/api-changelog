@@ -13639,11 +13639,16 @@ paths:
           in: query
           required: true
           schema:
-            type: string
-            enum:
-              - asc
-              - desc
-            example: asc
+            oneOf:
+              - type: string
+                enum:
+                  - asc
+                  - desc
+                description: io-ts codec for sort direction (asc or desc).
+              - type: string
+                enum:
+                  - asc
+            example: '"asc"'
         - name: enterpriseId
           description: Your enterprise id.
           in: path
@@ -13679,13 +13684,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
     post:
       summary: Create a Link account
       description: Creates a new account for the given enterprise at the specified venue.
@@ -13809,37 +13814,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '409':
           description: Conflict
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '422':
           description: Unprocessable Entity
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}:
     delete:
       summary: Delete a Link account
@@ -13887,31 +13892,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '409':
           description: Conflict
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
     get:
       summary: Get a Link account
       description: Retrieves a single Link account by id for an enterprise.
@@ -13963,19 +13968,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
     patch:
       summary: Update a Link account
       description: |-
@@ -14094,31 +14099,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '409':
           description: Conflict
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '422':
           description: Unprocessable Entity
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}/addresses:
     post:
       summary: Generate a deposit address
@@ -14199,25 +14204,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}/transfers:
     post:
       summary: Initiate a transfer from a Link account
@@ -14338,37 +14343,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '409':
           description: Conflict
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '422':
           description: Unprocessable Entity
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}/transfers/{transferId}/retry:
     post:
       summary: Retry a failed_retriable transfer
@@ -14445,31 +14450,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '409':
           description: Conflict
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '422':
           description: Unprocessable Entity
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/addresses:
     get:
       summary: List addresses
@@ -14567,11 +14572,16 @@ paths:
           in: query
           required: true
           schema:
-            type: string
-            enum:
-              - asc
-              - desc
-            example: desc
+            oneOf:
+              - type: string
+                enum:
+                  - asc
+                  - desc
+                description: io-ts codec for sort direction (asc or desc).
+              - type: string
+                enum:
+                  - desc
+            example: '"desc"'
         - name: enterpriseId
           description: Your enterprise id.
           in: path
@@ -14607,19 +14617,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/assets/balances:
     get:
       summary: Get enterprise asset balances — aggregated by asset across all permitted accounts
@@ -14681,19 +14691,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/balances:
     get:
       summary: Get permitted accounts balances for an enterprise
@@ -14823,19 +14833,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/on-chain-destinations:
     get:
       summary: List on-chain destinations for a given asset/network
@@ -14907,19 +14917,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/permissions:
     get:
       summary: Get the caller's Link permissions
@@ -14967,13 +14977,13 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/sources:
     get:
       summary: List Link accounts eligible as withdrawal sources
@@ -15072,19 +15082,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/transfer-destinations:
     get:
       summary: List destinations reachable from a Link-account source
@@ -15168,25 +15178,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/transfers:
     get:
       summary: List transfers
@@ -15308,11 +15318,16 @@ paths:
           in: query
           required: true
           schema:
-            type: string
-            enum:
-              - asc
-              - desc
-            example: desc
+            oneOf:
+              - type: string
+                enum:
+                  - asc
+                  - desc
+                description: io-ts codec for sort direction (asc or desc).
+              - type: string
+                enum:
+                  - desc
+            example: '"desc"'
         - name: searchLabel
           description: 'Case-insensitive search across transfer fields: transfer ID, fromId, toId, fromName, and toName.'
           in: query
@@ -15365,19 +15380,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/transfers/{transferId}:
     get:
       summary: Get transfer by ID
@@ -15430,25 +15445,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
     patch:
       summary: Update a transfer
       description: |-
@@ -15520,25 +15535,25 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/venues:
     get:
       summary: Get supported venues
@@ -15583,19 +15598,19 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
         '500':
           description: Internal Server Error
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1ErrorResponse'
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/notifications/v1/webhooks/{webhookId}/oauth-config:
     get:
       tags:
@@ -112292,6 +112307,20 @@ components:
     V1ErrorResponse:
       title: V1ErrorResponse
       type: object
+      properties:
+        errorName:
+          type: string
+        error:
+          type: string
+      required:
+        - errorName
+        - error
+    V1ErrorResponse1:
+      title: V1ErrorResponse
+      type: object
+      description: |-
+        Standard structured error response payload for Link API v1 error responses.
+        Contains an error name and human-readable error message.
       properties:
         errorName:
           type: string
