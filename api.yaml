@@ -44223,16 +44223,25 @@ paths:
           application/json:
             schema:
               type: object
-              description: Request body for creating a compliance request (issuer-initiated).
+              description: |-
+                Request body for creating compliance requests (issuer-initiated).
+
+                Supports two operation types:
+                - freeze/unfreeze: address-based (address and addressLabel required)
+                - pause/unpause: contract-level, keyed off assetId only
+
+                Extra fields on the unified body are ignored: address/addressLabel are unused
+                for pause/unpause. The token contract is not a request field — the UI may show
+                it from the asset; the server resolves it from assetId.
               properties:
                 address:
                   type: string
-                  description: Blockchain address targeted by this request
+                  description: Blockchain address targeted by this request (required for freeze/unfreeze)
                   example: '0xd0898d88e2c08b2a95e19441e412c0a708a8bd43'
                   minLength: 1
                 addressLabel:
                   type: string
-                  description: Human-readable label for the targeted address — required for all new requests
+                  description: Human-readable label for the targeted address (required for freeze/unfreeze)
                   example: Hot Wallet A
                   minLength: 1
                 type:
@@ -44256,8 +44265,6 @@ paths:
                   example: Suspicious activity detected
                   minLength: 1
               required:
-                - address
-                - addressLabel
                 - type
                 - assetId
       responses:
@@ -66820,8 +66827,9 @@ components:
             allOf:
               - $ref: '#/components/schemas/SmartContractMetadata'
             description: |-
-              Smart contract metadata. On the public assets endpoint this is included only for
-              issuer enterprises; on the admin assets endpoint it is always included.
+              Smart contract metadata, including pause status (`isPaused`). On the public assets
+              endpoint this is included only for issuer enterprises; on the admin assets endpoint it is
+              always included.
           publicDescription:
             nullable: true
             type: string
@@ -72660,11 +72668,6 @@ components:
           example: 0438163a-d236-4865-978e-02ee7c2285b7
           minLength: 1
           format: uuid
-        enterpriseId:
-          type: string
-          description: Enterprise ID of the requester
-          example: 6437d9f07d6a87000613e6c06e4218d3
-          minLength: 1
         requestSource:
           type: string
           enum:
@@ -72711,6 +72714,15 @@ components:
           example: '2025-06-23T07:28:17.042Z'
           format: date-time
           title: ISO Date String
+        enterpriseId:
+          type: string
+          description: |-
+            Enterprise associated with this request. For requestSource 'issuer' this is the enterprise
+            that raised the request. For requestSource 'bitgo' (Trust-initiated) this is the enterprise
+            that issues the asset, when one is configured. Absent when the asset has no configured issuer
+            enterprise (e.g. gousd, which BitGo issues itself) — there is nothing to derive in that case.
+          example: 6437d9f07d6a87000613e6c06e4218d3
+          minLength: 1
         userId:
           type: string
           description: ID of the user who created the request; omitted when the maker is bitgo-source on issuer-facing responses
@@ -72782,7 +72794,6 @@ components:
         - type
         - status
         - assetId
-        - enterpriseId
         - requestSource
         - baseAsset
         - chain
@@ -84404,11 +84415,6 @@ components:
                 example: 0438163a-d236-4865-978e-02ee7c2285b7
                 minLength: 1
                 format: uuid
-              enterpriseId:
-                type: string
-                description: Enterprise ID of the requester
-                example: 6437d9f07d6a87000613e6c06e4218d3
-                minLength: 1
               requestSource:
                 type: string
                 enum:
@@ -84455,6 +84461,15 @@ components:
                 example: '2025-06-23T07:28:17.042Z'
                 format: date-time
                 title: ISO Date String
+              enterpriseId:
+                type: string
+                description: |-
+                  Enterprise associated with this request. For requestSource 'issuer' this is the enterprise
+                  that raised the request. For requestSource 'bitgo' (Trust-initiated) this is the enterprise
+                  that issues the asset, when one is configured. Absent when the asset has no configured issuer
+                  enterprise (e.g. gousd, which BitGo issues itself) — there is nothing to derive in that case.
+                example: 6437d9f07d6a87000613e6c06e4218d3
+                minLength: 1
               userId:
                 type: string
                 description: ID of the user who created the request; omitted when the maker is bitgo-source on issuer-facing responses
@@ -84485,7 +84500,6 @@ components:
               - type
               - status
               - assetId
-              - enterpriseId
               - requestSource
               - baseAsset
               - chain
@@ -96928,6 +96942,9 @@ components:
 
         See the contract-roles reference doc for the per-asset, per-chain mapping.
       properties:
+        isPaused:
+          type: boolean
+          description: Whether the contract is currently paused under a compliance pause.
         contractAddress:
           type: string
           description: 'Primary contract address: governor / proxy / SPL mint / Aptos package.'
