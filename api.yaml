@@ -12393,7 +12393,22 @@ paths:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
   /api/identity-service/v1/identities:
     get:
       summary: List KYB Identities
@@ -12467,7 +12482,34 @@ paths:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
     post:
       summary: Create KYB Identity
       description: Create an identity with requested products. Requires User-Id header to associate the identity with the creating user.
@@ -12526,13 +12568,51 @@ paths:
                       description: Detailed error messages
                 required:
                   - error
+        '429':
+          description: '429'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
         '500':
           description: '500'
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
   /api/identity-service/v1/identities/{identityId}:
     patch:
       summary: Update KYB Identity
@@ -12605,13 +12685,51 @@ paths:
               schema:
                 type: object
                 properties: {}
+        '429':
+          description: '429'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
         '500':
           description: '500'
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
     get:
       summary: Get KYB Identity
       description: Retrieve an identity by its ID, including all related information. Requires User-Id header and user can only access identities they created.
@@ -12676,7 +12794,107 @@ paths:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+  /api/identity-service/v1/identities/{identityId}/auto-kyb/latest:
+    get:
+      summary: Get Latest AutoKYB Outcome
+      description: Return the most recent AutoKYB analyze outcome for an identity. Same access as GET /v1/identities/:identityId. 404 if the identity is inaccessible or no pass has been recorded.
+      operationId: identities.get.v1.identities.id.auto-kyb.latest
+      tags:
+        - Know Your Business (KYB)
+      x-internal: false
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The unique ID of the identity
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutoKybLatestResponse'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
   /api/identity-service/v1/identities/{identityId}/associated-people/{associatedPersonId}:
     delete:
       summary: Remove Associated Person
@@ -12762,6 +12980,17 @@ paths:
                       description: Detailed error messages
                 required:
                   - error
+        '429':
+          description: '429'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
         '500':
           description: '500'
           content:
@@ -12777,6 +13006,210 @@ paths:
                     items:
                       type: string
                       description: Detailed error messages
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                    description: Description of the error
+                  details:
+                    type: array
+                    items:
+                      type: string
+                      description: Detailed error messages
+                required:
+                  - error
+  /api/identity-service/v1/identities/{identityId}/agreements:
+    post:
+      summary: Submit Agreement Attestations
+      description: Submit one or more agreement attestations for an identity. Each submission is validated against document-service before being stored.
+      operationId: identities.post.v1.identities.id.agreements
+      tags:
+        - Know Your Business (KYB)
+      x-internal: false
+      parameters:
+        - name: identityId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+          description: The unique ID of the identity
+      requestBody:
+        description: Body
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                type: object
+                properties:
+                  agreementId:
+                    type: string
+                    enum:
+                      - amlAttestation
+                      - nonSolicitationLetterEu
+                      - nonSolicitationLetterSg
+                    description: The agreement type being attested
+                  revision:
+                    type: integer
+                    minimum: 1
+                    description: The revision number of the agreement content
+                  attested:
+                    description: Whether the user attested to this agreement
+                    type: boolean
+                  attestationDate:
+                    type: string
+                    format: date-time
+                    description: ISO 8601 timestamp of when the attestation occurred
+                required:
+                  - agreementId
+                  - revision
+                  - attested
+                  - attestationDate
+              minItems: 1
+      responses:
+        '201':
+          description: '201'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  identityId:
+                    type: string
+                    format: uuid
+                    description: The identity ID
+                  acceptedAgreements:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          description: Internal ID for the agreement association
+                        agreementId:
+                          type: string
+                          enum:
+                            - amlAttestation
+                            - nonSolicitationLetterEu
+                            - nonSolicitationLetterSg
+                          description: The agreement type attested
+                        revision:
+                          type: integer
+                          minimum: 1
+                          description: Revision number at time of attestation
+                        attested:
+                          type: boolean
+                          description: Whether the user attested to this agreement
+                        attestationDate:
+                          type: string
+                          format: date-time
+                          description: ISO 8601 timestamp of attestation
+                        status:
+                          type: string
+                          enum:
+                            - missing
+                            - countExceeded
+                            - submitted
+                            - inReview
+                            - verified
+                          description: Status of the agreement
+                        attestedByUserId:
+                          type: string
+                          maxLength: 36
+                          description: BitGo user ID of the user who attested, from request context
+                          nullable: true
+                        createdAt:
+                          type: string
+                          description: ISO timestamp when agreement was created
+                        updatedAt:
+                          type: string
+                          description: ISO timestamp when agreement was last updated
+                      required:
+                        - id
+                        - agreementId
+                        - revision
+                        - attested
+                        - attestationDate
+                        - status
+                        - attestedByUserId
+                        - createdAt
+                        - updatedAt
+                    description: Successfully accepted agreements
+                required:
+                  - identityId
+                  - acceptedAgreements
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '429':
+          description: '429'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
                 required:
                   - error
   /api/identity-service/v1/identities/{identityId}/documents:
@@ -12849,6 +13282,7 @@ paths:
                           - caseRequiredDocuments
                           - correspondentAccountCertification
                           - authorizedSignerForm
+                          - financialCrimeComplianceQuestionnaire
                         description: Type of document being uploaded
                       documentSubType:
                         type: string
@@ -12921,6 +13355,7 @@ paths:
                             - caseRequiredDocuments
                             - correspondentAccountCertification
                             - authorizedSignerForm
+                            - financialCrimeComplianceQuestionnaire
                           description: Type of document being uploaded
                         documentSubType:
                           type: string
@@ -12996,6 +13431,7 @@ paths:
                             - caseRequiredDocuments
                             - correspondentAccountCertification
                             - authorizedSignerForm
+                            - financialCrimeComplianceQuestionnaire
                           description: Type of document being uploaded
                         documentSubType:
                           type: string
@@ -13046,13 +13482,39 @@ paths:
                     type: string
                 required:
                   - error
+        '429':
+          description: '429'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
         '500':
           description: '500'
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
     get:
       summary: List KYB Documents
       description: Retrieve all documents associated with an identity.
@@ -13128,6 +13590,7 @@ paths:
                             - caseRequiredDocuments
                             - correspondentAccountCertification
                             - authorizedSignerForm
+                            - financialCrimeComplianceQuestionnaire
                           description: Type of document being uploaded
                         documentSubType:
                           type: string
@@ -13183,6 +13646,17 @@ paths:
                   - error
         '500':
           description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '503':
+          description: '503'
           content:
             application/json:
               schema:
@@ -13264,6 +13738,7 @@ paths:
                     - caseRequiredDocuments
                     - correspondentAccountCertification
                     - authorizedSignerForm
+                    - financialCrimeComplianceQuestionnaire
                   description: Type of document being uploaded
                 documentSubType:
                   type: string
@@ -13321,6 +13796,7 @@ paths:
                       - caseRequiredDocuments
                       - correspondentAccountCertification
                       - authorizedSignerForm
+                      - financialCrimeComplianceQuestionnaire
                     description: Type of document being uploaded
                   documentSubType:
                     type: string
@@ -13387,7 +13863,22 @@ paths:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
   /api/identity-service/v1/products-configs:
     get:
       summary: Get BitGo Products Configuration
@@ -13426,9 +13917,10 @@ paths:
               - entity
         - name: country
           in: query
-          description: Country (formatted as ISO 3166-1 alpha-3)
+          description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
           required: true
-          schema: {}
+          schema:
+            type: string
         - name: subdivision
           in: query
           description: State, province, or region (formatted as subdivision section of ISO 3166-2, excludes country code)
@@ -13445,6 +13937,20 @@ paths:
               - ftx-retail
               - ftx-bahamas
               - ftx-bahamas-retail
+              - link-binance
+              - link-bitget
+              - link-bybit
+              - link-coinbase
+              - link-cryptocom
+              - link-deribit
+              - link-gate
+              - link-htx
+              - link-kraken
+              - link-kucoin
+              - link-okx-eu
+              - link-okx-global
+              - link-okx-tr
+              - link-okx-us
         - name: organizationId
           in: query
           description: The ID of the organization
@@ -13472,7 +13978,8 @@ paths:
                           - individual
                           - entity
                       country:
-                        description: Country (formatted as ISO 3166-1 alpha-3)
+                        description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+                        type: string
                       subdivision:
                         type: string
                         minLength: 1
@@ -13505,7 +14012,8 @@ paths:
                           - individual
                           - entity
                       country:
-                        description: Country (formatted as ISO 3166-1 alpha-3)
+                        description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+                        type: string
                       subdivision:
                         type: string
                         minLength: 1
@@ -13518,6 +14026,20 @@ paths:
                           - ftx-retail
                           - ftx-bahamas
                           - ftx-bahamas-retail
+                          - link-binance
+                          - link-bitget
+                          - link-bybit
+                          - link-coinbase
+                          - link-cryptocom
+                          - link-deribit
+                          - link-gate
+                          - link-htx
+                          - link-kraken
+                          - link-kucoin
+                          - link-okx-eu
+                          - link-okx-global
+                          - link-okx-tr
+                          - link-okx-us
                       organizationId:
                         type: string
                         nullable: true
@@ -13549,14 +14071,33 @@ paths:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                  code:
+                    type: string
         '500':
           description: '500'
           content:
             application/json:
               schema:
                 type: object
-                properties: {}
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
   /api/link/v1/enterprises/{enterpriseId}/accounts:
     get:
       summary: List Link accounts
@@ -67528,11 +68069,14 @@ components:
             occupation:
               $ref: '#/components/schemas/Occupation'
             countryOfCitizenship:
-              description: Country of citizenship (ISO 3166-1 alpha-3)
+              description: Country of citizenship (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+              type: string
             countryOfResidence:
-              description: Country of residence (ISO 3166-1 alpha-3)
+              description: Country of residence (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+              type: string
             govIdCountryOfIssuance:
-              description: Country where government ID was issued (ISO 3166-1 alpha-3)
+              description: Country where government ID was issued (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+              type: string
             govIdClass:
               type: string
               enum:
@@ -67625,7 +68169,8 @@ components:
                   type: string
                   description: ZIP or postal code
                 country:
-                  description: Country (formatted as ISO 3166-1 alpha-3)
+                  description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+                  type: string
               required:
                 - street1
                 - city
@@ -67640,9 +68185,9 @@ components:
             multipleCitizenship:
               type: array
               items:
+                description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
                 type: string
-                description: Country (formatted as ISO 3166-1 alpha-3)
-              description: Additional citizenships beyond primary (ISO 3166-1 alpha-3 codes)
+              description: Additional citizenships beyond primary (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
             sourceOfFundOrigin:
               type: string
               maxLength: 500
@@ -68297,6 +68842,90 @@ components:
         - credID
         - fmt
         - publicKey
+    AutoKybLatestField:
+      type: object
+      properties:
+        key:
+          type: string
+          minLength: 1
+          description: Dotted path of the identity field, e.g. business.legalName
+        proposedValue:
+          nullable: true
+          type: object
+          additionalProperties: true
+          description: Value AutoKYB proposed for the field
+        currentValue:
+          nullable: true
+          type: object
+          additionalProperties: true
+          description: Value already present on the identity at analyze time
+        source:
+          nullable: true
+          type: object
+          additionalProperties: true
+          description: Provenance of the proposed value, e.g. the source document
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Model confidence in the proposed value, between 0 and 1
+        action:
+          type: string
+          enum:
+            - wrote
+            - suggested
+            - skipped_user_owned
+            - missing
+            - needs_review
+          description: Outcome recorded for a single field
+      required:
+        - key
+        - action
+      title: AutoKybLatestField
+    AutoKybLatestResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum:
+            - running
+            - complete
+            - partial
+            - failed
+            - skipped
+          description: Status of the most recent AutoKYB analyze pass
+        mode:
+          type: string
+          enum:
+            - prefill
+            - suggest
+          description: AutoKYB operating mode used for the pass
+        requestId:
+          type: string
+          minLength: 1
+          description: Identifier of the AutoKYB analyze pass that produced this
+        fields:
+          default: []
+          type: array
+          items:
+            $ref: '#/components/schemas/AutoKybLatestField'
+          description: 'Per-field outcomes: filled, suggested, needs review, missing'
+        gaps:
+          default: []
+          type: array
+          items:
+            type: string
+          description: Field keys still missing after the pass
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the outcome was last written, ISO 8601
+      required:
+        - status
+        - mode
+        - requestId
+        - updatedAt
+      title: AutoKybLatestResponse
     AuxProofType:
       title: AuxProofType
       type: string
@@ -71768,9 +72397,11 @@ components:
           pattern: ^[A-Za-zÀ-ÿĀ-ſƀ-ɏ0-9\s'\-\.,#\/( )&]+$
           description: Legal name of the business
         incorporationCountryCode:
-          description: Country of incorporation (ISO 3166-1 alpha-3)
+          description: Country of incorporation (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+          type: string
         primaryOperationsCountryCode:
-          description: Primary country of operations (ISO 3166-1 alpha-3)
+          description: Primary country of operations (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+          type: string
         einTinIdentificationNumber:
           type: string
           description: EIN/TIN of the business
@@ -71801,7 +72432,8 @@ components:
               type: string
               description: ZIP or postal code
             country:
-              description: Country (formatted as ISO 3166-1 alpha-3)
+              description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+              type: string
           required:
             - street1
             - city
@@ -71831,7 +72463,8 @@ components:
               type: string
               description: ZIP or postal code
             country:
-              description: Country (formatted as ISO 3166-1 alpha-3)
+              description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+              type: string
           required:
             - street1
             - city
@@ -71861,7 +72494,8 @@ components:
               type: string
               description: ZIP or postal code
             country:
-              description: Country (formatted as ISO 3166-1 alpha-3)
+              description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+              type: string
           required:
             - street1
             - city
@@ -72016,7 +72650,8 @@ components:
           type: boolean
           description: Whether the business is regulated
         regulatorCountryCode:
-          description: Country of regulator (ISO 3166-1 alpha-3)
+          description: Country of regulator (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+          type: string
           nullable: true
         regulatorName:
           type: string
@@ -76342,6 +76977,7 @@ components:
             - caseRequiredDocuments
             - correspondentAccountCertification
             - authorizedSignerForm
+            - financialCrimeComplianceQuestionnaire
           description: Type of document being uploaded
         status:
           type: string
@@ -84157,11 +84793,14 @@ components:
         occupation:
           $ref: '#/components/schemas/Occupation'
         countryOfCitizenship:
-          description: Country of citizenship (ISO 3166-1 alpha-3)
+          description: Country of citizenship (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+          type: string
         countryOfResidence:
-          description: Country of residence (ISO 3166-1 alpha-3)
+          description: Country of residence (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+          type: string
         govIdCountryOfIssuance:
-          description: Country where government ID was issued (ISO 3166-1 alpha-3)
+          description: Country where government ID was issued (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+          type: string
         govIdClass:
           type: string
           enum:
@@ -84254,7 +84893,8 @@ components:
               type: string
               description: ZIP or postal code
             country:
-              description: Country (formatted as ISO 3166-1 alpha-3)
+              description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+              type: string
           required:
             - street1
             - city
@@ -84269,9 +84909,9 @@ components:
         multipleCitizenship:
           type: array
           items:
+            description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
             type: string
-            description: Country (formatted as ISO 3166-1 alpha-3)
-          description: Additional citizenships beyond primary (ISO 3166-1 alpha-3 codes)
+          description: Additional citizenships beyond primary (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
         sourceOfFundOrigin:
           type: string
           maxLength: 500
@@ -96016,7 +96656,8 @@ components:
             - BitGo Inc
           description: The BitGo entity identifier
         country:
-          description: The country where the permission is being requested
+          description: The country where the permission is being requested (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+          type: string
         subdivision:
           type: string
           minLength: 1
@@ -109882,7 +110523,8 @@ components:
               bitgoOrg:
                 $ref: '#/components/schemas/WPBitgoOrg'
               country:
-                description: Country (formatted as ISO 3166-1 alpha-3)
+                description: Country (ISO 3166-1 alpha-2 or alpha-3; normalized to alpha-3)
+                type: string
               subdivision:
                 type: string
                 minLength: 1
