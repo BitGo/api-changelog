@@ -2244,6 +2244,237 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error'
+  /api/audit-log-service/v3/audit-logs:
+    get:
+      summary: List user audit logs
+      description: |-
+        Lists audit logs for the authenticated user within an enterprise.
+        Returns audit logs based on the user's role (auditor, admin, or member)
+        with appropriate filtering. Results are paginated and sorted by
+        timestamp in descending order.
+
+        **Requires access token scopes:** `auditlogs_view_all` or `user_manage`
+      operationId: v3.auditlog.list
+      tags:
+        - Audit log
+      x-internal: false
+      x-lifecycle: alpha
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: filter[enterpriseId]
+          in: query
+          description: Enterprise ID to scope the query
+          required: true
+          example: 59cd72485007a239fb00282ed480da1f
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: filter[targetId]
+          in: query
+          description: Filter by target ID. Common values include walletId, userId, enterpriseId and organizationId.
+          required: false
+          example: 5e3ae8d4b31f6a001e17f23a00000002
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: filter[targetType]
+          in: query
+          description: Filter by target type. Common values include wallet, enterprise, user, and organization.
+          required: false
+          example: wallet
+          schema:
+            $ref: '#/components/schemas/TargetType'
+        - name: filter[type]
+          in: query
+          description: Filter by audit log type. Accepts a single value or a comma-separated list for multiple values.
+          required: false
+          example: wallet.create,wallet.freeze
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/AuditLogEventType'
+        - name: filter[actorId]
+          in: query
+          description: Filter by actor ID
+          required: false
+          example: 59cd72485007a239fb00282ed480da1f
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: filter[actorType]
+          in: query
+          description: Filter by actor type.
+          required: false
+          example: user
+          schema:
+            type: string
+            enum:
+              - admin
+              - user
+              - bitgo
+        - name: filter[bucket]
+          in: query
+          description: Filter by audit log category
+          required: false
+          example: transaction
+          schema:
+            type: string
+            enum:
+              - enterprise
+              - login
+              - organization
+              - policy
+              - safe
+              - transaction
+              - unknown
+              - user
+              - wallet
+        - name: filter[correlationId]
+          in: query
+          description: Filter by correlation ID to correlate related audit events.
+          required: false
+          example: 59cd72485007a239fb00282ed480da1f
+          schema:
+            type: string
+        - name: filter[createdAt][gte]
+          in: query
+          description: Filter for audit logs on or after this date (ISO 8601 format)
+          required: false
+          example: '2026-01-01T00:00:00.000Z'
+          schema:
+            type: string
+            format: date-time
+        - name: filter[createdAt][lt]
+          in: query
+          description: Filter for audit logs before this date (ISO 8601 format)
+          required: false
+          example: '2026-06-30T23:59:59.999Z'
+          schema:
+            type: string
+            format: date-time
+        - name: page[after]
+          in: query
+          description: Opaque pagination cursor returned in the previous page's `links.next`
+          required: false
+          example: eyJpZCI6IjVlM2FlOGQ0YjMxZjZhMDAxZTE3ZjIzYTAwMDAwMDk5IiwidHMiOiIxNzUxMzQ3MjAwMDAwIn0=
+          schema:
+            type: string
+        - name: page[size]
+          in: query
+          description: Maximum number of results to return per page
+          required: false
+          example: 25
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 25
+      responses:
+        '200':
+          description: Successfully retrieved audit logs
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/ListUserAuditLogsResponse'
+              example:
+                data:
+                  - type: audit-logs
+                    id: 5e3ae8d4b31f6a001e17f23a00000001
+                    attributes:
+                      auditLogType: wallet.update
+                      detail:
+                        label:
+                          old: My Bitcoin Wallet
+                          new: My Bitcoin Wallet 2
+                      ip: 203.0.113.42
+                      userAgent: Mozilla/5.0
+                      sessionId: 5f9a1c2b3d4e5f6a7b8c9d0e00000002
+                      requestId: req-7a8b9c0d1e2f3a4b
+                      actor:
+                        id: 5f9a1c2b3d4e5f6a7b8c9d0e00000001
+                        type: user
+                        username: alice@example.com
+                      targetId: 5e3ae8d4b31f6a001e17f23a00000002
+                      targetType: wallet
+                      category: wallet
+                      timestamp: '2026-07-15T14:32:10.000Z'
+                      title: Wallet Update
+                      description: alice@example.com updated My Bitcoin Wallet 2
+                links:
+                  self: /api/audit-log-service/v3/audit-logs?filter[enterpriseId]=5e3ae8d4b31f6a001e17f23a00000001&page[size]=25
+                  next: /api/audit-log-service/v3/audit-logs?filter[enterpriseId]=5e3ae8d4b31f6a001e17f23a00000001&page[size]=25&page[after]=eyJpZCI6IjVlM2FlOGQ0YjMxZjZhMDAxZTE3ZjIzYTAwMDAwMDk5IiwidHMiOiIxNzUxMzQ3MjAwMDAwIn0=
+        '400':
+          description: Invalid request parameters
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/JsonPlatformErrorResponse'
+              example:
+                errors:
+                  - code: VALIDATION_ERROR
+                    status: '400'
+                    title: Input validation failed
+                    detail: Expected string
+                    source:
+                      parameter: dateGte
+                    meta:
+                      requestId: req-7a8b9c0d1e2f3a4b
+        '401':
+          description: Unauthorized
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/JsonPlatformErrorResponse'
+              example:
+                errors:
+                  - code: UNAUTHORIZED
+                    status: '401'
+                    title: Missing or invalid authentication
+                    detail: Unauthorized
+                    meta:
+                      requestId: req-7a8b9c0d1e2f3a4b
+        '403':
+          description: Forbidden
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/JsonPlatformErrorResponse'
+              example:
+                errors:
+                  - code: FORBIDDEN
+                    status: '403'
+                    title: Insufficient permissions
+                    detail: Forbidden
+                    meta:
+                      requestId: req-7a8b9c0d1e2f3a4b
+        '404':
+          description: Not found
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/JsonPlatformErrorResponse'
+              example:
+                errors:
+                  - code: NOT_FOUND
+                    status: '404'
+                    title: Resource does not exist
+                    detail: Not found
+                    meta:
+                      requestId: req-7a8b9c0d1e2f3a4b
+        '500':
+          description: Internal server error
+          content:
+            application/vnd.api+json:
+              schema:
+                $ref: '#/components/schemas/JsonPlatformErrorResponse'
+              example:
+                errors:
+                  - code: INTERNAL_ERROR
+                    status: '500'
+                    title: Unexpected server error
+                    detail: Internal server error
+                    meta:
+                      requestId: req-7a8b9c0d1e2f3a4b
   /api/network/v1/enterprises/{enterpriseId}/clients:
     post:
       summary: Create client
@@ -67378,6 +67609,304 @@ components:
       required:
         - rootAddress
         - lastMemoId
+    AuditLogData:
+      type: object
+      description: Additional data associated with the audit log event
+      additionalProperties: true
+    AuditLogEventType:
+      type: string
+      description: Audit log event type identifier in `resource.action` format
+      enum:
+        - address.create
+        - address.makeEmptyTransaction
+        - addressBook.add
+        - addressBook.remove
+        - addressBook.update
+        - admin.actionApprove
+        - admin.actionReject
+        - admin.actionRequest
+        - admin.addVideoId
+        - admin.addVideoIdUser
+        - admin.removeVideoId
+        - admin.rotateAccessToken
+        - admin.withdrawCollateral
+        - approval.approve
+        - approval.freeze
+        - approval.reject
+        - approval.skip
+        - approval.unfreeze
+        - approval.verifyLivenessCheck
+        - enterprise.acceptServicesAgreement
+        - enterprise.acknowledgePolicy
+        - enterprise.activateNetworkClient
+        - enterprise.addBankAccount
+        - enterprise.addUser
+        - enterprise.addUserRequest
+        - enterprise.addVideoIdUser
+        - enterprise.addWebhook
+        - enterprise.addWebhookSecret
+        - enterprise.adminUpdateBankAccount
+        - enterprise.archive
+        - enterprise.autoWhitelist
+        - enterprise.create
+        - enterprise.createCredential
+        - enterprise.createPlaidBankAccount
+        - enterprise.deleteBankAccount
+        - enterprise.deleteCredential
+        - enterprise.deletePricingType
+        - enterprise.freeze
+        - enterprise.internalUpdateBankAccount
+        - enterprise.kycExemption
+        - enterprise.removeUser
+        - enterprise.removeUserRequest
+        - enterprise.removeVideoIdUser
+        - enterprise.rename
+        - enterprise.trustToSingaporeUpgrade
+        - enterprise.unfreeze
+        - enterprise.update
+        - enterprise.updateAllowedCoins
+        - enterprise.updateApprovalsRequired
+        - enterprise.updateBankAccount
+        - enterprise.updateBitgoOrg
+        - enterprise.updateCredential
+        - enterprise.updateKycStatus
+        - enterprise.updatePlaidBankAccount
+        - enterprise.updateUser
+        - enterprise.updateUserPermission
+        - enterprise.updateUserRequest
+        - enterprise.updateVideoIdUser
+        - enterprise.updateWhitelist
+        - enterprise.updateWhitelistRequest
+        - fixSession.logon
+        - fixSession.logout
+        - goAccount.activationSkipped
+        - goAccount.create
+        - goAccount.rebalanceRequest
+        - goAccount.requestPasswordReset
+        - goAccount.settle
+        - goAccount.settlementRequest
+        - goAccount.updatePasswordReset
+        - key.createCustodial
+        - linkAccount.initiateTransfer
+        - linkAccount.retryTransfer
+        - marginCollateral.cancelWithdrawal
+        - marginCollateral.deposit
+        - marginCollateral.requestWithdrawal
+        - marginPosition.closeRequest
+        - marginPosition.cover
+        - marginPosition.transfer
+        - marginWithdrawal.complete
+        - mobilePairing.approve
+        - mobilePairing.approveReauthFailed
+        - mobilePairing.claim
+        - mobilePairing.consume
+        - mobilePairing.create
+        - mobilePairing.reject
+        - mobilePairing.revokeViaEmail
+        - oauthaccesstoken.update
+        - order.cancel
+        - order.place
+        - order.update
+        - order.updateNotes
+        - organization.addRole
+        - organization.addRoleRequest
+        - organization.addWebhook
+        - organization.addWebhookSecret
+        - organization.approveAddRole
+        - organization.approveUpdateRole
+        - organization.approveUpdateRoleUsers
+        - organization.approveUserInvitation
+        - organization.delete
+        - organization.inviteUser
+        - organization.inviteUserRequest
+        - organization.regenerateInvitation
+        - organization.rejectAddRole
+        - organization.rejectRemoveRole
+        - organization.rejectUpdateRole
+        - organization.rejectUpdateRoleUsers
+        - organization.rejectUpdateUserRoles
+        - organization.rejectUserInvitation
+        - organization.rejectUserRemoval
+        - organization.removeRole
+        - organization.removeRoleRequest
+        - organization.removeUser
+        - organization.removeUserRequest
+        - organization.update
+        - organization.updateAdminUsers
+        - organization.updateRole
+        - organization.updateRoleRequest
+        - organization.updateRoleUsers
+        - organization.updateRoleUsersRequest
+        - organization.updateUserRequest
+        - organization.updateUserRoles
+        - organization.updateUserRolesRequest
+        - policy.add
+        - policy.addRequest
+        - policy.duplicate
+        - policy.duplicateRequest
+        - policy.lock
+        - policy.optIn
+        - policy.optInRequest
+        - policy.optOut
+        - policy.optOutRequest
+        - policy.remove
+        - policy.removeRequest
+        - policy.unlock
+        - policy.unlockRequest
+        - policy.update
+        - policy.updateMutability
+        - policy.updateRequest
+        - policy.updateTag
+        - policyConfig.dataValidationExemptionDisabled
+        - policyConfig.dataValidationExemptionEnabled
+        - safe.addMember
+        - safe.addWebhook
+        - safe.archive
+        - safe.childKeyCreate
+        - safe.finalize
+        - safe.freeze
+        - safe.initialize
+        - safe.keycardDownload
+        - safe.passkeyRegister
+        - safe.passkeyRemove
+        - safe.passwordChange
+        - safe.removeMember
+        - safe.removeWebhook
+        - safe.rename
+        - safe.rootKeyCreated
+        - safe.rootKeyCreationDenied
+        - safe.shareAccept
+        - safe.shareCreate
+        - safe.unfreeze
+        - safe.walletMint
+        - securityControl.approvalBlocked
+        - securityControl.changeApplied
+        - securityControl.changeRejected
+        - securityControl.changeRequested
+        - transaction.bitgoSigned
+        - transaction.changeGasPrice
+        - transaction.create
+        - transaction.createRequest
+        - transaction.failedCreation
+        - transaction.updateComment
+        - transaction.updateSendQ
+        - transaction.updateSendQItem
+        - transaction.updateSendQTx
+        - transaction.updateWalletSendQ
+        - transactionRequest.addUserSignatureShare
+        - transactionRequest.create
+        - transactionRequest.removeUserSignatureShare
+        - transactionRequest.update
+        - user.acknowledgeDappConsent
+        - user.activate
+        - user.add2FA
+        - user.addTrustedDevice
+        - user.addTrustedMachine
+        - user.addWebhook
+        - user.allowCoins
+        - user.completeReset2FA
+        - user.create
+        - user.createAccessToken
+        - user.deactivate
+        - user.defiCreateAcknowledgement
+        - user.deleteAccessToken
+        - user.deleteTrustedDevice
+        - user.deleteTrustedMachine
+        - user.deleteWebhook
+        - user.detectRefreshTokenReuse
+        - user.failedLogin
+        - user.freeze
+        - user.getInternalAccessToken
+        - user.login
+        - user.oauthAuthorize
+        - user.oauthClientRequestAuthorized
+        - user.oauthClientRequestDenied
+        - user.refreshTokenFingerprintMismatch
+        - user.remove2FA
+        - user.removeFromBitgo
+        - user.removeSourceIp
+        - user.reset2FA
+        - user.resetPassword
+        - user.setPassword
+        - user.startReset2FA
+        - user.unblockEmail
+        - user.unfreeze
+        - user.update
+        - user.updateAccessToken
+        - user.updateKycStatus
+        - user.updatePassword
+        - user.upsertRecoveryCodes
+        - user.verifyReset2FA
+        - user.verifySource
+        - user.viewRecoveryCodes
+        - verifyPairing.approve
+        - verifyPairing.approveReauthFailed
+        - verifyPairing.claim
+        - verifyPairing.consume
+        - verifyPairing.create
+        - verifyPairing.reject
+        - verifyPairing.revokeViaEmail
+        - videoCall.create
+        - videoId.joinQueue
+        - videoId.leaveQueue
+        - wallet.acceptInvite
+        - wallet.activateSafeMode
+        - wallet.addAddressLabel
+        - wallet.addFlag
+        - wallet.addLockAsset
+        - wallet.addNode
+        - wallet.addUser
+        - wallet.addUserRequest
+        - wallet.addWebhook
+        - wallet.attachPasskey
+        - wallet.autoWhitelist
+        - wallet.batchUpdateTransferState
+        - wallet.bulkLockAsset
+        - wallet.cancelInvite
+        - wallet.cosignRecoveryTransaction
+        - wallet.confirmTransfer
+        - wallet.create
+        - wallet.declineInvite
+        - wallet.delete
+        - wallet.deleteLockAsset
+        - wallet.deletePasswordReset
+        - wallet.deleteWebhook
+        - wallet.externalWithdrawal
+        - wallet.forwardToken
+        - wallet.freeze
+        - wallet.initialize
+        - wallet.invite
+        - wallet.redeployAddress
+        - wallet.rejectUserRequest
+        - wallet.removeAddressLabel
+        - wallet.removeFlag
+        - wallet.removeUnspents
+        - wallet.removeUser
+        - wallet.removeUserRequest
+        - wallet.rename
+        - wallet.resetPassword
+        - wallet.resetWebhookNotification
+        - wallet.restore
+        - wallet.setNonce
+        - wallet.shareKeys
+        - wallet.stake
+        - wallet.unfreeze
+        - wallet.update
+        - wallet.updateApprovalsRequired
+        - wallet.updateApprovalsRequiredRequest
+        - wallet.updateCircuitBreaker
+        - wallet.updateCustomTags
+        - wallet.updateEnterprise
+        - wallet.updateFlag
+        - wallet.updateLockAsset
+        - wallet.updatePassword
+        - wallet.updatePasswordReset
+        - wallet.updateToMPCv2
+        - wallet.updateTransferState
+        - wallet.updateUserPermission
+        - wallet.updateWhitelist
+        - wallet.updateWhitelistRequest
+        - wallet.whitelistAddress
     AuditLogType1:
       title: AuditLogType
       type: string
@@ -71963,6 +72492,19 @@ components:
               - staking_rewards
               - treasury_management
               - stuck_transaction_notification
+    CategoryType:
+      type: string
+      description: Category of the audit log entry
+      enum:
+        - policy
+        - transaction
+        - user
+        - wallet
+        - safe
+        - enterprise
+        - login
+        - organization
+        - unknown
     CbitAccountResponseProps:
       title: CbitAccountResponseProps
       type: object
@@ -84649,6 +85191,68 @@ components:
             description: Array of issuer orders
       required:
         - orders
+    JsonPlatformErrorResponse:
+      type: object
+      description: JSON:API error Response
+      required:
+        - errors
+      properties:
+        errors:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            required:
+              - code
+              - status
+              - title
+            properties:
+              code:
+                type: string
+                description: Machine-readable error code from the BitGo error catalog
+                enum:
+                  - BAD_REQUEST
+                  - VALIDATION_ERROR
+                  - UNAUTHORIZED
+                  - FORBIDDEN
+                  - NOT_FOUND
+                  - CONFLICT
+                  - RATE_LIMIT_EXCEEDED
+                  - INTERNAL_ERROR
+                  - UPSTREAM_ERROR
+                  - SERVICE_UNAVAILABLE
+              status:
+                type: string
+                description: HTTP status code as a string
+                example: '400'
+              title:
+                type: string
+                description: Stable human-readable summary for this error code
+                example: Input validation failed
+              detail:
+                type: string
+                description: Occurrence-specific explanation of the error
+              source:
+                type: object
+                description: Location of the problem in the request
+                properties:
+                  parameter:
+                    type: string
+                    description: Query parameter name
+                  pointer:
+                    type: string
+                    description: JSON Pointer into the request body
+                  header:
+                    type: string
+                    description: Request header name
+              meta:
+                type: object
+                required:
+                  - requestId
+                properties:
+                  requestId:
+                    type: string
+                    description: Request Identifier
     JsonRecord:
       title: JsonRecord
       type: object
@@ -86314,6 +86918,41 @@ components:
           format: uuid
       required:
         - txRequests
+    ListUserAuditLogActor:
+      type: object
+      description: Actor information for audit logs
+      required:
+        - id
+        - username
+        - type
+      properties:
+        id:
+          $ref: '#/components/schemas/Id'
+        username:
+          type: string
+          description: Username of the actor
+          minLength: 5
+        type:
+          type: string
+          description: Type of actor
+          enum:
+            - admin
+            - user
+            - bitgo
+    ListUserAuditLogsResponse:
+      type: object
+      description: JSON:API response containing audit logs with pagination
+      required:
+        - data
+        - links
+      properties:
+        data:
+          type: array
+          description: List of audit log resource objects
+          items:
+            $ref: '#/components/schemas/UserAuditLogResource'
+        links:
+          $ref: '#/components/schemas/PaginationLinks'
     ListUserOrganizationResponse:
       title: ListUserOrganizationResponse
       type: object
@@ -89959,6 +90598,18 @@ components:
         nextBatchPrevId:
           type: string
           description: The value to pass as the prevId to the API for getting the next page.
+    PaginationLinks:
+      type: object
+      description: JSON:API pagination links
+      required:
+        - self
+      properties:
+        self:
+          type: string
+          description: Link to the current page
+        next:
+          type: string
+          description: Link to the next page (absent when no more pages)
     PaillierBlumProof:
       title: PaillierBlumProof
       type: object
@@ -101093,6 +101744,14 @@ components:
             - amountUnstaked
         - $ref: '#/components/schemas/WithdrawIntent'
         - $ref: '#/components/schemas/TaoStakingBaseIntent'
+    TargetType:
+      type: string
+      description: Type of entity that was the target of the action
+      enum:
+        - user
+        - wallet
+        - enterprise
+        - organization
     TestcoinAddress:
       title: Testcoin Address
       type: object
@@ -109149,6 +109808,77 @@ components:
       enum:
         - members
         - roles
+    UserAuditLog:
+      type: object
+      description: Audit log entry for user-facing API
+      required:
+        - actor
+        - requestId
+        - targetId
+        - targetType
+        - timestamp
+        - auditLogType
+      properties:
+        actor:
+          $ref: '#/components/schemas/ListUserAuditLogActor'
+        ip:
+          type: string
+          description: IP address of the actor
+          minLength: 2
+          maxLength: 39
+        userAgent:
+          type: string
+          description: User agent of the actor
+        sessionId:
+          type: string
+          description: Session ID
+        requestId:
+          type: string
+          description: Request ID
+          minLength: 5
+          maxLength: 100
+        targetId:
+          $ref: '#/components/schemas/Id'
+        targetType:
+          $ref: '#/components/schemas/TargetType'
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp of the action
+        auditLogType:
+          $ref: '#/components/schemas/AuditLogEventType'
+        correlationId:
+          type: string
+          description: Correlation ID linking related audit events
+        detail:
+          $ref: '#/components/schemas/AuditLogData'
+        category:
+          $ref: '#/components/schemas/CategoryType'
+        coin:
+          type: string
+          description: Cryptocurrency coin identifier
+        title:
+          type: string
+          description: Human-readable title for this audit log event
+        description:
+          type: string
+          description: Human-readable description providing additional context for the event
+    UserAuditLogResource:
+      type: object
+      description: JSON:API resource object wrapping a user audit log
+      required:
+        - type
+        - id
+        - attributes
+      properties:
+        type:
+          type: string
+          enum:
+            - audit-logs
+        id:
+          $ref: '#/components/schemas/Id'
+        attributes:
+          $ref: '#/components/schemas/UserAuditLog'
     UserCategoriesResponse:
       required:
         - categories
