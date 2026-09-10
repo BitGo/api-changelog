@@ -497,6 +497,9 @@ paths:
                       - eddsaMPCv2Round1
                       - eddsaMPCv2Round2
                       - eddsaMPCv2Round3
+                      - redpallasMPCv2Round1
+                      - redpallasMPCv2Round2
+                      - redpallasMPCv2Round3
                       - readyToCombineShares
                       - signed
                       - held
@@ -47062,6 +47065,89 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/getAccount:
+    post:
+      summary: Get TRON account resources and resource delegations
+      description: |-
+        Retrieves frozenV2 balances, resource delegation fields, network conversion
+        ratios, and spendable bandwidth/energy for TRON addresses from a single
+        getaccountresource call per address. Ratios are returned raw; callers
+        convert frozenV2 amounts to energy/bandwidth units.
+
+        per address — consequence: a second call can drift a block so usage would
+        not match energyRatio/bandwidthRatio
+        on each account — consequence: the resources page MUST NOT also call
+        getAccountResources
+      operationId: v2.wallet.getAccount
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: coin
+          description: Coin or token identifier (e.g. trx, ttrx:usdt)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: Wallet ID to retrieve account resource data for
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Addresses to query for TRON frozenV2, resource delegation, and spendable usage.
+
+                Each address is looked up via TRON getaccount and getaccountresource in
+                parallel so frozenV2, conversion ratios, and usage come from the same block.
+                Addresses that do not belong to the wallet are returned in failedAddresses.
+                The resources page SHOULD call this endpoint instead of also calling getAccountResources.
+              title: GetAccountBody
+              properties:
+                addresses:
+                  type: array
+                  items:
+                    type: string
+                    description: List of TRON addresses to retrieve frozenV2, resource delegation, and usage for
+                destinationAddress:
+                  type: string
+                  description: Optional destination address for resource deficit calculation (token transfers)
+              required:
+                - addresses
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAccountResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                description: Wallet does not exist, or the caller has no view access to it
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/getAccountResources:
     post:
       summary: Get account resources
@@ -47090,7 +47176,10 @@ paths:
           application/json:
             schema:
               type: object
-              description: List of TRON addresses to retrieve resource information for
+              description: |-
+                List of TRON addresses to retrieve resource information for
+
+                Optional destinationAddress is used only for token energy deficit calculation.
               title: GetAccountResourcesBody
               properties:
                 addresses:
@@ -47116,6 +47205,14 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                description: Wallet does not exist, or the caller has no view access to it
         '500':
           description: Internal Server Error
           content:
@@ -48180,9 +48277,14 @@ paths:
                         example: txlm:BST-GBQTIOS3XGHB7LVYGBKQVJGCZ3R4JL5E4CBSWJ5ALIJUHBKS6263644L
                 stakingOptions:
                   oneOf:
-                    - $ref: '#/components/schemas/InitiateTransactionCSPRStakingOptions'
                     - $ref: '#/components/schemas/InitiateTransactionSTXStakingOptions'
-                  description: Required object for staking. Only for CSPR and STX.
+                    - $ref: '#/components/schemas/InitiateTransactionAVAXPStakingOptions'
+                    - $ref: '#/components/schemas/InitiateTransactionCSPRStakingOptions'
+                    - $ref: '#/components/schemas/InitiateTransactionBTCStakingOptions'
+                    - $ref: '#/components/schemas/InitiateTransactionHBARStakingOptions'
+                  description: |-
+                    Per-coin staking options. Populated by staking-service for CSPR, STX, HBAR,
+                    AVAXP, and BTC only; other coins omit the field.
                 unstakingOptions:
                   type: object
                   description: Options needed to unstake EOS assets
@@ -48594,9 +48696,14 @@ paths:
                         example: txlm:BST-GBQTIOS3XGHB7LVYGBKQVJGCZ3R4JL5E4CBSWJ5ALIJUHBKS6263644L
                 stakingOptions:
                   oneOf:
-                    - $ref: '#/components/schemas/SendTransactionCSPRStakingOptions'
                     - $ref: '#/components/schemas/SendTransactionSTXStakingOptions'
-                  description: Required object for staking. Only for CSPR and STX.
+                    - $ref: '#/components/schemas/SendTransactionAVAXPStakingOptions'
+                    - $ref: '#/components/schemas/SendTransactionCSPRStakingOptions'
+                    - $ref: '#/components/schemas/SendTransactionBTCStakingOptions'
+                    - $ref: '#/components/schemas/SendTransactionHBARStakingOptions'
+                  description: |-
+                    Per-coin staking options. Populated by staking-service for CSPR, STX, HBAR,
+                    AVAXP, and BTC only; other coins omit the field.
                 unstakingOptions:
                   type: object
                   description: Options needed to unstake EOS assets
@@ -52331,6 +52438,9 @@ paths:
                           - eddsaMPCv2Round1
                           - eddsaMPCv2Round2
                           - eddsaMPCv2Round3
+                          - redpallasMPCv2Round1
+                          - redpallasMPCv2Round2
+                          - redpallasMPCv2Round3
                           - readyToCombineShares
                           - signed
                           - held
@@ -52719,6 +52829,7 @@ paths:
               - whitelistApproved
               - whitelistRejected
               - allocationRequest
+              - allocationAccepted
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -53076,6 +53187,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApprovalListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidEnterpriseId1'
+                  - $ref: '#/components/schemas/InvalidOrganizationId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/pendingapprovals/{approvalId}:
     get:
       summary: Get pending approval
@@ -57293,6 +57420,33 @@ paths:
                     - signatureShares
                     - signerGpgPublicKey
                     - type
+                - type: object
+                  description: |-
+                    RedPallas MPCv2 signing request body (Zcash Orchard shielded custodial cold wallets).
+
+                    Uses RedPallasSignatureShareWithoutVssProof rather than the ECDSA/EdDSA
+                    SignatureShareWithoutVssProof codec, so the RedPallas R1/R2/R3 share contract is never
+                    silently unioned with the EdDSA MPCv2 share type.
+                  properties:
+                    signatureShares:
+                      type: array
+                      items:
+                        allOf:
+                          - $ref: '#/components/schemas/BaseShare'
+                        description: The array of RedPallas MPCv2 (R1/R2/R3) signature shares without VSS proof
+                    signerGpgPublicKey:
+                      type: string
+                      description: The GPG public key of the signer
+                      minLength: 1
+                    type:
+                      type: string
+                      enum:
+                        - redPallasMpcV2
+                      description: The type of the request body
+                  required:
+                    - signatureShares
+                    - signerGpgPublicKey
+                    - type
       responses:
         '200':
           description: OK
@@ -57747,6 +57901,10 @@ paths:
               - 2-eddsa-mpcv2
               - 3-eddsa-mpcv2
               - 4-eddsa-mpcv2
+              - 1-redpallas-mpcv2
+              - 2-redpallas-mpcv2
+              - 3-redpallas-mpcv2
+              - 4-redpallas-mpcv2
         - name: prevId
           description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
           in: query
@@ -65029,6 +65187,41 @@ components:
                 errorName: backend:common:internalServerError
                 reqId: unk-nqo97l23l2ofpvgkbb8z
   schemas:
+    AVAXPStakingOptions1:
+      title: AVAXPStakingOptions
+      type: object
+      description: |-
+        AVAXP add-permissionless-validator staking options.
+
+        staking-service: `AvaxPStakingOptions` (AvaxPTxBuilder). Etna BLS fields required.
+      properties:
+        nodeID:
+          type: string
+          description: Avalanche NodeID (e.g. `NodeID-…`).
+        blsPublicKey:
+          type: string
+          description: BLS public key hex.
+        blsSignature:
+          type: string
+          description: BLS signature hex.
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Stake amount in nAVAX (base units).
+        durationSeconds:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Validator period duration in seconds.
+        delegationFeeRate:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Delegation fee rate percentage (e.g. 100 = 1%). Defaults at build time when omitted.
+      required:
+        - nodeID
+        - blsPublicKey
+        - blsSignature
+        - amount
+        - durationSeconds
     AccelerationIntent:
       title: AccelerationIntent
       allOf:
@@ -69336,6 +69529,27 @@ components:
     BNSupportedCurrency:
       title: BNSupportedCurrency
       type: string
+    BTCStakingOptions1:
+      title: BTCStakingOptions
+      type: object
+      description: |-
+        BTC/Babylon staking options on the StakingOptions marker interface.
+
+        staking-service: `BtcStakingOptions` (BtcTxBuilder). Same JSON fields as CSPR.
+        Distinct from `CreateBtcDelegationMessageRequest.StakingOptions` (Babylon
+        delegation-message API).
+      properties:
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Stake amount in satoshis.
+        validator:
+          allOf:
+            - $ref: '#/components/schemas/AddressString'
+          description: Babylon / staking validator identifier.
+      required:
+        - amount
+        - validator
     BabyCreateBtcDelegationIntent:
       title: Baby CreateBtcDelegation Intent
       allOf:
@@ -72896,6 +73110,25 @@ components:
           allOf:
             - $ref: '#/components/schemas/AddressString3'
           description: Required for CSPR. The validator address used to delegate or undelegate.
+    CSPRStakingOptionsWP:
+      title: CSPRStakingOptionsWP
+      type: object
+      description: |-
+        CSPR staking options for delegate or undelegate transactions.
+
+        staking-service: `CsprStakingOptions`.
+      properties:
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/NumberLike'
+          description: Amount to stake or unstake in base units (motes).
+        validator:
+          allOf:
+            - $ref: '#/components/schemas/AddressString'
+          description: Validator address used to delegate or undelegate.
+      required:
+        - amount
+        - validator
     CaaSBitGoProduct:
       type: string
       enum:
@@ -78921,6 +79154,9 @@ components:
               - eddsaMPCv2Round1
               - eddsaMPCv2Round2
               - eddsaMPCv2Round3
+              - redpallasMPCv2Round1
+              - redpallasMPCv2Round2
+              - redpallasMPCv2Round3
               - readyToCombineShares
               - signed
               - held
@@ -81206,6 +81442,13 @@ components:
           type: string
           nullable: true
       description: Payload to create a Go staking transfer
+    FrozenV2Type:
+      title: FrozenV2Type
+      type: string
+      enum:
+        - BANDWIDTH
+        - ENERGY
+        - TRON_POWER
     FtxHostType:
       title: FtxHostType
       type: string
@@ -81360,8 +81603,10 @@ components:
             properties:
               address:
                 type: string
+                description: TRON address these resource and usage fields belong to
               freeBandwidthAvailable:
                 type: number
+                description: Spendable free bandwidth remaining
               freeBandwidthUsed:
                 type: number
               stakedBandwidthAvailable:
@@ -81410,6 +81655,77 @@ components:
               - error
       required:
         - resources
+        - failedAddresses
+    GetAccountResponse:
+      title: GetAccountResponse
+      type: object
+      properties:
+        accounts:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  frozenV2:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        type:
+                          allOf:
+                            - $ref: '#/components/schemas/FrozenV2Type'
+                          description: Resource type. Omitted BANDWIDTH from TRON protobuf is normalised to this literal.
+                        amount:
+                          type: string
+                          description: |-
+                            Frozen TRX amount in SUN (already SUN from IMS; not a TRX→SUN conversion).
+                            Decimal integer string, same as bandwidthSunRequired / maxResourcesDelegatable.
+                            Missing IMS amounts are returned as "0".
+                      required:
+                        - type
+                        - amount
+                      description: frozenV2 entries for BANDWIDTH, ENERGY, and TRON_POWER (amount "0" when absent)
+                  delegatedFrozenV2BalanceForEnergy:
+                    type: string
+                    description: SUN delegated to others for energy. Protobuf-omitted zeros are returned as "0".
+                  acquiredDelegatedFrozenV2BalanceForEnergy:
+                    type: string
+                    description: SUN of energy delegated from others. Protobuf-omitted zeros are returned as "0".
+                  delegatedFrozenV2BalanceForBandwidth:
+                    type: string
+                    description: SUN delegated to others for bandwidth. Protobuf-omitted zeros are returned as "0".
+                  acquiredDelegatedFrozenV2BalanceForBandwidth:
+                    type: string
+                    description: SUN of bandwidth delegated from others. Protobuf-omitted zeros are returned as "0".
+                  energyRatio:
+                    type: number
+                    description: TotalEnergyLimit / TotalEnergyWeight from the paired getaccountresource call. 0 when unavailable.
+                  bandwidthRatio:
+                    type: number
+                    description: TotalNetLimit / TotalNetWeight from the paired getaccountresource call. 0 when unavailable.
+                required:
+                  - frozenV2
+                  - delegatedFrozenV2BalanceForEnergy
+                  - acquiredDelegatedFrozenV2BalanceForEnergy
+                  - delegatedFrozenV2BalanceForBandwidth
+                  - acquiredDelegatedFrozenV2BalanceForBandwidth
+                  - energyRatio
+                  - bandwidthRatio
+              - $ref: '#/components/schemas/TronAddressResourceInfo'
+        failedAddresses:
+          type: array
+          items:
+            type: object
+            properties:
+              address:
+                type: string
+              error:
+                type: string
+            required:
+              - address
+              - error
+      required:
+        - accounts
         - failedAddresses
     GetBatchSigningResponse:
       title: GetBatchSigningResponse
@@ -83823,6 +84139,35 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: The transfer amount must be greater than the given limit for the condition to trigger
+    HBARStakingOptions:
+      title: HBARStakingOptions
+      allOf:
+        - type: object
+          properties:
+            stakedNodeId:
+              type: number
+              description: Hedera consensus node id to stake to.
+            declineStakingReward:
+              type: boolean
+              default: false
+              description: When true, the account declines staking rewards.
+        - oneOf:
+            - type: object
+              properties:
+                stakedNodeId:
+                  type: number
+              required:
+                - stakedNodeId
+            - type: object
+              properties:
+                declineStakingReward:
+                  type: boolean
+              required:
+                - declineStakingReward
+      description: |-
+        HBAR staking options for account-update stake/decline-reward txs.
+
+        staking-service: `HbarStakingOptions` (HbarStakingTxBuilder).
     HalfSigned:
       title: HalfSigned
       type: object
@@ -85027,6 +85372,11 @@ components:
         - requirements
         - finalizeSubmission
       title: IndividualIdentityResponse
+    InitiateTransactionAVAXPStakingOptions:
+      title: InitiateTransactionAVAXPStakingOptions
+      allOf:
+        - $ref: '#/components/schemas/AVAXPStakingOptions1'
+      description: AVAXP add-permissionless-validator staking options.
     InitiateTransactionAddressType:
       title: InitiateTransactionAddressType
       type: string
@@ -85038,22 +85388,16 @@ components:
         - p2trMusig2
       description: platform.yaml `components/schemas/AddressType`
       example: p2sh
+    InitiateTransactionBTCStakingOptions:
+      title: InitiateTransactionBTCStakingOptions
+      allOf:
+        - $ref: '#/components/schemas/BTCStakingOptions1'
+      description: BTC/Babylon StakingOptions-interface payloads (`{ amount, validator }`).
     InitiateTransactionCSPRStakingOptions:
       title: InitiateTransactionCSPRStakingOptions
-      type: object
+      allOf:
+        - $ref: '#/components/schemas/CSPRStakingOptionsWP'
       description: CSPR staking options for delegate or undelegate transactions.
-      properties:
-        amount:
-          allOf:
-            - $ref: '#/components/schemas/NumberLike'
-          description: Required for CSPR. String representation of the amount to stake or unstake in base units (motes).
-        validator:
-          allOf:
-            - $ref: '#/components/schemas/AddressString'
-          description: Required for CSPR. The validator address used to delegate or undelegate.
-      required:
-        - amount
-        - validator
     InitiateTransactionChangeAddressTypes:
       title: InitiateTransactionChangeAddressTypes
       type: array
@@ -85070,6 +85414,11 @@ components:
           The address types for the change address. Order by preference and BitGo uses the first available.
           Any subset of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`.
         example: p2sh
+    InitiateTransactionHBARStakingOptions:
+      title: InitiateTransactionHBARStakingOptions
+      allOf:
+        - $ref: '#/components/schemas/HBARStakingOptions'
+      description: HBAR staking options for account-update stake txs.
     InitiateTransactionIntegerString:
       title: InitiateTransactionIntegerString
       type: string
@@ -85105,162 +85454,11 @@ components:
         Only a single recipient with a 'max' amount is allowed.
       example: '2000000'
       pattern: ^(-?\d+|max|invoice)$
-    InitiateTransactionSTXStakingFunctionArgOptional:
-      title: InitiateTransactionSTXStakingFunctionArgOptional
-      type: object
-      description: STX staking function argument with type optional.
-      properties:
-        type:
-          type: string
-          enum:
-            - optional
-          default: optional
-          description: Type of argument. Use the default.
-        val:
-          $ref: '#/components/schemas/InitiateTransactionSTXStakingOptionalVal'
-      required:
-        - type
-        - val
-    InitiateTransactionSTXStakingFunctionArgPrincipal:
-      title: InitiateTransactionSTXStakingFunctionArgPrincipal
-      type: object
-      description: STX staking function argument with type principal.
-      properties:
-        type:
-          type: string
-          enum:
-            - principal
-          default: principal
-          description: Type of argument. Use the default.
-        val:
-          type: string
-          description: Address of the validator
-      required:
-        - type
-        - val
-    InitiateTransactionSTXStakingFunctionArgUint128:
-      title: InitiateTransactionSTXStakingFunctionArgUint128
-      type: object
-      description: STX staking function argument with type uint128.
-      properties:
-        type:
-          type: string
-          enum:
-            - uint128
-          default: uint128
-          description: Type of argument. Use the default.
-        val:
-          type: string
-          description: Amount in micro-stx
-      required:
-        - type
-        - val
-    InitiateTransactionSTXStakingOptionalVal:
-      title: InitiateTransactionSTXStakingOptionalVal
-      oneOf:
-        - type: string
-        - $ref: '#/components/schemas/InitiateTransactionSTXStakingTuple'
-      description: Value for an optional STX staking function argument.
     InitiateTransactionSTXStakingOptions:
       title: InitiateTransactionSTXStakingOptions
-      type: object
+      allOf:
+        - $ref: '#/components/schemas/STXStakingOptionsWP'
       description: STX staking options for delegate or revoke-delegate transactions.
-      properties:
-        contractName:
-          type: string
-          default: pox-3
-          description: The STX staking contract name. Use pox-3.
-        functionName:
-          type: string
-          description: STX staking contract function.
-        functionArgs:
-          type: array
-          items:
-            oneOf:
-              - $ref: '#/components/schemas/InitiateTransactionSTXStakingFunctionArgUint128'
-              - $ref: '#/components/schemas/InitiateTransactionSTXStakingFunctionArgPrincipal'
-              - $ref: '#/components/schemas/InitiateTransactionSTXStakingFunctionArgOptional'
-            description: The 4 Objects are required and in the order expressed.
-      required:
-        - contractName
-        - functionName
-        - functionArgs
-    InitiateTransactionSTXStakingTuple:
-      title: InitiateTransactionSTXStakingTuple
-      type: object
-      description: Tuple nested inside an optional STX staking function argument.
-      properties:
-        type:
-          type: string
-          enum:
-            - tuple
-          default: tuple
-          description: Type of argument. Use the default.
-        val:
-          allOf:
-            - $ref: '#/components/schemas/InitiateTransactionSTXStakingTupleVal'
-          description: 'The 2 objects are required and in the order expressed: hashbytes, then version.'
-          minItems: 2
-          maxItems: 2
-      required:
-        - type
-        - val
-    InitiateTransactionSTXStakingTupleHashbytes:
-      title: InitiateTransactionSTXStakingTupleHashbytes
-      type: object
-      description: BTC address hash buffer within an STX staking tuple.
-      properties:
-        key:
-          type: string
-          enum:
-            - hashbytes
-          default: hashbytes
-          description: Tuple field name.
-        type:
-          type: string
-          enum:
-            - buffer
-          default: buffer
-          description: Type of argument. Use the default.
-        val:
-          type: string
-          description: The BTC Address hash.
-      required:
-        - key
-        - type
-        - val
-    InitiateTransactionSTXStakingTupleVal:
-      title: InitiateTransactionSTXStakingTupleVal
-      type: array
-      items:
-        oneOf:
-          - $ref: '#/components/schemas/InitiateTransactionSTXStakingTupleHashbytes'
-          - $ref: '#/components/schemas/InitiateTransactionSTXStakingTupleVersion'
-        description: Ordered pair of hashbytes and version within an STX staking tuple value.
-    InitiateTransactionSTXStakingTupleVersion:
-      title: InitiateTransactionSTXStakingTupleVersion
-      type: object
-      description: BTC address version buffer within an STX staking tuple.
-      properties:
-        key:
-          type: string
-          enum:
-            - version
-          default: version
-          description: Tuple field name.
-        type:
-          type: string
-          enum:
-            - buffer
-          default: buffer
-          description: Type of argument. Use the default.
-        val:
-          type: string
-          description: The BTC Address version.
-      required:
-        - key
-        - type
-        - val
     InitiatorIsAllowedToApproveActionParameter:
       title: Initiator is allowed to approve
       type: object
@@ -87477,6 +87675,9 @@ components:
                     - eddsaMPCv2Round1
                     - eddsaMPCv2Round2
                     - eddsaMPCv2Round3
+                    - redpallasMPCv2Round1
+                    - redpallasMPCv2Round2
+                    - redpallasMPCv2Round3
                     - readyToCombineShares
                     - signed
                     - held
@@ -87731,6 +87932,9 @@ components:
                     - eddsaMPCv2Round1
                     - eddsaMPCv2Round2
                     - eddsaMPCv2Round3
+                    - redpallasMPCv2Round1
+                    - redpallasMPCv2Round2
+                    - redpallasMPCv2Round3
                     - readyToCombineShares
                     - signed
                     - held
@@ -91138,6 +91342,7 @@ components:
               - foundation
               - Coinlist
               - Sales Referral!Frank Wang
+              - Nydig
         usersViewAllWallets:
           nullable: true
           type: boolean
@@ -91607,6 +91812,9 @@ components:
               - eddsaMPCv2Round1
               - eddsaMPCv2Round2
               - eddsaMPCv2Round3
+              - redpallasMPCv2Round1
+              - redpallasMPCv2Round2
+              - redpallasMPCv2Round3
               - readyToCombineShares
               - signed
               - held
@@ -97141,6 +97349,35 @@ components:
                                 val:
                                   type: string
                                   description: The BTC Address version.
+    STXStakingOptionsWP:
+      title: STXStakingOptionsWP
+      type: object
+      description: |-
+        STX staking options for delegate / stack / revoke-delegate transactions.
+
+        staking-service: `StxStakingOptions` (StxStakingTransactionBuilder).
+        Contract name defaults to `pox-4` in staking-service (`@Value`); on the wire
+        it is a plain string (historically `pox-3` in platform.yaml docs).
+      properties:
+        contractName:
+          type: string
+          default: pox-4
+          description: The STX staking contract name (e.g. pox-3 / pox-4).
+        functionName:
+          type: string
+          description: STX staking contract function (e.g. delegate-stx, stack-stx, revoke-delegate-stx).
+        functionArgs:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/STXStakingFunctionArgUint128'
+              - $ref: '#/components/schemas/STXStakingFunctionArgPrincipal'
+              - $ref: '#/components/schemas/STXStakingFunctionArgOptional'
+            description: Function arguments; length and types depend on the operation.
+      required:
+        - contractName
+        - functionName
+        - functionArgs
     STXStakingTuple:
       title: STXStakingTuple
       type: object
@@ -97480,46 +97717,31 @@ components:
           description: Encoded transaction hex queued for broadcast.
         id:
           type: string
+    SendTransactionAVAXPStakingOptions:
+      title: SendTransactionAVAXPStakingOptions
+      allOf:
+        - $ref: '#/components/schemas/AVAXPStakingOptions1'
+      description: AVAXP add-permissionless-validator staking options.
+    SendTransactionBTCStakingOptions:
+      title: SendTransactionBTCStakingOptions
+      allOf:
+        - $ref: '#/components/schemas/BTCStakingOptions1'
+      description: BTC/Babylon StakingOptions-interface payloads (`{ amount, validator }`).
     SendTransactionCSPRStakingOptions:
       title: SendTransactionCSPRStakingOptions
-      type: object
+      allOf:
+        - $ref: '#/components/schemas/CSPRStakingOptionsWP'
       description: CSPR staking options for delegate or undelegate transactions.
-      properties:
-        amount:
-          allOf:
-            - $ref: '#/components/schemas/NumberLike'
-          description: Required for CSPR. String representation of the amount to stake or unstake in base units (motes).
-        validator:
-          allOf:
-            - $ref: '#/components/schemas/AddressString'
-          description: Required for CSPR. The validator address used to delegate or undelegate.
-      required:
-        - amount
-        - validator
+    SendTransactionHBARStakingOptions:
+      title: SendTransactionHBARStakingOptions
+      allOf:
+        - $ref: '#/components/schemas/HBARStakingOptions'
+      description: HBAR staking options for account-update stake txs.
     SendTransactionSTXStakingOptions:
       title: SendTransactionSTXStakingOptions
-      type: object
+      allOf:
+        - $ref: '#/components/schemas/STXStakingOptionsWP'
       description: STX staking options for delegate or revoke-delegate transactions.
-      properties:
-        contractName:
-          type: string
-          default: pox-3
-          description: The STX staking contract name. Use pox-3.
-        functionName:
-          type: string
-          description: STX staking contract function.
-        functionArgs:
-          type: array
-          items:
-            oneOf:
-              - $ref: '#/components/schemas/STXStakingFunctionArgUint128'
-              - $ref: '#/components/schemas/STXStakingFunctionArgPrincipal'
-              - $ref: '#/components/schemas/STXStakingFunctionArgOptional'
-            description: The 4 Objects are required and in the order expressed.
-      required:
-        - contractName
-        - functionName
-        - functionArgs
     SepaAccountResponseProps:
       title: SepaAccountResponseProps
       type: object
@@ -105702,6 +105924,9 @@ components:
         - eddsaMPCv2Round1
         - eddsaMPCv2Round2
         - eddsaMPCv2Round3
+        - redpallasMPCv2Round1
+        - redpallasMPCv2Round2
+        - redpallasMPCv2Round3
         - readyToCombineShares
         - signed
         - held
@@ -107666,9 +107891,57 @@ components:
           type: string
       required:
         - rootPub
+    TronAddressResourceInfo:
+      title: TronAddressResourceInfo
+      type: object
+      properties:
+        address:
+          type: string
+          description: TRON address these resource and usage fields belong to
+        freeBandwidthAvailable:
+          type: number
+          description: Spendable free bandwidth remaining
+        freeBandwidthUsed:
+          type: number
+        stakedBandwidthAvailable:
+          type: number
+        stakedBandwidthUsed:
+          type: number
+        energyAvailable:
+          type: number
+        energyUsed:
+          type: number
+        resourceDeficitForAssetTransfer:
+          $ref: '#/components/schemas/TronResourceDeficit'
+        maxResourcesDelegatable:
+          $ref: '#/components/schemas/MaxResourcesDelegatable'
+        TotalNetLimit:
+          type: number
+          description: Live total network bandwidth limit (same value for all addresses)
+        TotalNetWeight:
+          type: number
+          description: Live total staked TRX for bandwidth (same value for all addresses)
+        TotalEnergyLimit:
+          type: number
+          description: Live total network energy limit (same value for all addresses)
+        TotalEnergyWeight:
+          type: number
+          description: Live total staked TRX for energy (same value for all addresses)
+      required:
+        - address
+        - freeBandwidthAvailable
+        - freeBandwidthUsed
+        - stakedBandwidthAvailable
+        - stakedBandwidthUsed
+        - energyAvailable
+        - energyUsed
     TronResourceDeficit:
       title: TronResourceDeficit
       type: object
+      description: |-
+        Shared TRON account-resource response codecs used by getAccount and
+        getAccountResources. Request bodies stay in each route file so OpenAPI
+        keeps per-operation @title / description.
       properties:
         bandwidthDeficit:
           type: number
@@ -119751,6 +120024,9 @@ components:
               - eddsaMPCv2Round1
               - eddsaMPCv2Round2
               - eddsaMPCv2Round3
+              - redpallasMPCv2Round1
+              - redpallasMPCv2Round2
+              - redpallasMPCv2Round3
               - readyToCombineShares
               - signed
               - held
@@ -119798,6 +120074,7 @@ components:
         - endInvestorOnboardingAccepted
         - pendingDecryption
         - allocationRequest
+        - allocationAccepted
     WalletsResponse:
       type: object
       properties:
@@ -120332,6 +120609,7 @@ components:
         - whitelistApproved
         - whitelistRejected
         - allocationRequest
+        - allocationAccepted
     WebhookTypeBlock:
       type: string
       enum:
@@ -120359,6 +120637,8 @@ components:
         - stuckTx
         - endInvestorOnboardingInvite
         - endInvestorOnboardingAccepted
+        - allocationRequest
+        - allocationAccepted
       example: transfer
       description: Event type to listen to.
     WethStakingRequest:
