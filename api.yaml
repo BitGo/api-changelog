@@ -2251,10 +2251,12 @@ paths:
     get:
       summary: List user audit logs
       description: |-
-        Lists audit logs for the authenticated user within an enterprise.
-        Returns audit logs based on the user's role (auditor, admin, or member)
-        with appropriate filtering. Results are paginated and sorted by
-        timestamp in descending order.
+        Lists audit logs for the authenticated user within an enterprise or
+        organization. Enterprise results are based on the user's role, while
+        organization-scoped results require organization admin access. Results
+        are paginated and sorted by timestamp in descending order.
+        Provide exactly one of `filter[enterpriseId]` or
+        `filter[organizationId]`; the parameters are mutually exclusive.
 
         **Requires access token scopes:** `auditlogs_view_all` or `user_manage`
       operationId: v3.auditlog.list
@@ -2267,9 +2269,16 @@ paths:
       parameters:
         - name: filter[enterpriseId]
           in: query
-          description: Enterprise ID to scope the query
-          required: true
+          description: Enterprise ID to scope the query. Mutually exclusive with filter[organizationId].
+          required: false
           example: 59cd72485007a239fb00282ed480da1f
+          schema:
+            $ref: '#/components/schemas/Id'
+        - name: filter[organizationId]
+          in: query
+          description: Organization ID to scope organization audit logs. Mutually exclusive with filter[enterpriseId]. Exactly one scope filter is required.
+          required: false
+          example: 59cd72485007a239fb00282ed480da2f
           schema:
             $ref: '#/components/schemas/Id'
         - name: filter[targetId]
@@ -53175,6 +53184,7 @@ paths:
               - organizationAdmin
               - organizationAdminInvite
               - crossChainRecovery
+              - issuerMintOrder
         - name: includeEvmKeyringWallets
           description: When true, include pending approvals from all wallets in the same EVM keyring
           in: query
@@ -83269,7 +83279,7 @@ components:
                 allOf:
                   - $ref: '#/components/schemas/tokenTypeCodec'
                 description: Asset type classification
-                example: '"stablecoin"'
+                example: stablecoin
               minimumMintAmount:
                 type: string
                 description: Minimum amount required to mint, in full units
@@ -83300,7 +83310,7 @@ components:
                 description: |-
                   The enterprise's role for this token.
                   Only present for issuer and partner enterprises.
-                example: '"issuer"'
+                example: issuer
               issuerOrdersEnabled:
                 type: boolean
                 description: |-
@@ -95686,6 +95696,10 @@ components:
             market_ticker:
               type: string
               description: AMS-owned external market/security ticker.
+            cusip:
+              type: string
+              pattern: ^[0-9A-Z]{9}$
+              description: AMS-owned nine-character CUSIP security identifier.
         environment:
           type: string
           description: Network environment.
@@ -96171,9 +96185,15 @@ components:
         campaign:
           nullable: true
           type: string
+          maxLength: 255
+        medium:
+          nullable: true
+          type: string
+          maxLength: 255
         source:
           nullable: true
           type: string
+          maxLength: 255
     RegionalFeatures:
       title: RegionalFeatures
       type: object
