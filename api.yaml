@@ -43413,6 +43413,89 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/plaid/processor-token:
+    post:
+      x-internal: false
+      summary: Create bank transfer method from Plaid processor token
+      description: |
+        Sending the `processor_token` to this endpoint will create the bank
+        transfer method for the given enterprise on the BitGo Platform.
+
+        Currently, only ACH bank transfer methods will be accepted.
+
+        Ensure you set all the required permissions to the token before
+        submitting it: `auth`, `identity` and `signal`.
+
+        Optionally, you can provide the description for the bank transfer
+        method. The description is the display name and works similarly to a
+        nickname. Uses the account name returned by Plaid when omitted.
+      operationId: tradfi.v1.plaid.processor-token.create
+      tags:
+        - Plaid
+      requestBody:
+        required: true
+        description: Plaid processor token and enterprise for the bank transfer method
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enterpriseId:
+                  type: string
+                  description: The ID of the enterprise that owns the bank transfer method
+                  minLength: 1
+                processorToken:
+                  type: string
+                  description: A Plaid processor token created with BitGo as the processor.
+                  minLength: 1
+                description:
+                  type: string
+                  description: Optional display name for the bank transfer method. Uses the account name returned by Plaid when omitted.
+              required:
+                - enterpriseId
+                - processorToken
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      bankTransferMethodId:
+                        type: string
+                        description: The ID of the created bank transfer method
+                    required:
+                      - bankTransferMethodId
+                required:
+                  - data
+        '400':
+          description: Bad Request - Required parameters are missing, the processor token is invalid, or it is not linked to an ACH account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '403':
+          description: Forbidden - Client does not have access to the enterprise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '424':
+          description: Failed Dependency - Plaid service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/fiat/v1/sandbox/transaction/simulate:
     post:
       tags:
@@ -75866,7 +75949,7 @@ components:
       properties:
         acceptAuthTerms:
           type: boolean
-          description: 'Whether the client has accepted the ACH authorization terms. Required for deposits (`transferDirection: "in"`). Must be `true` to initiate a deposit. Retrieve the authorization language to present to the user via `GET /api/tradfi/v1/enterprises/{enterpriseId}/ach-authorization`.'
+          description: 'Whether the client has accepted the ACH authorization terms. Required for deposits (`transferDirection: "in"`). Must be `true` to initiate a deposit. See https://app.bitgo.com/my/ach-terms for institutional and retail clients, or https://app.bitgo.com/my/caas/ach-terms for CaaS.'
         amount:
           type: string
           minLength: 1
