@@ -70627,6 +70627,11 @@ components:
         - transferType
         - txid
         - walletId
+    BannerKey:
+      title: BannerKey
+      type: string
+      enum:
+        - goAccountActivationOptOut
     BaseBridgeFundsIntent:
       title: Bridge Funds Intent
       allOf:
@@ -82435,6 +82440,24 @@ components:
             hasScimClient:
               type: boolean
               description: Whether the enterprise has a SCIM OAuth client configured
+            banners:
+              type: array
+              items:
+                type: object
+                properties:
+                  bannerKey:
+                    $ref: '#/components/schemas/BannerKey'
+                  decidedBy:
+                    type: string
+                    description: ID of the enterprise admin who recorded the decision.
+                  decidedAt:
+                    type: string
+                    description: ISO-8601 timestamp of when the decision was recorded.
+                required:
+                  - bannerKey
+                  - decidedBy
+                  - decidedAt
+                description: Banner decisions recorded for this enterprise. A bannerKey absent from this array has not been decided on and defaults to shown.
             organizationId:
               type: string
               deprecated: true
@@ -82442,6 +82465,7 @@ components:
             - wallets
             - tags
             - hasScimClient
+            - banners
         - $ref: '#/components/schemas/Enterprise'
     GetEnterpriseUserSigningKeyResponse:
       title: GetEnterpriseUserSigningKeyResponse
