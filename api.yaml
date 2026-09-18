@@ -48296,6 +48296,19 @@ paths:
         Initiate an unsigned trustline transaction to create a pending approval.
         Trustline transactions manage trusted tokens on the account. Available for Stellar.
         Use only with custodial wallets.
+
+        `{ pendingApproval, error?, triggeredPolicy? }`, not a bare PendingApproval
+        — consequence: unsigned send throws that envelope; a bare PendingApproval codec
+        would fail shadow validation and OpenAPI clients against the real body
+        — consequence: omitting it from the codec drops a field the controller reads
+        via validateSequenceId(req.body.sequenceId)
+        trustline build: trustlines, memo, comment, sequenceId, fee, timebounds
+        — consequence: omitting a consumed field 400s a previously accepted request
+        — consequence: a raw `number | string` union accepts `limit: "abc"`, which becomes
+        BigNumber NaN; range checks never fire and formatBaseUnits throws an untyped 500
+        the XLM builder's isNaN(fee/timebounds) checks do not reject Infinity
+        — consequence: documenting type on the body would let callers think they can
+        override the transaction type
       operationId: v2.wallet.trustline.initiate
       tags:
         - Wallet
@@ -48332,7 +48345,6 @@ paths:
                   minItems: 1
                   items:
                     type: object
-                    description: List of trustlines to manage on the account.
                     properties:
                       token:
                         type: string
@@ -48345,13 +48357,15 @@ paths:
                           - remove
                       limit:
                         allOf:
-                          - $ref: '#/components/schemas/IntegerString11'
-                        description: String representation of the amount to limit in base units (stroops)
+                          - $ref: '#/components/schemas/NumberLike'
+                        description: |-
+                          Trustline limit in base units (stroops). XLM build accepts a number or numeric string
+                          (`BigNumber(limit)`). `0` (number) is required to omit the limit when removing.
                         example: '2000000'
-                        pattern: ^-?\d+$
                     required:
                       - token
                       - action
+                    description: List of trustlines to manage on the account.
                 memo:
                   type: object
                   description: The memo contains optional extra information that can also be used to identify payments in Stellar.
@@ -48367,6 +48381,27 @@ paths:
                   type: string
                   description: Optional metadata (only persisted in BitGo) to be applied to the transaction. Use this to add transaction-specific information such as the transaction's purpose or another identifier that you want to reference later. The value is shown in the UI in the transfer listing page.
                   maxLength: 256
+                sequenceId:
+                  type: string
+                  description: Sequence ID for the trustline transaction. Forwarded to unsigned send, not the Stellar account sequence.
+                fee:
+                  type: number
+                  description: |-
+                    Custom Stellar transaction fee. Consumed by XLM `getTrustlineBuildParams` / `buildTransaction`
+                    as `Number(fee)`. IMS fee is used when omitted.
+                timebounds:
+                  type: object
+                  description: |-
+                    Optional validity window for the Stellar transaction (`minTime` / `maxTime`).
+                    XLM `getTrustlineBuildParams` picks `timebounds` (lowercase).
+                  properties:
+                    maxTime:
+                      $ref: '#/components/schemas/NumberLike'
+                    minTime:
+                      $ref: '#/components/schemas/NumberLike'
+                  required:
+                    - maxTime
+                    - minTime
               required:
                 - trustlines
       responses:
@@ -48375,7 +48410,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PendingApproval'
+                $ref: '#/components/schemas/TrustlineInitiateAcceptedResponse'
         '400':
           description: Bad Request
           content:
@@ -48384,6 +48419,18 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidWalletId1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/tx/changeFee:
     post:
       summary: Change Fee
@@ -86130,12 +86177,6 @@ components:
       description: platform.yaml `components/schemas/IntegerString`
       example: '2000000'
       pattern: ^-?\d+$
-    IntegerString11:
-      title: IntegerString1
-      type: string
-      description: platform.yaml `components/schemas/IntegerString`
-      example: '2000000'
-      pattern: ^-?\d+$
     IntentType:
       title: IntentType
       type: string
@@ -108599,6 +108640,22 @@ components:
           allOf:
             - $ref: '#/components/schemas/IntegerString'
           description: String representation of the amount to limit in base units (stroops)
+    TrustlineInitiateAcceptedResponse:
+      title: TrustlineInitiateAcceptedResponse
+      type: object
+      description: |-
+        Trustline initiate always creates an unsigned pending approval. The HTTP 202 body is the
+        PendingApprovalResponse envelope (`pendingApproval` plus optional `error` /
+        `triggeredPolicy`), not the pending approval document alone.
+      properties:
+        pendingApproval:
+          $ref: '#/components/schemas/PendingApproval'
+        error:
+          type: string
+        triggeredPolicy:
+          type: string
+      required:
+        - pendingApproval
     TrxClaimRewardsIntent:
       title: TRX Claim Rewards Intent
       allOf:
