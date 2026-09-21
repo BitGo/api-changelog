@@ -14387,6 +14387,152 @@ paths:
                     type: string
                 required:
                   - error
+  /api/link/v1/attestation/status:
+    get:
+      summary: Get residency attestation
+      description: |-
+        Get user's current resolved geo-attestation for the jurisdiction
+        derived from the request's IP geolocation.
+      operationId: V1GetAttestationStatusRoute
+      tags:
+        - Link Permissions
+      x-internal: false
+      parameters:
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetAttestationStatusResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+  /api/link/v1/attestations:
+    post:
+      summary: Record residency attestation
+      description: |-
+        Attest whether the user is a citizen or resident of their current
+        IP-derived jurisdiction.
+      operationId: V1PostAttestationRoute
+      tags:
+        - Link Permissions
+      x-internal: false
+      parameters:
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Attestation request body. Records the user's Restricted Individual answer
+                and claimed jurisdiction, which must match the request's IP-derived location.
+              properties:
+                country:
+                  allOf:
+                    - $ref: '#/components/schemas/CountryCodeAlpha3'
+                  description: |-
+                    ISO 3166-1 alpha-3 code of the jurisdiction the user is attesting for.
+                    Must match the request's IP-derived country.
+                subdivision:
+                  type: string
+                  description: |-
+                    Bare ISO 3166-2 subdivision code (e.g. `NY`) of the jurisdiction the user
+                    is attesting for. Must match the request's IP-derived subdivision; omit
+                    only for country-level jurisdictions.
+                  minLength: 1
+                isRestrictedIndividual:
+                  type: boolean
+                  description: The user's answer to the "Restricted Individual" question for the jurisdiction.
+              required:
+                - country
+                - isRestrictedIndividual
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PostAttestationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1CountryMismatchResponse'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/accounts:
     get:
       summary: List Link accounts
@@ -14665,6 +14811,12 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse1'
         '422':
           description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '451':
+          description: Unavailable For Legal Reasons
           content:
             application/json:
               schema:
@@ -15277,6 +15429,85 @@ paths:
                 properties: {}
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+  /api/link/v1/enterprises/{enterpriseId}/activation:
+    post:
+      summary: Activate Link for an organization
+      description: |-
+        Creates the "Link Admin" role (permissions `bitgo.link.admin`,
+        `link.account.transfer`, `link.account.view`, `enterprise.view`) for the enterprise's
+        organization via Roles & Permissions. Requires the caller to be an organization
+        admin; there is no request body.
+      operationId: V1PostActivationRoute
+      tags:
+        - Link Permissions
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1PostActivationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -75990,6 +76221,15 @@ components:
           $ref: '#/components/schemas/CountryAddress'
       required:
         - rules
+    CountryCodeAlpha3:
+      title: CountryCodeAlpha3
+      type: string
+      description: |-
+        ISO 3166-1 alpha-3 country code (e.g. `USA`).
+
+        The route-facing codec stays a plain string so OpenAPI schema generation can
+        represent it. The service enforces the alpha-3 shape and known-country
+        membership before recording the attestation.
     CountryListResponse:
       title: CountryListResponse
       description: Response when requesting all available countries
@@ -82131,6 +82371,22 @@ components:
         - status
         - createdAt
         - user
+    GeoAttestationStatus:
+      title: GeoAttestationStatus
+      type: string
+      enum:
+        - not_attested
+        - attested_unrestricted
+        - attested_restricted
+      description: codec for the resolved geo-attestation state of a jurisdiction
+    GeoAvailability:
+      title: GeoAvailability
+      type: string
+      enum:
+        - available
+        - attestation_required
+        - restricted
+        - unavailable
     GeographicAddress:
       title: GeographicAddress
       type: object
@@ -97588,6 +97844,44 @@ components:
         - walletId
         - expireTime
         - userId
+    ResolvedGeoAttestation:
+      title: ResolvedGeoAttestation
+      type: object
+      description: |-
+        The user's resolved geo-attestation for the jurisdiction derived from their
+        request IP. `country` is the ISO 3166-1 alpha-3 code resolved from the
+        request's geolocation and is always present; `subdivision` is the bare
+        ISO 3166-2 subdivision code (e.g. `NY`) and is omitted for country-level
+        jurisdictions.
+
+        `not_attested` covers both a user who has never attested for the jurisdiction
+        and one whose latest attestation has expired — in both cases `attestedAt` and
+        `expiresAt` are omitted, since no attestation is currently in force.
+      properties:
+        country:
+          type: string
+          description: ISO 3166-1 alpha-3 code of the request's IP-derived jurisdiction.
+          minLength: 1
+        subdivision:
+          type: string
+          description: Bare ISO 3166-2 subdivision code (e.g. `NY`); omitted for country-level jurisdictions.
+        attestationStatus:
+          allOf:
+            - $ref: '#/components/schemas/GeoAttestationStatus'
+          description: The resolved attestation state for the jurisdiction.
+        attestedAt:
+          type: string
+          description: When the winning attestation was recorded; omitted while `not_attested`.
+          format: date-time
+          title: ISO Date String
+        expiresAt:
+          type: string
+          description: When the winning attestation stops being valid; omitted while `not_attested`.
+          format: date-time
+          title: ISO Date String
+      required:
+        - country
+        - attestationStatus
     Restaking:
       type: object
       description: Attributes related to restaking positions.
@@ -113692,6 +113986,24 @@ components:
               - initialized
       required:
         - connections
+    V1CountryMismatchResponse:
+      title: V1CountryMismatchResponse
+      type: object
+      description: |-
+        Codec for the 409 response returned when the attested jurisdiction does not
+        match the request's IP-derived one. Carries the current resolved geo-attestation
+        so the UI can re-prompt the user for the jurisdiction they are actually in.
+      properties:
+        errorName:
+          type: string
+        error:
+          type: string
+        geoAttestation:
+          $ref: '#/components/schemas/ResolvedGeoAttestation'
+      required:
+        - errorName
+        - error
+        - geoAttestation
     V1CreateBankAccountResponse:
       title: V1CreateBankAccountResponse
       allOf:
@@ -114114,6 +114426,27 @@ components:
           description: |-
             Total number of accounts matching the filter across all pages (same for every page).
             Use with limit/offset for pagination.
+        restrictedItems:
+          type: array
+          items:
+            type: object
+            description: |-
+              Minimal identities for accounts omitted because their venue is unavailable in the requester's jurisdiction.
+              This field is optional so internal responses and existing consumers remain unchanged.
+            properties:
+              id:
+                type: string
+                title: uuid
+              name:
+                type: string
+                minLength: 1
+              venueId:
+                type: string
+                minLength: 1
+            required:
+              - id
+              - name
+              - venueId
       required:
         - accounts
         - total
@@ -114177,6 +114510,15 @@ components:
       required:
         - addresses
         - total
+    V1GetAttestationStatusResponse:
+      title: V1GetAttestationStatusResponse
+      type: object
+      description: codec for the GET /api/link/v1/attestation/status response
+      properties:
+        geoAttestation:
+          $ref: '#/components/schemas/ResolvedGeoAttestation'
+      required:
+        - geoAttestation
     V1GetBankAccountResponse:
       title: V1GetBankAccountResponse
       allOf:
@@ -115539,6 +115881,8 @@ components:
                   required:
                     - normalized
                     - displayName
+              geoAvailability:
+                $ref: '#/components/schemas/GeoAvailability'
             required:
               - id
               - name
@@ -115549,6 +115893,7 @@ components:
               - supportsExternalDeposits
               - supportedCredentialAccessLevels
               - supportedAccountSubTypes
+              - geoAvailability
       required:
         - venues
     V1GlobalListingResponse:
@@ -116486,6 +116831,20 @@ components:
       allOf:
         - title: V1PostAccountResponse
         - $ref: '#/components/schemas/V1AccountResponse'
+    V1PostActivationResponse:
+      title: V1PostActivationResponse
+      type: object
+      description: |-
+        Response for Link activation.
+
+        Carries the `roleId` of the "Link Admin" role created in the User Management
+        Service.
+      properties:
+        roleId:
+          type: string
+          title: uuid
+      required:
+        - roleId
     V1PostAddressResponse:
       title: V1PostAddressResponse
       type: object
@@ -116532,6 +116891,15 @@ components:
         - genericAsset
         - createdDate
         - modifiedDate
+    V1PostAttestationResponse:
+      title: V1PostAttestationResponse
+      type: object
+      description: codec for the POST /api/link/v1/attestations response
+      properties:
+        geoAttestation:
+          $ref: '#/components/schemas/ResolvedGeoAttestation'
+      required:
+        - geoAttestation
     V1RejectedSettlementOutput:
       title: V1RejectedSettlementOutput
       type: object
