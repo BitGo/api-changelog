@@ -53361,6 +53361,7 @@ paths:
               - whitelistRejected
               - allocationRequest
               - allocationAccepted
+              - allocationSettlementFailed
             example: transfer
         - name: prevId
           description: The ID of the item to start at
@@ -66431,6 +66432,35 @@ components:
             - orderTxHash
             - orderOutputIndex
             - destinationAddress
+        - $ref: '#/components/schemas/BaseStakeIntent'
+    AdaRealFiClaimTimelockIntent:
+      title: ADA RealFi sUSDr Timelock Claim Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - claim
+            stakingType:
+              type: string
+              enum:
+                - REALFI_SUSDR
+            resultTxHash:
+              type: string
+            resultOutputIndex:
+              type: number
+            unlockSlot:
+              type: string
+            owner:
+              type: string
+          required:
+            - intentType
+            - stakingType
+            - resultTxHash
+            - resultOutputIndex
+            - unlockSlot
+            - owner
         - $ref: '#/components/schemas/BaseStakeIntent'
     AdaRealFiStakeIntent:
       title: ADA RealFi sUSDr Stake Intent
@@ -104919,6 +104949,7 @@ components:
         - $ref: '#/components/schemas/AdaRealFiUnstakeIntent'
         - $ref: '#/components/schemas/AdaUnstakeIntent'
         - $ref: '#/components/schemas/AdaRealFiCancelIntent'
+        - $ref: '#/components/schemas/AdaRealFiClaimTimelockIntent'
         - $ref: '#/components/schemas/AdaVoteDelegationIntent'
         - $ref: '#/components/schemas/AptCustomTxIntent'
         - $ref: '#/components/schemas/AtomPaymentIntent'
@@ -120686,6 +120717,7 @@ components:
         - pendingDecryption
         - allocationRequest
         - allocationAccepted
+        - allocationSettlementFailed
     WalletsResponse:
       type: object
       properties:
@@ -121221,6 +121253,7 @@ components:
         - whitelistRejected
         - allocationRequest
         - allocationAccepted
+        - allocationSettlementFailed
     WebhookTypeBlock:
       type: string
       enum:
