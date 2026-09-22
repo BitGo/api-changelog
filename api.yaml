@@ -50084,6 +50084,41 @@ paths:
           content:
             application/json:
               schema: {}
+  /api/v2/enterprise/{enterpriseId}/goAccount/eligibility:
+    get:
+      summary: Get Go Account activation eligibility
+      description: Returns the enterprise's eligibility, existing Go Account state, and opt-out state for the activation banner.
+      operationId: enterprise.goAccount.eligibility.get
+      tags:
+        - Enterprise
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Enterprise to evaluate for Go Account activation.
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/EnterpriseIdString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GoAccountEligibilityResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/enterprise/{enterpriseId}/organization:
     get:
       summary: Get organization metadata by enterprise
@@ -54033,16 +54068,57 @@ paths:
           application/json:
             schema:
               type: object
-              description: |-
-                Request body for updating a pending approval.
-                Matches platform.yaml: otp and state (both strings).
+              description: Request body for updating a pending approval.
               properties:
                 otp:
                   type: string
                   description: Second factor authentication token
                 state:
+                  allOf:
+                    - $ref: '#/components/schemas/PendingApprovalUpdateAction'
+                  description: Pending approval action to apply
+                resolutionMemo:
                   type: string
-                  description: Pending approval state to apply (e.g. approved or rejected)
+                  description: Memo stored on the resolver record
+                videoLink:
+                  type: string
+                  description: URL to the video recorded for a video-approved resolution
+                videoApprover:
+                  type: string
+                  description: Public ID of the user who performed the video approval
+                videoException:
+                  type: string
+                  description: Reason a video approval requirement was excepted
+                halfSigned:
+                  type: object
+                  description: Half-signed transaction payload for multisig approval flows
+                  properties: {}
+                isFullSigned:
+                  type: boolean
+                  description: Whether the transaction is fully signed
+                isSigned:
+                  type: boolean
+                  description: Whether the transaction is signed
+                txHex:
+                  type: string
+                  description: Serialized signed transaction hex
+                attestation:
+                  type: object
+                  description: WebAuthn assertion authorizing this update
+                  properties:
+                    authenticatorData:
+                      type: string
+                    clientDataJSON:
+                      type: string
+                    credentialId:
+                      type: string
+                    signature:
+                      type: string
+                  required:
+                    - authenticatorData
+                    - clientDataJSON
+                    - credentialId
+                    - signature
               required:
                 - state
       responses:
@@ -84804,6 +84880,25 @@ components:
         - COOLDOWN
         - WARMUP
         - UNSUPPORTED
+    GoAccountEligibilityResponse:
+      title: GoAccountEligibilityResponse
+      type: object
+      description: |-
+        Eligibility state used by the Go Account activation banner.
+
+        `eligible` describes the computed backfill criteria independently of whether
+        the enterprise already has a Go Account or has opted out.
+      properties:
+        eligible:
+          type: boolean
+        hasGoAccount:
+          type: boolean
+        optedOut:
+          type: boolean
+      required:
+        - eligible
+        - hasGoAccount
+        - optedOut
     GoStakingAttributes:
       type: object
       properties:
@@ -94358,6 +94453,14 @@ components:
         - enterpriseInviteRequest
         - updateWalletSettingRequest
         - updateWalletTagsRequest
+    PendingApprovalUpdateAction:
+      title: PendingApprovalUpdateAction
+      type: string
+      enum:
+        - approved
+        - rejected
+        - skipped
+        - failed
     PendingApprovalUpdateApprovalsRequiredRequest:
       title: Update approvals required request
       type: object
