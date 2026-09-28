@@ -74294,6 +74294,12 @@ components:
             - allocateBefore
             - settleBefore
         - $ref: '#/components/schemas/BaseIntent'
+    CantonAmount:
+      title: CantonAmount
+      type: string
+      description: |-
+        Exact Canton decimal-string amount codec.
+        API amounts remain strings so the OpenAPI schema stays backward compatible.
     CantonCommand:
       title: CantonCommand
       oneOf:
@@ -74537,8 +74543,7 @@ components:
             updateId:
               type: string
             amount:
-              type: string
-              format: number
+              $ref: '#/components/schemas/CantonAmount'
             expiry:
               type: number
             memoId:
@@ -86662,6 +86667,7 @@ components:
         - signMessage
         - signTypedStructuredData
         - enableToken
+        - disableToken
         - authorize
         - acceleration
         - fillNonce
@@ -86713,6 +86719,7 @@ components:
         - finalizeUnwrap
         - delegateResource
         - undelegateResource
+        - stacksRegisterForBond
         - export
         - import
         - importtoc
@@ -101040,6 +101047,53 @@ components:
       required:
         - baseAddress
         - memoId
+    StacksRegisterForBondIntent:
+      title: Stacks Register For Bond Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - stacksRegisterForBond
+              description: |-
+                TXN 2 of Stacks PoX-5 staking: submit `register-for-bond` against the STX
+                wallet that signs the registration (the BTC lock is TXN 1).
+            stxWalletId:
+              type: string
+            stxAddress:
+              type: string
+            bondIndex:
+              oneOf:
+                - type: string
+                - type: number
+            signerManager:
+              type: string
+            amountUstx:
+              oneOf:
+                - type: string
+                - type: number
+            contractName:
+              type: string
+            functionName:
+              type: string
+            functionArgs:
+              type: array
+              items:
+                type: string
+            signerCalldata:
+              $ref: '#/components/schemas/optionalString'
+          required:
+            - intentType
+            - stxWalletId
+            - stxAddress
+            - bondIndex
+            - signerManager
+            - amountUstx
+            - contractName
+            - functionName
+            - functionArgs
+        - $ref: '#/components/schemas/BaseStakeIntent'
     StacksSendQueue:
       title: Stacks
       type: object
@@ -105570,6 +105624,7 @@ components:
         - $ref: '#/components/schemas/XdcProposeIntent'
         - $ref: '#/components/schemas/XdcResignIntent'
         - $ref: '#/components/schemas/XdcWithdrawIntent'
+        - $ref: '#/components/schemas/StacksRegisterForBondIntent'
         - $ref: '#/components/schemas/BaseIntent'
     TransactionRequest:
       anyOf:
