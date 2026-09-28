@@ -43153,6 +43153,12 @@ paths:
         from `bankAccountId`. The `walletId` and `bankAccountId`
         must be owned by the same `enterpriseId`.
 
+        BitGo automatically collects the request's client IP and user agent.
+        However, if the request is being made by your server instead of the
+        client's device, you should collect the client IP and user agent and
+        specify it in the body as part of the request.
+        The IP and user agent will be used for risk evaluation.
+
         **Requires access token scope:** `wallet_spend_all`
       operationId: tradfi.v1.bank-transfers.create
       tags:
@@ -76423,6 +76429,12 @@ components:
         id:
           type: string
           description: Client-generated transfer ID. Serves as the idempotency key. Prefer UUID v4, v5, or v7.
+        ipAddress:
+          type: string
+          description: Optional end-user IP address. Provide this when the request originates from your server. This is used for risk evaluation. The value must be a valid IPv4 or IPv6 address.
+        userAgent:
+          type: string
+          description: Optional end-user user agent. Provide this when the request originates from your server. This is used for risk evaluation.
         transferDirection:
           allOf:
             - $ref: '#/components/schemas/TradfyTransferDirection'
