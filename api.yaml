@@ -15491,10 +15491,14 @@ paths:
     post:
       summary: Activate Link for an organization
       description: |-
-        Creates the "Link Admin" role (permissions `bitgo.link.admin`,
-        `link.account.transfer`, `link.account.view`, `enterprise.view`) for the enterprise's
-        organization via Roles & Permissions. Requires the caller to be an organization
-        admin; there is no request body.
+        Idempotent: finds the organization's existing "Link Manager" role or creates it (permissions
+        `bitgo.link.admin`, `link.account.admin`, `link.account.transfer`,
+        `link.account.view`, `enterprise.view`, scoped to all enterprises): an
+        existing matching role is reused, otherwise the role is created via
+        Roles & Permissions, bypassing the pending-approval flow. When the optional
+        `userIds` is non-empty, those users are assigned to the role
+        the same way, and the response carries the role's membership after the
+        assignment. Requires the caller to be an organization admin.
       operationId: V1PostActivationRoute
       tags:
         - Link Permissions
@@ -15516,6 +15520,25 @@ paths:
           schema:
             type: string
             minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Activation details. The body may be empty (`{}`) to activate without
+                assigning users.
+              properties:
+                userIds:
+                  type: array
+                  items:
+                    type: string
+                    minLength: 1
+                    description: |-
+                      External user IDs to assign to the organization's "Link Manager" role.
+                      Assignment bypasses the pending-approval flow, so the users are added
+                      synchronously. Optional — when omitted or empty, no assignment happens
+                      and the role is only ensured to exist.
       responses:
         '201':
           description: Created
@@ -15544,12 +15567,6 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse1'
         '404':
           description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/V1ErrorResponse1'
-        '409':
-          description: Conflict
           content:
             application/json:
               schema:
@@ -16707,6 +16724,12 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse1'
         '403':
           description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '451':
+          description: Unavailable For Legal Reasons
           content:
             application/json:
               schema:
@@ -117102,12 +117125,54 @@ components:
       description: |-
         Response for Link activation.
 
-        Carries the `roleId` of the "Link Admin" role created in the User Management
-        Service.
+        Carries the `roleId` of the organization's "Link Manager" role (reused when a
+        matching role already exists, created otherwise). When the request assigned
+        `userIds`, `users` carries the role's membership after the assignment;
+        otherwise it is absent.
       properties:
         roleId:
           type: string
           title: uuid
+        users:
+          type: array
+          items:
+            type: object
+            description: |-
+              A user assigned to the "Link Manager" role (trimmed mirror of the User
+              Management Service's `UserDetails`).
+            properties:
+              id:
+                type: string
+                description: The UMS id of the user record.
+                title: uuid
+              userId:
+                nullable: true
+                type: string
+                minLength: 1
+                description: The external user ID of the user.
+              userName:
+                type: string
+                description: The username of the user.
+                minLength: 1
+              status:
+                type: string
+                description: The status of the user.
+                minLength: 1
+              firstName:
+                nullable: true
+                type: string
+                minLength: 1
+              lastName:
+                nullable: true
+                type: string
+                minLength: 1
+            required:
+              - id
+              - userId
+              - userName
+              - status
+              - firstName
+              - lastName
       required:
         - roleId
     V1PostAddressResponse:
