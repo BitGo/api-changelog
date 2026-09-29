@@ -47470,11 +47470,26 @@ paths:
                       resource:
                         type: string
                         description: Resource type to delegate, e.g. 'ENERGY' or 'BANDWIDTH'
+                      sequenceId:
+                        type: string
+                        description: |-
+                          Client-generated idempotency key for the transaction request created for
+                          this delegation (TSS wallets only). When provided and another non-canceled
+                          latest transaction request on the same wallet already carries this
+                          sequenceId, creation fails with a DuplicateSequenceIdError instead of
+                          creating a duplicate. Omit for fire-and-forget builds.
                     required:
                       - receiverAddress
                       - amount
                       - resource
                     description: Array of resource delegation entries, each specifying a receiver address, amount, and resource type
+                preview:
+                  type: boolean
+                  description: |-
+                    When true, build each delegation transaction without creating a transaction request.
+                    Response entries carry NO txRequestId in this mode — the build is never persisted,
+                    so there is no referenceable request. Defaults to false, which creates a transaction
+                    request per entry (TSS wallets). Non-TSS builds are pure either way.
               required:
                 - delegations
       responses:
@@ -49697,11 +49712,26 @@ paths:
                       resource:
                         type: string
                         description: Resource type to delegate, e.g. 'ENERGY' or 'BANDWIDTH'
+                      sequenceId:
+                        type: string
+                        description: |-
+                          Client-generated idempotency key for the transaction request created for
+                          this delegation (TSS wallets only). When provided and another non-canceled
+                          latest transaction request on the same wallet already carries this
+                          sequenceId, creation fails with a DuplicateSequenceIdError instead of
+                          creating a duplicate. Omit for fire-and-forget builds.
                     required:
                       - receiverAddress
                       - amount
                       - resource
                     description: Array of resource undelegation entries, each specifying a receiver address, amount, and resource type
+                preview:
+                  type: boolean
+                  description: |-
+                    When true, build each undelegation transaction without creating a transaction request.
+                    Response entries carry NO txRequestId in this mode — the build is never persisted,
+                    so there is no referenceable request. Defaults to false, which creates a transaction
+                    request per entry (TSS wallets). Non-TSS builds are pure either way.
               required:
                 - undelegations
       responses:
