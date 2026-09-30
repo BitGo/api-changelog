@@ -48131,7 +48131,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PendingApproval'
+                $ref: '#/components/schemas/WalletPolicyRulePendingApprovalResponse'
         '400':
           description: Bad Request
           content:
@@ -48250,7 +48250,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PendingApproval'
+                $ref: '#/components/schemas/WalletPolicyRulePendingApprovalResponse'
         '400':
           description: Bad Request
           content:
@@ -48359,7 +48359,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PendingApproval'
+                $ref: '#/components/schemas/WalletPolicyRulePendingApprovalResponse'
         '400':
           description: Bad Request
           content:
@@ -120654,6 +120654,19 @@ components:
         - walletId
         - enterpriseId
       description: '`ListRuleEntryType` in platform.yaml'
+    WalletPolicyRulePendingApprovalResponse:
+      title: WalletPolicyRulePendingApprovalResponse
+      type: object
+      description: |-
+        Response for the 202 four-eyes path — thrown by the controller (via
+        respondWithPendingApproval) as the success signal, wrapping a single pending approval.
+        Unlike the transactions-domain PendingApprovalResponse wrapper, this one has no
+        `error`/`triggeredPolicy` sibling fields — just `{ pendingApproval }`.
+      properties:
+        pendingApproval:
+          $ref: '#/components/schemas/PendingApproval'
+      required:
+        - pendingApproval
     WalletPolicyRuleWhitelistAddMetaData:
       title: WalletPolicyRuleWhitelistAddMetaData
       allOf:
