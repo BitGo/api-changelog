@@ -81477,6 +81477,11 @@ components:
           type: string
           description: ISO8601 last-updated timestamp @example "2025-04-04T09:25:48.216Z"
           format: date-time
+        pendingApprovalId:
+          nullable: true
+          type: string
+          minLength: 1
+          description: Pending-approval id from the order's policy evaluation (issuer mint); null when absent.
         idempotencyKey:
           type: string
           description: Idempotency key — present only when the order was created with one
@@ -81485,7 +81490,7 @@ components:
         depositInstructions:
           allOf:
             - $ref: '#/components/schemas/DepositInstructions'
-          description: Deposit instructions describing where source funds should be sent
+          description: Deposit instructions describing where the source funds should be sent
         orderMethod:
           type: string
           enum:
@@ -81508,6 +81513,7 @@ components:
         - fee
         - createdAt
         - updatedAt
+        - pendingApprovalId
     ExchangeOrderDestinationResponse:
       title: ExchangeOrderDestinationResponse
       type: object
