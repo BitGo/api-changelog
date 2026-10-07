@@ -14836,7 +14836,10 @@ paths:
       summary: Delete a Link account
       description: |-
         Soft-deletes a Link account. Blocks deletion if the account has active
-        sub-accounts or pending transfers.
+        sub-accounts or pending transfers. To delete all sub-accounts together with
+        the main account in one atomic operation, set the optional
+        `deleteAllSubAccounts` body flag to true — in that mode only pending
+        transfers block deletion, and either all accounts are deleted or none are.
       operationId: V1DeleteAccountRoute
       tags:
         - Link Accounts
@@ -14866,6 +14869,23 @@ paths:
           schema:
             type: string
             minLength: 1
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Optional body for the delete account request. Contains the `deleteAllSubAccounts` flag,
+                which controls whether sub-accounts are deleted together with the main account.
+              properties:
+                deleteAllSubAccounts:
+                  type: boolean
+                  description: |-
+                    Delete all sub-accounts together with the main account in a single atomic operation.
+                    When true, deletion is skipped if any account (main or sub-account) has pending transfers,
+                    and either every non-deleted sub-account and the main account are deleted, or none are.
+                    When false or omitted, deletion fails with 409 if the account still has active sub-accounts.
+                  example: true
       responses:
         '200':
           description: OK
@@ -15958,6 +15978,75 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse1'
+  /api/link/v1/enterprises/{enterpriseId}/member-access:
+    get:
+      summary: Get enterprise member Link access
+      description: |-
+        Returns every UMS member of the enterprise that holds at least one Link
+        permission (`link.account.admin`, `link.account.transfer`, or
+        `link.account.view`), regardless of which role granted it, together with
+        one access grant per Link permission held and the enterprise's total Link
+        account count. Unpaginated. Requires the caller to be an organization
+        admin; `bitgo.link.admin` alone does not grant access.
+      operationId: V1GetLinkMemberAccessRoute
+      tags:
+        - Link Permissions
+      x-internal: false
+      parameters:
+        - name: enterpriseId
+          description: Your enterprise id.
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 59cd72485007a239fb00282ed480da1f
+            minLength: 1
+            pattern: ^[0-9a-f]{32}$
+        - name: user-id
+          description: User id of the user making the request.
+          in: header
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1GetLinkMemberAccessResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/on-chain-destinations:
     get:
       summary: List on-chain destinations for a given asset/network
@@ -16214,8 +16303,13 @@ paths:
         Returns enterprise Link accounts the caller has `link.account.view` on that the
         given Link-account source can transfer to, split into two segments: off-chain
         (`internalDestinations`, with subtype entries) and on-chain (`externalDestinations`,
-        no subtype). Same-hierarchy accounts are excluded from the external segment since
-        they are already covered by the internal segment. The response envelope carries
+        no subtype). External rows respect VAS's per-`(venueId, accountType)` on-chain
+        eligibility — same-venue accounts outside the source hierarchy surface only when
+        VAS lists the source venue as an on-chain destination for that account type.
+        Same-hierarchy accounts are excluded from the external segment since
+        they are already covered by the internal segment. The external segment is empty
+        when the source venue does not support on-chain withdrawal — its rows are rendered
+        as withdrawals by consumers. The response envelope carries
         `sourceSupportsOnChainWithdrawal` to indicate whether BitGo-wallet / external-address
         destinations can also be used alongside the Link-account destinations returned here.
         Excludes accounts with `status != active`.
@@ -88566,6 +88660,13 @@ components:
       required:
         - amountString
         - timeWindow
+    LinkAccountPermission:
+      title: LinkAccountPermission
+      type: string
+      enum:
+        - link.account.admin
+        - link.account.transfer
+        - link.account.view
     ListAccessTokensResponse:
       title: ListAccessTokensResponse
       type: object
@@ -115165,6 +115266,67 @@ components:
               - total
       required:
         - balances
+    V1GetLinkMemberAccessResponse:
+      title: V1GetLinkMemberAccessResponse
+      type: object
+      description: |-
+        All Link members of one enterprise with their per-permission Link access,
+        plus the enterprise's total Link account count so consumers can render
+        summaries like "All Linked accounts (N)". Unpaginated: the member list
+        defines the consumer's row set, so it is always returned in full.
+      properties:
+        members:
+          type: array
+          items:
+            type: object
+            description: Enterprise members holding at least one Link permission. Empty when the enterprise has none.
+            properties:
+              userId:
+                type: string
+                description: The member's external (BitGo) user ID.
+                minLength: 1
+              linkAccess:
+                type: array
+                items:
+                  oneOf:
+                    - type: object
+                      properties:
+                        permission:
+                          $ref: '#/components/schemas/LinkAccountPermission'
+                        scope:
+                          type: string
+                          enum:
+                            - ALL
+                      required:
+                        - permission
+                        - scope
+                    - type: object
+                      properties:
+                        accountIds:
+                          type: array
+                          items:
+                            type: string
+                            title: uuid
+                        permission:
+                          $ref: '#/components/schemas/LinkAccountPermission'
+                        scope:
+                          type: string
+                          enum:
+                            - LIMITED
+                      required:
+                        - accountIds
+                        - permission
+                        - scope
+                  description: 'The member''s Link access: one grant per Link permission held, sorted by permission.'
+            required:
+              - userId
+              - linkAccess
+        totalLinkAccounts:
+          type: number
+          description: Total number of non-deleted Link accounts in the enterprise.
+      required:
+        - members
+        - totalLinkAccounts
     V1GetLinkPermissionsResponse:
       title: V1GetLinkPermissionsResponse
       type: object
@@ -115172,12 +115334,13 @@ components:
         The calling user's Link permissions for one enterprise. Each account scope is
         the permission as resolved by UMS (UMS already includes implied grants — e.g. a
         `link.account.admin`/`transfer` grant carries the implied `link.account.view`),
-        so consumers only need membership checks. `bitgoLinkAdmin` is a distinct
-        enterprise-wide capability, reported separately and not folded into the scopes.
+        so consumers only need membership checks. `bitgoLinkAdmin` represents Link
+        admin access from either `bitgo.link.admin` or `enterprise.admin` and is
+        reported separately, not folded into the scopes.
       properties:
         bitgoLinkAdmin:
           type: boolean
-          description: Enterprise-wide `bitgo.link.admin` grant. Drives non-account-scoped actions (e.g. "+ Link Account").
+          description: Enterprise-wide Link admin access from `bitgo.link.admin` or `enterprise.admin`. Drives non-account-scoped actions (e.g. "+ Link Account").
         admin:
           oneOf:
             - type: object
@@ -115683,9 +115846,14 @@ components:
         Segments:
          - `internalDestinations` — off-chain reachable accounts (same-venue), grouped by
            account with subtype entries. May be empty when no same-venue rail qualifies.
-         - `externalDestinations` — on-chain reachable accounts. May be cross-venue or same-
-           venue but in a different account hierarchy from the source. Same-hierarchy entries
-           are suppressed since they're already covered by the internal segment.
+         - `externalDestinations` — on-chain reachable accounts, per VAS's
+           `(venueId, accountType)` eligibility. May be cross-venue or same-venue but in a
+           different account hierarchy from the source; same-venue rows appear only when VAS
+           lists the source venue as an on-chain destination for that account type. Same-
+           hierarchy entries are suppressed since they're already covered by the internal
+           segment. Empty when the source venue does not support on-chain withdrawal
+           (`sourceSupportsOnChainWithdrawal` false) — the UI renders these rows as
+           withdrawals, which the venue could not execute.
 
         `sourceSupportsOnChainWithdrawal` indicates whether BitGo wallet / external-address
         destinations can also be used alongside the Link-account destinations returned here.
@@ -117227,33 +117395,27 @@ components:
                 description: The UMS id of the user record.
                 title: uuid
               userId:
-                nullable: true
                 type: string
-                minLength: 1
                 description: The external user ID of the user.
+                minLength: 1
               userName:
                 type: string
                 description: The username of the user.
-                minLength: 1
               status:
                 type: string
                 description: The status of the user.
                 minLength: 1
               firstName:
-                nullable: true
                 type: string
-                minLength: 1
+                description: The first name of the user (absent when unset).
               lastName:
-                nullable: true
                 type: string
-                minLength: 1
+                description: The last name of the user (absent when unset).
             required:
               - id
               - userId
               - userName
               - status
-              - firstName
-              - lastName
       required:
         - roleId
     V1PostAddressResponse:
