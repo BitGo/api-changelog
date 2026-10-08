@@ -38731,6 +38731,229 @@ paths:
           $ref: '#/components/responses/RateLimitError'
         '500':
           $ref: '#/components/responses/internalServerError1'
+  /api/prime/trading/v1/accounts/{accountId}/rfq/quote:
+    post:
+      summary: RFQ - Request for Quote
+      description: |-
+        Solicits a quote for the requested size in base or counter currency.
+
+        The returned quote is valid until `expirationDate`. Use `POST /accounts/{accountId}/rfq/order` with the
+        quote `id` to place an order priced off this quote. Requesting an identical quote (same account,
+        product, side, quantity and quantity currency) while an identical quote is still active returns
+        the existing quote.
+      operationId: trade.rfq.quote.add
+      x-internal: false
+      tags:
+        - Orders
+      parameters:
+        - $ref: '#/components/parameters/AccountIdPathParam'
+      requestBody:
+        required: true
+        description: The quote request - product, side, and quantity with its denomination currency
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRFQQuoteRequest'
+      responses:
+        '200':
+          description: An RFQ quote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFQQuote'
+        '400':
+          description: Bad request - Invalid quote parameters
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidQuantity:
+                  summary: Quantity is invalid
+                  value:
+                    error: backend:common:invalidArgument key=quantity
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                quantityCurrencyUnsupported:
+                  summary: The requested quantity currency is not supported for this product
+                  value:
+                    error: backend:trade:invalidArgument
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          description: Forbidden - RFQ disabled for your enterprise, or the product does not support RFQ
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                rfqDisabled:
+                  summary: RFQ is not enabled for your enterprise
+                  value:
+                    error: backend:trade:rfqFeatureDisabled
+                    errorName: backend:trade:rfqFeatureDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                productNotSupported:
+                  summary: Product does not support RFQ
+                  value:
+                    error: backend:trade:rfqProductNotSupported
+                    errorName: backend:trade:rfqProductNotSupported
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
+        '503':
+          description: No liquidity - No valid quote before the timeout
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                noLiquidity:
+                  summary: No open quotes were returned within the timeout
+                  value:
+                    error: backend:trade:rfqNoLiquidity
+                    errorName: backend:trade:rfqNoLiquidity
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+  /api/prime/trading/v1/accounts/{accountId}/rfq/quote/{quoteId}:
+    get:
+      summary: Get RFQ Quote
+      description: |-
+        Returns a previously created RFQ quote by id.
+
+        This is a lookup only: it never re-solicits quotes and does not check expiry. Quote expiry is
+        enforced when the quote is used to place an order.
+      operationId: trade.rfq.quote.detail
+      x-internal: false
+      tags:
+        - Orders
+      parameters:
+        - $ref: '#/components/parameters/AccountIdPathParam'
+        - name: quoteId
+          in: path
+          description: The ID of the RFQ quote
+          required: true
+          style: simple
+          explode: false
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: An RFQ quote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFQQuote'
+        '400':
+          description: Bad request - Invalid quote ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidArgument:
+                  summary: Invalid quote ID format
+                  value:
+                    error: backend:common:invalidArgument key=quoteId
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          $ref: '#/components/responses/ForbiddenError1'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
+  /api/prime/trading/v1/accounts/{accountId}/rfq/order:
+    post:
+      summary: Place RFQ Order
+      description: |-
+        Places an order priced off a previously accepted RFQ quote.
+
+        The request carries only the `quoteId`: the agreed price, quantity, side and product are already
+        persisted on the quote. The order executes fill-or-kill at the quote's price.
+
+        A quote can fund exactly one order. Placing an order on an expired or already-used quote fails.
+      operationId: trade.rfq.order.add
+      x-internal: false
+      tags:
+        - Orders
+      parameters:
+        - $ref: '#/components/parameters/AccountIdPathParam'
+      requestBody:
+        required: true
+        description: The order request - the ID of the RFQ quote to execute
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NewRFQOrderRequest'
+      responses:
+        '200':
+          description: An RFQ order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RFQOrder'
+        '400':
+          description: Bad request - Invalid quote ID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                invalidQuoteId:
+                  summary: Invalid quote ID format
+                  value:
+                    error: backend:common:invalidArgument key=quoteId
+                    errorName: backend:common:invalidArgument
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '401':
+          $ref: '#/components/responses/UnauthorizedError1'
+        '403':
+          description: Forbidden - RFQ disabled for your enterprise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                rfqDisabled:
+                  summary: RFQ is not enabled for your enterprise
+                  value:
+                    error: backend:trade:rfqFeatureDisabled
+                    errorName: backend:trade:rfqFeatureDisabled
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '409':
+          description: Conflict - Quote expired or already used for another order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error1'
+              examples:
+                quoteExpired:
+                  summary: The quote has expired
+                  value:
+                    error: backend:trade:rfqQuoteExpired
+                    errorName: backend:trade:rfqQuoteExpired
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+                quoteAlreadyPlaced:
+                  summary: The quote was already used to place an order
+                  value:
+                    error: backend:trade:rfqAlreadyPlaced
+                    errorName: backend:trade:rfqAlreadyPlaced
+                    reqId: unk-nqo97l23l2ofpvgkbb8z
+        '422':
+          $ref: '#/components/responses/MalformedJSONError'
+        '429':
+          $ref: '#/components/responses/RateLimitError'
+        '500':
+          $ref: '#/components/responses/internalServerError1'
   /api/prime/trading/v1/accounts/{accountId}/trades:
     get:
       summary: List Trades
@@ -91126,6 +91349,38 @@ components:
         - $ref: '#/components/schemas/NewTWAPOrderRequest'
         - $ref: '#/components/schemas/NewSteadyPaceOrderRequest'
         - $ref: '#/components/schemas/NewStopOrderRequest'
+    NewRFQOrderRequest:
+      required:
+        - quoteId
+      type: object
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+          description: ID of the RFQ quote to execute. The quote must be unexpired and not already used.
+          example: 68ade562-5e4d-4efc-83d0-9b76aa6bf88a
+    NewRFQQuoteRequest:
+      required:
+        - product
+        - side
+        - quantity
+        - quantityCurrency
+      type: object
+      properties:
+        product:
+          type: string
+          description: Product name in `BASE-QUOTE` format (e.g. `BTC-USD`). Must be an RFQ-supported product.
+          example: BTC-USD
+        side:
+          $ref: '#/components/schemas/Side'
+        quantity:
+          type: string
+          description: Requested quantity, denominated in `quantityCurrency`
+          example: '250000'
+        quantityCurrency:
+          type: string
+          description: Currency the quantity is denominated in (base or quote currency of the product)
+          example: USD
     NewSteadyPaceOrderRequest:
       title: Steady Pace
       required:
@@ -97180,6 +97435,66 @@ components:
         - id
         - status
         - selectedIdClass
+    RFQOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of the created order
+          example: 3b7bfeae-17a3-4b4f-a44e-6a11ec58deab
+        status:
+          $ref: '#/components/schemas/OrderStatus'
+        quoteId:
+          type: string
+          format: uuid
+          description: ID of the RFQ quote the order was placed from
+          example: 68ade562-5e4d-4efc-83d0-9b76aa6bf88a
+        product:
+          type: string
+          description: Product name
+          example: BTC-USD
+        side:
+          $ref: '#/components/schemas/Side'
+    RFQQuote:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: ID of the RFQ quote. Pass it as `quoteId` when placing an RFQ order.
+          example: 68ade562-5e4d-4efc-83d0-9b76aa6bf88a
+        product:
+          type: string
+          description: Product name
+          example: BTC-USD
+        side:
+          $ref: '#/components/schemas/Side'
+        quotedPrice:
+          type: string
+          description: All-in price the client pays (or receives, on sells)
+          example: '85076.51'
+        quotedQuantity:
+          type: string
+          description: Quantity denominated in `quotedQuantityCurrency`
+          example: '2.93853144'
+        quotedQuantityCurrency:
+          type: string
+          description: Currency the quote is denominated in
+          example: BTC
+        quantityCurrency:
+          type: string
+          description: Currency of the client-requested quantity (echoes the request)
+          example: USD
+        quantity:
+          type: string
+          description: Client-requested quantity (echoes the request)
+          example: '250000'
+        expirationDate:
+          type: string
+          format: date-time
+          description: Time after which the quote can no longer be used to place an order
+          example: 2026-09-30T15:15:52.000Z
     Recipient:
       type: object
       properties:
