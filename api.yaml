@@ -499,8 +499,6 @@ paths:
                       - eddsaMPCv2Round1
                       - eddsaMPCv2Round2
                       - eddsaMPCv2Round3
-                      - redpallasRerandRound1
-                      - redpallasRerandRound2
                       - redpallasMPCv2Round1
                       - redpallasMPCv2Round2
                       - redpallasMPCv2Round3
@@ -49268,9 +49266,6 @@ paths:
       description: |-
         Initiate an unsigned transaction to create a pending approval. This is useful
         to request funds to be sent from custodial wallets. Use only with custodial wallets.
-
-        Payment path returns 202 `{ pendingApproval, error?, triggeredPolicy? }`.
-        Consolidate/fanout return 200 `{ pendingApprovals, error? }`.
       operationId: v2.wallet.tx.initiate
       tags:
         - Wallet
@@ -49646,10 +49641,9 @@ paths:
                           A memo for this recipient. Accepts MemoString (Stacks only) or InitiateTransactionMemoObject (CSPR, EOS, HBAR, RUNE, STX, TON, XLM, XRP).
                           MemoString: a memo for this specific transaction; this format is only available for Stacks.
                         maxLength: 100
-                      script:
-                        type: string
-                        description: Raw output script for an op-return recipient (UTXO only).
-                        example: 6a0a11223344556677889900
+                    required:
+                      - address
+                      - amount
                     description: A list of recipient addresses and amounts. Must be present but empty for Child-Pays-For-Parent transactions.
                 videoApprovers:
                   type: array
@@ -49659,110 +49653,13 @@ paths:
                     description: A list of public ids of users that should do the video id verification for the transaction that is being sent or initiated.
                     pattern: ^[0-9a-f]{32}$
                     example: 59cd72485007a239fb00282ed480da1f
-                attestation:
-                  description: |-
-                    WebAuthn attestation payload provided at initiate time. Malformed values MUST remain
-                    non-blocking (decoded as Json, not AttestationPayload) so they cannot 400 the request.
-                  title: JSON
-                stakingParams:
-                  type: object
-                  description: |-
-                    Staking metadata passed through to transfer creation. Distinct from `stakingOptions`
-                    (coin-level staking parameters).
-                  properties:
-                    actionType:
-                      type: string
-                    amount:
-                      type: string
-                    coreDao:
-                      type: object
-                      properties:
-                        amount:
-                          type: string
-                          format: number
-                        expiration:
-                          type: string
-                          format: date-time
-                          title: ISO Date String
-                        fee:
-                          type: number
-                        rewardAddress:
-                          type: string
-                        validator:
-                          type: string
-                        version:
-                          type: number
-                      required:
-                        - amount
-                        - expiration
-                        - fee
-                        - rewardAddress
-                        - validator
-                        - version
-                    receiverAddress:
-                      type: string
-                    requestId:
-                      type: string
-                    resource:
-                      type: string
-                    source:
-                      type: string
-                      enum:
-                        - external
-                        - internal
-                    validator:
-                      type: string
-                  required:
-                    - actionType
-                    - requestId
-                numUnspentsToMake:
-                  type: number
-                  description: '[UTXO consolidate/fanout] Number of new unspents to create.'
-                feeTxConfirmTarget:
-                  type: number
-                  description: '[UTXO consolidate/fanout] Block target used to estimate the fee rate.'
-                bulk:
-                  type: boolean
-                  description: '[UTXO consolidate] When true, return an array of transactions covering the unspent set.'
-                targetAddress:
-                  type: string
-                  description: '[UTXO consolidate/fanout] Custom internal output address.'
-                limit:
-                  type: number
-                  description: '[UTXO consolidate] Number of unspents to use as inputs.'
-                tokenName:
-                  type: string
-                  description: Token name for coin-specific flows such as token approval (ETH-like coins).
-                  example: hteth:usdt
-                closeRemainderTo:
-                  type: string
-                  description: (Algo only) Address that receives the remaining account balance when disabling a token.
-                sbtcWithdrawParams:
-                  type: object
-                  description: (STX only) sBTC withdrawal parameters.
-                  properties:
-                    amount:
-                      type: string
-                      description: sBTC withdrawal amount
-                    btcAddress:
-                      type: string
-                      description: Bitcoin address that receives the withdrawn sBTC
-                    maxFee:
-                      type: string
-                      description: Maximum fee for the withdrawal
       responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/InitiateTransactionBatch'
         '202':
           description: Accepted
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InitiateTransactionAccepted'
+                $ref: '#/components/schemas/PendingApproval'
         '400':
           description: Bad Request
           content:
@@ -49785,12 +49682,6 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '500':
-          description: Internal Server Error
           content:
             application/json:
               schema:
@@ -50334,12 +50225,6 @@ paths:
             format: number
         - name: prevId
           description: Only return results created after this ID
-          in: query
-          schema:
-            type: string
-            minLength: 1
-        - name: address
-          description: Filter by address. For UTXO coins only.
           in: query
           schema:
             type: string
@@ -53891,8 +53776,6 @@ paths:
                           - eddsaMPCv2Round1
                           - eddsaMPCv2Round2
                           - eddsaMPCv2Round3
-                          - redpallasRerandRound1
-                          - redpallasRerandRound2
                           - redpallasMPCv2Round1
                           - redpallasMPCv2Round2
                           - redpallasMPCv2Round3
@@ -80779,8 +80662,6 @@ components:
               - eddsaMPCv2Round1
               - eddsaMPCv2Round2
               - eddsaMPCv2Round3
-              - redpallasRerandRound1
-              - redpallasRerandRound2
               - redpallasMPCv2Round1
               - redpallasMPCv2Round2
               - redpallasMPCv2Round3
@@ -87090,21 +86971,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/AVAXPStakingOptions1'
       description: AVAXP add-permissionless-validator staking options.
-    InitiateTransactionAccepted:
-      title: InitiateTransactionAccepted
-      type: object
-      description: |-
-        202 body for a single initiated payment. wrapPromiseHandler historically sent
-        PendingApprovalResponse.result, so callers read `res.body.pendingApproval`.
-      properties:
-        pendingApproval:
-          $ref: '#/components/schemas/PendingApproval'
-        error:
-          type: string
-        triggeredPolicy:
-          type: string
-      required:
-        - pendingApproval
     InitiateTransactionAddressType:
       title: InitiateTransactionAddressType
       type: string
@@ -87121,470 +86987,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/BTCStakingOptions1'
       description: BTC/Babylon StakingOptions-interface payloads (`{ amount, validator }`).
-    InitiateTransactionBatch:
-      title: InitiateTransactionBatch
-      type: object
-      description: |-
-        200 body for consolidate/fanout. Those paths fail-soft per transaction and return
-        a batch of pending approvals instead of throwing a single 202.
-      properties:
-        pendingApprovals:
-          type: array
-          items:
-            type: object
-            properties:
-              id:
-                type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              coin:
-                type: string
-                description: A cryptocurrency or token ticker symbol.
-                example: btc
-              wallet:
-                type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              walletType:
-                type: string
-              walletSubType:
-                type: string
-                description: The subtype of the wallet (e.g., custodialHot)
-              wallets:
-                type: array
-                items:
-                  type: string
-                  example: 59cd72485007a239fb00282ed480da1f
-                  pattern: ^[0-9a-f]{32}$
-                  description: The wallets of the pending approval
-              enterprise:
-                type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              organization:
-                type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              safeId:
-                type: string
-                description: The safe the pending approval is scoped to
-              organizationName:
-                type: string
-                description: The organization name
-              bitgoOrg:
-                type: string
-                description: The BitGo organization
-              creator:
-                type: string
-                example: 59cd72485007a239fb00282ed480da1f
-                pattern: ^[0-9a-f]{32}$
-              createDate:
-                type: string
-                description: The creation date of the pending approval
-                format: date-time
-                title: ISO Date String
-              approvedDate:
-                type: string
-                description: The date when the approval was granted
-                format: date-time
-                title: ISO Date String
-              updatedAt:
-                type: string
-                description: The date when the approval was last updated (any update, not just processing)
-                format: date-time
-                title: ISO Date String
-              keyCurve:
-                type: string
-                enum:
-                  - secp256k1
-                  - ed25519
-                  - bls12_381
-                  - redpallas
-                description: The key curve of the coin attached to this pending approval
-              info:
-                allOf:
-                  - $ref: '#/components/schemas/PendingApprovalInfo'
-                description: Information about the pending approval
-              state:
-                allOf:
-                  - $ref: '#/components/schemas/PendingApprovalState'
-                description: The state of the pending approval
-              scope:
-                type: string
-                enum:
-                  - enterprise
-                  - wallet
-                  - organization
-                  - global
-                  - safe
-                description: What kind of entity the Pending Approval is tied to
-              userIds:
-                type: array
-                items:
-                  type: string
-                  description: All the Users who should see this Pending Approval
-              approvalsRequired:
-                type: number
-                example: 1
-                minimum: 1
-              walletLabel:
-                type: string
-                description: Label for the wallet
-              addressLabels:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    address:
-                      $ref: '#/components/schemas/AddressString'
-                    label:
-                      type: string
-                      description: The label
-                    walletLabel:
-                      type: string
-                      description: The wallet label
-                  required:
-                    - address
-                    - label
-                  description: Address labels of recipients in this Pending Approval
-              resolvers:
-                type: array
-                items:
-                  type: object
-                  description: Resolvers for the pending approval
-                  properties:
-                    autoApproved:
-                      type: boolean
-                      description: Whether the resolution was auto approved
-                    date:
-                      type: string
-                      description: The date of resolution
-                      format: date-time
-                      title: ISO Date String
-                    resolutionAction:
-                      type: string
-                      enum:
-                        - approve
-                        - reject
-                        - skip
-                        - fail
-                      description: Action taken during resolution
-                    resolutionMemo:
-                      type: string
-                      description: Memo regarding the resolution
-                    resolutionType:
-                      allOf:
-                        - $ref: '#/components/schemas/PendingApprovalStatePending'
-                      description: The type of resolution
-                    user:
-                      type: string
-                      description: The user who resolved the approval
-                    videoApprover:
-                      type: string
-                      description: The approver of the video resolution
-                    videoException:
-                      type: string
-                      description: Exception details for the video
-                    videoLink:
-                      type: string
-                      description: Link to the resolution video
-                  required:
-                    - resolutionType
-              approvers:
-                type: array
-                items:
-                  type: string
-                  description: List of approvers
-              singleRunResults:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    ruleId:
-                      type: string
-                      description: The rule ID
-                    triggered:
-                      type: boolean
-                      description: Whether the rule was triggered
-                  description: Results from single run checks
-              txRequestId:
-                type: string
-                description: Transaction request ID
-                example: 123e4567-e89b-12d3-a456-426614174000
-                format: uuid
-              videoId:
-                type: object
-                description: ID for the video related to the approval
-                properties:
-                  date:
-                    type: string
-                    description: The date of the video ID
-                    format: date-time
-                    title: ISO Date String
-                  user:
-                    type: string
-                    description: The user associated with the video ID
-                  videoApprover:
-                    type: string
-                    description: The approver of the video
-                  videoException:
-                    type: string
-                    description: The exception related to the video
-                  videoLink:
-                    type: string
-                    description: The link to the video
-              version:
-                type: number
-                description: Version of the pending approval
-              policyEvaluationId:
-                type: string
-                description: ID for the policy evaluation
-              kytCounterpartyScreeningId:
-                type: string
-                description: ID for kyt counterparty address screening
-              actions:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    approvers:
-                      type: array
-                      items:
-                        type: string
-                        description: The approvers of the action
-                    excludedApprovers:
-                      type: array
-                      items:
-                        type: string
-                        description: Users that are eligible approvers but cannot approve (e.g. already approved or the initiator)
-                    id:
-                      type: string
-                      description: The ID of the action
-                    name:
-                      type: string
-                      description: The name of the action
-                    operator:
-                      type: string
-                      enum:
-                        - AND
-                        - OR
-                      description: The operator of the action
-                    parameters:
-                      allOf:
-                        - $ref: '#/components/schemas/PolicyActionParameters'
-                      description: The parameters of the action
-                    resolvers:
-                      type: array
-                      items:
-                        type: object
-                        description: The resolvers of the action
-                        properties:
-                          autoApproved:
-                            type: boolean
-                            description: Whether the resolution was auto approved
-                          date:
-                            type: string
-                            description: The date of resolution
-                            format: date-time
-                            title: ISO Date String
-                          resolutionAction:
-                            type: string
-                            enum:
-                              - approve
-                              - reject
-                              - skip
-                              - fail
-                            description: Action taken during resolution
-                          resolutionMemo:
-                            type: string
-                            description: Memo regarding the resolution
-                          resolutionType:
-                            allOf:
-                              - $ref: '#/components/schemas/PendingApprovalStatePending'
-                            description: The type of resolution
-                          user:
-                            type: string
-                            description: The user who resolved the approval
-                          videoApprover:
-                            type: string
-                            description: The approver of the video resolution
-                          videoException:
-                            type: string
-                            description: Exception details for the video
-                          videoLink:
-                            type: string
-                            description: Link to the resolution video
-                        required:
-                          - resolutionType
-                    status:
-                      allOf:
-                        - $ref: '#/components/schemas/EvaluatedPolicyActionStatus'
-                      description: The status of the action
-                  required:
-                    - id
-                    - name
-                    - parameters
-                    - status
-                  description: List of actions taken
-              resolutionOrder:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    actions:
-                      type: array
-                      items:
-                        type: string
-                        minLength: 1
-                  required:
-                    - actions
-                  description: Order of resolution
-              useLegacyPolicyEngine:
-                type: boolean
-                description: Flag to use legacy policy engine
-              videoCallId:
-                type: string
-                description: ID for the video call
-              lastUpdated:
-                type: string
-                description: The last date the approval was processing
-                format: date-time
-                title: ISO Date String
-              freeze:
-                type: object
-                description: The freeze state
-                properties:
-                  actions:
-                    type: array
-                    items:
-                      type: object
-                      properties:
-                        reason:
-                          type: string
-                        state:
-                          type: string
-                          enum:
-                            - frozen
-                            - unFrozen
-                        time:
-                          type: string
-                          format: date-time
-                          title: ISO Date String
-                        userId:
-                          type: string
-                        username:
-                          type: string
-                  state:
-                    type: string
-                    enum:
-                      - frozen
-                      - unFrozen
-              memo:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    text:
-                      type: string
-                      description: The text of the memo
-                    time:
-                      type: string
-                      description: The time the memo was created
-                      format: date-time
-                      title: ISO Date String
-                    userId:
-                      type: string
-                      description: The user ID of the admin who created the memo
-                    username:
-                      type: string
-                      description: The username of the admin who created the memo
-                  required:
-                    - text
-                    - time
-                    - userId
-                    - username
-                  description: Admin memos attached to this pending approval
-              associatedInquiries:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    inquiryId:
-                      type: string
-                    inquiryStatus:
-                      $ref: '#/components/schemas/InquiryStatus'
-                    inquirySubType:
-                      $ref: '#/components/schemas/InquirySubType'
-                    inquiryType:
-                      $ref: '#/components/schemas/InquiryType'
-                  required:
-                    - inquiryId
-                    - inquiryStatus
-                    - inquirySubType
-                    - inquiryType
-                  description: Associated inquiries
-              securityControlEvents:
-                type: array
-                items:
-                  type: object
-                  properties:
-                    control:
-                      type: string
-                      description: The security control that was evaluated
-                    date:
-                      type: string
-                      description: The date the event was recorded
-                      format: date-time
-                      title: ISO Date String
-                    evaluatedControls:
-                      type: array
-                      items:
-                        type: object
-                        properties:
-                          control:
-                            type: string
-                          message:
-                            type: string
-                          result:
-                            type: string
-                            enum:
-                              - allowed
-                              - blocked
-                        required:
-                          - control
-                          - result
-                        description: Per-control breakdown when more than one control was evaluated for this event
-                    ip:
-                      type: string
-                      description: The IP address of the user
-                    message:
-                      type: string
-                      description: Message from the security control
-                    result:
-                      type: string
-                      enum:
-                        - allowed
-                        - blocked
-                      description: Whether the user was allowed or blocked
-                    user:
-                      type: string
-                      description: The user who triggered the security control check
-                  required:
-                    - date
-                    - result
-                    - user
-                  description: Security control events recorded during approval enforcement
-            required:
-              - id
-              - creator
-              - createDate
-              - info
-              - state
-              - scope
-        error:
-          type: string
-      required:
-        - pendingApprovals
     InitiateTransactionCSPRStakingOptions:
       title: InitiateTransactionCSPRStakingOptions
       allOf:
@@ -87635,11 +87037,13 @@ components:
     InitiateTransactionRecipientAmount:
       title: InitiateTransactionRecipientAmount
       oneOf:
+        - $ref: '#/components/schemas/NumberLike'
         - type: string
-        - type: number
+          enum:
+            - max
+            - invoice
       description: |-
-        Amount to send in base units (satoshis/litoshis/zatoshis/duffs) as a string or number.
-        For doge, only string is allowed.
+        String representation of the amount to send in base units (satoshis/litoshis/zatoshis/duffs). For doge, only string is allowed.
         Passing in 'max' will send the recipient the maximum amount available, minus fees and amounts for other recipients.
         Only a single recipient with a 'max' amount is allowed.
       example: '2000000'
@@ -89868,8 +89272,6 @@ components:
                     - eddsaMPCv2Round1
                     - eddsaMPCv2Round2
                     - eddsaMPCv2Round3
-                    - redpallasRerandRound1
-                    - redpallasRerandRound2
                     - redpallasMPCv2Round1
                     - redpallasMPCv2Round2
                     - redpallasMPCv2Round3
@@ -90127,8 +89529,6 @@ components:
                     - eddsaMPCv2Round1
                     - eddsaMPCv2Round2
                     - eddsaMPCv2Round3
-                    - redpallasRerandRound1
-                    - redpallasRerandRound2
                     - redpallasMPCv2Round1
                     - redpallasMPCv2Round2
                     - redpallasMPCv2Round3
@@ -94042,8 +93442,6 @@ components:
               - eddsaMPCv2Round1
               - eddsaMPCv2Round2
               - eddsaMPCv2Round3
-              - redpallasRerandRound1
-              - redpallasRerandRound2
               - redpallasMPCv2Round1
               - redpallasMPCv2Round2
               - redpallasMPCv2Round3
@@ -108325,8 +107723,6 @@ components:
         - eddsaMPCv2Round1
         - eddsaMPCv2Round2
         - eddsaMPCv2Round3
-        - redpallasRerandRound1
-        - redpallasRerandRound2
         - redpallasMPCv2Round1
         - redpallasMPCv2Round2
         - redpallasMPCv2Round3
@@ -122638,8 +122034,6 @@ components:
               - eddsaMPCv2Round1
               - eddsaMPCv2Round2
               - eddsaMPCv2Round3
-              - redpallasRerandRound1
-              - redpallasRerandRound2
               - redpallasMPCv2Round1
               - redpallasMPCv2Round2
               - redpallasMPCv2Round3
