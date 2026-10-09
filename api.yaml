@@ -67146,6 +67146,12 @@ components:
     AccountId:
       type: string
       description: The ID of the account
+    AccountRestrictionReason:
+      title: AccountRestrictionReason
+      type: string
+      enum:
+        - ip
+        - user_kyc
     AccountStatus:
       title: AccountStatus
       type: string
@@ -115929,10 +115935,13 @@ components:
               venueId:
                 type: string
                 minLength: 1
+              restrictionReason:
+                $ref: '#/components/schemas/AccountRestrictionReason'
             required:
               - id
               - name
               - venueId
+              - restrictionReason
       required:
         - accounts
         - total
