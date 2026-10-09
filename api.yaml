@@ -52884,6 +52884,7 @@ paths:
               - policies
               - costBasis
               - gasTankReport
+              - cmeSecurityBalance
               - organizationHoldings
               - organizationHoldingsByAddress
               - organizationTransactions
@@ -53163,6 +53164,20 @@ paths:
                     - endDate
                     - enterprise
                     - startDate
+                cmeSecurityBalance:
+                  type: object
+                  description: CME security balance (position) report — enterprise-scoped EOD positions
+                  properties:
+                    enterprise:
+                      type: string
+                      minLength: 1
+                    snapshotDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                  required:
+                    - enterprise
+                    - snapshotDate
                 holdingsByAddress:
                   type: object
                   description: Address-level Holdings report
@@ -55105,6 +55120,7 @@ paths:
               - policies
               - costBasis
               - gasTankReport
+              - cmeSecurityBalance
               - organizationHoldings
               - organizationHoldingsByAddress
               - organizationTransactions
@@ -55382,6 +55398,20 @@ paths:
                     - endDate
                     - enterprise
                     - startDate
+                cmeSecurityBalance:
+                  type: object
+                  description: CME security balance (position) report — enterprise-scoped EOD positions
+                  properties:
+                    enterprise:
+                      type: string
+                      minLength: 1
+                    snapshotDate:
+                      type: string
+                      format: date-time
+                      title: ISO Date String
+                  required:
+                    - enterprise
+                    - snapshotDate
                 holdingsByAddress:
                   type: object
                   description: Address-level Holdings report
@@ -58573,6 +58603,18 @@ paths:
                         - type: string
                         - type: number
                       description: The nonce of the transaction
+                    isWalletConnectTx:
+                      type: boolean
+                      enum:
+                        - true
+                      description: |-
+                        Marks the transaction as originating from a WalletConnect session. Optional and literal
+                        true only — absent or `true`; any other value is rejected. Used by wallet-platform for
+                        txChannel classification (observability metadata only; never policy, approvals,
+                        signing, nonce, or fees). Intended to be set by WalletConnect client flows. BitGoJS
+                        (#9888) forwards it on the transfer prebuild path — the WalletConnect send flow; other
+                        prebuild types (e.g. transfertoken) do not forward it. BitGoJS types the field `boolean`:
+                        a client passing `false` type-checks in the SDK but is rejected by this contract.
                   required:
                     - intentType
                 videoApprovers:
@@ -80409,6 +80451,7 @@ components:
         - policies
         - costBasis
         - gasTankReport
+        - cmeSecurityBalance
     EnterpriseStakingTotals:
       type: object
       properties:
@@ -98787,6 +98830,20 @@ components:
             - endDate
             - enterprise
             - startDate
+        cmeSecurityBalance:
+          type: object
+          description: CME security balance (position) report — enterprise-scoped EOD positions
+          properties:
+            enterprise:
+              type: string
+              minLength: 1
+            snapshotDate:
+              type: string
+              format: date-time
+              title: ISO Date String
+          required:
+            - enterprise
+            - snapshotDate
         holdingsByAddress:
           type: object
           description: Address-level Holdings report
@@ -101419,6 +101476,7 @@ components:
         - policies
         - costBasis
         - gasTankReport
+        - cmeSecurityBalance
         - organizationHoldings
         - organizationHoldingsByAddress
         - organizationTransactions
