@@ -38902,7 +38902,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/RFQOrder'
+                $ref: '#/components/schemas/Order'
         '400':
           description: Bad request - Invalid quote ID format
           content:
@@ -93001,6 +93001,10 @@ components:
           description: Product name e.g. BTC-USD (base-quote)
         side:
           $ref: '#/components/schemas/Side'
+        quoteId:
+          type: string
+          format: uuid
+          description: ID of the RFQ quote the order was placed from. Present only on orders placed via the RFQ endpoint.
         quantity:
           type: string
           format: decimal
@@ -93536,6 +93540,7 @@ components:
         - limit
         - steady_pace
         - stop
+        - rfq
       description: The type of order to be placed. See our [Trade Guide](/docs/trade-overview) for more details on each order type.
     OrderTypeSummary:
       title: OrderTypeSummary
@@ -98152,27 +98157,6 @@ components:
         - id
         - status
         - selectedIdClass
-    RFQOrder:
-      type: object
-      properties:
-        id:
-          type: string
-          format: uuid
-          description: ID of the created order
-          example: 3b7bfeae-17a3-4b4f-a44e-6a11ec58deab
-        status:
-          $ref: '#/components/schemas/OrderStatus'
-        quoteId:
-          type: string
-          format: uuid
-          description: ID of the RFQ quote the order was placed from
-          example: 68ade562-5e4d-4efc-83d0-9b76aa6bf88a
-        product:
-          type: string
-          description: Product name
-          example: BTC-USD
-        side:
-          $ref: '#/components/schemas/Side'
     RFQQuote:
       type: object
       properties:
