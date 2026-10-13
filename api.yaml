@@ -44233,6 +44233,59 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/sandbox/transfers/{id}/settle:
+    patch:
+      tags:
+        - Fiat
+      summary: Settle a bank transfer (sandbox)
+      operationId: tradfi.v1.sandbox.transfers.settle
+      x-internal: false
+      description: Force-settles a bank transfer by simulating bank activity. The transfer must be `processing` and not be settled yet. Only available in testnet.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: The transfer's primary key (`id`) or transaction ID (`txid`)
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    $ref: '#/components/schemas/BankTransferResponse'
+        '400':
+          description: Bad Request – the transfer is not `processing`, or it has already been settled
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: Not Found – the transfer does not exist (JSON `V1ErrorResponse`), or this path is unavailable in production (plain `Not Found` body, same as an unregistered path)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+            text/plain:
+              schema:
+                type: string
+                example: Not Found
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/v2/bankaccounts:
     get:
       x-internal: false
