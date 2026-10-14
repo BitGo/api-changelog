@@ -49606,6 +49606,39 @@ paths:
                 validToBlock:
                   type: number
                   description: Optional block this transaction is valid until
+                flags:
+                  type: object
+                  description: |-
+                    (Stellar) Auth flags to set on the account via an `accountConfig` transaction. Only
+                    authRequired, authRevocable, and authClawbackEnabled are supported.
+                  properties:
+                    authClawbackEnabled:
+                      type: boolean
+                    authRequired:
+                      type: boolean
+                    authRevocable:
+                      type: boolean
+                clearFlags:
+                  type: object
+                  description: |-
+                    (Stellar) Auth flags to clear on the account via an `accountConfig` transaction. Only
+                    authRequired, authRevocable, and authClawbackEnabled are supported.
+                  properties:
+                    authClawbackEnabled:
+                      type: boolean
+                    authRequired:
+                      type: boolean
+                    authRevocable:
+                      type: boolean
+                lowThreshold:
+                  type: number
+                  description: |-
+                    (Stellar) Low-security operation threshold for an `accountConfig` transaction. Pinned to
+                    exactly 2 by the build layer — the supported operation is tightening the low threshold from
+                    the initialized 1 to 2 signatures, so low-security operations (including authorizeTrustline)
+                    require 2 signatures.
+                  minimum: 2
+                  maximum: 2
                 trustlines:
                   type: array
                   items:
