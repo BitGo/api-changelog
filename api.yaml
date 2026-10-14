@@ -49369,6 +49369,12 @@ paths:
                     For XRP, possible types include: `payment` and `accountSet`. The default is `payment`.
 
                     For STX, type is required.
+                consolidationMode:
+                  type: string
+                  enum:
+                    - single-asset
+                    - legacy-multi-asset
+                  description: Explicit SOL mode; omit to preserve legacy multi-asset behavior
                 messages:
                   type: array
                   items:
@@ -50267,7 +50273,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/PendingApproval'
+                $ref: '#/components/schemas/SendTransactionAccepted'
         '400':
           description: Bad Request
           content:
@@ -50278,6 +50284,24 @@ paths:
                   - $ref: '#/components/schemas/InvalidWalletId1'
                   - $ref: '#/components/schemas/DuplicateSequenceId'
                   - $ref: '#/components/schemas/InvalidOFAC'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '423':
           description: Locked
           content:
@@ -74906,6 +74930,13 @@ components:
               type: string
             settleBefore:
               type: string
+            legType:
+              type: string
+              enum:
+                - trade
+                - fee
+            parentTradeId:
+              type: string
             comment:
               type: string
             requestedAt:
@@ -75005,10 +75036,6 @@ components:
               type: string
             token:
               type: string
-            receiveToken:
-              type: string
-            receiveAmount:
-              type: string
             allocateBefore:
               type: string
             settleBefore:
@@ -75016,6 +75043,17 @@ components:
             comment:
               type: string
             requestedAt:
+              type: string
+            receiveToken:
+              type: string
+            receiveAmount:
+              type: string
+            legType:
+              type: string
+              enum:
+                - trade
+                - fee
+            parentTradeId:
               type: string
           required:
             - intentType
@@ -75028,8 +75066,6 @@ components:
             - receiverPartyId
             - amount
             - token
-            - receiveToken
-            - receiveAmount
             - allocateBefore
             - settleBefore
         - $ref: '#/components/schemas/BaseIntent'
@@ -84801,6 +84837,7 @@ components:
                 - staking_eth_block_reward
                 - staking_bera_withdrawal
                 - staking_bera_block_reward
+                - staking
                 - defi_deposit
               description: Transfer subtype
             tags:
@@ -100187,6 +100224,21 @@ components:
       allOf:
         - $ref: '#/components/schemas/AVAXPStakingOptions1'
       description: AVAXP add-permissionless-validator staking options.
+    SendTransactionAccepted:
+      title: SendTransactionAccepted
+      type: object
+      description: |-
+        202 body for a pending-approval response — wrapPromiseHandler sends err.result from
+        PendingApprovalResponse, so callers read `res.body.pendingApproval`, not a bare PendingApproval.
+      properties:
+        pendingApproval:
+          $ref: '#/components/schemas/PendingApproval'
+        error:
+          type: string
+        triggeredPolicy:
+          type: string
+      required:
+        - pendingApproval
     SendTransactionBTCStakingOptions:
       title: SendTransactionBTCStakingOptions
       allOf:
@@ -107015,47 +107067,21 @@ components:
       title: TransactionRequestBase
       type: object
       properties:
-        apiVersion:
-          type: string
-          enum:
-            - lite
-            - full
-          description: The API version of the transaction request
         txRequestId:
           allOf:
             - $ref: '#/components/schemas/TransactionRequestId'
           description: A unique ID for the TxRequest document across all wallets. The combination of the txRequestId and version will always be unique.
-        idempotencyKey:
-          type: string
-          description: The idempotency key of the transaction request
         walletId:
           allOf:
-            - $ref: '#/components/schemas/WalletIdString'
+            - $ref: '#/components/schemas/WalletIdString1'
           description: The id of the Wallet the TxRequest is for.
-        walletType:
-          type: string
-          enum:
-            - backing
-            - cold
-            - custodial
-            - custodialPaired
-            - hot
-            - advanced
-            - trading
-          description: The type describes who owns the keys to the wallet associated to the TxRequest.
         version:
           type: number
           description: The version of the transaction request
-        enterpriseId:
-          type: string
-          description: If the wallet that owns the TxRequest is owned by an enterprise then this is the Id of said enterprise.
-          example: 59cd72485007a239fb00282ed480da1f
-          pattern: ^[0-9a-f]{32}$
-        organizationId:
-          type: string
-          description: The id of the organization the TxRequest's wallet belongs to.
         state:
-          $ref: '#/components/schemas/TransactionRequestState'
+          allOf:
+            - $ref: '#/components/schemas/TransactionRequestState'
+          description: The state of the transaction request
         date:
           type: string
           description: The date and time this version of the TxRequest document was created.
@@ -107077,19 +107103,39 @@ components:
         updatedBy:
           type: string
           description: The Id of the User that last updated the TxRequest document. This is an alias for the userId field.
-        intent:
-          description: The intent of the transaction request
         intents:
           type: array
-          items: {}
+          items:
+            description: The intents of the transaction request
+        latest:
+          type: boolean
+          description: Indicates if this is the latest transaction request
+        apiVersion:
+          allOf:
+            - $ref: '#/components/schemas/TransactionRequestApiVersion'
+          description: The API version of the transaction request
+        idempotencyKey:
+          type: string
+          description: The idempotency key of the transaction request
+        walletType:
+          allOf:
+            - $ref: '#/components/schemas/WalletTypes'
+          description: The type describes who owns the keys to the wallet associated to the TxRequest.
+        enterpriseId:
+          allOf:
+            - $ref: '#/components/schemas/EnterpriseIdString'
+          description: If the wallet that owns the TxRequest is owned by an enterprise then this is the Id of said enterprise.
+        organizationId:
+          type: string
+          description: The id of the organization the TxRequest's wallet belongs to.
+        intent:
+          description: The intent of the transaction request
         pendingApprovalId:
           type: string
           description: The id of the Pending Approval that was created for the TxRequest if one was required.
         policiesChecked:
           type: boolean
-        latest:
-          type: boolean
-          description: Indicates if this is the latest transaction request
+          description: Indicates if the transaction request has been checked against the policies.
         isCanceled:
           type: boolean
           description: True, if the transaction request is canceled.
@@ -107100,43 +107146,9 @@ components:
           type: boolean
           description: True when the txRequest was initiated by a dApp OAuth client (e.g. Narval).
         txChannel:
-          type: object
+          allOf:
+            - $ref: '#/components/schemas/TxChannel'
           description: Immutable DeFi / marketplace channel classification (DEFI-300).
-          properties:
-            clientId:
-              type: string
-              description: OAuth dApp client id (Narval).
-            connector:
-              type: string
-              enum:
-                - narval
-                - walletconnect
-              description: External entry connector (narval, walletconnect). Omitted for internal BitGo flows.
-            defiAction:
-              type: string
-              enum:
-                - approve
-                - deposit
-                - withdraw
-            protocol:
-              type: string
-              enum:
-                - morpho
-                - aave
-                - concrete
-              description: DeFi protocol (morpho, aave, concrete).
-            source:
-              $ref: '#/components/schemas/TxChannelSource'
-            type:
-              $ref: '#/components/schemas/TxChannelType'
-            vaultId:
-              type: string
-            walletConnectRequestId:
-              type: string
-              description: defi-service walletconnect_requests.id when supplied on the intent.
-          required:
-            - source
-            - type
       required:
         - txRequestId
         - walletId
@@ -107596,6 +107608,10 @@ components:
         - readyToSend
         - signed
         - failed
+      description: |-
+        If supplied, only transaction request state changes from the provided list
+        will trigger notifications. If not provided, all transaction request state
+        changes will trigger notifications.
     TransactionRequestState1:
       type: string
       enum:
@@ -108152,6 +108168,7 @@ components:
                   - staking_eth_block_reward
                   - staking_bera_withdrawal
                   - staking_bera_block_reward
+                  - staking
                   - defi_deposit
                 description: Transfer subtype
               txRequestId:
@@ -109293,6 +109310,7 @@ components:
             - staking_eth_block_reward
             - staking_bera_withdrawal
             - staking_bera_block_reward
+            - staking
             - defi_deposit
           description: Transfer subtype
         txRequestId:
@@ -111048,6 +111066,57 @@ components:
           type: object
       required:
         - address
+    TxChannel:
+      title: TxChannel
+      type: object
+      description: Immutable classification of how a txRequest entered BitGo (DEFI-300).
+      properties:
+        type:
+          $ref: '#/components/schemas/TxChannelType'
+        source:
+          $ref: '#/components/schemas/TxChannelSource'
+        connector:
+          allOf:
+            - $ref: '#/components/schemas/TxChannelConnector'
+          description: External entry connector (narval, walletconnect). Omitted for internal BitGo flows.
+        protocol:
+          allOf:
+            - $ref: '#/components/schemas/TxChannelProtocol'
+          description: DeFi protocol (morpho, aave, concrete).
+        defiAction:
+          $ref: '#/components/schemas/TxChannelDefiAction'
+        vaultId:
+          type: string
+        clientId:
+          type: string
+          description: OAuth dApp client id (Narval).
+        walletConnectRequestId:
+          type: string
+          description: defi-service walletconnect_requests.id when supplied on the intent.
+      required:
+        - type
+        - source
+    TxChannelConnector:
+      title: TxChannelConnector
+      type: string
+      enum:
+        - narval
+        - walletconnect
+    TxChannelDefiAction:
+      title: TxChannelDefiAction
+      type: string
+      enum:
+        - approve
+        - deposit
+        - withdraw
+    TxChannelProtocol:
+      title: TxChannelProtocol
+      type: string
+      enum:
+        - morpho
+        - aave
+        - concrete
+      description: DeFi protocol. aave/concrete are forward-compat stubs (not stamped by classifiers yet).
     TxChannelSource:
       title: TxChannelSource
       type: string
@@ -111454,6 +111523,7 @@ components:
                   - staking_eth_block_reward
                   - staking_bera_withdrawal
                   - staking_bera_block_reward
+                  - staking
                   - defi_deposit
                 description: Transfer subtype
               txRequestId:
@@ -121409,6 +121479,11 @@ components:
           example: 'true'
     WalletIdString:
       title: WalletIdString
+      type: string
+      example: 59cd72485007a239fb00282ed480da1f
+      pattern: ^[0-9a-f]{32}$
+    WalletIdString1:
+      title: WalletIdString1
       type: string
       example: 59cd72485007a239fb00282ed480da1f
       pattern: ^[0-9a-f]{32}$
