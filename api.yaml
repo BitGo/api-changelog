@@ -15340,7 +15340,7 @@ paths:
                   description: |-
                     Venue-specific one-time password (TOTP code). Required only when the
                     venue has OTP withdrawal protection enabled. When omitted and the venue
-                    requires OTP, the transfer is created with `status: "failed_retriable"`
+                    requires OTP, the transfer is created with `status: "pending_otp"`
                     and `reason.code: "OtpRequired"`. Call the retry endpoint with a fresh
                     code to proceed.
                   minLength: 1
@@ -15410,11 +15410,13 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse1'
   /api/link/v1/enterprises/{enterpriseId}/accounts/{accountId}/transfers/{transferId}/retry:
     post:
-      summary: Retry a failed_retriable transfer
+      summary: Retry a stalled transfer
       description: |-
-        Re-submit a transfer that stalled with `status: "failed_retriable"`.
-        Returns 409 `TransferNotRetriable` when the transfer is not in
-        `failed_retriable` status.
+        Re-submit a transfer that stalled with `status: "failed_retriable"` or
+        `status: "pending_otp"` (the venue is waiting for a TOTP code — supply it
+        via `venueOtp`). Returns 403 `RetryTransferForbidden` when the caller lacks
+        `link.account.transfer` on the account, and 409 `TransferNotRetriable` when the
+        transfer is in any other status.
       operationId: V1PostRetryTransferRoute
       tags:
         - Link Transfers
@@ -15463,7 +15465,7 @@ paths:
                   type: string
                   description: |-
                     Venue-specific one-time password (TOTP code).
-                    Required for failed_retriable transfers with reason.code of 'OtpRequired', or 'OtpInvalidError'.
+                    Required for `failed_retriable` / `pending_otp` transfers with reason.code of 'OtpRequired' or 'OtpInvalid'.
                   minLength: 1
       responses:
         '200':
@@ -15481,6 +15483,12 @@ paths:
                 properties: {}
         '401':
           description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse1'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -16463,6 +16471,7 @@ paths:
                 - completed
                 - failed
                 - failed_retriable
+                - pending_otp
                 - canceled
                 - rejected
               description: Filter by one or more transfer statuses.
@@ -83335,6 +83344,7 @@ components:
         - attestation_required
         - restricted
         - unavailable
+        - unavailable_user_kyc
     GeographicAddress:
       title: GeographicAddress
       type: object
@@ -110026,6 +110036,7 @@ components:
         - completed
         - failed
         - failed_retriable
+        - pending_otp
         - canceled
         - rejected
     TransferStatus1:
@@ -117287,6 +117298,16 @@ components:
                   - bitgo_wallet
                   - link_account
                   - venue_account
+              toMemo:
+                type: string
+                description: |-
+                  Destination memo / destination tag for this transfer, stored verbatim at
+                  initiation: an explicit `destination.memo`, or the `?dt=`-style suffix
+                  parsed off `toAddress` (`toId` keeps the raw address with the suffix).
+                  Absent for chains without memos and for transfers that predate memo
+                  capture.
+                example: '1234567890'
+                minLength: 1
               initiatedBy:
                 type: string
                 minLength: 1
@@ -117379,6 +117400,15 @@ components:
                     $ref: '#/components/schemas/CryptoTransferStatus'
                   toAddress:
                     type: string
+                    minLength: 1
+                  toMemo:
+                    type: string
+                    description: |-
+                      Destination memo / destination tag captured for this crypto leg: an
+                      explicit `destination.memo`, or the `?dt=`-style suffix parsed off
+                      `toAddress`. Absent for chains without memos or when the leg carries
+                      none.
+                    example: '1234567890'
                     minLength: 1
                   updatedAt:
                     type: string
@@ -117474,10 +117504,12 @@ components:
               reason:
                 type: object
                 description: |-
-                  Normalized failure context. Set when `status` is `failed` (terminal)
-                  or `failed_retriable` (the venue rejected this attempt but the same
+                  Normalized failure context. Set when `status` is `failed` (terminal),
+                  `failed_retriable` (the venue rejected this attempt but the same
                   transfer can be retried under the same `externalId` once external
-                  state changes). `code` is a stable string the caller can branch on;
+                  state changes), or `pending_otp` (the venue requires a TOTP code the
+                  user must supply; call the retry endpoint with `venueOtp` to
+                  proceed). `code` is a stable string the caller can branch on;
                   `message` is a human-readable description from the venue.
                 properties:
                   code:
@@ -119336,6 +119368,16 @@ components:
             - bitgo_wallet
             - link_account
             - venue_account
+        toMemo:
+          type: string
+          description: |-
+            Destination memo / destination tag for this transfer, stored verbatim at
+            initiation: an explicit `destination.memo`, or the `?dt=`-style suffix
+            parsed off `toAddress` (`toId` keeps the raw address with the suffix).
+            Absent for chains without memos and for transfers that predate memo
+            capture.
+          example: '1234567890'
+          minLength: 1
         initiatedBy:
           type: string
           minLength: 1
@@ -119428,6 +119470,15 @@ components:
               $ref: '#/components/schemas/CryptoTransferStatus'
             toAddress:
               type: string
+              minLength: 1
+            toMemo:
+              type: string
+              description: |-
+                Destination memo / destination tag captured for this crypto leg: an
+                explicit `destination.memo`, or the `?dt=`-style suffix parsed off
+                `toAddress`. Absent for chains without memos or when the leg carries
+                none.
+              example: '1234567890'
               minLength: 1
             updatedAt:
               type: string
@@ -119523,10 +119574,12 @@ components:
         reason:
           type: object
           description: |-
-            Normalized failure context. Set when `status` is `failed` (terminal)
-            or `failed_retriable` (the venue rejected this attempt but the same
+            Normalized failure context. Set when `status` is `failed` (terminal),
+            `failed_retriable` (the venue rejected this attempt but the same
             transfer can be retried under the same `externalId` once external
-            state changes). `code` is a stable string the caller can branch on;
+            state changes), or `pending_otp` (the venue requires a TOTP code the
+            user must supply; call the retry endpoint with `venueOtp` to
+            proceed). `code` is a stable string the caller can branch on;
             `message` is a human-readable description from the venue.
           properties:
             code:
