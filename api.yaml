@@ -40727,23 +40727,6 @@ paths:
               - asc
               - desc
             example: desc
-        - name: rtId
-          description: |-
-            Routed-transaction id filter (push-to-burn orders). Trimmed for
-            consistency with the stored value.
-          in: query
-          schema:
-            type: string
-            example: 95bdbd9c-9cdc-41a4-ae70-165387b7aa51
-            minLength: 1
-        - name: rtType
-          description: Routed-transaction type filter
-          in: query
-          schema:
-            type: string
-            enum:
-              - RT_PUSH_TO_BURN
-            example: RT_PUSH_TO_BURN
         - name: enterpriseId
           description: Enterprise ID
           in: path
@@ -40804,22 +40787,6 @@ paths:
                   example: Q2 rebalance batch 3
                   maxLength: 500
                   minLength: 1
-                rtId:
-                  type: string
-                  description: |-
-                    Routed-transaction id (push-to-burn). Set by RouteComposition-driven order
-                    creation; duplicates are rejected via the idempotencyKey=rtId unique index.
-                  example: 95bdbd9c-9cdc-41a4-ae70-165387b7aa51
-                  minLength: 1
-                rtType:
-                  type: string
-                  enum:
-                    - RT_PUSH_TO_BURN
-                  description: |-
-                    Routed-transaction type. Required when rtId is set (enforced in the
-                    create path). Narrowed to the single known value — widen to a union when
-                    RC adds more routed-transaction types.
-                  example: RT_PUSH_TO_BURN
                 source:
                   $ref: '#/components/schemas/PostExchangeOrderSource'
                 destination:
@@ -82249,16 +82216,6 @@ components:
           type: string
           description: Idempotency key — present only when the order was created with one
           example: mint-order-2025-04-04-001
-          minLength: 1
-        rtId:
-          type: string
-          description: Routed-transaction id — present only on push-to-burn (RC-routed) orders
-          example: 95bdbd9c-9cdc-41a4-ae70-165387b7aa51
-          minLength: 1
-        rtType:
-          type: string
-          description: Routed-transaction type — present only on push-to-burn (RC-routed) orders
-          example: RT_PUSH_TO_BURN
           minLength: 1
         depositInstructions:
           allOf:
