@@ -59083,6 +59083,35 @@ paths:
                     - signatureShares
                     - signerGpgPublicKey
                     - type
+                - type: object
+                  description: |-
+                    RedPallas rerand request body (Zcash Orchard shielded custodial cold wallets).
+
+                    Rerand (wasm-mps ≥ 1.17) is the 2-round key re-randomization protocol that must run
+                    before RedPallas DSG signing; it shares this /sign route with the DSG types. The rerand
+                    share codecs reuse the DSG round1Input/round2Input type literals over the same
+                    RedPallasSignatureShareWithoutVssProof shape, so the body-level `type` is the ONLY
+                    disambiguator between a rerand share and a DSG share.
+                  properties:
+                    signatureShares:
+                      type: array
+                      items:
+                        allOf:
+                          - $ref: '#/components/schemas/BaseShare'
+                        description: The array of RedPallas rerand (R1/R2) signature shares without VSS proof
+                    signerGpgPublicKey:
+                      type: string
+                      description: The GPG public key of the signer
+                      minLength: 1
+                    type:
+                      type: string
+                      enum:
+                        - redPallasRerand
+                      description: The type of the request body
+                  required:
+                    - signatureShares
+                    - signerGpgPublicKey
+                    - type
       responses:
         '200':
           description: OK
@@ -86588,8 +86617,19 @@ components:
         - type: object
           properties:
             memo:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: |-
+                Numeric sub-address memo encoded as a string (e.g. "42"). Used to
+                distinguish deposits to the same root account identifier, similar to
+                exchange deposit tags. Must parse as a non-negative integer —
+                non-numeric strings are rejected at transaction build time.
         - $ref: '#/components/schemas/PaymentIntent'
+      description: |-
+        Transfer ICP tokens to a single recipient on the Internet Computer network.
+        The wallet's root account identifier is the sender. Supports an optional
+        numeric memo for sub-address routing (e.g. exchange deposit tags). Only one
+        recipient is supported per transaction.
     Id:
       title: ID
       type: string
@@ -87967,6 +88007,7 @@ components:
         - contractCall
         - deactivate
         - customTx
+        - confidentialTransfer
         - closeAssociatedTokenAccount
         - stakeWithCallData
         - unstakeWithCallData
@@ -101954,6 +101995,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/PaymentIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
+        - $ref: '#/components/schemas/SolVersionMarker'
       description: Transfer native SOL or SPL tokens to one or more recipients on Solana. For token transfers, the recipient amount symbol must use the "sol:tokenName" format (e.g. "sol:usdc"). Native SOL recipients must not be Associated Token Account (ATA) addresses.
     SolSendQueue:
       title: Sol
@@ -102184,6 +102226,22 @@ components:
             - stakingAddress
         - $ref: '#/components/schemas/UnstakeIntent1'
         - $ref: '#/components/schemas/SolBuildOptions1'
+    SolVersionMarker:
+      title: SolVersionMarker
+      type: object
+      description: |-
+        Optional wire-version marker (0 = v0, 1 = v1 SIMD-0296/0385) for structured Solana intents.
+
+        When `version: 1`, the platform builds the transaction SERVER-SIDE from the
+        structured intent fields via the SDK v1 serializer — clients supply fields
+        (recipients, amounts), never instructions. `version: 0` (or absent) selects
+        the v0 path. Absent-by-default keeps existing clients backward compatible.
+      properties:
+        version:
+          type: number
+          enum:
+            - 0
+            - 1
     SolVersionedCustomTxIntent:
       title: SOL Versioned Custom Transaction Intent
       allOf:
@@ -102195,89 +102253,104 @@ components:
                 - customTx
               description: Must be "customTx". Presence of solVersionedTransactionData distinguishes this from legacy SolCustomTxIntent at runtime.
             solVersionedTransactionData:
-              type: object
+              allOf:
+                - $ref: '#/components/schemas/SolVersionedTransactionData'
               description: Versioned transaction data in Solana v0 message format. Presence of this field indicates a versioned transaction.
-              properties:
-                versionedInstructions:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      programIdIndex:
-                        type: number
-                        description: Index into the staticAccountKeys array identifying the program to invoke.
-                      accountKeyIndexes:
-                        type: array
-                        items:
-                          type: number
-                          description: Indexes into the combined account keys (static + lookup) for this instruction.
-                      data:
-                        type: string
-                        description: Instruction data encoded as base58 or hex.
-                    required:
-                      - programIdIndex
-                      - accountKeyIndexes
-                      - data
-                    description: The program instructions for this versioned transaction.
-                addressLookupTables:
-                  type: array
-                  items:
-                    type: object
-                    properties:
-                      accountKey:
-                        type: string
-                        description: The on-chain address of the lookup table account.
-                      writableIndexes:
-                        type: array
-                        items:
-                          type: number
-                          description: Indexes of writable accounts in the lookup table.
-                      readonlyIndexes:
-                        type: array
-                        items:
-                          type: number
-                          description: Indexes of read-only accounts in the lookup table.
-                    required:
-                      - accountKey
-                      - writableIndexes
-                      - readonlyIndexes
-                    description: Address lookup tables to extend the number of accounts beyond the static limit. Required when using account lookup tables in a v0 transaction.
-                staticAccountKeys:
-                  type: array
-                  items:
-                    type: string
-                    description: The static account keys referenced by this transaction.
-                messageHeader:
-                  type: object
-                  description: Solana message header specifying the number of required signers and read-only accounts.
-                  properties:
-                    numRequiredSignatures:
-                      type: number
-                      description: Number of signatures required for this transaction.
-                    numReadonlySignedAccounts:
-                      type: number
-                      description: Number of read-only accounts that require signatures.
-                    numReadonlyUnsignedAccounts:
-                      type: number
-                      description: Number of read-only accounts that do not require signatures.
-                  required:
-                    - numRequiredSignatures
-                    - numReadonlySignedAccounts
-                    - numReadonlyUnsignedAccounts
-                recentBlockhash:
-                  type: string
-                  description: Optional recent blockhash; when provided the platform uses it instead of fetching a durable nonce.
-              required:
-                - versionedInstructions
-                - addressLookupTables
-                - staticAccountKeys
-                - messageHeader
           required:
             - intentType
             - solVersionedTransactionData
         - $ref: '#/components/schemas/BaseIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
       description: Submit a custom Solana versioned (v0) transaction with optional address lookup tables. Use this intent for versioned transactions; for legacy instruction-based transactions use the customTx intent with solInstructions instead. When recentBlockhash is provided, the platform uses it directly without fetching a durable nonce. Wallets without the enableSolCustomTx flag require a second admin approval before the transaction is processed.
+    SolVersionedTransactionData:
+      title: SolVersionedTransactionData
+      type: object
+      description: |-
+        Solana versioned-transaction envelope carried by versioned custom intents and
+        (as an interim, server-validated carrier) structured confidential-transfer
+        intents. Client-supplied for customTx; for structured v1 intents the platform
+        builds the envelope server-side and the client never supplies instructions.
+      properties:
+        versionedInstructions:
+          type: array
+          items:
+            type: object
+            properties:
+              programIdIndex:
+                type: number
+                description: Index into the staticAccountKeys array identifying the program to invoke.
+              accountKeyIndexes:
+                type: array
+                items:
+                  type: number
+                  description: Indexes into the combined account keys (static + lookup) for this instruction.
+              data:
+                type: string
+                description: Instruction data encoded as base58 or hex.
+            required:
+              - programIdIndex
+              - accountKeyIndexes
+              - data
+            description: The program instructions for this versioned transaction.
+        addressLookupTables:
+          type: array
+          items:
+            type: object
+            properties:
+              accountKey:
+                type: string
+                description: The on-chain address of the lookup table account.
+              writableIndexes:
+                type: array
+                items:
+                  type: number
+                  description: Indexes of writable accounts in the lookup table.
+              readonlyIndexes:
+                type: array
+                items:
+                  type: number
+                  description: Indexes of read-only accounts in the lookup table.
+            required:
+              - accountKey
+              - writableIndexes
+              - readonlyIndexes
+            description: Address lookup tables to extend the number of accounts beyond the static limit. Required when using account lookup tables in a v0 transaction.
+        staticAccountKeys:
+          type: array
+          items:
+            type: string
+            description: The static account keys referenced by this transaction.
+        messageHeader:
+          type: object
+          description: Solana message header specifying the number of required signers and read-only accounts.
+          properties:
+            numRequiredSignatures:
+              type: number
+              description: Number of signatures required for this transaction.
+            numReadonlySignedAccounts:
+              type: number
+              description: Number of read-only accounts that require signatures.
+            numReadonlyUnsignedAccounts:
+              type: number
+              description: Number of read-only accounts that do not require signatures.
+          required:
+            - numRequiredSignatures
+            - numReadonlySignedAccounts
+            - numReadonlyUnsignedAccounts
+        recentBlockhash:
+          type: string
+          description: Optional recent blockhash; when provided the platform uses it instead of fetching a durable nonce.
+        version:
+          type: number
+          enum:
+            - 0
+            - 1
+          description: 'Wire version: 0 (v0) or 1 (v1, SIMD-0296/0385). Absent means v0.'
+      required:
+        - versionedInstructions
+        - addressLookupTables
+        - staticAccountKeys
+        - messageHeader
     SolWallet:
       title: Sol Wallet
       type: object
@@ -105379,10 +105452,17 @@ components:
               type: string
               enum:
                 - stakeClaimRewards
+              description: Must be "stakeClaimRewards".
             hotkey:
               type: string
+              description: |-
+                SS58-encoded public key of the hotkey whose accrued root-network basket
+                rewards are being claimed.
             netuid:
               type: string
+              description: |-
+                Must be "0" — the root network identifier. The underlying
+                claimRootWithHotkey extrinsic only exists for the root network.
           required:
             - intentType
             - hotkey
@@ -105429,10 +105509,16 @@ components:
           properties:
             amountStaked:
               type: string
+              description: Amount to stake, in base units (RAO for native TAO).
           required:
             - amountStaked
         - $ref: '#/components/schemas/StakeIntent'
         - $ref: '#/components/schemas/TaoStakingBaseIntent'
+      description: |-
+        Stake TAO from the wallet's root address (coldkey) to a hotkey (validator)
+        on a specified Bittensor subnet. Corresponds to the on-chain `add_stake`
+        extrinsic. Requires a staking request ID from the BitGo staking service,
+        and requires the enterprise to have staking permissions.
     TaoStakingBaseIntent:
       title: Tao Staking Base Intent
       allOf:
@@ -105440,13 +105526,23 @@ components:
           properties:
             hotkey:
               type: string
+              description: |-
+                SS58-encoded public key of the hotkey (validator) to stake to or
+                remove stake from on the specified subnet.
             netuid:
               type: string
+              description: |-
+                Numeric identifier of the Bittensor subnet to stake on or remove stake
+                from, as a string. Use "0" for the root network.
           required:
             - hotkey
             - netuid
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
+      description: |-
+        Base fields shared by the TAO staking intents (`stake` and `claim`): the
+        hotkey (validator) and Bittensor subnet to operate on. All TAO staking
+        operations are submitted by the wallet's root address (coldkey).
     TaoStakingRequest:
       title: TAO
       allOf:
@@ -105560,16 +105656,32 @@ components:
               type: string
               enum:
                 - switchValidator
+              description: Must be "switchValidator".
             originHotkey:
               type: string
+              description: |-
+                SS58-encoded public key of the source hotkey (validator) currently
+                holding the stake.
             destinationHotkey:
               type: string
+              description: |-
+                SS58-encoded public key of the target hotkey (validator) to move the
+                stake to.
             originNetuid:
               type: string
+              description: |-
+                Numeric identifier of the source subnet where the stake currently
+                resides, as a string.
             destinationNetuid:
               type: string
+              description: |-
+                Numeric identifier of the destination subnet to move the stake to,
+                as a string. May equal originNetuid when changing hotkeys only.
             alphaAmount:
               type: string
+              description: |-
+                Amount of alpha tokens to move, in raw alpha units. Must not exceed
+                the staked balance for originHotkey on originNetuid.
           required:
             - intentType
             - originHotkey
@@ -105579,6 +105691,10 @@ components:
             - alphaAmount
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
+      description: |-
+        Move staked alpha tokens from one hotkey (validator) or subnet to another
+        within the same wallet coldkey — no unstaking and re-staking required.
+        Corresponds to the on-chain `move_stake` extrinsic.
     TaoSwitchValidatorRequestEntityProperties:
       title: TAO switch validator staking request entity properties
       allOf:
@@ -105653,18 +105769,40 @@ components:
               type: string
               enum:
                 - transferStake
+              description: Must be "transferStake".
             originColdkey:
-              $ref: '#/components/schemas/optionalString'
+              allOf:
+                - $ref: '#/components/schemas/optionalString'
+              description: |-
+                Optional SS58-encoded coldkey address within this wallet to send the
+                stake from. Defaults to the wallet's root address when omitted. Must
+                be a wallet-owned address; otherwise the request fails with an
+                AddressNotFound error.
             destinationColdkey:
               type: string
+              description: |-
+                SS58-encoded coldkey address of the recipient who will own the stake
+                after the transfer. May belong to any wallet.
             hotkey:
               type: string
+              description: |-
+                SS58-encoded public key of the hotkey (validator) whose stake position
+                is being transferred. Must have an active stake on originNetuid.
             originNetuid:
               type: string
+              description: |-
+                Numeric identifier of the source subnet where the stake currently
+                resides, as a string.
             destinationNetuid:
               type: string
+              description: |-
+                Numeric identifier of the destination subnet where the transferred
+                stake will be registered, as a string. May differ from originNetuid.
             alphaAmount:
               type: string
+              description: |-
+                Amount of alpha tokens to transfer, in raw alpha units. Must not
+                exceed the staked alpha balance for hotkey on originNetuid.
           required:
             - intentType
             - originColdkey
@@ -105675,6 +105813,12 @@ components:
             - alphaAmount
         - $ref: '#/components/schemas/BaseStakeIntent'
         - $ref: '#/components/schemas/SubstrateAccountBaseBuildOptions'
+      description: |-
+        Transfer staked alpha tokens from this wallet's coldkey to another coldkey
+        on a specified subnet. This cross-coldkey operation transfers ownership of
+        the stake without unstaking; it is distinct from switchValidator, which
+        moves stake within the same coldkey. Corresponds to the on-chain
+        `transfer_stake` extrinsic.
     TaoUnStakingRequestPOSTBody:
       title: TAO unstake
       allOf:
@@ -105687,10 +105831,20 @@ components:
           properties:
             amountUnstaked:
               type: string
+              description: |-
+                Amount to unstake, in base units (RAO for native TAO; raw alpha units
+                for subnet tokens). Must not exceed the staked amount for the given
+                hotkey and netuid.
           required:
             - amountUnstaked
         - $ref: '#/components/schemas/WithdrawIntent'
         - $ref: '#/components/schemas/TaoStakingBaseIntent'
+      description: |-
+        Remove staked TAO or alpha tokens from a hotkey on a specified subnet.
+        Funds return to the wallet's root address (coldkey). Corresponds to the
+        on-chain `remove_stake` extrinsic. Note: the `intentType` value for
+        unstaking is "claim" (inherited from the generic withdraw/claim intent),
+        not "unstake".
     TargetType:
       type: string
       description: Type of entity that was the target of the action
@@ -124022,6 +124176,9 @@ components:
               description: Must be "claim".
             amount:
               type: object
+              description: |-
+                Optional amount override. amount.symbol identifies the asset;
+                amount.value is the quantity in base units.
               properties:
                 symbol:
                   type: string
