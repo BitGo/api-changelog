@@ -102065,9 +102065,10 @@ components:
           format: bigInteger
           nullable: true
           description: |
-            The inactive (deactivating/deactivated) balance of the stake account, if available.
-            Only present for SOL_STAKE delegations when the inactive balance lookup feature flag is enabled.
-            Null when the feature is disabled or the delegation type does not support activation lookups.
+            The inactive (deactivating/deactivated) balance of the stake account.
+            Populated for active SOL_STAKE delegations whose stake account has a non-zero inactive balance.
+            Null when there is no inactive balance, the delegation type does not support activation lookups
+            (e.g. MARINADE, JITO), or the on-chain lookup is temporarily unavailable.
         permissionAttributes:
           $ref: '#/components/schemas/WalletStakingPermissionAttributes'
     SolStakingRequest:
