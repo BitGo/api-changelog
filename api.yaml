@@ -80580,6 +80580,14 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/AuditableItem'
+    EnterpriseSettings:
+      type: object
+      description: Settings controlled by enterprise admins
+      properties:
+        withdrawalAttestationRequired:
+          type: boolean
+          description: Whether withdrawals must be confirmed with the initiator's passkey
+          example: false
     EnterpriseSnowflakeReportType:
       title: EnterpriseSnowflakeReportType
       type: string
@@ -96211,6 +96219,8 @@ components:
           $ref: '#/components/schemas/ViewAllWallets'
         videoIdWaived:
           $ref: '#/components/schemas/VideoIdWaived'
+        settings:
+          $ref: '#/components/schemas/EnterpriseSettings'
       required:
         - id
     PlatformEnterpriseContract:
@@ -113383,6 +113393,17 @@ components:
           allOf:
             - $ref: '#/components/schemas/EnterpriseAvailableUI'
           description: The UI that this enterprise prefers to use
+        settings:
+          type: object
+          additionalProperties: false
+          minProperties: 1
+          description: Enterprise admin settings to change. Only the settings that are present are updated.
+          properties:
+            withdrawalAttestationRequired:
+              type: boolean
+              description: |
+                Require withdrawals to be confirmed with the initiator's passkey. Only an enterprise admin of an
+                enterprise with a single admin can change it; multi-admin enterprises are not supported yet.
     UpdateEnterpriseChallenge:
       title: UpdateEnterpriseChallenge
       type: object
