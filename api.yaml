@@ -47220,6 +47220,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/address/{addressId}/deployment:
     post:
       summary: Deploy address
@@ -47410,6 +47416,12 @@ paths:
                 $ref: '#/components/schemas/WalletAddressUnion'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -72107,6 +72119,10 @@ components:
           type: boolean
           description: Whether the customer has waived the need for Video ID on low risk withdrawals.
           example: false
+        settings:
+          allOf:
+            - $ref: '#/components/schemas/EnterpriseSettings'
+          description: Settings controlled by enterprise admins
         createdAt:
           type: string
           description: ISO 8601 creation timestamp derived from the MongoDB ObjectId
@@ -80581,12 +80597,18 @@ components:
             items:
               $ref: '#/components/schemas/AuditableItem'
     EnterpriseSettings:
+      title: EnterpriseSettings
       type: object
-      description: Settings controlled by enterprise admins
+      description: |-
+        Enterprise settings
+
+        Settings that an enterprise admin controls through `PUT /api/v2/enterprise/{enterpriseId}`.
       properties:
         withdrawalAttestationRequired:
           type: boolean
-          description: Whether withdrawals must be confirmed with the initiator's passkey
+          description: |-
+            Require withdrawals to be confirmed with the initiator's passkey. Has no effect until
+            withdrawal-intent attestation enforcement is enabled for the enterprise.
           example: false
     EnterpriseSnowflakeReportType:
       title: EnterpriseSnowflakeReportType
@@ -82099,6 +82121,15 @@ components:
           type: string
         evmKeyRingReferenceWalletId:
           type: string
+        trustedTokens:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  state:
+                    $ref: '#/components/schemas/TrustedTokenState'
+              - $ref: '#/components/schemas/Token'
       required:
         - pendingChainInitialization
         - creationFailure
@@ -96220,7 +96251,7 @@ components:
         videoIdWaived:
           $ref: '#/components/schemas/VideoIdWaived'
         settings:
-          $ref: '#/components/schemas/EnterpriseSettings'
+          $ref: '#/components/schemas/PlatformEnterpriseSettings'
       required:
         - id
     PlatformEnterpriseContract:
@@ -96232,6 +96263,14 @@ components:
         endDate:
           type: string
           description: The contract end date for an enterprise
+    PlatformEnterpriseSettings:
+      type: object
+      description: Settings controlled by enterprise admins
+      properties:
+        withdrawalAttestationRequired:
+          type: boolean
+          description: Whether withdrawals must be confirmed with the initiator's passkey
+          example: false
     PlatformFreeze:
       type: object
       properties:
