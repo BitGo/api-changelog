@@ -13509,7 +13509,7 @@ paths:
                   - error
   /api/identity-service/v1/identities/{identityId}/documents:
     post:
-      summary: Add KYB Documents
+      summary: Assign KYB Document to Identity
       description: Add and validate documents for an existing identity. Documents are verified with the document service before being associated with the identity.
       operationId: identities.post.v1.identities.id.documents
       tags:
@@ -13811,7 +13811,7 @@ paths:
                 required:
                   - error
     get:
-      summary: List KYB Documents
+      summary: List KYB Documents for Identity
       description: Retrieve all documents associated with an identity.
       operationId: identities.get.v1.identities.id.documents
       tags:
@@ -14243,6 +14243,7 @@ paths:
               - link-htx
               - link-kraken
               - link-kucoin
+              - link-mock-venue
               - link-okx-eu
               - link-okx-global
               - link-okx-tr
@@ -14333,6 +14334,7 @@ paths:
                           - link-htx
                           - link-kraken
                           - link-kucoin
+                          - link-mock-venue
                           - link-okx-eu
                           - link-okx-global
                           - link-okx-tr
@@ -78747,7 +78749,12 @@ components:
         - retail50To75
         - retail75To100
       title: DiligenceRetailInstitutional
-      description: Percentage breakdown of retail vs institutional customer base
+      description: |-
+        Percentage breakdown of retail vs institutional customer base:
+        - `retail0To25` - 0–25% retail, 75–100% institutional.
+        - `retail25To50` - 25–50% retail, 50–75% institutional.
+        - `retail50To75` - 50–75% retail, 25–50% institutional.
+        - `retail75To100` - 75–100% retail, 0–25% institutional.
     DisclaimerAttributes:
       type: object
       properties:
@@ -99459,7 +99466,14 @@ components:
             - inReview
             - approved
             - rejected
-          description: Status of the requested permission
+          description: |-
+            Status of the requested permission:
+            - `missingLocation` - BitGo needs the business location.
+            - `missingEntityStructure` - BitGo needs the four structural fields.
+            - `missingRequirements` - Fields or documents are still missing.
+            - `readyForSubmission` - You submitted everything.
+            - `inReview` - BitGo is reviewing the identity.
+            - `approved` or `rejected` - BitGo made a final decision.
       required:
         - id
         - name
