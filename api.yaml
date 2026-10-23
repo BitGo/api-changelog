@@ -47542,6 +47542,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/addresses:
     get:
       summary: List addresses
@@ -58967,6 +58973,27 @@ paths:
               oneOf:
                 - type: object
                   properties:
+                    attestation:
+                      type: object
+                      description: WebAuthn assertion authorizing this request.
+                      properties:
+                        authenticatorData:
+                          type: string
+                          description: WebAuthn authenticatorData (base64url)
+                        clientDataJSON:
+                          type: string
+                          description: WebAuthn clientDataJSON (base64url)
+                        credentialId:
+                          type: string
+                          description: Passkey credential ID used to locate the registered authenticator public key
+                        signature:
+                          type: string
+                          description: WebAuthn assertion signature (base64url)
+                      required:
+                        - authenticatorData
+                        - clientDataJSON
+                        - credentialId
+                        - signature
                     signatureShares:
                       type: array
                       items:
@@ -59003,6 +59030,27 @@ paths:
                     - type
                 - type: object
                   properties:
+                    attestation:
+                      type: object
+                      description: WebAuthn assertion authorizing this request.
+                      properties:
+                        authenticatorData:
+                          type: string
+                          description: WebAuthn authenticatorData (base64url)
+                        clientDataJSON:
+                          type: string
+                          description: WebAuthn clientDataJSON (base64url)
+                        credentialId:
+                          type: string
+                          description: Passkey credential ID used to locate the registered authenticator public key
+                        signature:
+                          type: string
+                          description: WebAuthn assertion signature (base64url)
+                      required:
+                        - authenticatorData
+                        - clientDataJSON
+                        - credentialId
+                        - signature
                     signatureShares:
                       type: array
                       items:
@@ -59037,6 +59085,27 @@ paths:
                     - type
                 - type: object
                   properties:
+                    attestation:
+                      type: object
+                      description: WebAuthn assertion authorizing this request.
+                      properties:
+                        authenticatorData:
+                          type: string
+                          description: WebAuthn authenticatorData (base64url)
+                        clientDataJSON:
+                          type: string
+                          description: WebAuthn clientDataJSON (base64url)
+                        credentialId:
+                          type: string
+                          description: Passkey credential ID used to locate the registered authenticator public key
+                        signature:
+                          type: string
+                          description: WebAuthn assertion signature (base64url)
+                      required:
+                        - authenticatorData
+                        - clientDataJSON
+                        - credentialId
+                        - signature
                     signatureShares:
                       type: array
                       items:
@@ -59079,6 +59148,27 @@ paths:
                     SignatureShareWithoutVssProof codec, so the RedPallas R1/R2/R3 share contract is never
                     silently unioned with the EdDSA MPCv2 share type.
                   properties:
+                    attestation:
+                      type: object
+                      description: WebAuthn assertion authorizing this request.
+                      properties:
+                        authenticatorData:
+                          type: string
+                          description: WebAuthn authenticatorData (base64url)
+                        clientDataJSON:
+                          type: string
+                          description: WebAuthn clientDataJSON (base64url)
+                        credentialId:
+                          type: string
+                          description: Passkey credential ID used to locate the registered authenticator public key
+                        signature:
+                          type: string
+                          description: WebAuthn assertion signature (base64url)
+                      required:
+                        - authenticatorData
+                        - clientDataJSON
+                        - credentialId
+                        - signature
                     signatureShares:
                       type: array
                       items:
@@ -59108,6 +59198,27 @@ paths:
                     RedPallasSignatureShareWithoutVssProof shape, so the body-level `type` is the ONLY
                     disambiguator between a rerand share and a DSG share.
                   properties:
+                    attestation:
+                      type: object
+                      description: WebAuthn assertion authorizing this request.
+                      properties:
+                        authenticatorData:
+                          type: string
+                          description: WebAuthn authenticatorData (base64url)
+                        clientDataJSON:
+                          type: string
+                          description: WebAuthn clientDataJSON (base64url)
+                        credentialId:
+                          type: string
+                          description: Passkey credential ID used to locate the registered authenticator public key
+                        signature:
+                          type: string
+                          description: WebAuthn assertion signature (base64url)
+                      required:
+                        - authenticatorData
+                        - clientDataJSON
+                        - credentialId
+                        - signature
                     signatureShares:
                       type: array
                       items:
@@ -75121,6 +75232,11 @@ components:
                 - fee
             parentTradeId:
               type: string
+            allocationRole:
+              type: string
+              enum:
+                - send
+                - receive
           required:
             - intentType
             - updateId
@@ -75302,6 +75418,55 @@ components:
             - txRequestId
             - reason
         - $ref: '#/components/schemas/BaseIntent'
+    CantonParticipantAllowListAddIntent:
+      title: Canton Participant Allow-List Add Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonParticipantAllowListAdd
+            endInvestorPartyIds:
+              $ref: '#/components/schemas/NonEmptyUniqueStringArray'
+          required:
+            - intentType
+            - endInvestorPartyIds
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/CantonParticipantAllowListOperationFields'
+    CantonParticipantAllowListOperationFields:
+      title: CantonParticipantAllowListOperationFields
+      type: object
+      properties:
+        participantPartyId:
+          type: string
+          description: Participant party ID; omitted when the wallet root party is authoritative.
+        participantServiceCid:
+          type: string
+          description: ParticipantService contract CID; normally resolved by wallet-platform.
+        allowListCid:
+          type: string
+          description: Participant-owned AllowList contract CID; normally resolved by wallet-platform.
+        credentialCids:
+          allOf:
+            - $ref: '#/components/schemas/UniqueStringArray'
+          description: Credential CIDs; normally resolved from persisted allow-list membership state.
+    CantonParticipantAllowListRemoveIntent:
+      title: Canton Participant Allow-List Remove Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonParticipantAllowListRemove
+            endInvestorPartyIds:
+              $ref: '#/components/schemas/NonEmptyUniqueStringArray'
+          required:
+            - intentType
+            - endInvestorPartyIds
+        - $ref: '#/components/schemas/BaseIntent'
+        - $ref: '#/components/schemas/CantonParticipantAllowListOperationFields'
     CantonParticipantOnboardingRequestIntent:
       title: Canton Participant Onboarding Request Intent
       allOf:
@@ -85365,6 +85530,13 @@ components:
             allOf:
               - type: object
                 properties:
+                  intent:
+                    nullable: true
+                    oneOf:
+                      - $ref: '#/components/schemas/TransactionIntentFullOnly'
+                      - $ref: '#/components/schemas/TransactionIntentCommon'
+                      - $ref: '#/components/schemas/BaseIntent'
+                    description: The intent of the transaction request
                   transactions:
                     type: array
                     items:
@@ -88110,6 +88282,8 @@ components:
         - cantonEndInvestorOnboardingAccept
         - cantonEndInvestorOnboardingReject
         - cantonParticipantOnboardingRequest
+        - cantonParticipantAllowListAdd
+        - cantonParticipantAllowListRemove
         - defi-deposit
         - defi-redeem
         - defi-approve
@@ -90471,6 +90645,13 @@ components:
             allOf:
               - type: object
                 properties:
+                  intent:
+                    nullable: true
+                    oneOf:
+                      - $ref: '#/components/schemas/TransactionIntentFullOnly'
+                      - $ref: '#/components/schemas/TransactionIntentCommon'
+                      - $ref: '#/components/schemas/BaseIntent'
+                    description: The intent of the transaction request
                   transactions:
                     type: array
                     items:
@@ -92432,6 +92613,11 @@ components:
         rewardCycle:
           description: Time in seconds until the next reward cycle.
           type: integer
+    NonEmptyUniqueStringArray:
+      title: NonEmptyUniqueStringArray
+      type: array
+      items:
+        type: string
     NonNegativeBigAmount:
       title: NonNegativeBigAmount
       type: string
@@ -107131,8 +107317,8 @@ components:
       properties:
         keyDerivationPath:
           type: string
-    TransactionIntent:
-      title: TransactionIntent
+    TransactionIntentCommon:
+      title: TransactionIntentCommon
       oneOf:
         - $ref: '#/components/schemas/AdaConsolidateIntent'
         - $ref: '#/components/schemas/AdaPaymentIntent'
@@ -107145,14 +107331,6 @@ components:
         - $ref: '#/components/schemas/AdaRealFiClaimTimelockIntent'
         - $ref: '#/components/schemas/AdaVoteDelegationIntent'
         - $ref: '#/components/schemas/AptCustomTxIntent'
-        - $ref: '#/components/schemas/AtomPaymentIntent'
-        - $ref: '#/components/schemas/AtomStakeIntent'
-        - $ref: '#/components/schemas/AtomUnstakeIntent'
-        - $ref: '#/components/schemas/BabyCreateBtcDelegationIntent'
-        - $ref: '#/components/schemas/BabyWithdrawRewardIntent'
-        - $ref: '#/components/schemas/BscDelegateIntent'
-        - $ref: '#/components/schemas/BscUnDelegateIntent'
-        - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
         - $ref: '#/components/schemas/CantonAllocationAllocateIntent'
         - $ref: '#/components/schemas/CantonAllocationOfferWithdrawnIntent'
         - $ref: '#/components/schemas/CantonAllocationRejectIntent'
@@ -107169,48 +107347,19 @@ components:
         - $ref: '#/components/schemas/CantonEndInvestorOnboardingAcceptIntent'
         - $ref: '#/components/schemas/CantonEndInvestorOnboardingRejectIntent'
         - $ref: '#/components/schemas/CantonParticipantOnboardingRequestIntent'
-        - $ref: '#/components/schemas/ClaimIntent'
-        - $ref: '#/components/schemas/CosmosContractCallIntent'
-        - $ref: '#/components/schemas/CosmosPaymentIntent'
-        - $ref: '#/components/schemas/CosmosStakeClaimRewardsIntent'
-        - $ref: '#/components/schemas/CosmosStakeIntent'
-        - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
-        - $ref: '#/components/schemas/CosmosUnstakeIntent'
-        - $ref: '#/components/schemas/DefiApproveIntent'
-        - $ref: '#/components/schemas/DefiDepositIntent'
-        - $ref: '#/components/schemas/DefiRedeemIntent'
-        - $ref: '#/components/schemas/DefiWithdrawIntent'
-        - $ref: '#/components/schemas/WrapNativeIntent'
-        - $ref: '#/components/schemas/UnwrapNativeIntent'
-        - $ref: '#/components/schemas/WrapApproveIntent'
+        - $ref: '#/components/schemas/CantonParticipantAllowListAddIntent'
+        - $ref: '#/components/schemas/CantonParticipantAllowListRemoveIntent'
         - $ref: '#/components/schemas/DotConsolidateIntent'
         - $ref: '#/components/schemas/DotCreateAccountIntent'
         - $ref: '#/components/schemas/DotPaymentIntent'
         - $ref: '#/components/schemas/DotStakingIntent'
         - $ref: '#/components/schemas/DotUnstakingIntent'
         - $ref: '#/components/schemas/DotWithdrawStakeIntent'
-        - $ref: '#/components/schemas/DelegateIntent'
-        - $ref: '#/components/schemas/EthAccelerationIntent'
-        - $ref: '#/components/schemas/EthConsolidateIntent'
-        - $ref: '#/components/schemas/EthConsolidateTokenIntent'
-        - $ref: '#/components/schemas/EthFillNonceIntent'
         - $ref: '#/components/schemas/FillNonceIntent'
-        - $ref: '#/components/schemas/EthPaymentIntent'
-        - $ref: '#/components/schemas/EthStakingIntent'
-        - $ref: '#/components/schemas/EthTransferTokenIntent'
         - $ref: '#/components/schemas/StakeClaimRewardsIntent'
-        - $ref: '#/components/schemas/UndelegateIntent'
         - $ref: '#/components/schemas/FeeAddressTransferIntent'
-        - $ref: '#/components/schemas/HbarUpdateAccountIntent'
-        - $ref: '#/components/schemas/HypeevmBridgeFundsIntent'
-        - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
-        - $ref: '#/components/schemas/HypeevmEnableBridgingIntent'
-        - $ref: '#/components/schemas/IcpPaymentIntent'
         - $ref: '#/components/schemas/IotaConsolidateIntent'
         - $ref: '#/components/schemas/IotaPaymentIntent'
-        - $ref: '#/components/schemas/LightningPaymentIntent'
-        - $ref: '#/components/schemas/MmiSignMessageIntent'
-        - $ref: '#/components/schemas/MmiSignTransactionIntent'
         - $ref: '#/components/schemas/NearStakeIntent'
         - $ref: '#/components/schemas/NearUnstakeIntent'
         - $ref: '#/components/schemas/NearWithdrawIntent'
@@ -107246,7 +107395,6 @@ components:
         - $ref: '#/components/schemas/TaoSwitchValidatorIntent'
         - $ref: '#/components/schemas/TaoTransferStakeIntent'
         - $ref: '#/components/schemas/TaoUnstakeIntent'
-        - $ref: '#/components/schemas/TokenApprovalIntent'
         - $ref: '#/components/schemas/TonConsolidateIntent'
         - $ref: '#/components/schemas/TonDelegateIntent'
         - $ref: '#/components/schemas/TonMultiNominatorDelegateIntent'
@@ -107257,6 +107405,91 @@ components:
         - $ref: '#/components/schemas/TonUndelegateIntent'
         - $ref: '#/components/schemas/TonWhalesDelegateIntent'
         - $ref: '#/components/schemas/TonWhalesUndelegateIntent'
+        - $ref: '#/components/schemas/WalletRecoveryIntent'
+        - $ref: '#/components/schemas/WalrusStakingIntent'
+        - $ref: '#/components/schemas/WalrusUndelegateIntent'
+        - $ref: '#/components/schemas/WalrusWithdrawIntent'
+      description: |-
+        Intent schema groups for `TransactionRequestFull` and `TransactionRequestLite` (WCI-2003).
+
+        `TransactionIntent` deliberately stays unchanged — these groups are additive and exist so the
+        generated OpenAPI can scope intents to the TxRequest variant they can actually be used with.
+        Previously only `TransactionRequestLite` overrode `intent`, so every intent variant rendered
+        under Lite and `TransactionRequestFull.intent` rendered unconstrained.
+
+        Membership rule — an intent is Full-only when its coin cannot run the Lite flow, i.e. when ANY
+        of the following hold for the coin family that owns the intent:
+          - the primary key curve is secp256k1 (Lite is EdDSA TSS incremental signing);
+          - the family uses the legacy pre-TxRequest signing flow (e.g. hbar, trx, stx, btc/lightning);
+          - the family has no TSS support at all (e.g. hbar);
+          - the intent is rejected under apiVersion=lite by wallet-platform regardless of coin
+            (message signing and wrapApprove).
+        Everything else is Common. Lite vs Full is chosen by the wallet (EdDSA hot wallet makes Lite
+        available; cold/custodial is always Full), never by the intent, so the Full set and the Common
+        set together cover every intent and no intent is Lite-only.
+
+        Together the groups PARTITION `TransactionIntent`: every coin-specific union member appears in
+        exactly one of Common or Full-only, and none appears in both. The `BaseIntent` catch-all is the
+        one member that is shared — it is `TransactionIntentLiteOnly`'s only entry, and it is also added
+        at the point of use in `TransactionRequestLite.intent` and `TransactionRequestFull.intent` so
+        each variant keeps accepting intents that have no codec yet.
+
+        ADDING A NEW INTENT — any intent added to the `TransactionIntent` union MUST also be added to
+        one of the groups below, in the same relative order as it appears in the union. Apply the
+        membership rule above: Full-only if its coin cannot run the Lite flow, Common otherwise.
+        `intentGroups.test.ts` asserts `Common ∪ FullOnly ∪ LiteOnly === TransactionIntent`, so an
+        intent added to the union without being placed in a group fails the build rather than silently
+        dropping out of the generated spec.
+
+        `TransactionIntentLiteOnly` IS `BaseIntent` — there is currently no Lite-exclusive intent, and
+        the group is declared as the open catch-all so it is still a real, emittable codec (`t.never`
+        has no structure, contributes nothing to the generated spec, and is not assignable to io-ts'
+        `Mixed`). If a genuinely Lite-exclusive intent ever appears, drop the `BaseIntent` aliasing and
+        make the group a `t.union([...])` of the real intents, and update the test that pins the group
+        to the catch-all — the catch-all is already added at both use sites, so nothing else needs it.
+    TransactionIntentFullOnly:
+      title: TransactionIntentFullOnly
+      oneOf:
+        - $ref: '#/components/schemas/AtomPaymentIntent'
+        - $ref: '#/components/schemas/AtomStakeIntent'
+        - $ref: '#/components/schemas/AtomUnstakeIntent'
+        - $ref: '#/components/schemas/BabyCreateBtcDelegationIntent'
+        - $ref: '#/components/schemas/BabyWithdrawRewardIntent'
+        - $ref: '#/components/schemas/BscDelegateIntent'
+        - $ref: '#/components/schemas/BscUnDelegateIntent'
+        - $ref: '#/components/schemas/BscWithdrawUndelegateIntent'
+        - $ref: '#/components/schemas/ClaimIntent'
+        - $ref: '#/components/schemas/CosmosContractCallIntent'
+        - $ref: '#/components/schemas/CosmosPaymentIntent'
+        - $ref: '#/components/schemas/CosmosStakeClaimRewardsIntent'
+        - $ref: '#/components/schemas/CosmosStakeIntent'
+        - $ref: '#/components/schemas/CosmosSwitchValidatorIntent'
+        - $ref: '#/components/schemas/CosmosUnstakeIntent'
+        - $ref: '#/components/schemas/DefiApproveIntent'
+        - $ref: '#/components/schemas/DefiDepositIntent'
+        - $ref: '#/components/schemas/DefiRedeemIntent'
+        - $ref: '#/components/schemas/DefiWithdrawIntent'
+        - $ref: '#/components/schemas/WrapNativeIntent'
+        - $ref: '#/components/schemas/UnwrapNativeIntent'
+        - $ref: '#/components/schemas/WrapApproveIntent'
+        - $ref: '#/components/schemas/DelegateIntent'
+        - $ref: '#/components/schemas/EthAccelerationIntent'
+        - $ref: '#/components/schemas/EthConsolidateIntent'
+        - $ref: '#/components/schemas/EthConsolidateTokenIntent'
+        - $ref: '#/components/schemas/EthFillNonceIntent'
+        - $ref: '#/components/schemas/EthPaymentIntent'
+        - $ref: '#/components/schemas/EthStakingIntent'
+        - $ref: '#/components/schemas/EthTransferTokenIntent'
+        - $ref: '#/components/schemas/UndelegateIntent'
+        - $ref: '#/components/schemas/HbarUpdateAccountIntent'
+        - $ref: '#/components/schemas/HypeevmBridgeFundsIntent'
+        - $ref: '#/components/schemas/HypeevmSpotTransferIntent'
+        - $ref: '#/components/schemas/HypeevmEnableBridgingIntent'
+        - $ref: '#/components/schemas/IcpPaymentIntent'
+        - $ref: '#/components/schemas/LightningPaymentIntent'
+        - $ref: '#/components/schemas/MmiSignMessageIntent'
+        - $ref: '#/components/schemas/MmiSignTransactionIntent'
+        - $ref: '#/components/schemas/TokenApprovalIntent'
         - $ref: '#/components/schemas/TrxClaimRewardsIntent'
         - $ref: '#/components/schemas/TrxDelegateResourceIntent'
         - $ref: '#/components/schemas/TrxFreezeIntent'
@@ -107274,7 +107507,6 @@ components:
         - $ref: '#/components/schemas/VetDecreaseStakeIntent'
         - $ref: '#/components/schemas/VetSignalExitIntent'
         - $ref: '#/components/schemas/VetWithdrawStakeIntent'
-        - $ref: '#/components/schemas/WalletRecoveryIntent'
         - $ref: '#/components/schemas/BaseStakeIntentWithCalldata'
         - $ref: '#/components/schemas/StakeWithCallDataIntent'
         - $ref: '#/components/schemas/SwitchValidatorWithCallDataIntent'
@@ -107283,15 +107515,28 @@ components:
         - $ref: '#/components/schemas/CoreDaoClaimIntent'
         - $ref: '#/components/schemas/EthLikeStakeIntent'
         - $ref: '#/components/schemas/BeraDelegateIntent'
-        - $ref: '#/components/schemas/WalrusStakingIntent'
-        - $ref: '#/components/schemas/WalrusUndelegateIntent'
-        - $ref: '#/components/schemas/WalrusWithdrawIntent'
         - $ref: '#/components/schemas/XdcUploadKycIntent'
         - $ref: '#/components/schemas/XdcProposeIntent'
         - $ref: '#/components/schemas/XdcResignIntent'
         - $ref: '#/components/schemas/XdcWithdrawIntent'
         - $ref: '#/components/schemas/StacksRegisterForBondIntent'
+      description: |-
+        Intents usable ONLY with `TransactionRequestFull`, because the owning coin cannot run the
+        Lite flow. Coin families: Atom/CosmosLike, Baby, Bera, Bsc, CoreDao, EthLike (incl. DeFi,
+        MMI, ERC-7984 wrap), Hbar, Hypeevm, Icp, Lightning, Stacks, Trx, Vet and Xdc.
+
+        `ClaimIntent`, `DelegateIntent` and `UndelegateIntent` are here despite having no coin prefix:
+        each documents itself as EVM-only, no Ed25519 codec derives from them (only `VetDelegateIntent`
+        and `VetUnstakingIntent` do, and Vet is secp256k1), and every Lite-capable coin that uses those
+        intentTypes has its own codec (e.g. `SolClaimIntent`, `SolDelegateIntent`, `TonDelegateIntent`,
+        `TonUndelegateIntent`, `WalrusUndelegateIntent`).
+    TransactionIntentLiteOnly:
+      title: TransactionIntentLiteOnly
+      allOf:
         - $ref: '#/components/schemas/BaseIntent'
+      description: |-
+        Intents usable ONLY with `TransactionRequestLite`. No coin-specific intent is Lite-exclusive,
+        so this is the open `BaseIntent` catch-all — see the note at the top of this file.
     TransactionRequest:
       anyOf:
         - $ref: '#/components/schemas/TransactionRequestLite1'
@@ -107484,6 +107729,13 @@ components:
       allOf:
         - type: object
           properties:
+            intent:
+              nullable: true
+              oneOf:
+                - $ref: '#/components/schemas/TransactionIntentFullOnly'
+                - $ref: '#/components/schemas/TransactionIntentCommon'
+                - $ref: '#/components/schemas/BaseIntent'
+              description: The intent of the transaction request
             transactions:
               type: array
               items:
@@ -107722,8 +107974,11 @@ components:
         - type: object
           properties:
             intent:
-              allOf:
-                - $ref: '#/components/schemas/TransactionIntent'
+              nullable: true
+              oneOf:
+                - $ref: '#/components/schemas/TransactionIntentLiteOnly'
+                - $ref: '#/components/schemas/TransactionIntentCommon'
+                - $ref: '#/components/schemas/BaseIntent'
               description: The intent of the transaction request
             unsignedTxs:
               type: array
@@ -112993,6 +113248,11 @@ components:
         Remove delegation of staked assets from a validator on EVM-compatible chains.
         Initiates the unbonding period. Requires a staking request ID from the BitGo
         staking service.
+    UniqueStringArray:
+      title: UniqueStringArray
+      type: array
+      items:
+        type: string
     UnknownDelegationProperties:
       title: Unknown Delegation Properties
       allOf:
