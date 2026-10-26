@@ -43829,9 +43829,7 @@ paths:
           required: true
           description: The banking system where a bank operates.
           schema:
-            type: string
-            enum:
-              - aba
+            $ref: '#/components/schemas/V1BankType'
         - name: routingNumber
           in: path
           required: true
@@ -113665,9 +113663,7 @@ components:
         address:
           $ref: '#/components/schemas/V1RoutingAddress'
         bankType:
-          type: string
-          enum:
-            - aba
+          $ref: '#/components/schemas/V1BankType'
         createdAt:
           type: string
           format: date-time
@@ -113689,6 +113685,17 @@ components:
               - ach-us
               - wire-domestic
               - wire-swift
+    V1BankType:
+      type: string
+      description: |
+        The identifier system a bank belongs to. `aba` is a US routing number,
+        `swift` a SWIFT/BIC code, `ifsc` an Indian Financial System Code, and
+        `dtc` a Depository Trust Company participant number for a brokerage.
+      enum:
+        - aba
+        - dtc
+        - ifsc
+        - swift
     V1BlockListResponse:
       title: V1BlockListResponse
       type: object
