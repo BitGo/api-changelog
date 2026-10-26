@@ -53151,6 +53151,8 @@ paths:
                       type: boolean
                     isFillsReport:
                       type: boolean
+                    isOtcReport:
+                      type: boolean
                     startDate:
                       type: string
                       description: Date of the snapshot
@@ -55384,6 +55386,8 @@ paths:
                     isCostBasisReport:
                       type: boolean
                     isFillsReport:
+                      type: boolean
+                    isOtcReport:
                       type: boolean
                     startDate:
                       type: string
@@ -72145,6 +72149,15 @@ components:
               - user
               - date
               - version
+        mintTokenizedAssetAgreements:
+          type: object
+          additionalProperties:
+            type: array
+            items:
+              allOf:
+                - $ref: '#/components/schemas/StablecoinAgreement'
+              description: Per-asset stablecoin agreement acceptance entry.
+          description: Per-asset stablecoin T&C acceptances keyed by asset symbol (e.g. 'usdc', 'wtgxx')
         otcServicesAgreement:
           type: array
           items:
@@ -98097,6 +98110,8 @@ components:
               type: boolean
             isFillsReport:
               type: boolean
+            isOtcReport:
+              type: boolean
             startDate:
               type: string
               description: Date of the snapshot
@@ -101645,6 +101660,34 @@ components:
           txCount: 1
           txValue: 0
           txValueLimit: 50000000000
+    StablecoinAgreement:
+      title: StablecoinAgreement
+      type: object
+      description: Stablecoin agreement schema for enterprise users.
+      properties:
+        user:
+          type: string
+          description: User who accepted the agreement
+        date:
+          oneOf:
+            - type: string
+            - type: string
+              format: date-time
+              title: ISO Date String
+            - type: string
+              format: date
+              title: Date String
+          description: Date when the agreement was accepted
+        ip:
+          type: string
+          description: IP address of the user
+        version:
+          type: number
+          description: Version number of the agreement
+      required:
+        - user
+        - date
+        - version
     StacksAddress:
       title: Stacks Address
       type: object
