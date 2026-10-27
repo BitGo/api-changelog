@@ -51099,6 +51099,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -51172,6 +51173,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -51408,6 +51410,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -58313,6 +58316,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -58386,6 +58390,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -75006,6 +75011,25 @@ components:
       description: |-
         Exact Canton decimal-string amount codec.
         API amounts remain strings so the OpenAPI schema stays backward compatible.
+    CantonBroadridgeStandingDelegationIntent:
+      title: Canton Broadridge Standing Delegation Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonBroadridgeStandingDelegation
+            executorPartyId:
+              type: string
+              minLength: 1
+            meta:
+              type: object
+              additionalProperties: {}
+          required:
+            - intentType
+            - executorPartyId
+        - $ref: '#/components/schemas/BaseIntent'
     CantonCommand:
       title: CantonCommand
       oneOf:
@@ -79996,6 +80020,13 @@ components:
                 required:
                   - name
                 description: One or more token entries specifying which tokens to enable.
+            configureAccount:
+              allOf:
+                - $ref: '#/components/schemas/optionalBoolean'
+              description: |-
+                Solana confidential-transfer tokens only: also run ConfigureAccount after ATA creation so
+                the account can hold confidential balances. Defaults to true. Ignored for CMB mints,
+                which are always configured.
           required:
             - intentType
             - enableTokens
@@ -86866,6 +86897,31 @@ components:
           type: string
         triggeredPolicy:
           type: string
+        erc7984WrapLink:
+          type: object
+          description: 'Custodial multi-sig shield only: the poll key for the shield journey GET.'
+          properties:
+            wrapLinkId:
+              type: string
+            wrapLinkExpiresAt:
+              type: string
+            wrapStatus:
+              type: string
+            wrapTokenName:
+              type: string
+          required:
+            - wrapLinkId
+            - wrapLinkExpiresAt
+            - wrapStatus
+            - wrapTokenName
+        erc7984UnshieldLink:
+          type: object
+          description: 'Custodial multi-sig unshield only: the poll key for the unshield journey GET.'
+          properties:
+            unshieldLinkId:
+              type: string
+          required:
+            - unshieldLinkId
       required:
         - pendingApproval
     InitiateTransactionAddressType:
@@ -87602,6 +87658,7 @@ components:
         - cosignDelegationAccept
         - allocationRequest
         - cantonCommand
+        - cantonBroadridgeStandingDelegation
         - allocationAllocate
         - allocationOfferWithdrawn
         - allocationReject
@@ -87662,6 +87719,7 @@ components:
         - allocationRequest
         - allocationAllocate
         - cantonCommand
+        - cantonBroadridgeStandingDelegation
         - cantonEndInvestorOnboardingOffer
         - cantonEndInvestorOnboardingAccept
         - cantonEndInvestorOnboardingReject
@@ -93470,6 +93528,7 @@ components:
               - cantonByovMigrate
               - disableBridging
               - enableSignTypedStructuredData
+              - xlmTrustlineSkipCosign
         distributedCustody:
           nullable: true
           allOf:
@@ -93555,6 +93614,7 @@ components:
               - tokenManagementServiceEnabled
               - CaaSEnabledFiatPolicies
               - euRegulated
+              - vbanAgreementSigned
             description: All feature flags that should be set on the organization
         reserveGoAccountId:
           nullable: true
@@ -100886,7 +100946,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/EnableTokenIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
-      description: Initialize one or more Associated Token Accounts (ATAs) on Solana so the wallet can receive SPL tokens. All entries in enableTokens must target the same wallet address. Spending policy is not evaluated for this intent.
+      description: Initialize one or more Associated Token Accounts (ATAs) on Solana so the wallet can receive SPL tokens. All entries in enableTokens must target the same wallet address, unless they are confidential-transfer tokens whose mints carry the ConfidentialTransferMint extension. Those are enabled per address — one ConfigureAccount transaction per address — so entries may target different addresses. Spending policy is not evaluated for this intent.
     SolCustomTxIntent:
       title: SOL Custom Transaction Intent
       allOf:
@@ -106013,6 +106073,7 @@ components:
         - $ref: '#/components/schemas/CantonCosignDelegationAcceptIntent'
         - $ref: '#/components/schemas/CantonCosignDelegationProposalIntent'
         - $ref: '#/components/schemas/CantonCommandIntent'
+        - $ref: '#/components/schemas/CantonBroadridgeStandingDelegationIntent'
         - $ref: '#/components/schemas/CantonPaymentIntent'
         - $ref: '#/components/schemas/CantonTransferAcceptIntent'
         - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
