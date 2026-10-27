@@ -37437,61 +37437,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/wallet/{walletId}/lightning/invoices:
-    get:
-      tags:
-        - Lightning
-      summary: Lightning - List Invoices
-      operationId: v2.wallet.lightning.invoice.list
-      description: List Lightning Network invoices for the given wallet.
-      parameters:
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExpressCreateInvoiceRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ExpressListInvoicesResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-  /api/v2/wallet/{walletId}/lightning/backup:
-    get:
-      tags:
-        - Lightning
-      summary: Lightning - Get Channel Backup
-      operationId: v2.wallet.lightning.backup
-      description: This is only used for self-custody lightning. Retrieve the channel backup for the given wallet.
-      parameters:
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LightningBackupResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/policy/v1/enterprises/{enterpriseId}/rules:
     get:
       x-internal: false
@@ -57689,7 +57634,7 @@ paths:
       description: |-
         This API call is used to fetch current lightning invoices which are
         used for requesting and receiving payments over the lightning network.
-      operationId: v2.wallet.lightning.invoice.list1
+      operationId: v2.wallet.lightning.invoice.list
       tags:
         - Lightning
       parameters:
@@ -82161,62 +82106,6 @@ components:
       type: object
       additionalProperties:
         type: string
-    ExpressCreateInvoiceRequest:
-      description: Create invoice request. Provide exactly one of `valueMsat` or `valueSat`
-      type: object
-      properties:
-        valueSat:
-          type: number
-          description: The invoice amount in satoshis
-        valueMsat:
-          type: string
-          description: The invoice amount in millisatoshis
-        memo:
-          type: string
-          description: Optional description for the invoice
-        expiry:
-          type: number
-          description: Optional expiration time in seconds
-    ExpressListInvoicesResponse:
-      type: object
-      properties:
-        valueMsat:
-          type: string
-          description: Amount in millisatoshis
-        valueSat:
-          type: number
-          description: Amount in satoshis
-        paymentHash:
-          type: string
-          description: Payment hash of the invoice
-        invoice:
-          type: string
-          description: The BOLT 11 encoded invoice string
-        walletId:
-          type: string
-          description: The public BitGo walletId to which this invoice belongs to
-        status:
-          type: string
-          enum:
-            - open
-            - settled
-            - canceled
-          description: Current status of the invoice
-        expiresAt:
-          type: string
-          format: date-time
-          description: Expiration date in ISO format
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation date in ISO format
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update date in ISO format
-        amtPaidMsat:
-          type: string
-          description: Amount actually paid in millisatoshis (may be greater than valueMsat)
     ExtDepositsResp:
       title: ExtDepositsResp
       type: array
@@ -89192,26 +89081,6 @@ components:
         asks:
           - - '7002.55'
             - '2.7524'
-    LightningBackupResponse:
-      type: object
-      properties:
-        chanPoints:
-          type: array
-          items:
-            $ref: '#/components/schemas/LightningChanPoints'
-          description: List of channel points
-        multiChanBackup:
-          type: string
-          description: Multi-channel backup
-    LightningChanPoints:
-      type: object
-      properties:
-        fundingTxid:
-          type: string
-          description: Funding transaction ID
-        outputIndex:
-          type: integer
-          description: Output index
     LightningCoinSpecificUpdateData:
       title: LightningCoinSpecificUpdateData
       type: object
