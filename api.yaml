@@ -49264,6 +49264,26 @@ paths:
                     For XRP, possible types include: `payment` and `accountSet`. The default is `payment`.
 
                     For STX, type is required.
+                defiParams:
+                  type: object
+                  description: DeFi operation sub-params.
+                  properties:
+                    actionType:
+                      allOf:
+                        - $ref: '#/components/schemas/InitiateTransactionDefiActionType'
+                      description: Operation type; takes precedence over the top-level `type` for operation detection.
+                    amount:
+                      oneOf:
+                        - type: string
+                        - type: number
+                      description: Operation amount in base units; must be non-zero for `defi-deposit`.
+                    vaultId:
+                      type: string
+                      description: defi-service vault the operation targets.
+                  required:
+                    - actionType
+                    - amount
+                    - vaultId
                 consolidationMode:
                   type: string
                   enum:
@@ -49410,6 +49430,17 @@ paths:
                     [UTXO only] Format of the returned transaction hex serialization.
                     `legacy` for serialized transaction in custom bitcoinjs-lib format. `psbt` for BIP174 serialized transaction
                   example: psbt
+                unifiedRecipientPreference:
+                  type: string
+                  enum:
+                    - shielded
+                    - transparent
+                  description: |-
+                    [UTXO ZEC/TZEC only] How a Unified Address (ZIP-316) recipient is handled when building
+                    the transaction. `shielded` sends to the shielded receiver, keeping the recipient and
+                    amount private on-chain. `transparent` sends to the transparent receiver like a regular
+                    ZEC transfer.
+                  example: shielded
                 instant:
                   type: boolean
                   description: (DASH only) Specifies whether or not to use Dash's "InstantSend" feature when sending a transaction.
@@ -49555,6 +49586,52 @@ paths:
                         type: string
                         description: One of the supported coin types for Stellar tokens listed in Coin-specific-implementation
                         example: txlm:BST-GBQTIOS3XGHB7LVYGBKQVJGCZ3R4JL5E4CBSWJ5ALIJUHBKS6263644L
+                trustlineAuths:
+                  type: array
+                  items:
+                    type: object
+                    description: |-
+                      (Stellar) Authorize/deauthorize instructions for trustlines the issuing account controls, via an
+                      `authorizeTrustline` (setTrustLineFlags) transaction. Only full authorization/revocation is
+                      supported; authorizeToMaintainLiabilities is not modelled.
+                    properties:
+                      authorize:
+                        type: boolean
+                        description: |-
+                          True to set the `authorized` flag on the trustline, false to revoke it. Only full
+                          authorization/revocation is supported; authorizeToMaintainLiabilities is not modelled.
+                      token:
+                        type: string
+                        description: The Stellar token whose trustline is being authorized, in `txlm:CODE-ISSUER` form.
+                        example: txlm:BST-GCWHAO4SVB4KX3Q62QZGZUHUH2GSH3OIV7IS7Y3MPQOFGQFGBP6IYCOU
+                      trustor:
+                        type: string
+                        description: |-
+                          Stellar account ID whose trustline flags are being set. The transaction source must be
+                          the asset issuer (the token's issuer).
+                        example: GADEIAKGEUJHWBWOPC4TBCXUV4NKHIEQP6FYSE6FZXDARDEK4RHVWTUM
+                clawbacks:
+                  type: array
+                  items:
+                    type: object
+                    description: |-
+                      (Stellar) Clawback instructions for assets the issuing account controls, via a `clawback`
+                      transaction.
+                    properties:
+                      amount:
+                        allOf:
+                          - $ref: '#/components/schemas/InitiateTransactionIntegerString'
+                        description: String representation of the amount to claw back in base units (stroops)
+                        example: '2000000'
+                        pattern: ^-?\d+$
+                      from:
+                        type: string
+                        description: Stellar account ID holding the asset to claw back.
+                        example: GADEIAKGEUJHWBWOPC4TBCXUV4NKHIEQP6FYSE6FZXDARDEK4RHVWTUM
+                      token:
+                        type: string
+                        description: The Stellar asset to claw back, in `txlm:CODE-ISSUER` form.
+                        example: txlm:BST-GCWHAO4SVB4KX3Q62QZGZUHUH2GSH3OIV7IS7Y3MPQOFGQFGBP6IYCOU
                 stakingOptions:
                   oneOf:
                     - $ref: '#/components/schemas/InitiateTransactionSTXStakingOptions'
@@ -78912,10 +78989,47 @@ components:
               - wForm
         wForm:
           $ref: '#/components/schemas/DocumentCollectionAgreement'
+        submissions:
+          type: array
+          items:
+            type: object
+            title: Document Submission
+            properties:
+              type:
+                allOf:
+                  - $ref: '#/components/schemas/DocumentCollectionType'
+                description: Document type that was submitted
+              taxYear:
+                type: number
+                description: Tax year the submission is for
+              user:
+                type: string
+                description: Public ID of the user who submitted
+              date:
+                oneOf:
+                  - type: string
+                  - type: string
+                    format: date-time
+                    title: ISO Date String
+                  - type: string
+                    format: date
+                    title: Date String
+                description: When the submission was recorded
+            required:
+              - type
+              - taxYear
+              - user
+              - date
+            description: One entry per document type and tax year. Returned by the enterprise, admin and internal summary endpoints.
     DocumentCollectionAgreement:
       allOf:
         - title: DocumentCollectionAgreement
         - $ref: '#/components/schemas/OnboardingAgreement'
+    DocumentCollectionType:
+      title: DocumentCollectionType
+      type: string
+      enum:
+        - wForm
     DocumentFileDetail:
       type: object
       properties:
@@ -83476,6 +83590,11 @@ components:
             organizationId:
               type: string
               deprecated: true
+            mintTokenizedAssetAgreementLatestVersions:
+              type: object
+              additionalProperties:
+                type: number
+              description: Latest published T&C version per asset (e.g. 'usdc', 'wtgxx'); assets ride the generic agreement when absent
           required:
             - wallets
             - tags
@@ -87436,6 +87555,14 @@ components:
           The address types for the change address. Order by preference and BitGo uses the first available.
           Any subset of `p2sh`, `p2shP2wsh`, `p2wsh`, `p2tr` or `p2trMusig2`.
         example: p2sh
+    InitiateTransactionDefiActionType:
+      title: InitiateTransactionDefiActionType
+      type: string
+      enum:
+        - defi-approve
+        - defi-deposit
+        - defi-withdraw
+      description: DeFi operation sub-params (`defi-approve`, `defi-deposit`, `defi-withdraw`).
     InitiateTransactionHBARStakingOptions:
       title: InitiateTransactionHBARStakingOptions
       allOf:
