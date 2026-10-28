@@ -37437,61 +37437,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/wallet/{walletId}/lightning/invoices:
-    get:
-      tags:
-        - Lightning
-      summary: Lightning - List Invoices
-      operationId: v2.wallet.lightning.invoice.list
-      description: List Lightning Network invoices for the given wallet.
-      parameters:
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ExpressCreateInvoiceRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/ExpressListInvoicesResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-  /api/v2/wallet/{walletId}/lightning/backup:
-    get:
-      tags:
-        - Lightning
-      summary: Lightning - Get Channel Backup
-      operationId: v2.wallet.lightning.backup
-      description: This is only used for self-custody lightning. Retrieve the channel backup for the given wallet.
-      parameters:
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/LightningBackupResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/policy/v1/enterprises/{enterpriseId}/rules:
     get:
       x-internal: false
@@ -51154,6 +51099,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -51227,6 +51173,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -51463,6 +51410,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -57689,7 +57637,7 @@ paths:
       description: |-
         This API call is used to fetch current lightning invoices which are
         used for requesting and receiving payments over the lightning network.
-      operationId: v2.wallet.lightning.invoice.list1
+      operationId: v2.wallet.lightning.invoice.list
       tags:
         - Lightning
       parameters:
@@ -58368,6 +58316,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -58441,6 +58390,7 @@ paths:
                 - allocationRequest
                 - allocationAllocate
                 - cantonCommand
+                - cantonBroadridgeStandingDelegation
                 - cantonEndInvestorOnboardingOffer
                 - cantonEndInvestorOnboardingAccept
                 - cantonEndInvestorOnboardingReject
@@ -75061,6 +75011,25 @@ components:
       description: |-
         Exact Canton decimal-string amount codec.
         API amounts remain strings so the OpenAPI schema stays backward compatible.
+    CantonBroadridgeStandingDelegationIntent:
+      title: Canton Broadridge Standing Delegation Intent
+      allOf:
+        - type: object
+          properties:
+            intentType:
+              type: string
+              enum:
+                - cantonBroadridgeStandingDelegation
+            executorPartyId:
+              type: string
+              minLength: 1
+            meta:
+              type: object
+              additionalProperties: {}
+          required:
+            - intentType
+            - executorPartyId
+        - $ref: '#/components/schemas/BaseIntent'
     CantonCommand:
       title: CantonCommand
       oneOf:
@@ -75179,6 +75148,10 @@ components:
               type: string
             participantPartyId:
               type: string
+            endInvestorPartyId:
+              type: string
+            custodialSigningBudgetSeconds:
+              type: number
           required:
             - intentType
             - txRequestId
@@ -80051,6 +80024,13 @@ components:
                 required:
                   - name
                 description: One or more token entries specifying which tokens to enable.
+            configureAccount:
+              allOf:
+                - $ref: '#/components/schemas/optionalBoolean'
+              description: |-
+                Solana confidential-transfer tokens only: also run ConfigureAccount after ATA creation so
+                the account can hold confidential balances. Defaults to true. Ignored for CMB mints,
+                which are always configured.
           required:
             - intentType
             - enableTokens
@@ -82161,62 +82141,6 @@ components:
       type: object
       additionalProperties:
         type: string
-    ExpressCreateInvoiceRequest:
-      description: Create invoice request. Provide exactly one of `valueMsat` or `valueSat`
-      type: object
-      properties:
-        valueSat:
-          type: number
-          description: The invoice amount in satoshis
-        valueMsat:
-          type: string
-          description: The invoice amount in millisatoshis
-        memo:
-          type: string
-          description: Optional description for the invoice
-        expiry:
-          type: number
-          description: Optional expiration time in seconds
-    ExpressListInvoicesResponse:
-      type: object
-      properties:
-        valueMsat:
-          type: string
-          description: Amount in millisatoshis
-        valueSat:
-          type: number
-          description: Amount in satoshis
-        paymentHash:
-          type: string
-          description: Payment hash of the invoice
-        invoice:
-          type: string
-          description: The BOLT 11 encoded invoice string
-        walletId:
-          type: string
-          description: The public BitGo walletId to which this invoice belongs to
-        status:
-          type: string
-          enum:
-            - open
-            - settled
-            - canceled
-          description: Current status of the invoice
-        expiresAt:
-          type: string
-          format: date-time
-          description: Expiration date in ISO format
-        createdAt:
-          type: string
-          format: date-time
-          description: Creation date in ISO format
-        updatedAt:
-          type: string
-          format: date-time
-          description: Last update date in ISO format
-        amtPaidMsat:
-          type: string
-          description: Amount actually paid in millisatoshis (may be greater than valueMsat)
     ExtDepositsResp:
       title: ExtDepositsResp
       type: array
@@ -86977,6 +86901,31 @@ components:
           type: string
         triggeredPolicy:
           type: string
+        erc7984WrapLink:
+          type: object
+          description: 'Custodial multi-sig shield only: the poll key for the shield journey GET.'
+          properties:
+            wrapLinkId:
+              type: string
+            wrapLinkExpiresAt:
+              type: string
+            wrapStatus:
+              type: string
+            wrapTokenName:
+              type: string
+          required:
+            - wrapLinkId
+            - wrapLinkExpiresAt
+            - wrapStatus
+            - wrapTokenName
+        erc7984UnshieldLink:
+          type: object
+          description: 'Custodial multi-sig unshield only: the poll key for the unshield journey GET.'
+          properties:
+            unshieldLinkId:
+              type: string
+          required:
+            - unshieldLinkId
       required:
         - pendingApproval
     InitiateTransactionAddressType:
@@ -87713,6 +87662,7 @@ components:
         - cosignDelegationAccept
         - allocationRequest
         - cantonCommand
+        - cantonBroadridgeStandingDelegation
         - allocationAllocate
         - allocationOfferWithdrawn
         - allocationReject
@@ -87773,6 +87723,7 @@ components:
         - allocationRequest
         - allocationAllocate
         - cantonCommand
+        - cantonBroadridgeStandingDelegation
         - cantonEndInvestorOnboardingOffer
         - cantonEndInvestorOnboardingAccept
         - cantonEndInvestorOnboardingReject
@@ -89192,26 +89143,6 @@ components:
         asks:
           - - '7002.55'
             - '2.7524'
-    LightningBackupResponse:
-      type: object
-      properties:
-        chanPoints:
-          type: array
-          items:
-            $ref: '#/components/schemas/LightningChanPoints'
-          description: List of channel points
-        multiChanBackup:
-          type: string
-          description: Multi-channel backup
-    LightningChanPoints:
-      type: object
-      properties:
-        fundingTxid:
-          type: string
-          description: Funding transaction ID
-        outputIndex:
-          type: integer
-          description: Output index
     LightningCoinSpecificUpdateData:
       title: LightningCoinSpecificUpdateData
       type: object
@@ -93601,6 +93532,7 @@ components:
               - cantonByovMigrate
               - disableBridging
               - enableSignTypedStructuredData
+              - xlmTrustlineSkipCosign
         distributedCustody:
           nullable: true
           allOf:
@@ -93686,6 +93618,7 @@ components:
               - tokenManagementServiceEnabled
               - CaaSEnabledFiatPolicies
               - euRegulated
+              - vbanAgreementSigned
             description: All feature flags that should be set on the organization
         reserveGoAccountId:
           nullable: true
@@ -101017,7 +100950,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/EnableTokenIntent'
         - $ref: '#/components/schemas/SolBuildOptions'
-      description: Initialize one or more Associated Token Accounts (ATAs) on Solana so the wallet can receive SPL tokens. All entries in enableTokens must target the same wallet address. Spending policy is not evaluated for this intent.
+      description: Initialize one or more Associated Token Accounts (ATAs) on Solana so the wallet can receive SPL tokens. All entries in enableTokens must target the same wallet address, unless they are confidential-transfer tokens whose mints carry the ConfidentialTransferMint extension. Those are enabled per address — one ConfigureAccount transaction per address — so entries may target different addresses. Spending policy is not evaluated for this intent.
     SolCustomTxIntent:
       title: SOL Custom Transaction Intent
       allOf:
@@ -106144,6 +106077,7 @@ components:
         - $ref: '#/components/schemas/CantonCosignDelegationAcceptIntent'
         - $ref: '#/components/schemas/CantonCosignDelegationProposalIntent'
         - $ref: '#/components/schemas/CantonCommandIntent'
+        - $ref: '#/components/schemas/CantonBroadridgeStandingDelegationIntent'
         - $ref: '#/components/schemas/CantonPaymentIntent'
         - $ref: '#/components/schemas/CantonTransferAcceptIntent'
         - $ref: '#/components/schemas/CantonTransferAcknowledgeIntent'
