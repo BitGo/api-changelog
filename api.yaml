@@ -40445,7 +40445,10 @@ paths:
   /api/mint/v1/enterprise/{enterpriseId}/agreement:
     put:
       summary: Accept mint agreement
-      description: Accepts the mint service terms for an enterprise, enabling order creation
+      description: |-
+        Accepts the mint service terms for an enterprise, enabling order creation.
+        Pass `token` to accept an asset-specific agreement (e.g. usdc, wtgxx);
+        omit it to accept the legacy generic mint agreement.
       operationId: mint.v1.enterprise.agreement.put
       tags:
         - Mint
@@ -40470,6 +40473,12 @@ paths:
                   type: number
                   description: Agreement version being accepted
                   example: 1
+                token:
+                  type: string
+                  description: |-
+                    Chain-agnostic token key of the asset-specific agreement being accepted
+                    (e.g. "usdc", "wtgxx"). Omit for the legacy generic mint agreement.
+                  example: wtgxx
               required:
                 - version
       responses:
