@@ -41147,6 +41147,10 @@ paths:
                 $ref: '#/components/examples/SolStakingRequestPOSTBodyExample'
               SolUnStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SolUnStakingRequestPOSTBodyExample'
+              SolClaimInactiveRequestPOSTBodyExample:
+                $ref: '#/components/examples/SolClaimInactiveRequestPOSTBodyExample'
+              SolClaimInactiveWithAmountRequestPOSTBodyExample:
+                $ref: '#/components/examples/SolClaimInactiveWithAmountRequestPOSTBodyExample'
               SomiStakingRequestPOSTBodyExample:
                 $ref: '#/components/examples/SomiStakingRequestPOSTBodyExample'
               SomiUnStakingRequestPOSTBodyExample:
@@ -42052,7 +42056,10 @@ paths:
       tags:
         - Staking History
       summary: Get staking reward history
-      description: Retrieve staking reward history.
+      description: |
+        Retrieve staking reward history in hourly or daily buckets, selected by `range`.
+        Responses are paginated. Buckets without recorded accrual data are not guaranteed to have zero-reward rows.
+        Enterprise queries include only staking wallets that the API user has permission to view.
       operationId: v1.staking.reward.history
       x-internal: false
       parameters:
@@ -42077,7 +42084,18 @@ paths:
             type: string
         - name: aggregationLevel
           in: query
-          description: The level of aggregation for rewards, accepts both uppercase (WALLET, DELEGATION) and lowercase (wallet, delegation) formats.
+          description: |
+            The response shape depends on the aggregation level and the identifier provided:
+
+            | Request | Response |
+            | --- | --- |
+            | `WALLET` + `walletId` | `WalletLevelRewards`: per time bucket for the specified wallet. Includes `walletId`. |
+            | `WALLET` + `enterpriseId`, without `walletId` | `EnterpriseAccrual`: enterprise total per coin and time bucket. No `walletId`; does not return separate wallet rows. |
+            | `DELEGATION` + `walletId` | `DelegationLevelRewards`: per delegation and time bucket for the specified wallet. Includes `walletId` and `delegationId`. |
+            | `DELEGATION` + `enterpriseId`, without `walletId` | `DelegationLevelRewards`: per delegation and time bucket across the enterprise wallets the API user can view. Includes `walletId` and `delegationId`. |
+
+            If both identifiers are provided, `walletId` takes precedence.
+            Accepts uppercase (`WALLET`, `DELEGATION`) and lowercase (`wallet`, `delegation`) values.
           required: false
           schema:
             type: string
@@ -42119,7 +42137,8 @@ paths:
                 $ref: '#/components/schemas/StakingRewards'
               examples:
                 WalletLevelRewards:
-                  summary: Wallet Level
+                  summary: WALLET with walletId
+                  description: Rows for the specified wallet, with walletId.
                   value:
                     rewards:
                       - reward: '1000000000000000'
@@ -42127,16 +42146,12 @@ paths:
                         enterpriseId: 1032e75c451052000436831deb797af1
                         coin: eth
                         date: 2022-01-10T14:32:28.000Z
-                      - reward: '5000000000'
-                        walletId: 3032e75g451052000636831abd797bd4
-                        enterpriseId: 1032e75c451052000436831deb797af1
-                        coin: sol
-                        date: 2022-01-10T14:32:28.000Z
                     page: 1
                     totalPages: 1
                     totalElements: 1
                 DelegationLevelRewards:
-                  summary: Delegation Level
+                  summary: DELEGATION with walletId or enterpriseId
+                  description: Delegation rows with walletId and delegationId.
                   value:
                     rewards:
                       - reward: '1000000000000000'
@@ -42150,25 +42165,21 @@ paths:
                           transactionReward: 3
                           mevReward: 2
                           provider: lido
-                      - reward: '5000000000'
-                        walletId: 3032e75g451052000636831abd797bd4
-                        enterpriseId: 1032e75c451052000436831deb797af1
-                        delegationId: d987654321
-                        coin: sol
-                        date: 2022-01-10T14:32:28.000Z
-                        properties: null
                     page: 1
                     totalPages: 1
                     totalElements: 1
                 EnterpriseAccrual:
-                  summary: Enterprise Level
+                  summary: WALLET with enterpriseId
+                  description: Enterprise totals with no walletId, not separate wallet rows.
                   value:
                     rewards:
                       - reward: '5000000000000000'
                         enterpriseId: 1032e75c451052000436831deb797af1
+                        coin: eth
                         date: 2022-01-10T14:32:28.000Z
                       - reward: '3500000000000000'
                         enterpriseId: 1032e75c451052000436831deb797af1
+                        coin: eth
                         date: 2022-01-11T14:32:28.000Z
                     page: 1
                     totalPages: 1
@@ -64216,6 +64227,21 @@ components:
         statusModifiedDate: 2022-01-10T14:32:28.000Z
         status: NEW
         amount: '10012000000'
+    SolClaimInactiveRequestPOSTBodyExample:
+      summary: Sol claim inactive balance (full inactive balance)
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
+        claimInactive: true
+    SolClaimInactiveWithAmountRequestPOSTBodyExample:
+      summary: Sol claim part of the inactive balance
+      value:
+        clientId: d055adbc-66a3-4ccd-9a9d-726a05bca0cf
+        delegationId: e0225adbc-66a3-4ccd-9a9d-726a05bca0cf
+        type: UNSTAKE
+        claimInactive: true
+        amount: '500000000'
     SolDelegationResultsExample:
       summary: Sol Delegation Results Example
       value:
@@ -73766,6 +73792,46 @@ components:
               description: The address where rewards will be sent.
               type: string
               example: '0x1234567890abcdef1234567890abcdef12345678'
+        amountBtcSats:
+          description: PoX-5. BTC amount locked in the timelock, in satoshis. Required with `bondIndex` to select PoX-5 rather than Babylon/CoreDAO.
+          type: integer
+          format: int64
+          example: 1000000
+        bondIndex:
+          description: PoX-5. Bond the stake registers against. Required with `amountBtcSats`.
+          type: integer
+          format: int64
+          example: 42
+        signerManager:
+          description: PoX-5. Signer-manager contract principal the bond is registered with.
+          type: string
+          example: SP3JVSE4ZB5GMDJP5XBPX7ZB1BG3QDFW7RCEQJDMY.signer-manager-stackslabs-dummy-v2
+        btcRewardAddress:
+          description: PoX-5. Bitcoin reward address encoded into `signer-calldata`. Must be valid for the configured `btc-network`.
+          type: string
+          example: bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq
+        maxFeeSats:
+          description: PoX-5. Maximum BTC fee in satoshis for the reward election.
+          type: integer
+          format: int64
+          example: 1000
+        stxAmountUstx:
+          description: PoX-5. STX amount in micro-STX registered against the bond.
+          type: integer
+          format: int64
+          example: 100000000
+        stxWalletId:
+          description: PoX-5. Stacks wallet that signs the register leg. Must be the wallet paired with this coin (for example a `tstxsignet` wallet for `tbtcstxsignet`).
+          type: string
+          example: 627c3f2646bf8c0007856e87d1120feb
+        signerCalldata:
+          description: PoX-5. Pre-built consensus-serialized `signer-calldata` as hex. When omitted it is built from `btcRewardAddress` and `maxFeeSats`.
+          type: string
+          example: '0x0c0000000207'
+        contractName:
+          description: PoX-5. PoX contract name, defaulting to `pox-5`.
+          type: string
+          example: pox-5
     BtcStakingTransaction:
       title: BTC Staking Transaction
       allOf:
@@ -101350,6 +101416,7 @@ components:
             Populated for active SOL_STAKE delegations whose stake account has a non-zero inactive balance.
             Null when there is no inactive balance, the delegation type does not support activation lookups
             (e.g. MARINADE, JITO), or the on-chain lookup is temporarily unavailable.
+            This is the upper bound for the `amount` of a SOL unstake request with `claimInactive: true`.
         permissionAttributes:
           $ref: '#/components/schemas/WalletStakingPermissionAttributes'
     SolStakingRequest:
@@ -101407,6 +101474,21 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBody'
       type: object
+      properties:
+        amount:
+          description: Amount to unstake in base units (lamports). Optional. When omitted without `claimInactive`, the entire remaining delegated amount (delegated amount minus any pending unstake) is unstaked. When `claimInactive` is `true`, see `claimInactive` for how `amount` is interpreted.
+          type: string
+          nullable: true
+        claimInactive:
+          description: |-
+            Optional. Defaults to `false`. When `true`, the request only claims (withdraws) the on-chain inactive balance of the staking account (stake that has deactivated and is no longer earning rewards). It never unstakes active balance, so it is safe for recurring claim operations.
+            - If `amount` is omitted, the amount is set to the full inactive balance of the staking account.
+            - If `amount` is provided, it must be greater than zero and not exceed the inactive balance, otherwise the request is rejected with a 4xx validation error. It never falls back to unstaking active balance. The inactive balance is available as `inactiveBalance` in the delegation attributes.
+            - The minimum remaining stake requirement does not apply to the claimed amount.
+            Only supported for native SOL staking delegations (`SOL_STAKE`); delegations created with `MARINADE`, `MARINADE_SELECT` or `JITO` are rejected. The request is also rejected if the staking account has no inactive balance to claim.
+          type: boolean
+          nullable: true
+          default: false
     SolUnStakingTransactionProperties:
       title: SOL Unstaking Transaction Properties
       allOf:
