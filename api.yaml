@@ -49802,6 +49802,11 @@ paths:
                   required:
                     - actionType
                     - requestId
+                unstakingParams:
+                  description: |-
+                    [UTXO] Unstaking request, e.g. `{ pox5: { branch: 'early-exit', principalPreimage } }`. Persisted in the pending
+                    approval's `buildParams`.
+                  title: JSON
                 numUnspentsToMake:
                   type: number
                   description: '[UTXO consolidate/fanout] Number of new unspents to create.'
@@ -51732,6 +51737,12 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidEnterpriseId1'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
           content:
@@ -72259,40 +72270,6 @@ components:
               - user
               - date
               - version
-        oesContractAgreement:
-          type: array
-          items:
-            type: object
-            description: OES contract acceptances, entity-scoped by bitgoOrg (required on every acceptance)
-            properties:
-              user:
-                type: string
-                description: User who accepted the agreement
-              date:
-                oneOf:
-                  - type: string
-                  - type: string
-                    format: date-time
-                    title: ISO Date String
-                  - type: string
-                    format: date
-                    title: Date String
-                description: Date when the agreement was accepted
-              version:
-                type: number
-                description: Version number of the agreement
-              bitgoOrg:
-                allOf:
-                  - $ref: '#/components/schemas/BitgoOrg'
-                description: BitGo Organization whose OES contract was accepted (required; per-org versioning keys on it)
-              ip:
-                type: string
-                description: IP address of the user
-            required:
-              - user
-              - date
-              - version
-              - bitgoOrg
         accountType:
           allOf:
             - $ref: '#/components/schemas/AccountType'
