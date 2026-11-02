@@ -43611,6 +43611,10 @@ paths:
         specify it in the body as part of the request.
         The IP and user agent will be used for risk evaluation.
 
+        As part of BitGo's risk and compliance strategy, ACH transfers may be
+        rejected by risk evaluation. A rejected transfer is not processed and
+        the request fails with a `422` response.
+
         **Requires access token scope:** `wallet_spend_all`
       operationId: tradfi.v1.bank-transfers.create
       tags:
@@ -43643,6 +43647,12 @@ paths:
                 $ref: '#/components/schemas/V1ErrorResponse'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '422':
+          description: Unprocessable Entity - the transfer was rejected by risk evaluation
           content:
             application/json:
               schema:
