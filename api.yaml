@@ -37781,6 +37781,55 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/ServerError'
+  /api/policy/v1/enterprises/{enterpriseId}/touchpoints:
+    get:
+      x-internal: false
+      tags:
+        - Policy Builder
+      summary: List all touchpoints
+      description: |
+        Lists all active touchpoints across all scopes. Each touchpoint includes the scope it belongs to.
+        Results are sorted by touchpoint name.
+
+        Non-admin callers only see touchpoints they are allowed to use. See also the List touchpoints for a scope API.
+      operationId: v1.policy.touchpoint.list
+      parameters:
+        - $ref: '#/components/parameters/Enterprise1'
+        - name: page
+          in: query
+          description: Page number (1-based)
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: pageSize
+          in: query
+          description: Number of results per page
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 20
+      responses:
+        '200':
+          description: Paginated list of available Touchpoints across all scopes
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TouchpointsResults'
+              examples:
+                example:
+                  $ref: '#/components/examples/AllTouchpointsExample'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/touchpoints/{touchpointId}/conditions:
     get:
       x-internal: false
@@ -38077,6 +38126,102 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+  /api/policy/v1/enterprises/{enterpriseId}/webhooks/settings:
+    get:
+      x-internal: false
+      tags:
+        - Webhook Keys
+      summary: Get webhook signing settings
+      description: |
+        Returns the current webhook signing settings for an enterprise.
+
+        If the enterprise has never changed its settings, the response reflects the platform
+        default: `updatedAt` is `null` and `status` is `ENABLED` or `DISABLED` accordingly.
+
+        **Authorization:** Caller must be an admin of the specified enterprise or a member of it.
+      operationId: v1.enterprise.webhooks.settings.get
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          description: The enterprise ID.
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Current webhook signing settings.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSecuritySettingsResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/ServerError'
+    put:
+      x-internal: false
+      tags:
+        - Webhook Keys
+      summary: Enable or disable webhook signing
+      description: |
+        Enables webhook signing, or requests that it be disabled, for an enterprise.
+
+        **Enabling** (`signingEnabled: true`) takes effect immediately. It is idempotent, and
+        also cancels any pending disable request.
+
+        **Disabling** (`signingEnabled: false`) does not take effect immediately. It requires
+        OTP verification and moves the enterprise to `DISABLE_PENDING`. Webhooks continue to be
+        signed until the request is approved, at which point the status becomes `DISABLED`. If
+        the request is denied, the status returns to `ENABLED`. The response includes a
+        `pendingDisableRequest` with the `evaluationId` of the approval. Submitting a disable
+        request while one is already pending returns a 409. Disabling when signing is already
+        `DISABLED` is a no-op and returns the current settings.
+
+        **Authorization:** Caller must be an admin of the specified enterprise.
+      operationId: v1.enterprise.webhooks.settings.update
+      parameters:
+        - name: enterpriseId
+          in: path
+          required: true
+          description: The enterprise ID.
+          schema:
+            type: string
+        - name: X-BitGo-OTP
+          in: header
+          required: false
+          description: OTP code for verification. Required only when disabling webhook signing.
+          schema:
+            type: string
+          example: '123456'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookSecuritySettingsRequest'
+      responses:
+        '200':
+          description: |
+            Settings updated. When disabling, `status` is `DISABLE_PENDING` and
+            `signingEnabled` remains `true` until the request is approved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookSecuritySettingsResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
         '500':
           $ref: '#/components/responses/ServerError'
   /api/policy/v1/enterprises/{enterpriseId}/recommendations:
@@ -60850,6 +60995,22 @@ components:
             min: '0'
             multiplier: '1'
             requiresDelegationId: false
+    AllTouchpointsExample:
+      summary: All Touchpoints
+      description: A successful response with one Touchpoint, including the scope it belongs to.
+      value:
+        touchpoints:
+          - id: 0441ea9f-cd66-4d60-a52a-471aecd3e54e
+            name: wallet.segregated.transfer
+            status: ACTIVE
+            label: Transfer from a Segregated Wallet
+            description: When transferring from a BitGo Segregated Wallet
+            adminOnly: false
+            scopeId: 5b0c1e2a-7f3d-4a8e-9c61-2d4f8a7b3e10
+            scopeName: wallet.segregated
+        page: 1
+        totalPages: 1
+        totalElements: 1
     AptStakingRequestPOSTBodyExample:
       summary: Apt Staking Request POST Body Example
       value:
@@ -105910,6 +106071,18 @@ components:
           type: boolean
           description: true, if this is an internal Touchpoint, false otherwise.
           example: false
+        scopeId:
+          type: string
+          description: |
+            Id of the Scope this Touchpoint belongs to. A UUID. Each Touchpoint belongs to exactly one Scope.
+            Only returned by the List all touchpoints API.
+          example: 5b0c1e2a-7f3d-4a8e-9c61-2d4f8a7b3e10
+        scopeName:
+          type: string
+          description: |
+            Name of the Scope this Touchpoint belongs to.
+            Only returned by the List all touchpoints API.
+          example: wallet.segregated
     TouchpointsResults:
       description: A paginated list of Touchpoints
       allOf:
@@ -122500,6 +122673,28 @@ components:
         - pending
         - processed
         - failed
+    WebhookPendingDisableRequest:
+      type: object
+      description: Details of the pending request to disable webhook signing.
+      required:
+        - evaluationId
+        - requestedBy
+        - requestedAt
+      properties:
+        evaluationId:
+          type: string
+          format: uuid
+          description: ID of the policy evaluation that must be approved to complete the disable request.
+          example: 3b1f4c0e-6a52-4f0b-9d55-2f6c1f0a7e11
+        requestedBy:
+          type: string
+          description: ID of the user who requested that signing be disabled.
+          example: 5f8d0d55b54764421b7156c3e3a3a0f1
+        requestedAt:
+          type: string
+          format: date-time
+          description: When the disable request was submitted.
+          example: 2026-01-12T10:30:00.000Z
     WebhookRuleCondition:
       title: WebhookRuleCondition
       type: object
@@ -122517,6 +122712,59 @@ components:
         - enterprise
         - organization
         - safe
+    WebhookSecuritySettingsRequest:
+      type: object
+      description: Request to enable or disable webhook signing for an enterprise.
+      required:
+        - signingEnabled
+      properties:
+        signingEnabled:
+          type: boolean
+          description: |
+            `true` enables webhook signing immediately. `false` submits a request to disable
+            signing, which requires OTP verification and approval before it takes effect.
+          example: true
+    WebhookSecuritySettingsResponse:
+      type: object
+      description: Current webhook signing settings for an enterprise.
+      required:
+        - status
+        - signingEnabled
+      properties:
+        status:
+          $ref: '#/components/schemas/WebhookSecurityStatus'
+        signingEnabled:
+          type: boolean
+          description: |
+            Whether webhooks are currently signed. `true` for `ENABLED` and `DISABLE_PENDING`,
+            `false` for `DISABLED`.
+          example: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+          description: |
+            When the settings were last changed. `null` if the enterprise has never changed
+            its settings, in which case `status` reflects the platform default.
+          example: 2026-01-12T10:30:00.000Z
+        pendingDisableRequest:
+          allOf:
+            - $ref: '#/components/schemas/WebhookPendingDisableRequest'
+          nullable: true
+          description: Present only when `status` is `DISABLE_PENDING`.
+    WebhookSecurityStatus:
+      type: string
+      description: |
+        Webhook signing status for the enterprise.
+        - `ENABLED`: webhooks are signed.
+        - `DISABLED`: webhooks are not signed.
+        - `DISABLE_PENDING`: a request to disable signing is awaiting approval. Webhooks
+          continue to be signed until the request is approved.
+      enum:
+        - ENABLED
+        - DISABLED
+        - DISABLE_PENDING
+      example: ENABLED
     WebhookState:
       title: WebhookState
       type: string
