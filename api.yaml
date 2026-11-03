@@ -72442,6 +72442,37 @@ components:
               - user
               - date
               - version
+        oesContractAgreement:
+          type: array
+          items:
+            type: object
+            description: OES contract acceptances, at most one per BitGo org; absent when nothing has been accepted
+            properties:
+              user:
+                type: string
+                description: Public id of the user who accepted the contract
+              date:
+                oneOf:
+                  - type: string
+                  - type: string
+                    format: date-time
+                    title: ISO Date String
+                  - type: string
+                    format: date
+                    title: Date String
+                description: When the contract was accepted
+              version:
+                type: number
+                description: The contract version that was accepted
+              bitgoOrg:
+                allOf:
+                  - $ref: '#/components/schemas/BitgoOrg'
+                description: The BitGo org the contract was accepted with
+            required:
+              - user
+              - date
+              - version
+              - bitgoOrg
         accountType:
           allOf:
             - $ref: '#/components/schemas/AccountType'
@@ -83857,6 +83888,11 @@ components:
               additionalProperties:
                 type: number
               description: Latest published T&C version per asset (e.g. 'usdc', 'wtgxx'); assets ride the generic agreement when absent
+            oesContractLatestVersions:
+              type: object
+              additionalProperties:
+                type: number
+              description: Latest published OES contract version per BitGo org; an org absent here has no published OES contract
           required:
             - wallets
             - tags
