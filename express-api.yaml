@@ -5412,6 +5412,7 @@ components:
             - $ref: '#/components/schemas/PendingApprovalUpdateApprovalsRequiredRequest'
             - $ref: '#/components/schemas/PendingApprovalEnterpriseModificationResponse1'
             - $ref: '#/components/schemas/PendingApprovalEnterpriseInviteRequest'
+            - $ref: '#/components/schemas/PendingApprovalUpdateEnterpriseSettingRequest'
         state:
           $ref: '#/components/schemas/PendingApprovalState1'
         scope:
@@ -5620,6 +5621,7 @@ components:
         - approved
         - processing
         - rejected
+        - cancelled
     PendingApprovalTransactionRequest1:
       title: Transaction request (lite)
       type: object
@@ -5704,6 +5706,28 @@ components:
           properties:
             requestedApprovalsRequired:
               type: number
+    PendingApprovalUpdateEnterpriseSettingRequest:
+      title: Update enterprise setting request
+      type: object
+      properties:
+        type:
+          type: string
+          enum:
+            - updateEnterpriseSettingRequest
+        updateEnterpriseSettingRequest:
+          type: object
+          description: Requested enterprise setting changes, keyed by setting name.
+          properties:
+            withdrawalAttestationRequired:
+              type: object
+              properties:
+                oldValue:
+                  type: boolean
+                newValue:
+                  type: boolean
+              required:
+                - oldValue
+                - newValue
     PendingApprovalUserChangeRequest:
       title: User change request
       type: object
