@@ -38176,7 +38176,7 @@ paths:
       x-internal: false
       tags:
         - Policy Builder
-      summary: List touchpoints
+      summary: List touchpoints for scope
       description: Lists all touchpoints for a given scope.
       operationId: v1.policy.scope.touchpoint.list
       parameters:
@@ -38210,7 +38210,7 @@ paths:
         Lists all active touchpoints across all scopes. Each touchpoint includes the scope it belongs to.
         Results are sorted by touchpoint name.
 
-        Non-admin callers only see touchpoints they are allowed to use. See also the List touchpoints for a scope API.
+        Non-admin callers only see touchpoints they are allowed to use. See also the List touchpoints for scope API.
       operationId: v1.policy.touchpoint.list
       parameters:
         - $ref: '#/components/parameters/Enterprise1'
@@ -38231,6 +38231,19 @@ paths:
             minimum: 1
             maximum: 500
             default: 20
+        - name: scopeName
+          in: query
+          description: |
+            Only return touchpoints that belong to a scope with one of these names. Repeat the parameter to
+            filter by multiple scopes, for example `?scopeName=wallet.segregated&scopeName=wallet.custodial`.
+            When omitted, touchpoints from all scopes are returned.
+          required: false
+          style: form
+          explode: true
+          schema:
+            type: array
+            items:
+              type: string
       responses:
         '200':
           description: Paginated list of available Touchpoints across all scopes
@@ -66866,7 +66879,7 @@ components:
     Touchpoints:
       name: touchpoints
       in: query
-      description: The Touchpoints of the returned policy rules. One or more may be provided. For example, the Transfer from a Wallet Touchpoint. See also the List scope Touchpoints API.
+      description: The Touchpoints of the returned policy rules. One or more may be provided. For example, the Transfer from a Wallet Touchpoint. See also the List touchpoints for scope API.
       required: false
       schema:
         type: string
