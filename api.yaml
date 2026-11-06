@@ -49540,6 +49540,110 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidWalletId1'
+  /api/v2/{coin}/wallet/{walletId}/shieldedunspents:
+    get:
+      summary: List a wallet's shielded notes
+      description: |-
+        Serves the ZEC/TZEC Ironwood pool — the ZIP-229 successor to Orchard; the
+        indexer extracts Ironwood actions only, so notes received via legacy
+        Orchard are not listed. By default only UNSPENT notes are returned; request
+        PENDING_SPEND or SPENT explicitly to observe the indexer's recorded
+        pending or spent notes. The page reflects the indexer's persisted on-chain
+        state only: a note locked by one of the wallet's in-flight transactions
+        (pending transaction requests, signed or unconfirmed transfers) still
+        appears UNSPENT here until its spend is indexed — spend selection applies
+        its own in-flight reservation, so treat the listing as observed value, not
+        a spendability guarantee. The response proxies one page of the indexer's
+        shielded-unspents listing — `nextBatchPrevId` is present only when the
+        page came back full; feed it back as `prevId` for the next page.
+        Coin-generic: any coin without shielded capability answers 400.
+
+        the shielded unspents listing; the request/response codecs here are the
+        OpenAPI source of truth
+      operationId: v2.wallet.shieldedunspents
+      tags:
+        - Wallet
+      x-internal: false
+      parameters:
+        - name: limit
+          description: |-
+            Limit the number of results. Values above 2000 are clamped at the
+            wallet-platform boundary (mirroring the transparent unspents
+            endpoint), not rejected; values below 1 or non-integers are rejected
+            with a 400.
+          in: query
+          schema:
+            type: string
+            default: '500'
+            minimum: 1
+            maximum: 2000
+            format: number
+        - name: prevId
+          description: |-
+            Continuation cursor: the nextBatchPrevId value from a previous
+            response — the note commitment (cmx) of the last note on that page.
+            Values that are not hex-shaped are rejected with a 400 at the
+            wallet-platform boundary before the indexer is called.
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: spendState
+          description: |-
+            Spend state of the notes to list, as persisted by the indexer. This
+            is the indexer's on-chain state only: unlike the transparent unspents
+            endpoint, which excludes outputs locked in the send queue, this
+            listing cannot exclude notes already selected by the wallet's
+            in-flight transactions — such a note still appears UNSPENT until its
+            spend is indexed (spend selection applies its own reservation). A
+            PENDING_SPEND note is excluded from the default listing even if its
+            spending transaction later fails; request that state explicitly to
+            see it.
+          in: query
+          schema:
+            type: string
+            enum:
+              - UNSPENT
+              - PENDING_SPEND
+              - SPENT
+            default: UNSPENT
+            title: Shielded Note Spend State
+        - name: minValue
+          description: |-
+            The minimum value of notes to return (in zatoshi). Must be a
+            non-negative integer string (/^\d+$/); anything else is rejected with
+            a 400 at the wallet-platform boundary before the indexer is called.
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: coin
+          description: Coin or token identifier (e.g. zec, tzec)
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: Wallet ID to list shielded unspents for
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletShieldedUnspentsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/token/approval/build:
     post:
       summary: Build an approval transaction for ERC20 token
@@ -56885,20 +56989,6 @@ paths:
                     For example, if the template has `scope: ['spend', 'transfer']` and you send `scope: ['read']`,
                     the created token will have `scope: ['read']`. If you omit `scope` entirely, the token gets
                     `scope: ['spend', 'transfer']` from the template.
-                permittedEnterprises:
-                  type: array
-                  items:
-                    type: string
-                    description: |-
-                      Restricts the access token to the listed enterprise IDs only.
-                      Absence means no restriction (the token can access all enterprises the user belongs to).
-                permittedWallets:
-                  type: array
-                  items:
-                    type: string
-                    description: |-
-                      Restricts the access token to the listed wallet IDs only.
-                      Absence means no restriction (the token can access all wallets the user has access to).
               required:
                 - label
                 - otp
@@ -57020,14 +57110,6 @@ paths:
                             type: string
                         tokenLimits:
                           $ref: '#/components/schemas/TokenLimits'
-                        permittedEnterprises:
-                          type: array
-                          items:
-                            type: string
-                        permittedWallets:
-                          type: array
-                          items:
-                            type: string
                         createdAt:
                           type: string
                           format: date-time
@@ -57150,20 +57232,6 @@ paths:
                             type: string
                         required:
                           - coin
-                permittedEnterprises:
-                  type: array
-                  items:
-                    type: string
-                    description: |-
-                      Enterprise IDs to restrict tokens created from this template to. Absence means no enterprise restriction.
-                      Cannot be set together with permittedWallets.
-                permittedWallets:
-                  type: array
-                  items:
-                    type: string
-                    description: |-
-                      Wallet IDs to restrict tokens created from this template to. Absence means no wallet restriction.
-                      Cannot be set together with permittedEnterprises.
               required:
                 - name
       responses:
@@ -57371,16 +57439,6 @@ paths:
                             type: string
                         required:
                           - coin
-                permittedEnterprises:
-                  type: array
-                  items:
-                    type: string
-                    description: Updated enterprise IDs restriction. Omit to clear. Cannot be set together with permittedWallets.
-                permittedWallets:
-                  type: array
-                  items:
-                    type: string
-                    description: Updated wallet IDs restriction. Omit to clear. Cannot be set together with permittedEnterprises.
       responses:
         '200':
           description: OK
@@ -67840,14 +67898,6 @@ components:
             type: string
         tokenLimits:
           $ref: '#/components/schemas/TokenLimits'
-        permittedEnterprises:
-          type: array
-          items:
-            type: string
-        permittedWallets:
-          type: array
-          items:
-            type: string
         createdAt:
           type: string
           format: date-time
@@ -103194,6 +103244,34 @@ components:
           description: If the share generated a pending approval, the id of that pending approval
         keychain:
           $ref: '#/components/schemas/WalletShareKeychain'
+    ShieldedNoteDirection:
+      title: Shielded Note Direction
+      type: string
+      enum:
+        - incoming
+        - outgoing
+      description: |-
+        Whether a shielded note was received by the wallet (incoming) or created as
+        a spend output of one of the wallet's own transactions (outgoing). The
+        indexer's decrypt resolves one viewing key per transaction and direction is
+        relative to that key, so an outgoing note's value belongs to its
+        recipient, not to the wallet the note is listed under.
+    ShieldedSpendState:
+      title: Shielded Note Spend State
+      type: string
+      enum:
+        - UNSPENT
+        - PENDING_SPEND
+        - SPENT
+      description: |-
+        Spend state of a shielded note, as tracked by the indexer's shielded_notes
+        model set. Mirrors the indexer's `POST /v2/:coin/shielded-unspents`
+        vocabulary one-for-one.
+
+        This is the indexer's persisted on-chain spend state, not wallet-platform's
+        in-flight transaction state: notes locked by pending wallet transactions
+        keep appearing UNSPENT until their spend is indexed, and spend selection
+        applies its own reservation on top. The listing default is UNSPENT.
     ShortCountryCode:
       type: string
       description: Two-letter country code, as specified by ISO 3166-1 alpha-2
@@ -125950,6 +126028,82 @@ components:
             type: number
         required:
           - walletSharesCount
+    WalletShieldedUnspentsResponse:
+      title: WalletShieldedUnspentsResponse
+      type: object
+      properties:
+        notes:
+          type: array
+          items:
+            type: object
+            description: |-
+              One shielded note of a wallet, as listed by the shielded unspents endpoint.
+              Field names mirror the indexer's `POST /v2/:coin/shielded-unspents` item
+              shape verbatim — wallet-platform proxies the indexer page without renaming.
+
+              Note secrets (nullifier, rho, rseed, diversifier, memo) are never part of
+              this contract: the indexer excludes them at the query layer, and the IMS
+              boundary codec (ImsShieldedNote in app/base/indexerdbMicroservice/protocol.ts)
+              is t.exact, which strips them from any page before it reaches a handler.
+            title: Shielded Note
+            properties:
+              id:
+                type: string
+                description: The note commitment — the note's stable natural id.
+              address:
+                type: string
+                description: The shielded address that received the note.
+              valueString:
+                type: string
+                description: Note value in zatoshi as a decimal string (never a JSON number).
+              blockHeight:
+                type: number
+                description: Height of the block containing the note's action.
+              date:
+                type: string
+                description: |-
+                  ISO-8601 UTC timestamp. Always present, including for unconfirmed notes
+                  (hasLeafPosition=false): the indexer derives it from createdAt, which its
+                  ZECShieldedNote schema marks required (indexerdb-microservice-utxo#405) —
+                  so t.string (not nullable) matches the wire contract.
+              spendState:
+                allOf:
+                  - $ref: '#/components/schemas/ShieldedSpendState'
+                description: |-
+                  The note's spend state — the indexer's persisted on-chain state, not
+                  wallet-platform's in-flight transaction state (see ShieldedSpendState).
+              hasLeafPosition:
+                type: boolean
+                description: |-
+                  True once the indexer has assigned the note a note-commitment-tree
+                  position — a position indicator, not a standalone spendability signal:
+                  actual spendability also depends on the note's anchor height and on
+                  in-flight spends (pending nullifiers).
+              txid:
+                type: string
+                description: The transaction that created the note.
+              direction:
+                allOf:
+                  - $ref: '#/components/schemas/ShieldedNoteDirection'
+                description: |-
+                  Whether the note was received by the wallet (incoming) or created by a
+                  wallet spend (outgoing) — an outgoing note's value belongs to its
+                  recipient, not to the wallet the note is listed under.
+            required:
+              - id
+              - address
+              - valueString
+              - blockHeight
+              - date
+              - spendState
+              - hasLeafPosition
+              - txid
+              - direction
+        nextBatchPrevId:
+          type: string
+          description: The ID from where the results can continue; absent means end of results.
+      required:
+        - notes
     WalletStakingDisclaimerAttributes:
       type: object
       description: Spendable disclaimer attributes for a staking wallet.
