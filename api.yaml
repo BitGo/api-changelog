@@ -15892,9 +15892,9 @@ paths:
       description: |-
         Re-submit a transfer that stalled with `status: "failed_retriable"` or
         `status: "pending_otp"` (the venue is waiting for a TOTP code — supply it
-        via `venueOtp`). Returns 403 `RetryTransferForbidden` when the caller lacks
-        `link.account.transfer` on the account, and 409 `TransferNotRetriable` when the
-        transfer is in any other status.
+        via `venueOtp`). Returns 404 `TransferNotFound` if the transfer is unknown or the
+        caller lacks `link.account.transfer` on its account, and 409 `TransferNotRetriable`
+        when the transfer is in any other status.
       operationId: V1PostRetryTransferRoute
       tags:
         - Link Transfers
