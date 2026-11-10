@@ -10247,6 +10247,63 @@ paths:
                 $ref: '#/components/schemas/MarketDataError'
       x-licenses:
         - cryptoCompare
+  /api/document-service/v1/agreements/{agreementId}:
+    get:
+      summary: Get legal disclosure and agreement
+      description: Get the latest text and version number of a legal disclosure and agreement for a given agreement ID. Display the copy in your application before submitting your end user's consent and attestation to BitGo.
+      operationId: documents.get.v1.agreements.id
+      tags:
+        - Know Your Business (KYB)
+      x-internal: false
+      parameters:
+        - name: agreementId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - amlAttestation
+              - nonSolicitationLetterEu
+              - nonSolicitationLetterSg
+              - taxEDeliveryConsent
+          description: Identifier for the legal disclosure and agreement type (e.g., amlAttestation, nonSolicitationLetterEu, nonSolicitationLetterSg, taxEDeliveryConsent)
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAgreementResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAgreementBadRequestError'
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAgreementUnauthorizedError'
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAgreementInternalError'
+        '502':
+          description: '502'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAgreementBadGatewayError'
+        '503':
+          description: '503'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetAgreementUpstreamError'
   /api/document-service/v1/documents:
     post:
       summary: Generate KYB Document Upload URL
@@ -84553,6 +84610,127 @@ components:
       required:
         - accounts
         - failedAddresses
+    GetAgreementBadGatewayError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetAgreementBadGatewayError
+      description: Generic error response
+    GetAgreementBadRequestError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetAgreementBadRequestError
+      description: Generic error response
+    GetAgreementInternalError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetAgreementInternalError
+      description: Generic error response
+    GetAgreementResponse:
+      type: object
+      properties:
+        agreementId:
+          type: string
+          enum:
+            - amlAttestation
+            - nonSolicitationLetterEu
+            - nonSolicitationLetterSg
+            - taxEDeliveryConsent
+          description: Identifier for the legal disclosure and agreement type (e.g., amlAttestation, nonSolicitationLetterEu, nonSolicitationLetterSg, taxEDeliveryConsent)
+        revision:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+          description: Agreement version (revision) number
+        content:
+          type: object
+          additionalProperties: {}
+          description: Legal disclosure and agreement content payload
+      required:
+        - agreementId
+        - revision
+        - content
+      title: GetAgreementResponse
+      description: Latest version number and content for a legal disclosure and agreement
+    GetAgreementUnauthorizedError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetAgreementUnauthorizedError
+      description: Generic error response
+    GetAgreementUpstreamError:
+      type: object
+      properties:
+        code:
+          type: string
+          description: Error code
+        message:
+          type: string
+          description: Error message
+        details:
+          type: object
+          additionalProperties:
+            nullable: true
+          description: Additional error details
+      required:
+        - code
+        - message
+      title: GetAgreementUpstreamError
+      description: Generic error response
     GetBatchSigningResponse:
       title: GetBatchSigningResponse
       type: object
