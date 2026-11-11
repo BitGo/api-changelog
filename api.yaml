@@ -55751,7 +55751,9 @@ paths:
   /api/v2/organization/{organizationId}/enterprise/{enterpriseId}/user:
     post:
       summary: Add a user to an enterprise within an organization
-      description: Add an existing user to an enterprise under the specified organization.
+      description: |-
+        Add a user (by email) to an enterprise under the specified organization, creating the user if needed.
+        Organizations with the user management service enabled are rejected with 400; use the user management service instead.
       operationId: v2.organization.enterprise.user.add
       tags:
         - Enterprise Management
@@ -130958,6 +130960,7 @@ components:
       enum:
         - stablecoin
         - tokenized-asset
+        - tokenized-bitcoin
         - tokenized-money-market-fund
   securitySchemes:
     bearerAuth:
