@@ -18325,10 +18325,139 @@ paths:
     get:
       operationId: org.enterprise
       summary: Get child enterprise
-      description: Get a child enterprise by its ID for a child enterprise within an organization.
+      description: |-
+        Get a child enterprise by its ID for a child enterprise within an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/enterprise/ENTERPRISE_ID?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/enterprise/ENTERPRISE_ID?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/enterprise/ENTERPRISE_ID?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/enterprise/ENTERPRISE_ID?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/enterprise/ENTERPRISE_ID?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/enterprise/ENTERPRISE_ID?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -19149,10 +19278,139 @@ paths:
     get:
       operationId: org.enterprise.assetbalances
       summary: List asset balances
-      description: List asset balances by coin for a given enterprise
+      description: |-
+        List asset balances by coin for a given enterprise
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/enterprise/ENTERPRISE_ID/asset-balances?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/enterprise/ENTERPRISE_ID/asset-balances?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/enterprise/ENTERPRISE_ID/asset-balances?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/enterprise/ENTERPRISE_ID/asset-balances?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/enterprise/ENTERPRISE_ID/asset-balances?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/enterprise/ENTERPRISE_ID/asset-balances?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -19374,10 +19632,139 @@ paths:
     get:
       operationId: org.enterprise.onboarding
       summary: Get enterprise onboarding
-      description: Get onboarding and KYC details for a child enterprise, including KYC verification and identity product status.
+      description: |-
+        Get onboarding and KYC details for a child enterprise, including KYC verification and identity product status.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/enterprise/ENTERPRISE_ID/onboarding?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/enterprise/ENTERPRISE_ID/onboarding?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/enterprise/ENTERPRISE_ID/onboarding?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/enterprise/ENTERPRISE_ID/onboarding?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/enterprise/ENTERPRISE_ID/onboarding?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/enterprise/ENTERPRISE_ID/onboarding?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -19617,10 +20004,139 @@ paths:
     get:
       operationId: org.search.results
       summary: Global search across the organization
-      description: List of customers & transactions across the organization.
+      description: |-
+        List of customers & transactions across the organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/search?organizationId=ORGANIZATION_ID&searchTerm=YOUR_SEARCH_TERM";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/search?organizationId=ORGANIZATION_ID&searchTerm=YOUR_SEARCH_TERM" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/search?organizationId=ORGANIZATION_ID&searchTerm=YOUR_SEARCH_TERM';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/search?organizationId=ORGANIZATION_ID&searchTerm=YOUR_SEARCH_TERM"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/search?organizationId=ORGANIZATION_ID&searchTerm=YOUR_SEARCH_TERM'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/search?organizationId=ORGANIZATION_ID&searchTerm=YOUR_SEARCH_TERM';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -20767,10 +21283,139 @@ paths:
     get:
       operationId: org.search.history
       summary: List org search history
-      description: List all previously queried search-history items for an organization.
+      description: |-
+        List all previously queried search-history items for an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/search/history?orgId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/search/history?orgId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/search/history?orgId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/search/history?orgId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/search/history?orgId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/search/history?orgId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -20818,9 +21463,147 @@ paths:
         Create a new search history item for reference later
 
         **Requires access token scope:** `user_manage`
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/search/history";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "{\"orgId\":\"ORGANIZATION_ID\",\"searchTerm\":\"YOUR_SEARCH_TERM\"}";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            console.info('BODY=' + q(b));
+            NODE
+            )"
+            curl -s -X POST "https://app.bitgo-test.com/api/org/search/history" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0" \
+              -H "Content-Type: application/json" -d "$BODY"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/search/history';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '{"orgId":"ORGANIZATION_ID","searchTerm":"YOUR_SEARCH_TERM"}';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'POST',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                'Content-Type': 'application/json',
+                },
+                body: body
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/search/history"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = "{\"orgId\":\"ORGANIZATION_ID\",\"searchTerm\":\"YOUR_SEARCH_TERM\"}"
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.post(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0",
+                "Content-Type": "application/json"
+              },
+              data=body
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/search/history'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = '{"orgId":"ORGANIZATION_ID","searchTerm":"YOUR_SEARCH_TERM"}'
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Post.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            req.body = body
+            req['Content-Type'] = 'application/json'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/search/history';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '{"orgId":"ORGANIZATION_ID","searchTerm":"YOUR_SEARCH_TERM"}';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'POST');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0",
+              "Content-Type: application/json"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $body);
+            $response = curl_exec($ch);
+            echo $response;
       requestBody:
         content:
           application/json:
@@ -20865,9 +21648,137 @@ paths:
         Delete an existing search history item or all history for a given organization
 
         **Requires access token scope:** `user_manage`
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/search/history?orgId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X DELETE "https://app.bitgo-test.com/api/org/search/history?orgId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/search/history?orgId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'DELETE',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/search/history?orgId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.delete(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/search/history?orgId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Delete.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/search/history?orgId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'DELETE');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -20906,10 +21817,139 @@ paths:
     get:
       operationId: org.timeline.transfer
       summary: List org transfer timeline
-      description: List all timeline events for a given transfer within an organization.
+      description: |-
+        List all timeline events for a given transfer within an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/timeline/transfer?transferId=YOUR_TRANSFER_ID&organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/timeline/transfer?transferId=YOUR_TRANSFER_ID&organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/timeline/transfer?transferId=YOUR_TRANSFER_ID&organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/timeline/transfer?transferId=YOUR_TRANSFER_ID&organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/timeline/transfer?transferId=YOUR_TRANSFER_ID&organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/timeline/transfer?transferId=YOUR_TRANSFER_ID&organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -26840,10 +27880,139 @@ paths:
     get:
       operationId: org.timeline.activity
       summary: List org activity timeline
-      description: List all timeline events for a given pending approval within an organization.
+      description: |-
+        List all timeline events for a given pending approval within an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/timeline/activity?pendingApprovalId=YOUR_PENDING_APPROVAL_ID&organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/timeline/activity?pendingApprovalId=YOUR_PENDING_APPROVAL_ID&organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/timeline/activity?pendingApprovalId=YOUR_PENDING_APPROVAL_ID&organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/timeline/activity?pendingApprovalId=YOUR_PENDING_APPROVAL_ID&organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/timeline/activity?pendingApprovalId=YOUR_PENDING_APPROVAL_ID&organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/timeline/activity?pendingApprovalId=YOUR_PENDING_APPROVAL_ID&organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -32774,10 +33943,139 @@ paths:
     get:
       operationId: org.trades.orders
       summary: List org trade orders
-      description: List all trade orders for an organization.
+      description: |-
+        List all trade orders for an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/orders?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/orders?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/orders?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/orders?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/orders?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/orders?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -33018,10 +34316,139 @@ paths:
     get:
       operationId: org.trades.orders.id
       summary: Get org trade order
-      description: Get a trade order by its ID for a trade order within an organization.
+      description: |-
+        Get a trade order by its ID for a trade order within an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/orders/YOUR_ORDER_ID?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/orders/YOUR_ORDER_ID?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/orders/YOUR_ORDER_ID?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/orders/YOUR_ORDER_ID?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/orders/YOUR_ORDER_ID?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/orders/YOUR_ORDER_ID?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -33194,10 +34621,139 @@ paths:
     get:
       operationId: org.trades.order.fills
       summary: List org trade order fills
-      description: List all trade order fills for an organization.
+      description: |-
+        List all trade order fills for an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/order/fills?orderId=YOUR_ORDER_ID&organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/order/fills?orderId=YOUR_ORDER_ID&organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/order/fills?orderId=YOUR_ORDER_ID&organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/order/fills?orderId=YOUR_ORDER_ID&organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/order/fills?orderId=YOUR_ORDER_ID&organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/order/fills?orderId=YOUR_ORDER_ID&organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -33280,10 +34836,139 @@ paths:
     get:
       operationId: org.trades.products
       summary: List org trade products
-      description: List all trade products for an organization.
+      description: |-
+        List all trade products for an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/products";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/products" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/products';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/products"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/products'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/products';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       responses:
         '200':
           description: ''
@@ -33352,10 +35037,139 @@ paths:
     get:
       operationId: org.transfers.list
       summary: List org transfers
-      description: List all transfers within an organization.
+      description: |-
+        List all transfers within an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/transfers?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/transfers?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/transfers?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/transfers?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/transfers?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/transfers?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -34116,10 +35930,139 @@ paths:
     get:
       operationId: org.transfer
       summary: Get org transfer
-      description: Get a transfer by its ID for a transfer within an organization.
+      description: |-
+        Get a transfer by its ID for a transfer within an organization.
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/transfers/YOUR_TRANSFER_ID?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/transfers/YOUR_TRANSFER_ID?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/transfers/YOUR_TRANSFER_ID?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/transfers/YOUR_TRANSFER_ID?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/transfers/YOUR_TRANSFER_ID?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/transfers/YOUR_TRANSFER_ID?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -34763,10 +36706,139 @@ paths:
     get:
       operationId: org.users
       summary: List users across the organization
-      description: List users across the organization
+      description: |-
+        List users across the organization
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/users?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/users?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/users?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/users?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/users?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/users?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
@@ -35317,10 +37389,139 @@ paths:
     get:
       operationId: org.user
       summary: Get user by id
-      description: Get user by id
+      description: |-
+        Get user by id
+
+        **Note:** This endpoint requires HMAC-signed request headers (`Auth-Timestamp`, `Hmac`, `Bitgo-Auth-Version`, and an `Authorization` value that is the SHA-256 hash of your access token, not the raw token). See the code samples on this page for how to construct the signature.
       tags:
         - Organization Management
       x-internal: false
+      x-codeSamples:
+        - lang: Shell
+          label: cURL with HMAC
+          source: |-
+            # Requires: Node.js, curl. Set ORG_DASHBOARD_ACCESS_TOKEN.
+            eval "$(node <<'NODE'
+            const c = require('crypto');
+            const path = "/api/org/user/YOUR_USER_ID?organizationId=ORGANIZATION_ID";
+            const t = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+            const s = Date.now().toString();
+            const b = "";
+            const m = s + '|' + path + '|' + b;
+            const q = (v) => "'" + String(v).replace(/'/g, "'\''") + "'";
+            console.info('AUTH=' + q('Bearer ' + c.createHash('sha256').update(t).digest('hex')));
+            console.info('TS=' + q(s));
+            console.info('HMAC=' + q(c.createHmac('sha256', t).update(m).digest('hex')));
+            NODE
+            )"
+            curl -s -X GET "https://app.bitgo-test.com/api/org/user/YOUR_USER_ID?organizationId=ORGANIZATION_ID" \
+              -H "Authorization: $AUTH" \
+              -H "Auth-Timestamp: $TS" \
+              -H "Hmac: $HMAC" \
+              -H "Bitgo-Auth-Version: 2.0"
+        - lang: JavaScript
+          label: Node.js with HMAC
+          source: |-
+            // Requires Node.js 18+ (fetch is built-in)
+            const crypto = require('crypto');
+
+            (async () => {
+              const path = '/api/org/user/YOUR_USER_ID?organizationId=ORGANIZATION_ID';
+              const token = process.env.ORG_DASHBOARD_ACCESS_TOKEN;
+              const ts = Date.now().toString();
+              const body = '';
+              const msg = ts + '|' + path + '|' + body;
+              const hmac = crypto.createHmac('sha256', token).update(msg).digest('hex');
+              const hash = crypto.createHash('sha256').update(token).digest('hex');
+
+              const options = {
+                method: 'GET',
+                headers: {
+                  Authorization: 'Bearer ' + hash,
+                  'Auth-Timestamp': ts,
+                  Hmac: hmac,
+                  'Bitgo-Auth-Version': '2.0',
+                }
+              };
+              const res = await fetch('https://app.bitgo-test.com' + path, options);
+              console.info(await res.text());
+            })();
+        - lang: Python
+          label: Python with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: pip install requests
+            import hashlib
+            import hmac
+            import os
+            import time
+            import requests
+
+            path = "/api/org/user/YOUR_USER_ID?organizationId=ORGANIZATION_ID"
+            token = os.environ["ORG_DASHBOARD_ACCESS_TOKEN"]
+            ts = str(int(time.time() * 1000))
+            body = ""
+            msg = f"{ts}|{path}|{body}"
+            sig = hmac.new(token.encode(), msg.encode(), hashlib.sha256).hexdigest()
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+
+            r = requests.get(
+              f"https://app.bitgo-test.com{path}",
+              headers={
+                "Authorization": f"Bearer {token_hash}",
+                "Auth-Timestamp": ts,
+                "Hmac": sig,
+                "Bitgo-Auth-Version": "2.0"
+              }
+            )
+        - lang: Ruby
+          label: Ruby with HMAC
+          source: |-
+            # Set ORG_DASHBOARD_ACCESS_TOKEN. Requires: ruby stdlib only.
+            require 'net/http'
+            require 'openssl'
+            require 'digest'
+            require 'uri'
+
+            path = '/api/org/user/YOUR_USER_ID?organizationId=ORGANIZATION_ID'
+            token = ENV['ORG_DASHBOARD_ACCESS_TOKEN']
+            ts = (Time.now.to_f * 1000).to_i.to_s
+            body = ''
+            msg = "#{ts}|#{path}|#{body}"
+            sig = OpenSSL::HMAC.hexdigest('SHA256', token, msg)
+            token_hash = Digest::SHA256.hexdigest(token)
+
+            uri = URI("https://app.bitgo-test.com#{path}")
+            req = Net::HTTP::Get.new(uri)
+            req['Authorization'] = "Bearer #{token_hash}"
+            req['Auth-Timestamp'] = ts
+            req['Hmac'] = sig
+            req['Bitgo-Auth-Version'] = '2.0'
+            res = Net::HTTP.start(uri.host, uri.port, use_ssl: true) { |http| http.request(req) }
+            puts res.body
+        - lang: PHP
+          label: PHP with HMAC
+          source: |-
+            <?php
+            // Set ORG_DASHBOARD_ACCESS_TOKEN.
+            $path = '/api/org/user/YOUR_USER_ID?organizationId=ORGANIZATION_ID';
+            $token = getenv('ORG_DASHBOARD_ACCESS_TOKEN');
+            $ts = (string) round(microtime(true) * 1000);
+            $body = '';
+            $msg = "{$ts}|{$path}|{$body}";
+            $sig = hash_hmac('sha256', $msg, $token);
+            $tokenHash = hash('sha256', $token);
+
+            $ch = curl_init("https://app.bitgo-test.com{$path}");
+            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'GET');
+            curl_setopt($ch, CURLOPT_HTTPHEADER, [
+              "Authorization: Bearer {$tokenHash}",
+              "Auth-Timestamp: {$ts}",
+              "Hmac: {$sig}",
+              "Bitgo-Auth-Version: 2.0"
+            ]);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            $response = curl_exec($ch);
+            echo $response;
       parameters:
         - schema:
             type: string
