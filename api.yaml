@@ -41147,7 +41147,7 @@ paths:
         - When an order with funding type "margin" is placed, funds will be reserved from your Margin Trade Account. You must have sufficient available margin (NOP limit) to place a margin order.
         - Stop orders require a `triggerPrice`. When the market reaches the trigger price, the order is activated. A stop order without a `limitPrice` executes as a market order (stop-market). A stop order with a `limitPrice` places a limit order at the specified price (stop-limit).
         - Buy orders can be placed in either base or quote currency. A buy in base currency specifies an exact quantity to purchase (e.g., "buy 1 BTC"), while a buy in quote currency specifies a total spend amount (e.g., "buy $10,000 of BTC"). Similarly, sell orders can be placed in either base or quote currency.
-        - When no `limitPrice` is provided on a base-buy or quote-sell order, the system automatically computes a protective marketable limit price derived from the current reference price. This prevents orders from executing at an unexpectedly unfavorable price. For market (Sweep) orders, the computed limit is valid for a short window to avoid leaving orders open indefinitely if the market moves away.
+        - When no `limitPrice` is provided on a base-buy or quote-sell order, the system automatically computes a protective marketable limit price derived from the current market price. This prevents orders from executing at an unexpectedly unfavorable price. For market (Sweep) orders, the computed limit is valid for a short window to avoid leaving orders open indefinitely if the market moves away.
         See our [Trade Guide](/docs/trade-overview) for more details on each order type and funding options.
 
         **Requires access token scope:** `trade_trade`
@@ -41533,14 +41533,14 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError1'
         '403':
-          description: Forbidden - RFQ disabled for your enterprise, or the product does not support RFQ
+          description: Forbidden - RFQ is unavailable on this deployment, or the product does not support RFQ
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error1'
               examples:
                 rfqDisabled:
-                  summary: RFQ is not enabled for your enterprise
+                  summary: RFQ is unavailable on this deployment
                   value:
                     error: backend:trade:rfqFeatureDisabled
                     errorName: backend:trade:rfqFeatureDisabled
@@ -41667,14 +41667,14 @@ paths:
         '401':
           $ref: '#/components/responses/UnauthorizedError1'
         '403':
-          description: Forbidden - RFQ disabled for your enterprise
+          description: Forbidden - RFQ is unavailable on this deployment
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/Error1'
               examples:
                 rfqDisabled:
-                  summary: RFQ is not enabled for your enterprise
+                  summary: RFQ is unavailable on this deployment
                   value:
                     error: backend:trade:rfqFeatureDisabled
                     errorName: backend:trade:rfqFeatureDisabled
@@ -57811,6 +57811,11 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: linkedGroupId
+          description: Only return the pending approvals of this linked "whitelist and withdraw" request
+          in: query
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -72676,6 +72681,26 @@ components:
                     - result
                     - user
                   description: Security control events recorded during approval enforcement
+              linkedRequest:
+                type: object
+                description: Present when this pending approval is one item of a linked "whitelist and withdraw" request
+                properties:
+                  groupId:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestGroupId'
+                    description: Id shared by both pending approvals of the linked request
+                  linkedPendingApprovalId:
+                    type: string
+                    description: Id of the other pending approval in the linked request
+                    pattern: ^[0-9a-f]{32}$
+                  role:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestRole'
+                    description: The part this pending approval plays in the linked request
+                required:
+                  - groupId
+                  - linkedPendingApprovalId
+                  - role
             required:
               - id
               - creator
@@ -91258,6 +91283,26 @@ components:
                     - result
                     - user
                   description: Security control events recorded during approval enforcement
+              linkedRequest:
+                type: object
+                description: Present when this pending approval is one item of a linked "whitelist and withdraw" request
+                properties:
+                  groupId:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestGroupId'
+                    description: Id shared by both pending approvals of the linked request
+                  linkedPendingApprovalId:
+                    type: string
+                    description: Id of the other pending approval in the linked request
+                    pattern: ^[0-9a-f]{32}$
+                  role:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestRole'
+                    description: The part this pending approval plays in the linked request
+                required:
+                  - groupId
+                  - linkedPendingApprovalId
+                  - role
             required:
               - id
               - creator
@@ -93261,6 +93306,22 @@ components:
         - link.account.admin
         - link.account.transfer
         - link.account.view
+    LinkedRequestGroupId:
+      title: LinkedRequestGroupId
+      type: string
+      description: |-
+        Server-generated id shared by every pending approval of one linked request.
+
+        Bounded (non-empty, at most {@link MAX_LINKED_REQUEST_GROUP_ID_LENGTH} characters, alphanumeric plus `_`/`-`)
+        because it is persisted verbatim on the PendingApproval document and accepted as a list filter. The
+        PendingApproval model enforces the same length and pattern on `linkedRequest.groupId`; keep the two in sync.
+    LinkedRequestRole:
+      title: LinkedRequestRole
+      type: string
+      enum:
+        - whitelist
+        - withdrawal
+      description: The part a pending approval plays in a linked request.
     ListAccessTokensResponse:
       title: ListAccessTokensResponse
       type: object
@@ -98632,6 +98693,26 @@ components:
               - result
               - user
             description: Security control events recorded during approval enforcement
+        linkedRequest:
+          type: object
+          description: Present when this pending approval is one item of a linked "whitelist and withdraw" request
+          properties:
+            groupId:
+              allOf:
+                - $ref: '#/components/schemas/LinkedRequestGroupId'
+              description: Id shared by both pending approvals of the linked request
+            linkedPendingApprovalId:
+              type: string
+              description: Id of the other pending approval in the linked request
+              pattern: ^[0-9a-f]{32}$
+            role:
+              allOf:
+                - $ref: '#/components/schemas/LinkedRequestRole'
+              description: The part this pending approval plays in the linked request
+          required:
+            - groupId
+            - linkedPendingApprovalId
+            - role
       required:
         - id
         - creator
@@ -101781,7 +101862,12 @@ components:
         baseMinSize:
           type: string
           format: decimal
-          description: Minimum order size in base currency
+          description: |
+            Minimum order size in base currency. May be empty when the product defines no
+            base-currency minimum; when empty, the quote-currency minimum (`quoteMinSize`)
+            still applies to base-denominated orders after their value is calculated at the
+            price used when the order is validated (the submitted limit price for passive
+            limit orders; an indicative market price otherwise).
           example: '0.00000001'
         baseMaxSize:
           type: string
@@ -101791,12 +101877,12 @@ components:
         baseIncrement:
           type: string
           format: decimal
-          description: Maximum precision allowed when entering order quantities in base currency
+          description: Maximum precision allowed when entering order quantities in base currency. This is a precision (step-size) constraint, not a minimum order size; do not derive minimums from increments.
           example: '0.00000001'
         quoteMinSize:
           type: string
           format: decimal
-          description: Minimum order size in quote currency
+          description: Minimum order size in quote currency. May be empty when the product defines no quote-currency minimum. An empty value does not mean no minimum applies; a dynamically calculated minimum may still be enforced.
           example: '10.00'
         quoteMaxSize:
           type: string
@@ -101806,7 +101892,7 @@ components:
         quoteIncrement:
           type: string
           format: decimal
-          description: Maximum precision allowed when entering order quantities in the quote currency
+          description: Maximum precision allowed when entering order quantities in the quote currency. This is a precision (step-size) constraint, not a minimum order size; do not derive minimums from increments.
           example: '0.01'
         quoteDisplayPrecision:
           type: integer
@@ -118190,6 +118276,26 @@ components:
                     - result
                     - user
                   description: Security control events recorded during approval enforcement
+              linkedRequest:
+                type: object
+                description: Present when this pending approval is one item of a linked "whitelist and withdraw" request
+                properties:
+                  groupId:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestGroupId'
+                    description: Id shared by both pending approvals of the linked request
+                  linkedPendingApprovalId:
+                    type: string
+                    description: Id of the other pending approval in the linked request
+                    pattern: ^[0-9a-f]{32}$
+                  role:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestRole'
+                    description: The part this pending approval plays in the linked request
+                required:
+                  - groupId
+                  - linkedPendingApprovalId
+                  - role
             required:
               - id
               - creator
