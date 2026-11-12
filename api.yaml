@@ -57811,6 +57811,11 @@ paths:
           in: query
           schema:
             type: boolean
+        - name: linkedGroupId
+          description: Only return the pending approvals of this linked "whitelist and withdraw" request
+          in: query
+          schema:
+            type: string
       responses:
         '200':
           description: OK
@@ -72676,6 +72681,26 @@ components:
                     - result
                     - user
                   description: Security control events recorded during approval enforcement
+              linkedRequest:
+                type: object
+                description: Present when this pending approval is one item of a linked "whitelist and withdraw" request
+                properties:
+                  groupId:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestGroupId'
+                    description: Id shared by both pending approvals of the linked request
+                  linkedPendingApprovalId:
+                    type: string
+                    description: Id of the other pending approval in the linked request
+                    pattern: ^[0-9a-f]{32}$
+                  role:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestRole'
+                    description: The part this pending approval plays in the linked request
+                required:
+                  - groupId
+                  - linkedPendingApprovalId
+                  - role
             required:
               - id
               - creator
@@ -91258,6 +91283,26 @@ components:
                     - result
                     - user
                   description: Security control events recorded during approval enforcement
+              linkedRequest:
+                type: object
+                description: Present when this pending approval is one item of a linked "whitelist and withdraw" request
+                properties:
+                  groupId:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestGroupId'
+                    description: Id shared by both pending approvals of the linked request
+                  linkedPendingApprovalId:
+                    type: string
+                    description: Id of the other pending approval in the linked request
+                    pattern: ^[0-9a-f]{32}$
+                  role:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestRole'
+                    description: The part this pending approval plays in the linked request
+                required:
+                  - groupId
+                  - linkedPendingApprovalId
+                  - role
             required:
               - id
               - creator
@@ -93261,6 +93306,22 @@ components:
         - link.account.admin
         - link.account.transfer
         - link.account.view
+    LinkedRequestGroupId:
+      title: LinkedRequestGroupId
+      type: string
+      description: |-
+        Server-generated id shared by every pending approval of one linked request.
+
+        Bounded (non-empty, at most {@link MAX_LINKED_REQUEST_GROUP_ID_LENGTH} characters, alphanumeric plus `_`/`-`)
+        because it is persisted verbatim on the PendingApproval document and accepted as a list filter. The
+        PendingApproval model enforces the same length and pattern on `linkedRequest.groupId`; keep the two in sync.
+    LinkedRequestRole:
+      title: LinkedRequestRole
+      type: string
+      enum:
+        - whitelist
+        - withdrawal
+      description: The part a pending approval plays in a linked request.
     ListAccessTokensResponse:
       title: ListAccessTokensResponse
       type: object
@@ -98632,6 +98693,26 @@ components:
               - result
               - user
             description: Security control events recorded during approval enforcement
+        linkedRequest:
+          type: object
+          description: Present when this pending approval is one item of a linked "whitelist and withdraw" request
+          properties:
+            groupId:
+              allOf:
+                - $ref: '#/components/schemas/LinkedRequestGroupId'
+              description: Id shared by both pending approvals of the linked request
+            linkedPendingApprovalId:
+              type: string
+              description: Id of the other pending approval in the linked request
+              pattern: ^[0-9a-f]{32}$
+            role:
+              allOf:
+                - $ref: '#/components/schemas/LinkedRequestRole'
+              description: The part this pending approval plays in the linked request
+          required:
+            - groupId
+            - linkedPendingApprovalId
+            - role
       required:
         - id
         - creator
@@ -118195,6 +118276,26 @@ components:
                     - result
                     - user
                   description: Security control events recorded during approval enforcement
+              linkedRequest:
+                type: object
+                description: Present when this pending approval is one item of a linked "whitelist and withdraw" request
+                properties:
+                  groupId:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestGroupId'
+                    description: Id shared by both pending approvals of the linked request
+                  linkedPendingApprovalId:
+                    type: string
+                    description: Id of the other pending approval in the linked request
+                    pattern: ^[0-9a-f]{32}$
+                  role:
+                    allOf:
+                      - $ref: '#/components/schemas/LinkedRequestRole'
+                    description: The part this pending approval plays in the linked request
+                required:
+                  - groupId
+                  - linkedPendingApprovalId
+                  - role
             required:
               - id
               - creator
