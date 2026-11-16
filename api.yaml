@@ -53503,7 +53503,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TransactionResponse1'
+                $ref: '#/components/schemas/TransactionResponse2'
         '202':
           description: Accepted
           content:
@@ -53518,8 +53518,8 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidWalletId1'
-                  - $ref: '#/components/schemas/DuplicateSequenceId'
-                  - $ref: '#/components/schemas/InvalidOFAC'
+                  - $ref: '#/components/schemas/DuplicateSequenceId1'
+                  - $ref: '#/components/schemas/InvalidOFAC1'
         '401':
           description: Unauthorized
           content:
@@ -56787,7 +56787,7 @@ paths:
                     - startDate
                 userAccess:
                   type: object
-                  description: Organization-level User Access Review report (DE-519)
+                  description: Organization-level User Access Review report
                   properties:
                     allEnterprises:
                       type: boolean
@@ -59029,7 +59029,7 @@ paths:
                     - startDate
                 userAccess:
                   type: object
-                  description: Organization-level User Access Review report (DE-519)
+                  description: Organization-level User Access Review report
                   properties:
                     allEnterprises:
                       type: boolean
@@ -61337,6 +61337,9 @@ paths:
       description: |-
         Create a transaction request for signing an off-chain message with your keys for an MPC wallet. Use this endpoint when you need to produce a cryptographic signature over arbitrary data without broadcasting a transaction on-chain. Common use cases include proving wallet ownership to a dApp, signing authentication challenges, and signing EIP-191 or EIP-712 typed data.
 
+        WalletConnect clients can set intent.isWalletConnectTx to true to classify the request's origin.
+        The marker is observability metadata and does not affect signing or policy; dApp clients are excluded.
+
         Use only for MPC wallets. Supported chains include EVM-compatible chains (ETH, BSC, Polygon, etc.), Solana, and Cardano. UTXO-based chains (Bitcoin, Litecoin, etc.) are not supported.
 
         To execute on-chain transactions with custom instructions (such as signing an on-chain message), use [Create transaction request](/reference/v2wallettxrequestcreate).
@@ -61958,7 +61961,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/DuplicateSequenceId'
+                  - $ref: '#/components/schemas/DuplicateSequenceId1'
                   - $ref: '#/components/schemas/PlatformError'
         '401':
           description: Unauthorized
@@ -62878,6 +62881,8 @@ paths:
               - 2-redpallas-mpcv2
               - 3-redpallas-mpcv2
               - 4-redpallas-mpcv2
+              - 1-redpallas-rerand
+              - 2-redpallas-rerand
         - name: prevId
           description: Return the next batch of results, based on the "nextBatchPrevId" value from the previous batch.
           in: query
@@ -83493,7 +83498,7 @@ components:
       allOf:
         - $ref: '#/components/schemas/WithdrawIntent'
         - $ref: '#/components/schemas/DotAccountBaseBuildOptions'
-    DuplicateSequenceId:
+    DuplicateSequenceId1:
       title: Duplicate SequenceId
       allOf:
         - type: object
@@ -86325,6 +86330,14 @@ components:
           type: string
         instantCreditEligible:
           type: boolean
+        reserveGoAccountId:
+          type: string
+        goAccountId:
+          type: string
+        withdrawHoldReleaseAt:
+          type: string
+          format: date-time
+          title: ISO Date String
     FiatTx:
       title: Fiat
       type: object
@@ -92096,7 +92109,7 @@ components:
           required:
             - context
         - $ref: '#/components/schemas/PlatformErrorNoName'
-    InvalidOFAC:
+    InvalidOFAC1:
       title: Address error
       allOf:
         - type: object
@@ -95240,6 +95253,13 @@ components:
           type: string
         isTss:
           type: boolean
+        isWalletConnectTx:
+          type: boolean
+          enum:
+            - true
+          description: |-
+            WalletConnect origin for txChannel classification only; omit or set to true. dApp clients are
+            excluded. The marker does not affect signing or policy.
         messageStandardType:
           type: string
         preparedTransaction:
@@ -103298,7 +103318,7 @@ components:
             - startDate
         userAccess:
           type: object
-          description: Organization-level User Access Review report (DE-519)
+          description: Organization-level User Access Review report
           properties:
             allEnterprises:
               type: boolean
@@ -113632,7 +113652,7 @@ components:
       required:
         - serializedTxHex
         - signableHex
-    TransactionResponse1:
+    TransactionResponse2:
       title: TransactionResponse
       type: object
       properties:
