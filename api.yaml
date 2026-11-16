@@ -46856,6 +46856,175 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/plaid/link/token/update:
+    post:
+      x-internal: false
+      summary: Create Plaid Link update mode token
+      description: |
+        Creates a Plaid Link token that opens Link in update mode for the Plaid
+        Item behind an existing bank transfer method. 
+
+        Once the user completes Link, call
+        `/api/tradfi/v1/plaid/link/token/update/complete`. 
+        The token expires after 30 minutes.
+      operationId: tradfi.v1.plaid.link.token.update
+      tags:
+        - Plaid
+      requestBody:
+        required: true
+        description: The bank transfer method whose Plaid Item opens in Link update mode
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enterpriseId:
+                  type: string
+                  description: The ID of the enterprise
+                  minLength: 1
+                bankTransferMethodId:
+                  type: string
+                  format: uuid
+                  description: |
+                    The ID of a bank transfer method created through Plaid Link.
+                androidPackageName:
+                  type: string
+                  description: |
+                    The Android package name for OAuth redirect flows. Required when initializing Plaid Link on Android.
+                redirectUri:
+                  type: string
+                  description: The OAuth redirect URI for mobile and web flows.
+              required:
+                - enterpriseId
+                - bankTransferMethodId
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+                        description: The Plaid Link token to use in the client
+                      expiration:
+                        type: string
+                        format: date-time
+                        description: The expiration time of the link token
+                    required:
+                      - token
+                      - expiration
+                required:
+                  - data
+        '400':
+          description: |
+            Bad Request - Missing parameters, or the bank transfer method is not linked to a Plaid Item
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: |
+            Not Found - The bank transfer method does not exist or belongs to another enterprise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '424':
+          description: Failed Dependency - Plaid service is unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '428':
+          description: Precondition Required - Plaid is not configured for this account
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+  /api/tradfi/v1/plaid/link/token/update/complete:
+    post:
+      x-internal: false
+      summary: Complete Plaid Link update mode
+      description: |
+        Completes a Plaid Link update mode session started with
+        `/api/tradfi/v1/plaid/link/token/update`. Call it after the user
+        completes Link.
+      operationId: tradfi.v1.plaid.link.token.update.complete
+      tags:
+        - Plaid
+      requestBody:
+        required: true
+        description: The bank transfer method whose Link update mode session completed
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                enterpriseId:
+                  type: string
+                  description: The ID of the enterprise
+                  minLength: 1
+                bankTransferMethodId:
+                  type: string
+                  format: uuid
+                  description: |
+                    The ID of the bank transfer method used to create the update mode token.
+              required:
+                - enterpriseId
+                - bankTransferMethodId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      bankTransferMethodIds:
+                        type: array
+                        items:
+                          type: string
+                          format: uuid
+                        description: |
+                          The IDs of every bank transfer method linked to the same Plaid Item, whose products were refreshed.
+                    required:
+                      - bankTransferMethodIds
+                required:
+                  - data
+        '400':
+          description: |
+            Bad Request - Missing parameters, the bank transfer method is not linked to a Plaid Item, or its products could not be fetched from Plaid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '404':
+          description: |
+            Not Found - The bank transfer method does not exist or belongs to another enterprise
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
   /api/tradfi/v1/plaid/processor-token:
     post:
       x-internal: false
