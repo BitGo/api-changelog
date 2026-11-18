@@ -47749,6 +47749,114 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+  /api/travel-rule/v1/receivingTransfers/enterprise/{enterpriseId}:
+    get:
+      summary: List VASP deposits for an enterprise
+      description: |-
+        List deposits received from a virtual asset service provider (VASP), scoped to a single
+        enterprise and gated by enterprise access.
+      operationId: travel.rule.receivingTransfers.enterprise.list
+      tags:
+        - Travel Rule
+      x-internal: false
+      parameters:
+        - name: transferIds
+          description: An optional filter for one or more transferIds
+          in: query
+          schema:
+            type: array
+            items:
+              type: string
+              minLength: 1
+              description: An optional filter for one or more transferIds
+        - name: walletId
+          description: An optional filter based on the walletId
+          in: query
+          schema:
+            type: string
+            minLength: 1
+        - name: status
+          description: An optional filter by deposit status (auto-resolved/pending_pii/resolved). Defaults to pending_pii when omitted.
+          in: query
+          schema:
+            type: string
+            enum:
+              - auto-resolved
+              - pending_pii
+              - resolved
+        - name: enterpriseId
+          description: The BitGo enterprise ID to list deposits for. The caller must have access to this enterprise.
+          in: path
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReceivingTransfersListResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '502':
+          description: Bad Gateway
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+  /api/travel-rule/v1/senderPII:
+    post:
+      summary: Update PII
+      description: Update the personal identifying information (PII) for send address.
+      operationId: travel.rule.senderPII.post
+      tags:
+        - Travel Rule
+      x-internal: false
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                data:
+                  oneOf:
+                    - $ref: '#/components/schemas/LegalPerson'
+                    - $ref: '#/components/schemas/NaturalPerson'
+              required:
+                - data
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError4'
   /api/travel-rule/v1/vasps:
     get:
       summary: List VASPs
@@ -76177,6 +76285,26 @@ components:
           nullable: true
       required:
         - enabled
+    BasePerson:
+      title: BasePerson
+      type: object
+      properties:
+        country:
+          type: string
+          minLength: 1
+        senderAddress:
+          type: string
+          minLength: 1
+        enterpriseId:
+          type: string
+          minLength: 1
+        transferId:
+          type: string
+          minLength: 1
+      required:
+        - country
+        - senderAddress
+        - enterpriseId
     BaseShare:
       title: BaseShare
       type: object
@@ -81696,6 +81824,16 @@ components:
             - tip
       required:
         - amount
+    DateAndPlaceOfBirth:
+      title: DateAndPlaceOfBirth
+      type: object
+      properties:
+        dateOfBirth:
+          type: string
+          minLength: 1
+        placeOfBirth:
+          type: string
+          minLength: 1
     DateTime:
       type: string
       format: date-time
@@ -86945,6 +87083,24 @@ components:
         country:
           type: string
           description: ISO 3166-1 Alpha-3 country code
+    GeographicAddress2:
+      title: GeographicAddress
+      type: object
+      properties:
+        addressLine:
+          type: array
+          items:
+            type: string
+            minLength: 1
+        townName:
+          type: string
+          minLength: 1
+        countrySubDivision:
+          type: string
+          minLength: 1
+        postcode:
+          type: string
+          minLength: 1
     GetAccountBalancesResponse:
       title: GetAccountBalancesResponse
       type: object
@@ -93138,6 +93294,27 @@ components:
           type: string
       required:
         - legalPersonNameIdentifierType
+    LegalPerson:
+      title: LegalPerson
+      allOf:
+        - type: object
+          properties:
+            legalName:
+              type: string
+              minLength: 1
+            taxIdentificationNumber:
+              type: string
+              minLength: 1
+            legalEntityIdentifier:
+              type: string
+              minLength: 1
+            geographicAddress:
+              $ref: '#/components/schemas/GeographicAddress2'
+            nationalIdentification:
+              $ref: '#/components/schemas/NationalIdentification'
+          required:
+            - legalName
+        - $ref: '#/components/schemas/BasePerson'
     LegalPersonNameIdentifierType:
       title: LegalPersonNameIdentifierType
       type: string
@@ -95536,6 +95713,49 @@ components:
         - first
         - full
         - last
+    NationalIdentification:
+      title: NationalIdentification
+      type: object
+      properties:
+        nationalIdentifier:
+          type: string
+          minLength: 1
+        nationalIdentifierType:
+          type: string
+          minLength: 1
+        countryOfIssue:
+          type: string
+          minLength: 1
+        registrationAuthority:
+          type: string
+          minLength: 1
+    NaturalPerson:
+      title: NaturalPerson
+      allOf:
+        - type: object
+          properties:
+            firstName:
+              type: string
+              minLength: 1
+            lastName:
+              type: string
+              minLength: 1
+            middleName:
+              type: string
+              minLength: 1
+            taxIdentificationNumber:
+              type: string
+              minLength: 1
+            nationalIdentification:
+              $ref: '#/components/schemas/NationalIdentification'
+            dateAndPlaceOfBirth:
+              $ref: '#/components/schemas/DateAndPlaceOfBirth'
+            geographicAddress:
+              $ref: '#/components/schemas/GeographicAddress2'
+          required:
+            - firstName
+            - lastName
+        - $ref: '#/components/schemas/BasePerson'
     NearDelegationProperties:
       title: NEAR Delegation Properties
       allOf:
@@ -102336,6 +102556,47 @@ components:
           format: date-time
           description: Time after which the quote can no longer be used to place an order
           example: 2026-09-30T15:15:52.000Z
+    ReceivingTransfersListResponse:
+      title: ReceivingTransfersListResponse
+      type: object
+      properties:
+        transfers:
+          type: array
+          items:
+            type: object
+            properties:
+              senderAddress:
+                type: string
+                minLength: 1
+              symbol:
+                type: string
+                minLength: 1
+              createdAt:
+                type: string
+                format: date-time
+                title: ISO Date String
+              walletId:
+                type: string
+                minLength: 1
+              enterpriseId:
+                type: string
+                minLength: 1
+              transferId:
+                type: string
+                minLength: 1
+              amount:
+                type: string
+                minLength: 1
+            required:
+              - senderAddress
+              - symbol
+              - createdAt
+              - walletId
+              - enterpriseId
+              - transferId
+              - amount
+      required:
+        - transfers
     Recipient:
       type: object
       properties:
