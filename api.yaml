@@ -46389,6 +46389,7 @@ paths:
       summary: Get ACH authorization language
       description: |-
         Returns the ACH debit authorization language that must be presented to and accepted by the end user before initiating an ACH debit transfer. Acceptance is mandatory — the `acceptAuthTerms` field on the initiate request must be `true`. This is a required part of BitGo's risk and compliance strategy for ACH debit origination. The ACH Terms URL in the response varies based on the enterprise's CaaS status.
+        By default, `achAuthorizationLanguage` ends with the ACH Terms URL and can be displayed as is. When `useSeparateLink` is `true`, the URL is left out: render `achAuthorizationLanguage` followed by a space and `linkLabel`, where `linkLabel` is a hyperlink to `link`. For example, in HTML: `{achAuthorizationLanguage} <a href="{link}">{linkLabel}</a>`.
         **Requires access token scope:** `wallet_view_all` or `wallet_spend_all`
       operationId: tradfi.v1.enterprises.ach-authorization
       tags:
@@ -46400,6 +46401,13 @@ paths:
           schema:
             type: string
           description: ID of the enterprise
+        - name: useSeparateLink
+          in: query
+          required: false
+          schema:
+            type: boolean
+            default: false
+          description: When `true`, leaves the ACH Terms URL out of `achAuthorizationLanguage` so it can be rendered as a hyperlink using `linkLabel` and `link`.
       responses:
         '200':
           description: OK
@@ -46410,14 +46418,19 @@ paths:
                 required:
                   - achAuthorizationLanguage
                   - link
+                  - linkLabel
                 properties:
                   achAuthorizationLanguage:
                     type: string
-                    description: The ACH authorization language containing the deposit terms and a link to the full ACH Terms & Conditions.
+                    description: The ACH authorization language. Ends with the ACH Terms URL unless `useSeparateLink` is `true`; in that case, render it followed by a space and `linkLabel`, with `linkLabel` as a hyperlink to `link`.
                   link:
                     type: string
                     format: uri
                     description: The ACH Terms & Conditions URL for the enterprise.
+                  linkLabel:
+                    type: string
+                    description: The hyperlink text for `link`. When `useSeparateLink` is `true`, render it right after `achAuthorizationLanguage`, separated by a space.
+                    example: ACH Terms.
         '401':
           description: Unauthorized
           content:
