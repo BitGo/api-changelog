@@ -46196,7 +46196,10 @@ paths:
     get:
       x-internal: false
       summary: List enterprise transfer limits
-      description: List the transfer limits for an enterprise based on currency, transfer type, and direction.
+      description: |-
+        List the transfer limits for an enterprise based on currency, transfer type, and direction.
+
+        **Requires access token scope:** `wallet_view_all` or `wallet_spend_all`
       operationId: tradfi.v1.enterprise.transfer.limits
       tags:
         - ACH Debits
@@ -46309,7 +46312,16 @@ paths:
 
         As part of BitGo's risk and compliance strategy, ACH transfers may be
         rejected by risk evaluation. A rejected transfer is not processed and
-        the request fails with a `422` response.
+        the request fails with a `422` response. Risk evaluation is mandatory
+        for these transfers: if it is unavailable, no transfer is created and
+        the request fails with a `424` response. Retry later with the same `id`. If
+        the bank account was linked without the Plaid Signal product, the request
+        fails with a `401` response: update its products or re-link it.
+
+        The `id` you provide is the idempotency key. If a transfer with that
+        `id` already exists, no new transfer is created and the request fails
+        with a `409` response; the original transfer is not returned. Safe
+        retries require reusing the same `id`.
 
         **Requires access token scope:** `wallet_spend_all`
       operationId: tradfi.v1.bank-transfers.create
@@ -46336,7 +46348,7 @@ paths:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
         '401':
-          description: Unauthorized
+          description: Unauthorized - authentication failed, or the bank account is missing the Plaid Signal product
           content:
             application/json:
               schema:
@@ -46347,8 +46359,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/V1ErrorResponse'
+        '409':
+          description: Conflict - a transfer with this `id` already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
         '422':
           description: Unprocessable Entity - the transfer was rejected by risk evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/V1ErrorResponse'
+        '424':
+          description: Failed Dependency - risk evaluation is unavailable and no transfer was created
           content:
             application/json:
               schema:
@@ -46363,7 +46387,9 @@ paths:
     get:
       x-internal: false
       summary: Get ACH authorization language
-      description: Returns the ACH debit authorization language that must be presented to and accepted by the end user before initiating an ACH debit transfer. Acceptance is mandatory — the `acceptAuthTerms` field on the initiate request must be `true`. This is a required part of BitGo's risk and compliance strategy for ACH debit origination. The ACH Terms URL in the response varies based on the enterprise's CaaS status.
+      description: |-
+        Returns the ACH debit authorization language that must be presented to and accepted by the end user before initiating an ACH debit transfer. Acceptance is mandatory — the `acceptAuthTerms` field on the initiate request must be `true`. This is a required part of BitGo's risk and compliance strategy for ACH debit origination. The ACH Terms URL in the response varies based on the enterprise's CaaS status.
+        **Requires access token scope:** `wallet_view_all` or `wallet_spend_all`
       operationId: tradfi.v1.enterprises.ach-authorization
       tags:
         - ACH Debits
@@ -46414,7 +46440,9 @@ paths:
     get:
       x-internal: false
       summary: Get a bank transfer
-      description: Gets a bank transfer by its `id` or `txid`. Either identifier may be used interchangeably.
+      description: |-
+        Gets a bank transfer by its `id` or `txid`. Either identifier may be used interchangeably.
+        **Requires access token scope:** `wallet_view_all` or `wallet_spend_all`
       operationId: tradfi.v1.bank-transfers.get
       tags:
         - ACH Debits
@@ -46642,7 +46670,10 @@ paths:
       tags:
         - Bank Accounts
       summary: Verify routing number by bank type
-      description: Endpoint for routing number verification.
+      description: |-
+        Endpoint for routing number verification.
+
+        **Requires access token scope:** `wallet_view_all`
       operationId: V1GetBankAccountsRoutingNumberRoute
       parameters:
         - name: bankType
@@ -46704,6 +46735,8 @@ paths:
         Link flow, use the `/api/tradfi/v1/plaid/link/token/exchange` endpoint
         with the returned `token` (as `linkToken`) and the `publicToken` received
         from Plaid Link to complete the bank account linking process.
+
+        **Requires access token scope:** `wallet_manage_all`
       operationId: tradfi.v1.plaid.link.token.create
       tags:
         - Plaid
@@ -46784,6 +46817,8 @@ paths:
         After a user completes the Plaid Link flow, the client receives a public
         token which must be exchanged using this endpoint to complete the bank
         account linking process.
+
+        **Requires access token scope:** `wallet_manage_all`
       operationId: tradfi.v1.plaid.link.token.exchange
       tags:
         - Plaid
@@ -46867,6 +46902,8 @@ paths:
         Once the user completes Link, call
         `/api/tradfi/v1/plaid/link/token/update/complete`. 
         The token expires after 30 minutes.
+
+        **Requires access token scope:** `wallet_manage_all`
       operationId: tradfi.v1.plaid.link.token.update
       tags:
         - Plaid
@@ -46884,9 +46921,8 @@ paths:
                   minLength: 1
                 bankTransferMethodId:
                   type: string
-                  format: uuid
                   description: |
-                    The ID of a bank transfer method created through Plaid Link.
+                    The ID of a bank transfer method created through Plaid Link. Accepts either the bank transfer method ID or its bank account ID (`bankAccountId`).
                 androidPackageName:
                   type: string
                   description: |
@@ -46960,6 +46996,8 @@ paths:
         Completes a Plaid Link update mode session started with
         `/api/tradfi/v1/plaid/link/token/update`. Call it after the user
         completes Link.
+
+        **Requires access token scope:** `wallet_manage_all`
       operationId: tradfi.v1.plaid.link.token.update.complete
       tags:
         - Plaid
@@ -46977,9 +47015,8 @@ paths:
                   minLength: 1
                 bankTransferMethodId:
                   type: string
-                  format: uuid
                   description: |
-                    The ID of the bank transfer method used to create the update mode token.
+                    The ID of the bank transfer method used to create the update mode token. Accepts either the bank transfer method ID or its bank account ID (`bankAccountId`).
               required:
                 - enterpriseId
                 - bankTransferMethodId
@@ -47041,6 +47078,8 @@ paths:
         Optionally, you can provide the description for the bank transfer
         method. The description is the display name and works similarly to a
         nickname. Uses the account name returned by Plaid when omitted.
+
+        **Requires access token scope:** `wallet_manage_all`
       operationId: tradfi.v1.plaid.processor-token.create
       tags:
         - Plaid
@@ -47162,7 +47201,9 @@ paths:
       summary: Settle a bank transfer (sandbox)
       operationId: tradfi.v1.sandbox.transfers.settle
       x-internal: false
-      description: Force-settles a bank transfer by simulating bank activity. The transfer must be `processing` and not be settled yet. Only available in testnet.
+      description: |-
+        Force-settles a bank transfer by simulating bank activity. The transfer must be `processing` and not be settled yet. Only available in testnet.
+        **Requires access token scope:** `wallet_spend_all`
       parameters:
         - name: id
           in: path
@@ -47214,7 +47255,10 @@ paths:
       tags:
         - Bank Accounts
       summary: List bank accounts
-      description: List all bank accounts associated with a BitGo enterprise.
+      description: |-
+        List all bank accounts associated with a BitGo enterprise.
+
+        **Requires access token scope:** `wallet_view_all`
       operationId: v2.bankaccount.list
       parameters:
         - name: bankAccountId
@@ -47325,6 +47369,8 @@ paths:
         Add a bank account to a BitGo enterprise so you can deposit and withdraw fiat. Required address parameters vary by country. Determine required parameters by calling [Get address format information](/reference/fiataddressinfo).
 
         >**CaaS clients:** If you are integrating as a Crypto as a Service (CaaS) client, follow the [Fund Go account integration guide](/docs/crypto-as-a-service-fund-go-accounts#steps) instead of using this endpoint directly.
+
+        **Requires access token scope:** `wallet_manage_all`
       operationId: v2.bankaccount.add
       parameters: []
       requestBody:
@@ -47375,7 +47421,10 @@ paths:
       tags:
         - Bank Accounts
       summary: Delete bank account
-      description: Delete a bank account associated with a BitGo enterprise.
+      description: |-
+        Delete a bank account associated with a BitGo enterprise.
+
+        **Requires access token scope:** `wallet_manage_all`
       operationId: v2.bankaccount.delete
       parameters:
         - name: bankAccountId
@@ -47432,7 +47481,10 @@ paths:
       tags:
         - Bank Accounts
       summary: Get bank account
-      description: Get a bank account associated with a BitGo enterprise by its ID.
+      description: |-
+        Get a bank account associated with a BitGo enterprise by its ID.
+
+        **Requires access token scope:** `wallet_view_all`
       operationId: v2.bankaccount.get
       parameters:
         - name: bankAccountId
@@ -47477,7 +47529,10 @@ paths:
       tags:
         - Bank Accounts
       summary: Update bank account
-      description: Update a bank account associated with a BitGo enterprise.
+      description: |-
+        Update a bank account associated with a BitGo enterprise.
+
+        **Requires access token scope:** `wallet_manage_all`
       operationId: v2.bankaccount.update
       parameters:
         - name: bankAccountId
@@ -47630,7 +47685,10 @@ paths:
       tags:
         - Bank Accounts
       summary: Get deposit info
-      description: Get BitGo's bank account information so you can deposit fiat into a Go Account.
+      description: |-
+        Get BitGo's bank account information so you can deposit fiat into a Go Account.
+
+        **Requires access token scope:** `wallet_view_all`
       operationId: fiat.get.deposit.info
       parameters:
         - name: currency
@@ -47680,21 +47738,15 @@ paths:
       x-internal: false
       tags:
         - Bank Accounts
-      summary: Get deposit verification info
+      summary: Get deposit info for KYC
       description: |-
-        Get the BitGo bank account details to use for an enterprise's
-        verification deposit during onboarding.
+        Get the virtual International Bank Account Number (vIBAN) deposit information for BitGo.
+        Returned BitGo vIBANs are specific to the enterprise.
+        You can send deposit verificaitons to any of them.
 
-        Each returned account is dedicated to the enterprise, and the
-        verification deposit can be sent to any of them. Once onboarding is
-        complete, use Get deposit info instead.
+        Use this endpoint only for KYC deposit verification (EU unregulated). For fiat deposits into Go Accounts, use [Get deposit info](/reference/fiatgetdepositinfo).
 
-        When the enterprise's penny test bank account is created and ready to use,
-        BitGo emits a `bankAccount` webhook notification with the account
-        details, so subscribed clients are notified instead of polling this
-        endpoint. 
-
-        To set up webhooks for your enterprise, see https://developers.bitgo.com/docs/webhooks-enterprise
+        **Requires access token scope:** `wallet_view_all`
       operationId: tradfi.v1.deposit-verification.deposit-info
       parameters:
         - name: enterpriseId
@@ -80880,7 +80932,7 @@ components:
           description: The transfer amount in the currency's smallest unit as a string (e.g., "50000" for $500.00 USD, where the base unit is cents). The value is converted to a decimal using the currency's unit precision (e.g., 2 for USD, 0 for JPY). Mutually exclusive with `amount`.
         id:
           type: string
-          description: Client-generated transfer ID. Serves as the idempotency key. Prefer UUID v4, v5, or v7.
+          description: 'Client-generated transfer ID. Serves as the idempotency key: reusing an existing ID returns a `409` and creates no new transfer. Prefer UUID v4, v5, or v7.'
         ipAddress:
           type: string
           description: Optional end-user IP address. Provide this when the request originates from your server. This is used for risk evaluation. The value must be a valid IPv4 or IPv6 address.
