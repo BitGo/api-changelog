@@ -75037,6 +75037,12 @@ components:
           allOf:
             - $ref: '#/components/schemas/PendingActivityState'
           description: Any pending activity on the account
+        requiredActions:
+          type: array
+          readOnly: true
+          description: Actions the user must complete for this account. Empty when none are required.
+          items:
+            $ref: '#/components/schemas/RequiredAction'
         fee:
           allOf:
             - $ref: '#/components/schemas/BankAccountFeeInfo'
@@ -103579,6 +103585,22 @@ components:
         - bitgoOrg
         - status
       title: RequestedProductResponse
+    RequiredAction:
+      title: RequiredAction
+      type: object
+      readOnly: true
+      properties:
+        type:
+          type: string
+          description: The action identifier. New values may be added.
+          example: plaid-refresh
+        title:
+          type: string
+          description: Display label for the action.
+          example: Refresh Required
+      required:
+        - type
+        - title
     Requirement:
       type: object
       properties:
