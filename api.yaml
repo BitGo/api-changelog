@@ -2845,6 +2845,8 @@ paths:
             Optional array of statuses.
             If provided will only return allocations/deallocations with those statuses.
             Statuses must be submitted as a comma-separated string.
+            pending_approval = records waiting for policy approval before reservation.
+            rejected = terminal records denied by policy before reservation.
             cleared = records for allocations that have been cleared.
             released = records for allocations that have been released.
             reserved = records for allocations that are still reserved.
@@ -2857,10 +2859,14 @@ paths:
                 - cleared
                 - released
                 - reserved
+                - pending_approval
+                - rejected
               description: |-
                 Optional array of statuses.
                 If provided will only return allocations/deallocations with those statuses.
                 Statuses must be submitted as a comma-separated string.
+                pending_approval = records waiting for policy approval before reservation.
+                rejected = terminal records denied by policy before reservation.
                 cleared = records for allocations that have been cleared.
                 released = records for allocations that have been released.
                 reserved = records for allocations that are still reserved.
@@ -3842,6 +3848,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/V1AllocationsClearedPostPayload'
                   - $ref: '#/components/schemas/V1ReservedNonRetriableAllocationsPostPayload'
+                  - $ref: '#/components/schemas/V1PendingApprovalAllocationsPostPayload'
         '400':
           description: Bad Request
           content:
@@ -3872,7 +3879,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1AllocationsReleasedWithErrorPostPayload'
+                $ref: '#/components/schemas/V1AllocationsUnprocessablePostPayload'
         '500':
           description: Internal Server Error
           content:
@@ -4166,10 +4173,12 @@ paths:
         - Occurs when the specified connection cannot be found.
         - Examples: Connection ID doesn't exist, connection doesn't belong to this client.
 
-        - 422: Deallocation Error with Released Status
-        - Occurs when the deallocation cannot be processed due to business rules.
+        - 422: Deallocation Error with Released or Rejected Status
+        - Occurs when the deallocation cannot be processed due to business rules or policy rejection.
+        - Body is the released or rejected deallocation with the error, or the error alone when
+        the request is rejected before a deallocation is created.
         - Examples: Insufficient funds available for deallocation, connection is inactive,
-        deallocation amount exceeds available balance.
+        deallocation amount exceeds available balance, policy denied the request.
 
         - 500: Internal Server Error or Reserved Deallocation
         - Occurs when there's an unexpected internal server error processing the request.
@@ -4275,6 +4284,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/V1DeallocationClearedPostPayload'
                   - $ref: '#/components/schemas/V1ReservedDeallocationsPostPayload'
+                  - $ref: '#/components/schemas/V1PendingApprovalDeallocationPostPayload'
         '400':
           description: Bad Request
           content:
@@ -4305,7 +4315,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1DeallocationReleasedWithErrorPostPayload'
+                $ref: '#/components/schemas/V1DeallocationUnprocessablePostPayload'
         '500':
           description: Internal Server Error
           content:
@@ -6217,6 +6227,8 @@ paths:
             Optional array of statuses.
             If statuses are provided, only allocations/deallocations with those statuses are returned.
             Statuses must be submitted as a comma-separated string.
+            pending_approval = records waiting for policy approval before reservation.
+            rejected = terminal records denied by policy before reservation.
             cleared = records for allocations that have been cleared.
             released = records for allocations that have been released.
             reserved = records for allocations that are still reserved.
@@ -6229,10 +6241,14 @@ paths:
                 - cleared
                 - released
                 - reserved
+                - pending_approval
+                - rejected
               description: |-
                 Optional array of statuses.
                 If statuses are provided, only allocations/deallocations with those statuses are returned.
                 Statuses must be submitted as a comma-separated string.
+                pending_approval = records waiting for policy approval before reservation.
+                rejected = terminal records denied by policy before reservation.
                 cleared = records for allocations that have been cleared.
                 released = records for allocations that have been released.
                 reserved = records for allocations that are still reserved.
@@ -72957,6 +72973,8 @@ components:
         - cleared
         - released
         - reserved
+        - pending_approval
+        - rejected
     AllocationType:
       title: AllocationType
       type: string
@@ -121729,7 +121747,7 @@ components:
           minLength: 1
           description: |-
             The reason that the allocation/deallocation is not cleared.
-            Provides a descriptive explanation for why the allocation is in the reserved state.
+            Explains why the allocation/deallocation has not cleared.
             Will not be defined if the allocation is cleared.
         status:
           allOf:
@@ -121738,6 +121756,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -121790,6 +121810,22 @@ components:
             indicating the allocation was successfully completed.
       required:
         - allocation
+    V1AllocationsErrorOnlyPostPayload:
+      allOf:
+        - title: V1AllocationsErrorOnlyPostPayload
+        - $ref: '#/components/schemas/V1ErrorPayload'
+    V1AllocationsFailedWithErrorPostPayload:
+      title: V1AllocationsFailedWithErrorPostPayload
+      allOf:
+        - type: object
+          properties:
+            allocation:
+              oneOf:
+                - $ref: '#/components/schemas/V1ReleasedAllocation'
+                - $ref: '#/components/schemas/V1RejectedAllocation'
+          required:
+            - allocation
+        - $ref: '#/components/schemas/V1ErrorPayload'
     V1AllocationsGetPayload:
       title: V1AllocationsGetPayload
       type: object
@@ -121889,7 +121925,7 @@ components:
                 minLength: 1
                 description: |-
                   The reason that the allocation/deallocation is not cleared.
-                  Provides a descriptive explanation for why the allocation is in the reserved state.
+                  Explains why the allocation/deallocation has not cleared.
                   Will not be defined if the allocation is cleared.
               status:
                 allOf:
@@ -121898,6 +121934,8 @@ components:
                   Status of the allocation/deallocation.
 
                   Possible values:
+                  - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+                  - rejected: Terminal state; policy denied the operation before funds were reserved.
                   - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
                     This is a temporary state awaiting final resolution.
                   - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -121935,25 +121973,15 @@ components:
               The array may be empty if no allocations match the query criteria.
       required:
         - allocations
-    V1AllocationsReleasedPayload:
-      title: V1AllocationsReleasedPayload
-      type: object
-      properties:
-        allocation:
-          allOf:
-            - $ref: '#/components/schemas/V1ReleasedAllocation'
-          description: |-
-            The allocation record in its released state.
-            This contains all allocation details with a status of 'released',
-            indicating the allocation was not completed and funds were returned.
-            The reason field will explain why the allocation was released.
-      required:
-        - allocation
-    V1AllocationsReleasedWithErrorPostPayload:
-      title: V1AllocationsReleasedWithErrorPostPayload
-      allOf:
-        - $ref: '#/components/schemas/V1AllocationsReleasedPayload'
-        - $ref: '#/components/schemas/V1ErrorPayload'
+    V1AllocationsUnprocessablePostPayload:
+      title: V1AllocationsUnprocessablePostPayload
+      oneOf:
+        - $ref: '#/components/schemas/V1AllocationsFailedWithErrorPostPayload'
+        - $ref: '#/components/schemas/V1AllocationsErrorOnlyPostPayload'
+      description: |-
+        422 body for allocation POST: either a released or rejected allocation with the error,
+        or the error alone when the request was rejected before an allocation was created
+        (for example, the requested amount exceeds the balance net of pending requests).
     V1AssignedDisputesWithClosureOutput:
       title: V1AssignedDisputesWithClosureOutput
       type: array
@@ -122175,6 +122203,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -122953,25 +122983,31 @@ components:
             indicating the allocation was successfully completed.
       required:
         - deallocation
-    V1DeallocationReleasedPayload:
-      title: V1DeallocationReleasedPayload
-      type: object
-      properties:
-        deallocation:
-          allOf:
-            - $ref: '#/components/schemas/V1ReleasedAllocation'
-          description: |-
-            The deallocation record in its released state.
-            This contains all deallocation details with a status of 'released',
-            indicating the allocation was not completed and funds were returned.
-            The reason field will explain why the deallocation was released.
-      required:
-        - deallocation
-    V1DeallocationReleasedWithErrorPostPayload:
-      title: V1DeallocationReleasedWithErrorPostPayload
+    V1DeallocationErrorOnlyPostPayload:
       allOf:
-        - $ref: '#/components/schemas/V1DeallocationReleasedPayload'
+        - title: V1DeallocationErrorOnlyPostPayload
         - $ref: '#/components/schemas/V1ErrorPayload'
+    V1DeallocationFailedWithErrorPostPayload:
+      title: V1DeallocationFailedWithErrorPostPayload
+      allOf:
+        - type: object
+          properties:
+            deallocation:
+              oneOf:
+                - $ref: '#/components/schemas/V1ReleasedAllocation'
+                - $ref: '#/components/schemas/V1RejectedAllocation'
+          required:
+            - deallocation
+        - $ref: '#/components/schemas/V1ErrorPayload'
+    V1DeallocationUnprocessablePostPayload:
+      title: V1DeallocationUnprocessablePostPayload
+      oneOf:
+        - $ref: '#/components/schemas/V1DeallocationFailedWithErrorPostPayload'
+        - $ref: '#/components/schemas/V1DeallocationErrorOnlyPostPayload'
+      description: |-
+        422 body for deallocation POST: either a released or rejected deallocation with the error,
+        or the error alone when the request was rejected before a deallocation was created
+        (for example, the requested amount exceeds the balance net of pending requests).
     V1DeleteAccountResponse:
       allOf:
         - title: V1DeleteAccountResponse
@@ -125766,6 +125802,133 @@ components:
       allOf:
         - title: V1PatchAccountResponse
         - $ref: '#/components/schemas/V1AccountResponse'
+    V1PendingApprovalAllocationOutput:
+      title: V1PendingApprovalAllocationOutput
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            The unique identifier of the allocation/deallocation.
+            This is a UUID that uniquely identifies the allocation record.
+          title: uuid
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: |-
+            The amount of the allocation/deallocation.
+            Contains both the currency identifier and the quantity in base units.
+        connectionId:
+          type: string
+          description: |-
+            The unique identifier of the connection this allocation is for.
+            This identifies a connection between a client and partner.
+          title: uuid
+        clientExternalId:
+          type: string
+          description: |-
+            External identifier provided by the client when creating the allocation/deallocation.
+            Used for idempotence and correlation with client systems.
+          minLength: 1
+        partnerExternalId:
+          type: string
+          description: |-
+            External identifier of the allocation/deallocation in the partner system.
+            May be populated when partners provide their own identifier for the allocation.
+          minLength: 1
+        initiatedBy:
+          type: string
+          description: |-
+            The identifier of the user that initiated the allocation/deallocation.
+            Represents the user ID from the BitGo platform.
+          minLength: 1
+        notes:
+          type: string
+          description: |-
+            Optional notes provided by the client when creating the allocation/deallocation.
+            Can contain additional context or information about the purpose of the allocation.
+          minLength: 1
+        createdAt:
+          type: string
+          description: |-
+            The date and time when the allocation/deallocation was created.
+            Represented as an ISO 8601 formatted date string.
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          description: |-
+            The date and time when the allocation/deallocation was last updated.
+            Represented as an ISO 8601 formatted date string.
+          format: date-time
+          title: ISO Date String
+        retriable:
+          type: boolean
+          enum:
+            - false
+          description: Approval progresses asynchronously and must not be retried by the client.
+        evaluationId:
+          type: string
+          description: |-
+            The unique identifier of the policy evaluation for this allocation/deallocation.
+            Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: |-
+            The unique identifier of the pending approval for this allocation/deallocation.
+            Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: |-
+            The result of the policy evaluation for this allocation/deallocation.
+            - 'approved': Policy evaluation passed and the operation was allowed
+            - 'rejected': Policy evaluation failed and the operation was denied
+            Not present if no policy evaluation was performed or if evaluation is still pending.
+        status:
+          type: string
+          enum:
+            - pending_approval
+          description: Waiting for policy approval before funds are reserved.
+        reason:
+          type: string
+          description: Explains why policy approval is pending.
+          minLength: 1
+      required:
+        - id
+        - amount
+        - connectionId
+        - clientExternalId
+        - initiatedBy
+        - createdAt
+        - updatedAt
+        - retriable
+        - status
+        - reason
+    V1PendingApprovalAllocationsPostPayload:
+      title: V1PendingApprovalAllocationsPostPayload
+      type: object
+      properties:
+        allocation:
+          allOf:
+            - $ref: '#/components/schemas/V1PendingApprovalAllocationOutput'
+          description: The allocation waiting for policy approval, without a client retry.
+      required:
+        - allocation
+    V1PendingApprovalDeallocationPostPayload:
+      title: V1PendingApprovalDeallocationPostPayload
+      type: object
+      properties:
+        deallocation:
+          allOf:
+            - $ref: '#/components/schemas/V1PendingApprovalAllocationOutput'
+          description: The deallocation waiting for policy approval, without a client retry.
+      required:
+        - deallocation
     V1PendingSettlementOutput:
       title: V1PendingSettlementOutput
       type: object
@@ -125984,6 +126147,113 @@ components:
           $ref: '#/components/schemas/ResolvedGeoAttestation'
       required:
         - geoAttestation
+    V1RejectedAllocation:
+      title: V1RejectedAllocation
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            The unique identifier of the allocation/deallocation.
+            This is a UUID that uniquely identifies the allocation record.
+          title: uuid
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: |-
+            The amount of the allocation/deallocation.
+            Contains both the currency identifier and the quantity in base units.
+        connectionId:
+          type: string
+          description: |-
+            The unique identifier of the connection this allocation is for.
+            This identifies a connection between a client and partner.
+          title: uuid
+        clientExternalId:
+          type: string
+          description: |-
+            External identifier provided by the client when creating the allocation/deallocation.
+            Used for idempotence and correlation with client systems.
+          minLength: 1
+        partnerExternalId:
+          type: string
+          description: |-
+            External identifier of the allocation/deallocation in the partner system.
+            May be populated when partners provide their own identifier for the allocation.
+          minLength: 1
+        initiatedBy:
+          type: string
+          description: |-
+            The identifier of the user that initiated the allocation/deallocation.
+            Represents the user ID from the BitGo platform.
+          minLength: 1
+        notes:
+          type: string
+          description: |-
+            Optional notes provided by the client when creating the allocation/deallocation.
+            Can contain additional context or information about the purpose of the allocation.
+          minLength: 1
+        createdAt:
+          type: string
+          description: |-
+            The date and time when the allocation/deallocation was created.
+            Represented as an ISO 8601 formatted date string.
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          description: |-
+            The date and time when the allocation/deallocation was last updated.
+            Represented as an ISO 8601 formatted date string.
+          format: date-time
+          title: ISO Date String
+        retriable:
+          type: boolean
+          enum:
+            - false
+          description: A rejected allocation/deallocation cannot be retried.
+        evaluationId:
+          type: string
+          description: |-
+            The unique identifier of the policy evaluation for this allocation/deallocation.
+            Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: |-
+            The unique identifier of the pending approval for this allocation/deallocation.
+            Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: |-
+            The result of the policy evaluation for this allocation/deallocation.
+            - 'approved': Policy evaluation passed and the operation was allowed
+            - 'rejected': Policy evaluation failed and the operation was denied
+            Not present if no policy evaluation was performed or if evaluation is still pending.
+        status:
+          type: string
+          enum:
+            - rejected
+          description: Terminal policy rejection before funds were reserved.
+        reason:
+          type: string
+          description: Explains that policy rejected the operation.
+          minLength: 1
+      required:
+        - id
+        - amount
+        - connectionId
+        - clientExternalId
+        - initiatedBy
+        - createdAt
+        - updatedAt
+        - retriable
+        - status
+        - reason
     V1RejectedSettlementOutput:
       title: V1RejectedSettlementOutput
       type: object
@@ -126192,6 +126462,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -126204,7 +126476,7 @@ components:
           type: string
           description: |-
             The reason that the allocation/deallocation is not cleared.
-            Provides a descriptive explanation for why the allocation is in the reserved state.
+            Explains why the allocation/deallocation has not cleared.
             Will not be defined if the allocation is cleared.
           minLength: 1
       required:
@@ -126343,7 +126615,7 @@ components:
           type: string
           description: |-
             The reason that the allocation/deallocation is not cleared.
-            Provides a descriptive explanation for why the allocation is in the reserved state.
+            Explains why the allocation/deallocation has not cleared.
             Will not be defined if the allocation is cleared.
           minLength: 1
         status:
@@ -126354,6 +126626,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -126483,7 +126757,7 @@ components:
           type: string
           description: |-
             The reason that the allocation/deallocation is not cleared.
-            Provides a descriptive explanation for why the allocation is in the reserved state.
+            Explains why the allocation/deallocation has not cleared.
             Will not be defined if the allocation is cleared.
           minLength: 1
         status:
@@ -126494,6 +126768,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
