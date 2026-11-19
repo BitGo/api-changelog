@@ -314,46 +314,6 @@ paths:
               schema:
                 $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/webhooks:
-    get:
-      tags:
-        - Webhook
-      summary: List wallet webhooks
-      description: |
-        List webhooks set up on the wallet. Currently, the types of
-        webhooks that can be attached to a wallet are `transfer`,
-        `pendingapproval`, and `address_confirmation` notifications.
-      operationId: v2.wallet.listwebhooks
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  webhooks:
-                    type: array
-                    items:
-                      allOf:
-                        - $ref: '#/components/schemas/PlatformWebhook'
-                        - type: object
-                          properties:
-                            walletId:
-                              $ref: '#/components/schemas/Id'
-                            allToken:
-                              type: boolean
-                              example: false
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformPlatformError'
-                  - $ref: '#/components/schemas/PlatformInvalidWalletId'
     delete:
       tags:
         - Webhook
@@ -399,6 +359,65 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformPlatformError'
                   - $ref: '#/components/schemas/PlatformInvalidWalletId'
+    get:
+      summary: List wallet webhooks
+      description: List webhooks set up on the wallet. Currently, the types of webhooks that can be attached to a wallet are `transfer`, `pendingapproval`, and `address_confirmation` notifications.
+      operationId: v2.wallet.listwebhooks
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: allTokens
+          description: Set to `true` to include the webhooks of all tokens on an Ethereum-family wallet. Any other value is ignored
+          in: query
+          schema:
+            type: string
+        - name: includeEvmKeyringWebhooks
+          description: Set to `true` to include the webhooks of every wallet of an EVM keyring. Any other value is ignored
+          in: query
+          schema:
+            type: string
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWalletWebhooksResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
     post:
       summary: Add wallet webhook
       description: |-
@@ -559,6 +578,73 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/webhooks/notifications:
+    x-internal: false
+    get:
+      summary: List wallet webhook notifications
+      description: List webhook notifications for a wallet. Returns notifications that were triggered by webhooks on the specified wallet.
+      operationId: v2.wallet.listwebhooknotifications
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: prevId
+          description: The ID returned as `nextBatchPrevId` by a previous response, to fetch the next page of notifications
+          in: query
+          schema:
+            type: string
+        - name: limit
+          description: Maximum number of notifications to return
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: hash
+          description: Return only the notifications for this transaction hash. Must be a valid transaction hash for the coin
+          in: query
+          schema:
+            type: string
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWebhookNotificationsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/walletshare/{shareId}:
     get:
       tags:
@@ -691,6 +777,120 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/webhooks:
+    post:
+      tags:
+        - Webhook
+      summary: Add block webhook
+      description: |
+        Adds a webhook that will result in an HTTP callback at the
+        specified URL from BitGo when events are triggered.
+
+        Types of block webhooks:
+
+        1. Block webhooks will fire when a new block is seen on the coin network.
+        2. Wallet confirmation webhooks will fire when a wallet has been initialized.
+      operationId: v2.webhooks.add
+      parameters:
+        - $ref: '#/components/parameters/pathCoin'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBlockWebhook'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - type: object
+                    properties:
+                      type:
+                        $ref: '#/components/schemas/WebhookTypeBlock'
+                      userId:
+                        $ref: '#/components/schemas/Id'
+                  - $ref: '#/components/schemas/PlatformWebhook'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformPlatformError'
+    delete:
+      tags:
+        - Webhook
+      summary: Remove block webhook
+      description: |
+        Removing a webhook will cause new events of the specified type to no
+        longer trigger HTTP callbacks to your URLs.
+      operationId: v2.webhooks.remove
+      parameters:
+        - $ref: '#/components/parameters/pathCoin'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  $ref: '#/components/schemas/WebhookTypeBlock'
+                url:
+                  type: string
+                  format: uri
+                  example: https://your.server.com/user_webhook
+                id:
+                  $ref: '#/components/schemas/Id'
+              required:
+                - type
+                - url
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  removed:
+                    type: integer
+                    example: 1
+                    description: Number of block webhooks removed.
+    get:
+      summary: List block webhooks
+      description: Returns block webhooks. The types of webhooks are `block` and `wallet_confirmation` notifications.
+      operationId: v2.webhooks.list
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUserWebhooksResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -2645,6 +2845,8 @@ paths:
             Optional array of statuses.
             If provided will only return allocations/deallocations with those statuses.
             Statuses must be submitted as a comma-separated string.
+            pending_approval = records waiting for policy approval before reservation.
+            rejected = terminal records denied by policy before reservation.
             cleared = records for allocations that have been cleared.
             released = records for allocations that have been released.
             reserved = records for allocations that are still reserved.
@@ -2657,10 +2859,14 @@ paths:
                 - cleared
                 - released
                 - reserved
+                - pending_approval
+                - rejected
               description: |-
                 Optional array of statuses.
                 If provided will only return allocations/deallocations with those statuses.
                 Statuses must be submitted as a comma-separated string.
+                pending_approval = records waiting for policy approval before reservation.
+                rejected = terminal records denied by policy before reservation.
                 cleared = records for allocations that have been cleared.
                 released = records for allocations that have been released.
                 reserved = records for allocations that are still reserved.
@@ -3642,6 +3848,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/V1AllocationsClearedPostPayload'
                   - $ref: '#/components/schemas/V1ReservedNonRetriableAllocationsPostPayload'
+                  - $ref: '#/components/schemas/V1PendingApprovalAllocationsPostPayload'
         '400':
           description: Bad Request
           content:
@@ -3672,7 +3879,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1AllocationsReleasedWithErrorPostPayload'
+                $ref: '#/components/schemas/V1AllocationsUnprocessablePostPayload'
         '500':
           description: Internal Server Error
           content:
@@ -3966,10 +4173,12 @@ paths:
         - Occurs when the specified connection cannot be found.
         - Examples: Connection ID doesn't exist, connection doesn't belong to this client.
 
-        - 422: Deallocation Error with Released Status
-        - Occurs when the deallocation cannot be processed due to business rules.
+        - 422: Deallocation Error with Released or Rejected Status
+        - Occurs when the deallocation cannot be processed due to business rules or policy rejection.
+        - Body is the released or rejected deallocation with the error, or the error alone when
+        the request is rejected before a deallocation is created.
         - Examples: Insufficient funds available for deallocation, connection is inactive,
-        deallocation amount exceeds available balance.
+        deallocation amount exceeds available balance, policy denied the request.
 
         - 500: Internal Server Error or Reserved Deallocation
         - Occurs when there's an unexpected internal server error processing the request.
@@ -4075,6 +4284,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/V1DeallocationClearedPostPayload'
                   - $ref: '#/components/schemas/V1ReservedDeallocationsPostPayload'
+                  - $ref: '#/components/schemas/V1PendingApprovalDeallocationPostPayload'
         '400':
           description: Bad Request
           content:
@@ -4105,7 +4315,7 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/V1DeallocationReleasedWithErrorPostPayload'
+                $ref: '#/components/schemas/V1DeallocationUnprocessablePostPayload'
         '500':
           description: Internal Server Error
           content:
@@ -6017,6 +6227,8 @@ paths:
             Optional array of statuses.
             If statuses are provided, only allocations/deallocations with those statuses are returned.
             Statuses must be submitted as a comma-separated string.
+            pending_approval = records waiting for policy approval before reservation.
+            rejected = terminal records denied by policy before reservation.
             cleared = records for allocations that have been cleared.
             released = records for allocations that have been released.
             reserved = records for allocations that are still reserved.
@@ -6029,10 +6241,14 @@ paths:
                 - cleared
                 - released
                 - reserved
+                - pending_approval
+                - rejected
               description: |-
                 Optional array of statuses.
                 If statuses are provided, only allocations/deallocations with those statuses are returned.
                 Statuses must be submitted as a comma-separated string.
+                pending_approval = records waiting for policy approval before reservation.
+                rejected = terminal records denied by policy before reservation.
                 cleared = records for allocations that have been cleared.
                 released = records for allocations that have been released.
                 reserved = records for allocations that are still reserved.
@@ -38173,54 +38389,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/key:
-    get:
-      tags:
-        - Key
-      summary: List keys
-      operationId: v2.key.list
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/KeysResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-    post:
-      tags:
-        - Key
-      summary: Create key
-      operationId: v2.key.add
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateKey'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/Key'
-                  - $ref: '#/components/schemas/KeyTSSCreated'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
   /api/v2/{coin}/wallet/{walletId}/transfer:
     get:
       tags:
@@ -38300,41 +38468,13 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/wallet/{walletId}/depositinfo:
-    get:
-      tags:
-        - Fiat
-      summary: Get deposit information [DEPRECATED]
-      description: |
-        Collects all information needed for a deposit.
-        DEPRECATED - The new API can be found at /api/v2/bankaccounts/deposit/info
-      deprecated: true
-      operationId: v2.wallet.depositinfo
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Deposit'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/transfer/{transferId}:
     get:
       tags:
@@ -38405,7 +38545,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidTransferId'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/{coin}/wallet/{walletId}/transfer/sequenceId/{sequenceId}:
     get:
       tags:
@@ -38436,7 +38576,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/user/lock:
     post:
       description: |
@@ -38720,7 +38860,7 @@ paths:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/CannotRemoveAdmin'
                   - $ref: '#/components/schemas/InvalidUserId'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
         '404':
           description: Not Found
   /api/v2/{coin}/wallet/{walletId}/maximumSpendable:
@@ -38767,7 +38907,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
         '404':
           description: Not Found
           content:
@@ -39127,59 +39267,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/wallet/{walletId}/webhooks/notifications:
-    x-internal: false
-    get:
-      tags:
-        - Webhook
-      summary: List wallet webhook notifications
-      description: |
-        List webhook notifications for a wallet. Returns notifications
-        that were triggered by webhooks on the specified wallet.
-      operationId: v2.wallet.listwebhooknotifications
-      parameters:
-        - name: coin
-          in: path
-          required: true
-          description: A cryptocurrency or token ticker symbol.
-          schema:
-            $ref: '#/components/schemas/Coin'
-        - $ref: '#/components/parameters/pathWalletId'
-        - $ref: '#/components/parameters/prevId'
-        - name: limit
-          in: query
-          schema:
-            type: integer
-            minimum: 1
-            example: 25
-          description: Maximum number of results to return.
-        - name: hash
-          in: query
-          schema:
-            type: string
-          description: Filter notifications by transaction hash.
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  webhookNotifications:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/WebhookNotification'
-                  nextBatchPrevId:
-                    $ref: '#/components/schemas/Id'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/webhooks/{webhookId}/simulate:
     post:
       tags:
@@ -39226,116 +39313,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-  /api/v2/{coin}/webhooks:
-    post:
-      tags:
-        - Webhook
-      summary: Add block webhook
-      description: |
-        Adds a webhook that will result in an HTTP callback at the
-        specified URL from BitGo when events are triggered.
-
-        Types of block webhooks:
-
-        1. Block webhooks will fire when a new block is seen on the coin network.
-        2. Wallet confirmation webhooks will fire when a wallet has been initialized.
-      operationId: v2.webhooks.add
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateBlockWebhook'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - type: object
-                    properties:
-                      type:
-                        $ref: '#/components/schemas/WebhookTypeBlock'
-                      userId:
-                        $ref: '#/components/schemas/Id'
-                  - $ref: '#/components/schemas/Webhook1'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-    get:
-      tags:
-        - Webhook
-      summary: List block webhooks
-      description: |
-        Returns block webhooks. The types of webhooks are `block` and
-        `wallet_confirmation` notifications.
-      operationId: v2.webhooks.list
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  webhooks:
-                    type: array
-                    items:
-                      allOf:
-                        - type: object
-                          properties:
-                            type:
-                              $ref: '#/components/schemas/WebhookTypeBlock'
-                            userId:
-                              $ref: '#/components/schemas/Id'
-                        - $ref: '#/components/schemas/Webhook1'
-    delete:
-      tags:
-        - Webhook
-      summary: Remove block webhook
-      description: |
-        Removing a webhook will cause new events of the specified type to no
-        longer trigger HTTP callbacks to your URLs.
-      operationId: v2.webhooks.remove
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                type:
-                  $ref: '#/components/schemas/WebhookTypeBlock'
-                url:
-                  type: string
-                  format: uri
-                  example: https://your.server.com/user_webhook
-                id:
-                  $ref: '#/components/schemas/Id'
-              required:
-                - type
-                - url
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  removed:
-                    type: integer
-                    example: 1
-                    description: Number of block webhooks removed.
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/{coin}/webhooks/{webhookId}/simulate:
     post:
       tags:
@@ -39443,124 +39421,6 @@ paths:
                     type: number
                   metadata:
                     type: string
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-  /api/v2/sendlabels:
-    get:
-      tags:
-        - Send label
-      summary: List send labels
-      description: List all send labels for the enterprise. Address and coin parameters optional.
-      operationId: v2.sendlabels.list
-      parameters:
-        - $ref: '#/components/parameters/coin'
-        - $ref: '#/components/parameters/address'
-        - $ref: '#/components/parameters/enterpriseId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/SendLabel'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-    post:
-      tags:
-        - Send label
-      summary: Create send label
-      operationId: v2.sendlabels.create
-      description: Create an address send label for an id
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateSendLabel'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SendLabel'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-  /api/v2/sendlabels/{id}:
-    get:
-      tags:
-        - Send label
-      summary: Get send label by id
-      operationId: v2.sendlabels.get
-      description: Gets an address send label by the specified id
-      parameters:
-        - $ref: '#/components/parameters/pathId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SendLabel'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-    put:
-      tags:
-        - Send label
-      summary: Update send label
-      operationId: v2.sendlabels.update
-      description: Updates an address send label by the specified id
-      parameters:
-        - $ref: '#/components/parameters/pathId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateSendLabel'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SendLabel'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-    delete:
-      tags:
-        - Send label
-      summary: Delete send label
-      operationId: v2.sendlabels.delete
-      parameters:
-        - $ref: '#/components/parameters/pathId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SendLabel'
         '400':
           description: Bad Request
           content:
@@ -39762,7 +39622,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidAddress'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/{coin}/wallet/{walletId}/consolidateUnspents:
     post:
       tags:
@@ -39792,7 +39652,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/{coin}/requiredReserve:
     get:
       tags:
@@ -39854,7 +39714,7 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
                   - $ref: '#/components/schemas/InvalidAddress'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
   /api/v2/{coin}/wallet/{walletId}/transfer/{transferId}/comment:
     post:
       tags:
@@ -39888,7 +39748,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId'
+                  - $ref: '#/components/schemas/InvalidWalletId1'
                   - $ref: '#/components/schemas/InvalidTransferId'
         '401':
           description: Unauthorized
@@ -45070,7 +44930,7 @@ paths:
       operationId: v1.partneredValidators.list
       x-internal: false
       parameters:
-        - $ref: '#/components/parameters/coin1'
+        - $ref: '#/components/parameters/coin'
         - name: enterpriseId
           in: query
           description: The enterprise ID.
@@ -49951,6 +49811,310 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/federation:
+    get:
+      summary: Look up a Stellar account
+      description: Resolve a Stellar address by name or look up an account by its ID.
+      operationId: v2.federation1
+      tags:
+        - Federation
+      x-internal: false
+      parameters:
+        - name: q
+          description: Stellar address or account ID to look up.
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+        - name: type
+          description: Lookup by Stellar address or account ID.
+          in: query
+          required: true
+          schema:
+            type: string
+            enum:
+              - name
+              - id
+        - name: coin
+          description: Stellar network coin, such as xlm or txlm.
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetFederationResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GetFederationError'
+                  - $ref: '#/components/schemas/GenericError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/GetFederationError'
+                  - $ref: '#/components/schemas/GenericError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenericError'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/key:
+    get:
+      summary: List keys
+      description: |-
+        Lists the authenticated user's keys with optional cursor pagination and safe scoping.
+
+        checksum — consequence: the SDK cannot validate the checksum without server secrets.
+        — consequence: shadow validation must accept both strings and string arrays.
+      operationId: v2.key.list
+      tags:
+        - Key
+      x-internal: false
+      parameters:
+        - name: limit
+          description: Maximum number of keys to return.
+          in: query
+          schema:
+            oneOf:
+              - type: string
+              - type: array
+                items:
+                  type: string
+        - name: prevId
+          description: Cursor returned by the preceding page.
+          in: query
+          schema:
+            type: string
+        - name: safeId
+          description: Restrict the list to a safe administered by the caller.
+          in: query
+          schema:
+            type: string
+        - name: coin
+          description: Coin or token identifier.
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListKeysResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Create a key
+      description: Create a key for a coin, optionally providing backup or MPC key material.
+      operationId: v2.key.add
+      tags:
+        - Key
+      x-internal: false
+      parameters:
+        - name: coin
+          description: Coin or token ticker.
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+            example: btc
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Create key request
+
+                Specifies the key source and optional key material, provider, and MPC parameters.
+              properties:
+                coinSpecific:
+                  type: object
+                  description: Coin-specific creation options, including Lightning authentication key purpose.
+                  properties:
+                    lnbtc:
+                      $ref: '#/components/schemas/LightningCoinSpecific'
+                    tlnbtc:
+                      $ref: '#/components/schemas/LightningCoinSpecific'
+                encryptedPrv:
+                  type: string
+                  description: Private key encrypted with a client-controlled passphrase.
+                provider:
+                  type: string
+                  description: Backup key provider.
+                source:
+                  type: string
+                  enum:
+                    - user
+                    - cold
+                    - bitgo
+                    - backup
+                  description: Owner of the key.
+                derivedFromParentWithSeed:
+                  type: string
+                  description: Seed used to derive the key from a parent.
+                disableKRSEmail:
+                  type: boolean
+                  description: Disable backup provider email notifications.
+                krsSpecific:
+                  type: object
+                  additionalProperties:
+                    title: JSON
+                  description: Additional backup provider options.
+                enterprise:
+                  type: string
+                  description: Public ID of the enterprise that owns the key.
+                identifier:
+                  type: string
+                  description: Client-specified key identifier.
+                newFeeAddress:
+                  type: boolean
+                  description: Create a new Ethereum fee address key.
+                originalPasscodeEncryptionCode:
+                  type: string
+                  description: Passphrase encryption code for the wallet keycard.
+                pub:
+                  type: string
+                  description: Public key material.
+                isDistributedCustody:
+                  type: boolean
+                  description: Whether the BitGo key uses distributed custody.
+                commonPub:
+                  type: string
+                  description: Common MPC public key.
+                commonKeychain:
+                  type: string
+                  description: Common MPC public key and chain code.
+                keyShares:
+                  type: array
+                  items:
+                    allOf:
+                      - type: object
+                        properties:
+                          privateShareProof:
+                            type: string
+                          vssProof:
+                            type: string
+                      - $ref: '#/components/schemas/KeyShareBaseJSON'
+                    description: MPC key shares for BitGo key creation.
+                type:
+                  type: string
+                  description: Legacy backup key type or coin name.
+                keyType:
+                  type: string
+                  enum:
+                    - tss
+                    - independent
+                  description: Key generation type.
+                userGPGPublicKey:
+                  type: string
+                  description: ASCII-armored user GPG public key.
+                backupGPGPublicKey:
+                  type: string
+                  description: ASCII-armored backup GPG public key.
+                isMPCv2:
+                  type: boolean
+                  description: Whether the key uses MPC version 2.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AddKeyResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '503':
+          description: Service Unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/key/{id}:
     get:
       summary: Get key
@@ -50042,6 +50206,7 @@ paths:
       description: |-
         Returns transaction details (transfers, send queue items, transaction requests and pending
         approvals) for a transaction id, scoped to the wallets the requesting user has access to.
+        Raw indexer transaction data and private transfer accounting are not included.
       operationId: v2.tx.get
       tags:
         - Transfer
@@ -50837,7 +51002,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '403':
           description: Forbidden
           content:
@@ -50931,6 +51096,72 @@ paths:
                 $ref: '#/components/schemas/BuildDelegationsResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/depositinfo:
+    get:
+      summary: Get deposit information
+      description: |-
+        Collects information needed for a deposit. This endpoint is deprecated; use
+        `/api/v2/bankaccounts/deposit/info` instead.
+      operationId: v2.wallet.depositinfo
+      tags:
+        - Fiat
+      x-internal: false
+      parameters:
+        - name: coin
+          description: Coin or token identifier.
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinString'
+        - name: walletId
+          description: The wallet ID.
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/DepositWalletId'
+            example: 59cd72485007a239fb00282ed480da1f
+            pattern: ^[0-9a-f]{32}$
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepositInfoResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
           content:
             application/json:
               schema:
@@ -51106,7 +51337,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/freeze:
     post:
       summary: Freeze the wallet for the given coin and wallet id.
@@ -51546,7 +51777,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '403':
           description: Forbidden
           content:
@@ -51683,7 +51914,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '403':
           description: Forbidden
           content:
@@ -51810,7 +52041,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '403':
           description: Forbidden
           content:
@@ -52011,7 +52242,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
   /api/v2/{coin}/wallet/{walletId}/shieldedunspents:
     get:
       summary: List a wallet's shielded notes
@@ -52303,7 +52534,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '403':
           description: Forbidden
           content:
@@ -53017,7 +53248,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '401':
           description: Unauthorized
           content:
@@ -53469,7 +53700,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
                   - $ref: '#/components/schemas/DuplicateSequenceId1'
                   - $ref: '#/components/schemas/InvalidOFAC1'
         '401':
@@ -54994,7 +55225,9 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
     put:
       summary: Update users role in an enterprise
-      description: Update a users role in an enterprise. Must be an enterprise manager to perform this action.
+      description: |-
+        Update a users role in an enterprise. Must be an enterprise manager to perform this action.
+        Requires the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.enterprise.user.update
       tags:
         - User Management
@@ -55039,6 +55272,12 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidOrganizationId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '403':
           description: Forbidden
           content:
@@ -55102,9 +55341,8 @@ paths:
       summary: Delete enterprise webhook
       description: |-
         Remove a webhook from the enterprise. This will permanently delete the webhook.
-        To call this endpoint, you must have the user_manage scope on a short-lived
-        access token created either in the web app or programmatically using
-        the [Login](/reference/userlogin#/) endpoint.
+        To call this endpoint, you must have the `user_manage` or `enterprise_manage_all`
+        scope. Requests without either scope receive a 401 response.
       operationId: v2.enterprise.webhook.delete
       tags:
         - Enterprise Webhooks
@@ -55143,7 +55381,7 @@ paths:
   /api/v2/enterprise/{enterpriseId}/webhook/{webhookId}/bankaccount/{bankaccountId}/simulate:
     get:
       summary: Simulate bank account webhook
-      description: Simulate a bank account webhook for testing purposes. To call this endpoint, you must have the user_manage scope on a short-lived access token created either in the web app or programmatically using the [Login](/reference/userlogin#/) endpoint.
+      description: Simulate a bank account webhook for testing purposes. To call this endpoint, you must have the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.enterprise.webhook.bankaccount.simulate
       tags:
         - Enterprise Webhooks
@@ -55203,7 +55441,7 @@ paths:
   /api/v2/enterprise/{enterpriseId}/webhook/{webhookId}/simulate:
     get:
       summary: Simulate enterprise webhook
-      description: Simulate a webhook for testing purposes. To call this endpoint, you must have the user_manage scope on a short-lived access token created either in the web app or programmatically using the [Login](/reference/userlogin#/) endpoint.
+      description: Simulate a webhook for testing purposes. To call this endpoint, you must have the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.enterprise.webhook.simulate
       tags:
         - Enterprise Webhooks
@@ -55352,8 +55590,8 @@ paths:
       description: |-
         Create a webhook that will fire for any bank account associated with the enterprise.
         Must be an organization or enterprise admin to perform this action. To call this
-        endpoint, you must have the user_manage scope on a short-lived access token created
-        either in the web app or programmatically using the [Login](/reference/userlogin#/) endpoint.
+        endpoint, you must have the `user_manage` or `enterprise_manage_all` scope.
+        Requests without either scope receive a 401 response.
       operationId: v2.enterprise.webhook.add
       tags:
         - Enterprise Webhooks
@@ -55688,6 +55926,8 @@ paths:
         Pass `fullSandboxKyc: true` to simulate the full KYC flow in a non-enforcing environment by starting
         with `kycState = pending`. Ignored in enforcing environments. KycExemption license takes precedence
         and overrides to `approved` even when this flag is set.
+
+        Requires the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.organization.enterprise.create
       tags:
         - Enterprise Management
@@ -55776,6 +56016,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '403':
           description: Forbidden
           content:
@@ -55803,7 +56049,9 @@ paths:
   /api/v2/organization/{organizationId}/enterprise/{enterpriseId}/contract:
     post:
       summary: Sign a contract for an enterprise within an organization
-      description: Sign a contract (MPA, CSA, etc.) for an enterprise under the specified organization.
+      description: |-
+        Sign a contract (MPA, CSA, etc.) for an enterprise under the specified organization.
+        Requires the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.organization.enterprise.contract.sign
       tags:
         - Enterprise Management
@@ -55851,6 +56099,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '403':
           description: Forbidden
           content:
@@ -55875,6 +56129,7 @@ paths:
       description: |-
         Add a user (by email) to an enterprise under the specified organization, creating the user if needed.
         Organizations with the user management service enabled are rejected with 400; use the user management service instead.
+        Requires the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.organization.enterprise.user.add
       tags:
         - Enterprise Management
@@ -55923,6 +56178,12 @@ paths:
                 $ref: '#/components/schemas/AddUserToOrganizationEnterpriseResponseC'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -56836,7 +57097,9 @@ paths:
   /api/v2/organization/{organizationId}/user:
     delete:
       summary: Remove a user from an organization
-      description: Remove a user from an organization. Must be an organization manager to perform this action.
+      description: |-
+        Remove a user from an organization. Must be an organization manager to perform this action.
+        Requires the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.organization.user.remove
       tags:
         - User Management
@@ -56876,6 +57139,12 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidOrganizationId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '403':
           description: Forbidden
           content:
@@ -56893,6 +57162,7 @@ paths:
       description: |-
         Add a user in the organization with a specified role.
         Must be an organization manager to perform this action.
+        Requires the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.organization.user.create
       tags:
         - User Management
@@ -56943,6 +57213,12 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidOrganizationId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
           content:
@@ -56951,7 +57227,9 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
     put:
       summary: Update users role in organization
-      description: Modify a users role in the organization. Must be an organization manager to perform this action.
+      description: |-
+        Modify a users role in the organization. Must be an organization manager to perform this action.
+        Requires the `user_manage` or `enterprise_manage_all` scope. Requests without either scope receive a 401 response.
       operationId: v2.organization.user.update
       tags:
         - User Management
@@ -56996,6 +57274,12 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidOrganizationId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
         '403':
           description: Forbidden
           content:
@@ -57082,8 +57366,8 @@ paths:
         Create a webhook that sends an HTTP callback from BitGo to a specified URL when
         specific conditions occur within an organization. Must be an organization
         manager to perform this action. To call this endpoint, you must have the
-        `user_manage` scope on a short-lived access token created either in the web app
-        or programmatically using the [Login](/reference/userlogin#/) endpoint.
+        `wallet_manage_all` or `enterprise_manage_all` scope. Requests without either
+        scope receive a 401 response.
       operationId: v2.organization.webhook.add
       tags:
         - Organization Webhooks
@@ -57438,9 +57722,9 @@ paths:
       summary: Delete organization webhook
       description: |-
         Remove a webhook from the organization. This permanently deletes the webhook.
-        To call this endpoint, you must have the `user_manage` scope on a short-lived access
-        token created either in the web app or programmatically using the
-        [Login](/reference/userlogin#/) endpoint.
+        To call this endpoint, you must have the `wallet_manage_all` or
+        `enterprise_manage_all` scope. Requests without either scope receive a 401
+        response.
       operationId: v2.organization.webhook.delete
       tags:
         - Organization Webhooks
@@ -57632,9 +57916,8 @@ paths:
       summary: Simulate organization webhook
       description: |-
         Simulate an organization webhook for testing purposes. To call this endpoint,
-        you must have the `user_manage` scope on a short-lived access token created
-        either in the web app or programmatically using the [Login](/reference/userlogin#/)
-        endpoint.
+        you must have the `wallet_manage_all` or `enterprise_manage_all` scope. Requests
+        without either scope receive a 401 response.
       operationId: v2.organization.webhook.simulate
       tags:
         - Organization Webhooks
@@ -57951,7 +58234,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
                   - $ref: '#/components/schemas/InvalidEnterpriseId1'
                   - $ref: '#/components/schemas/InvalidOrganizationId'
         '401':
@@ -59148,6 +59431,328 @@ paths:
               schema: {}
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/sendlabels:
+    get:
+      summary: List send labels
+      description: List all send labels for the enterprise. Address and coin parameters are optional.
+      operationId: v2.sendlabels.list
+      tags:
+        - Send label
+      x-internal: false
+      parameters:
+        - name: coin
+          description: Filter by coin. Required by the controller when `address` is supplied. An empty value is treated as absent.
+          in: query
+          schema:
+            type: string
+        - name: address
+          description: Filter by address string. Requires `coin`.
+          in: query
+          schema:
+            type: string
+            example: 2MvrwRYBAuRtPTiZ5MyKg42Ke55W3fZJfZS
+            maxLength: 250
+        - name: enterpriseId
+          description: The enterprise whose send labels are listed.
+          in: query
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PublicID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  description: 'A send label: a human-readable name attached to an address for a coin within an enterprise.'
+                  properties:
+                    id:
+                      allOf:
+                        - $ref: '#/components/schemas/PublicID'
+                      description: The ID of the send label
+                    coin:
+                      allOf:
+                        - $ref: '#/components/schemas/CoinString'
+                      description: The coin the label applies to. Tokens are stored under their underlying chain
+                    address:
+                      allOf:
+                        - $ref: '#/components/schemas/AddressString'
+                      description: The labelled address
+                    enterpriseId:
+                      allOf:
+                        - $ref: '#/components/schemas/PublicID'
+                      description: The ID of the enterprise the label belongs to
+                    label:
+                      type: string
+                      description: The human-readable label for the address
+                  required:
+                    - id
+                    - coin
+                    - address
+                    - enterpriseId
+                    - label
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Create send label
+      description: Create an address send label for an enterprise.
+      operationId: v2.sendlabels.create
+      tags:
+        - Send label
+      x-internal: false
+      parameters: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Create Send Label Request Body
+
+                The request body for creating a send label: the coin, address and enterprise the label applies to, and the label text itself.
+              properties:
+                coin:
+                  allOf:
+                    - $ref: '#/components/schemas/CoinNonEmptyString'
+                  description: |-
+                    The coin the label applies to.
+
+                    Tokens are stored under their underlying chain.
+                address:
+                  allOf:
+                    - $ref: '#/components/schemas/SendLabelAddress'
+                  description: |-
+                    The address to label.
+
+                    Must be a valid send label address for the coin.
+                enterpriseId:
+                  allOf:
+                    - $ref: '#/components/schemas/PublicID'
+                  description: |-
+                    The ID of the enterprise the label belongs to.
+
+                    The caller must be an enterprise admin or a wallet admin or spender in the enterprise.
+                label:
+                  allOf:
+                    - $ref: '#/components/schemas/CreateSendLabelText'
+                  description: |-
+                    The human-readable label for the address.
+
+                    Must be between 1 and 250 characters.
+              required:
+                - coin
+                - address
+                - enterpriseId
+                - label
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseSendLabel'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/sendlabels/{id}:
+    delete:
+      summary: Delete send label
+      description: Deletes an address send label by the specified id and returns the deleted label.
+      operationId: v2.sendlabels.delete
+      tags:
+        - Send label
+      x-internal: false
+      parameters:
+        - name: id
+          description: The ID of the send label
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PublicID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseSendLabel'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    get:
+      summary: Get send label by id
+      description: Gets an address send label by the specified id.
+      operationId: v2.sendlabels.get
+      tags:
+        - Send label
+      x-internal: false
+      parameters:
+        - name: id
+          description: The ID of the send label
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PublicID'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseSendLabel'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    put:
+      summary: Update send label
+      description: Updates an address send label by the specified id.
+      operationId: v2.sendlabels.update
+      tags:
+        - Send label
+      x-internal: false
+      parameters:
+        - name: id
+          description: The ID of the send label
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PublicID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Update Send Label Request Body
+
+                The request body for updating a send label: the new label text for the address.
+              properties:
+                label:
+                  allOf:
+                    - $ref: '#/components/schemas/UpdateSendLabelText'
+                  description: |-
+                    The new human-readable label for the address.
+
+                    Must be between 1 and 250 characters.
+              required:
+                - label
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EnterpriseSendLabel'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -60917,13 +61522,13 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidWalletId1'
+                $ref: '#/components/schemas/InvalidWalletId'
         '500':
           description: Internal Server Error
           content:
@@ -60985,13 +61590,13 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidWalletId1'
+                $ref: '#/components/schemas/InvalidWalletId'
         '500':
           description: Internal Server Error
           content:
@@ -61032,7 +61637,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
                   - $ref: '#/components/schemas/InvalidPaymentHash'
         '404':
           description: Not Found
@@ -61040,7 +61645,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
                   - $ref: '#/components/schemas/InvalidPaymentHash'
         '500':
           description: Internal Server Error
@@ -61108,13 +61713,13 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidWalletId1'
+                $ref: '#/components/schemas/InvalidWalletId'
         '500':
           description: Internal Server Error
           content:
@@ -61153,7 +61758,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
                   - $ref: '#/components/schemas/InvalidPaymentId'
         '404':
           description: Not Found
@@ -61161,7 +61766,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
                   - $ref: '#/components/schemas/InvalidPaymentId'
         '500':
           description: Internal Server Error
@@ -61222,13 +61827,13 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
         '404':
           description: Not Found
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/InvalidWalletId1'
+                $ref: '#/components/schemas/InvalidWalletId'
         '500':
           description: Internal Server Error
           content:
@@ -61267,7 +61872,7 @@ paths:
               schema:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
                   - $ref: '#/components/schemas/InvalidTxId'
         '404':
           description: Not Found
@@ -61275,7 +61880,7 @@ paths:
             application/json:
               schema:
                 oneOf:
-                  - $ref: '#/components/schemas/InvalidWalletId1'
+                  - $ref: '#/components/schemas/InvalidWalletId'
                   - $ref: '#/components/schemas/InvalidTxId'
         '500':
           description: Internal Server Error
@@ -62626,6 +63231,215 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/txrequests/{txRequestId}/signatureshares:
+    delete:
+      summary: Delete signature shares on a transaction request
+      description: |-
+        Allows users to clear the signature shares on a transaction request. This will also set the
+        state to pendingUserSignature. Use only with MPC wallets.
+      operationId: v2.wallet.txrequest.signatureshare.delete1
+      tags:
+        - Transaction request
+      x-internal: false
+      parameters:
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+        - name: txRequestId
+          description: The ID of the transaction request
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/TransactionRequestId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Delete Signature Shares Request Body
+
+                The optional request body for clearing the signature shares on a transaction request.
+              properties:
+                skipRebuild:
+                  type: boolean
+                  description: |-
+                    Skip rebuilding the transaction request after clearing signature shares.
+
+                    When true, only the signature shares are deleted and the transactions are not rebuilt.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  allOf:
+                    - type: object
+                      properties:
+                        vssProof:
+                          type: string
+                          description: The VSS proof of the signature share
+                        privateShareProof:
+                          type: string
+                          description: The private share proof
+                        publicShare:
+                          type: string
+                          description: The public share
+                    - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Create a signature share for the transaction request
+      description: Allows users to supply their signature share for signing. Use only with MPC wallets.
+      operationId: v2.wallet.txrequest.signatureshare.create1
+      tags:
+        - Transaction request
+      x-internal: false
+      parameters:
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+        - name: txRequestId
+          description: The ID of the transaction request
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/TransactionRequestId'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Create Signature Share Request Body
+
+                The request body for supplying a user signature share. At least one share must be supplied, either in `signatureShares` or in the deprecated `signatureShare`.
+              properties:
+                signatureShares:
+                  allOf:
+                    - $ref: '#/components/schemas/CreateTransactionRequestSignatureShareSignatureShares'
+                  description: |-
+                    User-provided shares to be used in the ECDSA or EDDSA MPC signing flow.
+
+                    Must contain at least one share when supplied. Takes precedence over `signatureShare`.
+                signatureShare:
+                  allOf:
+                    - type: object
+                      properties:
+                        privateShareProof:
+                          type: string
+                          description: The private share proof
+                        publicShare:
+                          type: string
+                          description: The public share
+                        vssProof:
+                          type: string
+                          description: The VSS proof of the signature share
+                    - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                  description: |-
+                    A user-provided share to be used in the ECDSA or EDDSA MPC signing flow.
+
+                    Deprecated: use `signatureShares` instead. Required when `signatureShares` is not supplied.
+                signerShare:
+                  type: string
+                  description: |-
+                    An openPGP ASCII armored message containing the previous signer's offset secret share.
+
+                    Encrypted to the known HSM public key. Must be provided when uploading an R share.
+                userPublicGpgKey:
+                  type: string
+                  description: |-
+                    The user's public GPG key.
+
+                    Used by the signing flow to encrypt shares back to the user.
+                attestation:
+                  type: object
+                  description: WebAuthn assertion authorizing this request.
+                  properties:
+                    authenticatorData:
+                      type: string
+                      description: WebAuthn authenticatorData (base64url)
+                    clientDataJSON:
+                      type: string
+                      description: WebAuthn clientDataJSON (base64url)
+                    credentialId:
+                      type: string
+                      description: Passkey credential ID used to locate the registered authenticator public key
+                    signature:
+                      type: string
+                      description: WebAuthn assertion signature (base64url)
+                  required:
+                    - authenticatorData
+                    - clientDataJSON
+                    - credentialId
+                    - signature
+              required:
+                - signatureShares
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignatureShare1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/wallet/{walletId}/txrequests/{txRequestId}/transactions/{transactionIdx}/challenge:
     post:
       summary: Create ECDSA MPC challenge for transaction
@@ -62747,6 +63561,193 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ExchangeEddsaCommitmentsResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/txrequests/{txRequestId}/transactions/{transactionIdx}/signatureshares:
+    post:
+      summary: Create a signature share for a transaction on a transaction request
+      description: |-
+        Allows users to supply their signature share for signing. This route is only valid for
+        transaction request full. Use only with MPC wallets.
+      operationId: v2.wallet.txrequest.transaction.signatureshare.create1
+      tags:
+        - Transaction request
+      x-internal: false
+      parameters:
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+        - name: txRequestId
+          description: The ID of the transaction request
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/TransactionRequestId'
+        - name: transactionIdx
+          description: The index of the transaction to sign
+          in: path
+          required: true
+          schema:
+            type: string
+            format: number
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Create Signature Share Request Body
+
+                The request body for supplying a user signature share. At least one share must be supplied, either in `signatureShares` or in the deprecated `signatureShare`.
+              properties:
+                signatureShares:
+                  allOf:
+                    - $ref: '#/components/schemas/CreateTransactionRequestTransactionSignatureShareSignatureShares'
+                  description: |-
+                    User-provided shares to be used in the ECDSA or EDDSA MPC signing flow.
+
+                    Must contain at least one share when supplied. Takes precedence over `signatureShare`.
+                signatureShare:
+                  allOf:
+                    - type: object
+                      properties:
+                        privateShareProof:
+                          type: string
+                          description: The private share proof
+                        publicShare:
+                          type: string
+                          description: The public share
+                        vssProof:
+                          type: string
+                          description: The VSS proof of the signature share
+                    - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+                  description: |-
+                    A user-provided share to be used in the ECDSA or EDDSA MPC signing flow.
+
+                    Deprecated: use `signatureShares` instead. Required when `signatureShares` is not supplied.
+                signerShare:
+                  type: string
+                  description: |-
+                    An openPGP ASCII armored message containing the previous signer's offset secret share.
+
+                    Encrypted to the known HSM public key. Must be provided when uploading an R share.
+                userPublicGpgKey:
+                  type: string
+                  description: |-
+                    The user's public GPG key.
+
+                    Used by the signing flow to encrypt shares back to the user.
+                attestation:
+                  type: object
+                  description: WebAuthn assertion authorizing this request.
+                  properties:
+                    authenticatorData:
+                      type: string
+                      description: WebAuthn authenticatorData (base64url)
+                    clientDataJSON:
+                      type: string
+                      description: WebAuthn clientDataJSON (base64url)
+                    credentialId:
+                      type: string
+                      description: Passkey credential ID used to locate the registered authenticator public key
+                    signature:
+                      type: string
+                      description: WebAuthn assertion signature (base64url)
+                  required:
+                    - authenticatorData
+                    - clientDataJSON
+                    - credentialId
+                    - signature
+              required:
+                - signatureShares
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignatureShare1'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/txrequests/{txRequestId}/transfers:
+    post:
+      summary: Create transfer for transaction request
+      description: Create a transfer for a transaction request and return that transfer. Use only with MPC wallets.
+      operationId: v2.wallet.txrequest.transfers.create1
+      tags:
+        - Transaction request
+      x-internal: false
+      parameters:
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdString'
+        - name: txRequestId
+          description: The ID of the transaction request
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/TransactionRequestId'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer1'
         '400':
           description: Bad Request
           content:
@@ -63754,7 +64755,8 @@ paths:
         This secret will be used to generate webhook notification signatures so that you can verify that the notification comes from BitGo using the v2.webhook.notification.verify endpoint.
         The secret can be rotated by calling this endpoint again at a cadence of once every 5 minutes.
         You must specify exactly one of `enterpriseId` or `organizationId`.
-        The requester must be an admin of the specified enterprise or organization.
+        The requester must be an admin of the specified enterprise or organization and hold the `user_manage` or `enterprise_manage_all` scope.
+        Requests without either scope receive a 401 response.
       operationId: v2.webhook.secret.create
       tags:
         - Webhook
@@ -63782,6 +64784,12 @@ paths:
                 $ref: '#/components/schemas/CreateWebhookSecretResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
           content:
             application/json:
               schema:
@@ -69355,12 +70363,6 @@ components:
       schema:
         type: string
       example: wallet.segregated.transfer
-    address:
-      name: address
-      in: query
-      description: Filter by address string
-      schema:
-        $ref: '#/components/schemas/AddressString3'
     allTokens:
       name: allTokens
       schema:
@@ -69369,12 +70371,6 @@ components:
       example: true
       description: Include data for all subtokens (i.e. ERC20 Tokens, Stellar Tokens)
     coin:
-      name: coin
-      in: query
-      description: Filter by coin
-      schema:
-        $ref: '#/components/schemas/Coin'
-    coin1:
       name: coin
       in: query
       description: Filter by coin.
@@ -69431,12 +70427,6 @@ components:
         type: boolean
     enterprise:
       name: enterprise
-      in: query
-      description: Filter by enterprise
-      schema:
-        $ref: '#/components/schemas/Id'
-    enterpriseId:
-      name: enterpriseId
       in: query
       description: Filter by enterprise
       schema:
@@ -71153,6 +72143,16 @@ components:
           type: string
         message:
           type: string
+    AddKey:
+      title: AddKey
+      allOf:
+        - $ref: '#/components/schemas/Key1'
+        - $ref: '#/components/schemas/EphemeralData'
+    AddKeyResponse:
+      title: AddKeyResponse
+      oneOf:
+        - $ref: '#/components/schemas/AddKey'
+        - $ref: '#/components/schemas/MpcKeyResponse'
     AddUserToOrganizationEnterpriseResponseC:
       title: AddUserToOrganizationEnterpriseResponseC
       type: object
@@ -71973,6 +72973,8 @@ components:
         - cleared
         - released
         - reserved
+        - pending_approval
+        - rejected
     AllocationType:
       title: AllocationType
       type: string
@@ -74723,10 +75725,6 @@ components:
           type: string
           description: A description for the condition parameter Value which can be shown to an end user.
           example: A backing wallet
-    BackupKeyType:
-      type: string
-      description: Coin name used to choose correct KRS public key for the given provider. Possible valid values are "btc", "eth", "bitcoin"
-      example: eth
     BadRequestErrorResponse:
       required:
         - error
@@ -74779,17 +75777,6 @@ components:
           type: integer
           description: the height of the block that provides the base values
           example: 11228504
-    BankAccountCurrency:
-      title: BankAccountCurrency
-      description: |
-        The currency of the bank account. If null, defaults to `fiatusd`.
-      type: string
-      nullable: true
-      enum:
-        - fiatusd
-        - fiateur
-        - null
-      example: fiatusd
     BankAccountFeeInfo:
       title: BankAccountFeeInfo
       allOf:
@@ -74859,11 +75846,6 @@ components:
         - owner
         - idHash
         - verificationState
-    BankAccountRequest:
-      anyOf:
-        - $ref: '#/components/schemas/DomesticWireBankAccount'
-        - $ref: '#/components/schemas/InternationalWireBankAccount'
-        - $ref: '#/components/schemas/CBITBankAccount'
     BankAccountRequest1:
       title: BankAccountRequest
       description: |
@@ -75157,17 +76139,6 @@ components:
         - ownerName
         - verificationState
         - createdAt
-    BankAccountType:
-      title: BankAccountType
-      description: |
-        The type of bank account. If null, defaults `wire`.
-      type: string
-      nullable: true
-      enum:
-        - wire
-        - cbit
-        - null
-      example: wire
     BankAccountsArrayResponse:
       title: BankAccountsArrayResponse
       description: Unified schema for an array of bank accounts
@@ -78184,88 +79155,6 @@ components:
           properties:
             validatorAddress:
               type: string
-    CBITBankAccount:
-      title: CBIT Bank Account
-      type: object
-      description: |
-        An external bank account. `routingNumber` must be set for US bank accounts.
-        `swiftCode` must be set for banks outside the US.
-      properties:
-        accountNumber:
-          description: Bank account number or IBAN.
-          type: string
-          minLength: 1
-          maxLength: 34
-          example: '0114584906'
-        enterpriseId:
-          $ref: '#/components/schemas/Id'
-        address:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        address1:
-          type: string
-          example: 2390 El Camino Real
-        address2:
-          type: string
-          example: Palo Alto, CA 94306
-        address3:
-          type: string
-          example: ''
-        name:
-          type: string
-          example: America California Bank
-        ownerName:
-          type: string
-          example: Donald E. Knuth
-        ownerAddress:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        owner:
-          type: object
-          description: Bank account owner
-          properties:
-            name:
-              type: string
-              example: Donald E. Knuth
-            address1:
-              type: string
-              example: Computer Science Department
-            address2:
-              type: string
-              example: Stanford University
-            address3:
-              type: string
-              example: Stanford, CA 94305-9045
-          required:
-            - name
-            - address1
-        externalId:
-          description: Required for CBIT transfers.
-          type: string
-          example: a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6
-        shortCountryCode:
-          $ref: '#/components/schemas/ShortCountryCode'
-        type:
-          $ref: '#/components/schemas/BankAccountType'
-        currency:
-          $ref: '#/components/schemas/BankAccountCurrency'
-        furtherCreditTo:
-          type: string
-          example: Donald E. Knuth
-        intermediaryBankName:
-          type: string
-          example: America California Bank
-        intermediaryBankId:
-          type: string
-          example: 59cd72485007a239fb00282ed480da1f
-      required:
-        - accountNumber
-        - address1
-        - shortCountryCode
-        - name
-        - owner
-        - enterpriseId
-        - externalId
     CSPRStakingOptions:
       title: CSPR
       type: object
@@ -81065,60 +81954,6 @@ components:
         - userId
         - requestedProducts
       title: CreateIndividualIdentityBody
-    CreateKey:
-      type: object
-      properties:
-        coinSpecific:
-          $ref: '#/components/schemas/KeyCreateCoinSpecific'
-        encryptedPrv:
-          type: string
-          description: Private part of this key pair, encrypted with a passphrase that only the client knows. Recommended for all sources except `bitgo`, but optional for self-custody wallets.
-        source:
-          $ref: '#/components/schemas/KeySource'
-        enterprise:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: The Enterprise that will own this key
-        newFeeAddress:
-          type: boolean
-          description: Create a new keychain instead of fetching enterprise key (only for Ethereum)
-        originalPasscodeEncryptionCode:
-          type: string
-          description: Passphrase that is used to decrypt box D (i.e. encrypted wallet passphrase) on your wallet keycard
-        pub:
-          allOf:
-            - $ref: '#/components/schemas/Pub'
-          description: Public part of this key pair. If the key type is "independent" (default) it is required for user key and is optional for backup key. If key type is "tss" this field is not required.
-        isDistributedCustody:
-          type: boolean
-          description: Set to true if you want to create a key for distributed custody. This parameter is only valid if you have the distributed custody enterprise license enabled and are creating a BitGo key. Otherwise it will throw an error.
-          example: false
-        commonPub:
-          type: string
-          description: The commonPub for the key. This value is necessary for MPC keys when the source is either “user” or “backup”. Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
-        commonKeychain:
-          type: string
-          description: The commonKeychain for the key if this is a MPC key. This value is required to be set when the type is set to “tss” and when the source is either “user” or “backup”. Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key. This value is the common pub concatenated with the common chaincode.
-        keyShares:
-          type: array
-          items:
-            $ref: '#/components/schemas/KeyShare'
-          description: Only required for BitGo MPC keys. Those will be the shares from the user and the backup provider that BitGo will end up generating the BitGo key (share) from.
-        type:
-          $ref: '#/components/schemas/BackupKeyType'
-        keyType:
-          allOf:
-            - $ref: '#/components/schemas/KeyType'
-            - default: tss
-        userGPGPublicKey:
-          type: string
-          description: User's public key in ASCII armored format. Only required for BitGo MPC keys.
-        backupGPGPublicKey:
-          type: string
-          description: Backup public key in ASCII armored format (may be managed by user or KRS). Only required for BitGo MPC keys.
-        isMPCv2:
-          type: boolean
-          description: Whether a key or wallet is using the Multi-Party Computation version 2 protocol. Optional field.
     CreateOrganizationEnterpriseResponse:
       title: CreateOrganizationEnterpriseResponse
       type: object
@@ -81236,23 +82071,10 @@ components:
         Intentionally differs from {@link UpdateRemovePolicyRuleType}: create exposes newer names
         (e.g. `allTxNoFiat`, `coinAddressWhitelist`) while update/delete must accept legacy type
         strings stored on existing rules (e.g. `bitcoinAddressWhitelist`, `transactionLimit`).
-    CreateSendLabel:
-      type: object
-      properties:
-        coin:
-          $ref: '#/components/schemas/Coin'
-        address:
-          $ref: '#/components/schemas/AddressString3'
-        enterpriseId:
-          $ref: '#/components/schemas/Id'
-        label:
-          type: string
-          maxLength: 250
-      required:
-        - coin
-        - address
-        - enterpriseId
-        - label
+    CreateSendLabelText:
+      title: CreateSendLabelText
+      type: string
+      description: A non-empty label of at most 250 characters.
     CreateSignatureShareRequest:
       type: object
       properties:
@@ -81292,6 +82114,42 @@ components:
               type: string
               description: WebAuthn authenticatorData (base64url)
           description: WebAuthn assertion authorizing this request.
+    CreateTransactionRequestSignatureShareSignatureShares:
+      title: CreateTransactionRequestSignatureShareSignatureShares
+      type: array
+      items:
+        allOf:
+          - type: object
+            properties:
+              privateShareProof:
+                type: string
+                description: The private share proof
+              publicShare:
+                type: string
+                description: The public share
+              vssProof:
+                type: string
+                description: The VSS proof of the signature share
+          - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+        description: An optional non-empty list of user signature shares.
+    CreateTransactionRequestTransactionSignatureShareSignatureShares:
+      title: CreateTransactionRequestTransactionSignatureShareSignatureShares
+      type: array
+      items:
+        allOf:
+          - type: object
+            properties:
+              privateShareProof:
+                type: string
+                description: The private share proof
+              publicShare:
+                type: string
+                description: The public share
+              vssProof:
+                type: string
+                description: The VSS proof of the signature share
+          - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
+        description: An optional non-empty list of user signature shares.
     CreateWallet:
       type: object
       properties:
@@ -82006,23 +82864,214 @@ components:
           type: string
       required:
         - txId
-    Deposit:
+    DepositBankAccountResponse:
+      title: DepositBankAccountResponse
+      type: object
+      description: |-
+        Serialized bank account as returned by the depositinfo controller.
+        Flat wire superset of the upstream discriminated union (BankAccountResponse,
+        8 variants); part 2 can tighten to the union. Derived from
+      properties:
+        id:
+          type: string
+        idHash:
+          type: string
+        currency:
+          type: string
+        token:
+          type: string
+        name:
+          type: string
+        shortCountryCode:
+          type: string
+        accountNumber:
+          type: string
+        enterpriseId:
+          type: string
+        trustOrg:
+          type: string
+        verificationState:
+          type: string
+          enum:
+            - pending
+            - removed
+            - revise
+            - approved
+            - rejected
+        type:
+          type: string
+          enum:
+            - sen
+            - wire
+            - rtp
+            - cbit
+            - ach
+            - sepa
+            - blinc
+            - lead_internal
+            - imps
+            - neft
+            - rtgs
+        createdAt:
+          type: string
+          description: The upstream Date is serialized as a string in the HTTP response.
+        address1:
+          type: string
+        address2:
+          type: string
+        address3:
+          type: string
+        address:
+          type: string
+        ownerAddress:
+          type: string
+        routingNumber:
+          type: string
+        swiftCode:
+          type: string
+        accountType:
+          type: string
+          enum:
+            - unknown
+            - checking
+            - saving
+        externalId:
+          type: string
+        description:
+          type: string
+        virtualDepositOnly:
+          type: boolean
+        metadata:
+          type: string
+        furtherCreditTo:
+          type: string
+        intermediaryBankName:
+          type: string
+        intermediaryBankId:
+          type: string
+      required:
+        - id
+        - idHash
+        - currency
+        - token
+        - name
+        - shortCountryCode
+        - accountNumber
+        - enterpriseId
+        - trustOrg
+        - verificationState
+        - type
+        - createdAt
+    DepositInfoResponse:
+      title: DepositInfoResponse
       type: object
       properties:
         toAddress:
           type: string
-          description: The address the deposit will be received at
-          example: 1234567890ABCDEF-XJBCOEF
-        valueString:
-          allOf:
-            - $ref: '#/components/schemas/IntegerString'
-          description: The value (in cents/base units) of the deposit
+          description: The address at which the deposit will be received.
         token:
           type: string
-          description: If this is a token entry, the token's symbol
-          example: ousd
+          description: The token symbol.
         toBankAccount:
-          $ref: '#/components/schemas/BankAccountRequest'
+          allOf:
+            - $ref: '#/components/schemas/DepositBankAccountResponse'
+          description: The first matching fiat bank account.
+        toBankAccounts:
+          type: array
+          items:
+            type: object
+            description: All matching fiat bank accounts.
+            properties:
+              id:
+                type: string
+              idHash:
+                type: string
+              currency:
+                type: string
+              token:
+                type: string
+              name:
+                type: string
+              shortCountryCode:
+                type: string
+              accountNumber:
+                type: string
+              enterpriseId:
+                type: string
+              trustOrg:
+                type: string
+              verificationState:
+                type: string
+                enum:
+                  - pending
+                  - removed
+                  - revise
+                  - approved
+                  - rejected
+              type:
+                type: string
+                enum:
+                  - sen
+                  - wire
+                  - rtp
+                  - cbit
+                  - ach
+                  - sepa
+                  - blinc
+                  - lead_internal
+                  - imps
+                  - neft
+                  - rtgs
+              createdAt:
+                type: string
+                description: The upstream Date is serialized as a string in the HTTP response.
+              address1:
+                type: string
+              address2:
+                type: string
+              address3:
+                type: string
+              address:
+                type: string
+              ownerAddress:
+                type: string
+              routingNumber:
+                type: string
+              swiftCode:
+                type: string
+              accountType:
+                type: string
+                enum:
+                  - unknown
+                  - checking
+                  - saving
+              externalId:
+                type: string
+              description:
+                type: string
+              virtualDepositOnly:
+                type: boolean
+              metadata:
+                type: string
+              furtherCreditTo:
+                type: string
+              intermediaryBankName:
+                type: string
+              intermediaryBankId:
+                type: string
+            required:
+              - id
+              - idHash
+              - currency
+              - token
+              - name
+              - shortCountryCode
+              - accountNumber
+              - enterpriseId
+              - trustOrg
+              - verificationState
+              - type
+              - createdAt
       required:
         - toAddress
         - token
@@ -82079,6 +83128,9 @@ components:
         Deposit instructions describing where the source funds should be sent.
         Returned after order creation when a treasury/deposit address is resolved.
         Exported so the list endpoint can reuse the same shape.
+    DepositWalletId:
+      title: DepositWalletId
+      type: string
     DeprecatedBankAccountRequest:
       title: DeprecatedBankAccountRequest
       description: |
@@ -83005,91 +84057,6 @@ components:
         - type
         - routingNumber
         - accountType
-    DomesticWireBankAccount:
-      title: Domestic Wire Bank Account
-      type: object
-      description: |
-        An external bank account. `routingNumber` must be set for US bank accounts.
-        `swiftCode` must be set for banks outside the US.
-      properties:
-        accountNumber:
-          description: Bank account number or IBAN.
-          type: string
-          minLength: 1
-          maxLength: 34
-          example: '0114584906'
-        enterpriseId:
-          $ref: '#/components/schemas/Id'
-        address:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        address1:
-          type: string
-          example: 2390 El Camino Real
-        address2:
-          type: string
-          example: Palo Alto, CA 94306
-        address3:
-          type: string
-          example: ''
-        name:
-          type: string
-          example: America California Bank
-        ownerName:
-          type: string
-          example: Donald E. Knuth
-        ownerAddress:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        owner:
-          type: object
-          description: Bank account owner
-          properties:
-            name:
-              type: string
-              example: Donald E. Knuth
-            address1:
-              type: string
-              example: Computer Science Department
-            address2:
-              type: string
-              example: Stanford University
-            address3:
-              type: string
-              example: Stanford, CA 94305-9045
-          required:
-            - name
-            - address1
-        routingNumber:
-          description: US bank routing number. Required for domestic wire transfers within the US.
-          type: string
-          example: '129131673'
-          minLength: 9
-          maxLength: 9
-          pattern: ^[0-9]+$
-        shortCountryCode:
-          $ref: '#/components/schemas/ShortCountryCode'
-        type:
-          $ref: '#/components/schemas/BankAccountType'
-        currency:
-          $ref: '#/components/schemas/BankAccountCurrency'
-        furtherCreditTo:
-          type: string
-          example: Donald E. Knuth
-        intermediaryBankName:
-          type: string
-          example: America California Bank
-        intermediaryBankId:
-          type: string
-          example: 59cd72485007a239fb00282ed480da1f
-      required:
-        - accountNumber
-        - address1
-        - shortCountryCode
-        - name
-        - owner
-        - enterpriseId
-        - routingNumber
     DomesticWireBankAccountRequest:
       title: DomesticWireBankAccountRequest
       description: Request schema for creating a domestic wire bank account.
@@ -84131,6 +85098,36 @@ components:
             type: array
             items:
               $ref: '#/components/schemas/AuditableItem'
+    EnterpriseSendLabel:
+      title: EnterpriseSendLabel
+      type: object
+      description: 'A send label: a human-readable name attached to an address for a coin within an enterprise.'
+      properties:
+        id:
+          allOf:
+            - $ref: '#/components/schemas/PublicID'
+          description: The ID of the send label
+        coin:
+          allOf:
+            - $ref: '#/components/schemas/CoinString'
+          description: The coin the label applies to. Tokens are stored under their underlying chain
+        address:
+          allOf:
+            - $ref: '#/components/schemas/AddressString'
+          description: The labelled address
+        enterpriseId:
+          allOf:
+            - $ref: '#/components/schemas/PublicID'
+          description: The ID of the enterprise the label belongs to
+        label:
+          type: string
+          description: The human-readable label for the address
+      required:
+        - id
+        - coin
+        - address
+        - enterpriseId
+        - label
     EnterpriseSettings:
       title: EnterpriseSettings
       type: object
@@ -84677,6 +85674,30 @@ components:
         - pendingChainInitialization
         - creationFailure
         - lastMemoId
+    EphemeralData:
+      title: EphemeralData
+      type: object
+      properties:
+        keyShares:
+          type: array
+          items:
+            allOf:
+              - type: object
+                properties:
+                  hsmSig:
+                    type: string
+                    description: The HSM signature
+                  privateShareProof:
+                    type: string
+                    description: The certificate of the private share, signed by the source of the key share.
+                  vssProof:
+                    type: string
+                    description: The verifiable shamir share verification value
+              - $ref: '#/components/schemas/KeyShareBaseJSON'
+        commonKeychainSig:
+          type: string
+        walletHSMGPGPublicKeySigs:
+          type: string
     Error:
       type: object
       description: Error response.
@@ -86836,6 +87857,17 @@ components:
           type: string
         status:
           type: integer
+    GenericError:
+      title: GenericError
+      type: object
+      properties:
+        error:
+          type: string
+        requestId:
+          type: string
+      required:
+        - error
+        - requestId
     GenericReportParamsJSON:
       title: GenericReportParamsJSON
       type: object
@@ -87709,6 +88741,33 @@ components:
               - allowedDestinations
       required:
         - assetPairs
+    GetFederationError:
+      title: GetFederationError
+      type: object
+      properties:
+        detail:
+          type: string
+        error:
+          type: string
+        name:
+          type: string
+        requestId:
+          type: string
+      required:
+        - detail
+        - error
+    GetFederationResponse:
+      title: GetFederationResponse
+      type: object
+      properties:
+        account_id:
+          type: string
+        stellar_address:
+          type: string
+        memo_type:
+          type: string
+        memo:
+          type: string
     GetFeeTokensResponse:
       title: GetFeeTokensResponse
       type: object
@@ -90607,25 +91666,6 @@ components:
         - Traders / Trading (High Frequency, Proprietary, Market Maker)
         - Other - Default
         - Weapons Dealers
-    IdentityStatus:
-      type: string
-      enum:
-        - approved
-        - declined
-        - input error
-        - ssn error
-        - gov id error
-        - ssn verified
-        - gov id verified
-        - evaluating submission
-        - awaiting document upload
-        - records uploaded
-        - in review
-        - incomplete verifications
-        - awaiting signature
-        - signature submitted
-        - initiating
-        - additional information submitted
     IdentityStatus1:
       title: IdentityStatus
       type: string
@@ -91916,91 +92956,6 @@ components:
         - type
         - swiftCode
         - accountType
-    InternationalWireBankAccount:
-      title: International Wire Bank Account
-      type: object
-      description: |
-        An external bank account. `routingNumber` must be set for US bank accounts.
-        `swiftCode` must be set for banks outside the US.
-      properties:
-        accountNumber:
-          description: Bank account number or IBAN.
-          type: string
-          minLength: 1
-          maxLength: 34
-          example: '0114584906'
-        enterpriseId:
-          $ref: '#/components/schemas/Id'
-        address:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        address1:
-          type: string
-          example: 2390 El Camino Real
-        address2:
-          type: string
-          example: Palo Alto, CA 94306
-        address3:
-          type: string
-          example: ''
-        name:
-          type: string
-          example: America California Bank
-        ownerName:
-          type: string
-          example: Donald E. Knuth
-        ownerAddress:
-          type: string
-          example: 2390 El Camino Real, Palo Alto, CA 94306
-        owner:
-          type: object
-          description: Bank account owner
-          properties:
-            name:
-              type: string
-              example: Donald E. Knuth
-            address1:
-              type: string
-              example: Computer Science Department
-            address2:
-              type: string
-              example: Stanford University
-            address3:
-              type: string
-              example: Stanford, CA 94305-9045
-          required:
-            - name
-            - address1
-        swiftCode:
-          description: Bank identifier code, as specified by ISO 9362.  Required for international wire transfers.
-          type: string
-          example: DEUTDEFF500
-          minLength: 8
-          maxLength: 11
-          pattern: ^[A-Z]{6}[0-9A-Z]{2}([0-9A-Z]{3})?$
-        shortCountryCode:
-          $ref: '#/components/schemas/ShortCountryCode'
-        type:
-          $ref: '#/components/schemas/BankAccountType'
-        currency:
-          $ref: '#/components/schemas/BankAccountCurrency'
-        furtherCreditTo:
-          type: string
-          example: Donald E. Knuth
-        intermediaryBankName:
-          type: string
-          example: America California Bank
-        intermediaryBankId:
-          type: string
-          example: 59cd72485007a239fb00282ed480da1f
-      required:
-        - accountNumber
-        - address1
-        - shortCountryCode
-        - name
-        - owner
-        - enterpriseId
-        - swiftCode
     InternationalWireBankAccountRequest:
       title: InternationalWireBankAccountRequest
       description: Request schema for creating an international wire bank account.
@@ -92062,11 +93017,11 @@ components:
                 - InvalidAddress
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
     InvalidEnterpriseId:
       title: Invalid enterprise ID
       allOf:
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
         - properties:
             name:
               type: string
@@ -92086,19 +93041,8 @@ components:
                 - InvalidEnterpriseId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
     InvalidId:
-      allOf:
-        - $ref: '#/components/schemas/PlatformErrorNoName3'
-        - properties:
-            context:
-              type: object
-              properties:
-                id:
-                  $ref: '#/components/schemas/Id'
-          required:
-            - context
-    InvalidId1:
       title: InvalidId
       allOf:
         - type: object
@@ -92115,6 +93059,17 @@ components:
           required:
             - context
         - $ref: '#/components/schemas/PlatformErrorNoName'
+    InvalidId1:
+      allOf:
+        - $ref: '#/components/schemas/PlatformErrorNoName3'
+        - properties:
+            context:
+              type: object
+              properties:
+                id:
+                  $ref: '#/components/schemas/Id'
+          required:
+            - context
     InvalidOFAC1:
       title: Address error
       allOf:
@@ -92143,7 +93098,7 @@ components:
                 - InvalidOrganizationId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
     InvalidPaymentHash:
       title: Invalid Payment Hash
       allOf:
@@ -92155,7 +93110,7 @@ components:
                 - InvalidPaymentHash
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
     InvalidPaymentId:
       title: Invalid Payment Id
       allOf:
@@ -92167,11 +93122,11 @@ components:
                 - InvalidPaymentId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
     InvalidTransferId:
       title: Invalid transfer ID
       allOf:
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
         - properties:
             name:
               type: string
@@ -92191,11 +93146,11 @@ components:
                 - InvalidTxId
           required:
             - name
-        - $ref: '#/components/schemas/InvalidId1'
+        - $ref: '#/components/schemas/InvalidId'
     InvalidUserId:
       title: Invalid user ID
       allOf:
-        - $ref: '#/components/schemas/InvalidId'
+        - $ref: '#/components/schemas/InvalidId1'
         - properties:
             name:
               type: string
@@ -92205,18 +93160,6 @@ components:
           required:
             - name
     InvalidWalletId:
-      title: Invalid wallet id
-      allOf:
-        - $ref: '#/components/schemas/InvalidId'
-        - properties:
-            name:
-              type: string
-              description: Error code
-              enum:
-                - InvalidWalletId
-          required:
-            - name
-    InvalidWalletId1:
       title: Invalid Wallet ID
       allOf:
         - type: object
@@ -92227,7 +93170,19 @@ components:
                 - InvalidWalletId
           required:
             - name
+        - $ref: '#/components/schemas/InvalidId'
+    InvalidWalletId1:
+      title: Invalid wallet id
+      allOf:
         - $ref: '#/components/schemas/InvalidId1'
+        - properties:
+            name:
+              type: string
+              description: Error code
+              enum:
+                - InvalidWalletId
+          required:
+            - name
     IotaBuildOptions:
       title: IOTA Build Options
       allOf:
@@ -92683,17 +93638,6 @@ components:
       allOf:
         - $ref: '#/components/schemas/UnStakingRequestPOSTBodyWithAmount'
       type: object
-    Key:
-      title: Multisig
-      allOf:
-        - $ref: '#/components/schemas/KeyCommon'
-        - type: object
-          properties:
-            pub:
-              $ref: '#/components/schemas/Pub'
-      required:
-        - id
-        - type
     Key1:
       title: Key
       type: object
@@ -92810,39 +93754,6 @@ components:
         - pub
         - source
         - type
-    KeyCommon:
-      type: object
-      properties:
-        encryptedPrv:
-          type: string
-          description: The encrypted private key
-        id:
-          $ref: '#/components/schemas/Id'
-        isBitGo:
-          type: boolean
-          description: True, if this key is owned by BitGo
-          example: false
-        source:
-          $ref: '#/components/schemas/KeySource'
-        type:
-          $ref: '#/components/schemas/KeyType'
-      required:
-        - id
-        - type
-    KeyCreateCoinSpecific:
-      type: object
-      properties:
-        lnbtc:
-          $ref: '#/components/schemas/KeyCreateCoinSpecificLnbtc'
-        tlnbtc:
-          $ref: '#/components/schemas/KeyCreateCoinSpecificLnbtc'
-    KeyCreateCoinSpecificLnbtc:
-      type: object
-      properties:
-        purpose:
-          allOf:
-            - $ref: '#/components/schemas/KeyPurpose'
-          description: The purpose of the key.
     KeyListItem:
       title: KeyListItem
       type: object
@@ -92872,50 +93783,31 @@ components:
               The key can either be a valid `Key` object or `null` if no key is associated.
         required:
           - walletId
-    KeyPurpose:
-      type: string
-      enum:
-        - userAuth
-        - nodeAuth
-      example: userAuth
-    KeyShare:
+    KeyShareBaseJSON:
+      title: KeyShareBaseJSON
       type: object
       properties:
         from:
           allOf:
-            - $ref: '#/components/schemas/KeyShareSource'
+            - $ref: '#/components/schemas/KeyShareSourceC'
           description: The source of the key share.
+          example: user
         to:
           allOf:
-            - $ref: '#/components/schemas/KeyShareSource'
+            - $ref: '#/components/schemas/KeyShareSourceC'
           description: The recipient of the key share.
+          example: backup
         publicShare:
           type: string
           description: Public part of the share concatenated with chain code (64+64 characters hex string).
         privateShare:
           type: string
           description: Private part of the share concatenated with chain code (64+64 characters hex string). Depending on who the source and the recipient are, the share might be encrypted against the recipient's public key.
-        privateShareProof:
-          type: string
-          description: The certificate of the private share, signed by the source of the key share.
-        vssProof:
-          type: string
-          description: The verifiable shamir share verification value
       required:
         - from
         - to
         - publicShare
         - privateShare
-    KeyShareResponse:
-      allOf:
-        - $ref: '#/components/schemas/KeyShare'
-        - type: object
-          properties:
-            hsmSig:
-              type: string
-              description: openPGP ASCII armored public key format string. Can be used to ensure that the "u" value came from the HSM. This contains the HSM signature/certification (signed by bitgo GPG key pair) of the public form of the "u" value and notation packets that indicate the commonPublicKey and the key ids of the two GPG keys used to share wrapping (userGPGPublicKey and backupGPGPublicKey).
-      required:
-        - hsmSig
     KeyShareSource:
       type: string
       enum:
@@ -92923,14 +93815,13 @@ components:
         - backup
         - bitgo
       example: user
-    KeySource:
+    KeyShareSourceC:
+      title: KeyShareSourceC
       type: string
       enum:
+        - user
         - backup
         - bitgo
-        - cold
-        - user
-      example: user
     KeySourceC:
       title: KeySourceC
       type: string
@@ -92939,54 +93830,6 @@ components:
         - cold
         - bitgo
         - backup
-    KeyTSS:
-      title: MPC
-      allOf:
-        - $ref: '#/components/schemas/KeyCommon'
-        - type: object
-          properties:
-            commonKeychain:
-              type: string
-              description: The commonKeychain for the key if this is a MPC key. This value is required to be set when the type is set to “tss” and when the source is either “user” or “backup”. Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key. This value is the concatenation of the common public key (32-byte) with the common chaincode (32-byte) as a hex string.
-            commonPub:
-              type: string
-              description: The common public key. This value is required to be set for MPC keys when the source is either "user" or "backup". Setting this indicates to BitGo that the owner of the key has received all key shares they needed for generating their key.
-      required:
-        - id
-        - type
-        - source
-    KeyTSSCreated:
-      title: MPC key
-      description: This schema contains KeyTSS attributes and several ephemeral fileds which are only available during the key creation since they are not stored.
-      allOf:
-        - $ref: '#/components/schemas/KeyTSS'
-        - type: object
-          properties:
-            commonKeychainSig:
-              type: string
-              description: openPGP ASCII armored pubkey format string. This contains the HSM signature/certification (signed by BitGo MPC GPG key pair) of the commonKeychain. This is necessary for verification purposes to ensure that the commonKeychain value came from BitGo's HSM. Used for full custody/OVC operations.
-            commonPublicKeySig:
-              type: string
-              description: OpenPGP ASCII pubkey armoured string containing HSM signature certification. Allows to ensure that commonPublicKey came from the HSM
-            keyShares:
-              type: array
-              items:
-                $ref: '#/components/schemas/KeyShareResponse'
-            walletHSMGPGPublicKeySigs:
-              type: string
-              description: GPG ASCII armored public key format that consists of HSM signature/certification and GPG notation data appended to the key signature subpackets
-      required:
-        - id
-        - type
-        - source
-    KeyType:
-      type: string
-      enum:
-        - tss
-        - independent
-      default: independent
-      description: A value from a string enum denoting what kind of key this is. Defaults to “independent” indicating an on-chain key is requested. If set to “tss” this tells us that a “tss” key is requested.
-      example: tss
     KeyTypeC:
       title: KeyTypeC
       type: string
@@ -93001,17 +93844,6 @@ components:
         - 585951a5df8380e0e304a553
         - 585951a5df8380e0e30d645c
         - 585951a5df8380e0e30b6147
-    KeysResponse:
-      type: object
-      properties:
-        keys:
-          type: array
-          items:
-            oneOf:
-              - $ref: '#/components/schemas/Key'
-              - $ref: '#/components/schemas/KeyTSS'
-      required:
-        - keys
     Kyc:
       title: Kyc
       type: object
@@ -93308,6 +94140,15 @@ components:
         asks:
           - - '7002.55'
             - '2.7524'
+    LightningCoinSpecific:
+      title: LightningCoinSpecific
+      type: object
+      properties:
+        purpose:
+          type: string
+          enum:
+            - userAuth
+            - nodeAuth
     LightningCoinSpecificUpdateData:
       title: LightningCoinSpecificUpdateData
       type: object
@@ -93881,6 +94722,29 @@ components:
         - total
         - pageNo
         - pageSize
+    ListKeysResponse:
+      title: ListKeysResponse
+      type: object
+      properties:
+        keys:
+          type: array
+          items:
+            oneOf:
+              - $ref: '#/components/schemas/ListedIndependentKey'
+              - $ref: '#/components/schemas/ListedMpcKey'
+            description: Keys visible to the authenticated user, with a public key required for independent keys.
+        limit:
+          type: number
+          description: Maximum number of keys in this page.
+        nextBatchPrevId:
+          type: string
+          description: Cursor for the next page, when more keys are available.
+        totalCount:
+          type: number
+          description: Total matching keys, when available on the first page.
+      required:
+        - keys
+        - limit
     ListOrganizationWebhookNotificationResponseC:
       title: ListOrganizationWebhookNotificationResponseC
       type: object
@@ -94422,6 +95286,90 @@ components:
               - businessModel
       required:
         - organizations
+    ListUserWebhooksResponse:
+      title: ListUserWebhooksResponse
+      type: object
+      description: The block webhooks of a user for a coin.
+      properties:
+        webhooks:
+          type: array
+          items:
+            type: object
+            description: The webhooks of the user for the coin.
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              created:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol.
+                example: btc
+              type:
+                type: string
+                enum:
+                  - block
+                  - wallet_confirmation
+                description: The type of event the webhook listens to, either `block` or `wallet_confirmation`.
+              url:
+                type: string
+                example: https://your.server.com/webhook
+                format: uri
+              version:
+                type: number
+                description: 2 for coins running on API v2.
+                example: 2
+              state:
+                $ref: '#/components/schemas/WebhookState'
+              successiveFailedAttempts:
+                type: number
+                example: 0
+              listenToFailureStates:
+                type: boolean
+                description: Whether or not to listen to failed transactions on chain.
+              label:
+                type: string
+                description: Label of the webhook.
+              scope:
+                allOf:
+                  - $ref: '#/components/schemas/WebhookScope'
+                description: The scope of the webhook. Not stored for webhooks owned by a user, so usually absent.
+              userId:
+                type: string
+                description: The ID of the user that owns the webhook.
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              numConfirmations:
+                type: number
+                description: Number of confirmations before the webhook is triggered.
+                example: 6
+              lastAttempt:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              failingSince:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+            required:
+              - id
+              - created
+              - coin
+              - type
+              - url
+              - version
+              - state
+              - successiveFailedAttempts
+              - listenToFailureStates
+      required:
+        - webhooks
     ListVaspResponse:
       title: ListVaspResponse
       type: object
@@ -94537,6 +95485,151 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/WalletShare1'
+    ListWalletWebhooksResponse:
+      title: ListWalletWebhooksResponse
+      type: object
+      description: The webhooks of a wallet.
+      properties:
+        webhooks:
+          type: array
+          items:
+            type: object
+            description: The webhooks of the wallet.
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              created:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol. Webhooks of v1 wallets report `bitcoin`.
+                example: btc
+              url:
+                type: string
+                example: https://your.server.com/webhook
+                format: uri
+              version:
+                type: number
+                description: 1 for v1 wallets and 2 for coins running on API v2.
+                example: 2
+              state:
+                $ref: '#/components/schemas/WebhookState'
+              successiveFailedAttempts:
+                type: number
+                example: 0
+              listenToFailureStates:
+                type: boolean
+                description: Whether or not to listen to failed transactions on chain.
+              label:
+                type: string
+                description: Label of the webhook.
+              scope:
+                allOf:
+                  - $ref: '#/components/schemas/WebhookScope'
+                description: The scope of the webhook. Not stored for older webhooks, so it can be absent.
+              walletId:
+                type: string
+                description: The ID of the wallet the webhook belongs to.
+                example: 59cd72485007a239fb00282ed480da1f
+              userId:
+                type: string
+                description: The ID of the user that created the webhook.
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              type:
+                allOf:
+                  - $ref: '#/components/schemas/WebhookType'
+                description: The type of event the webhook listens to.
+              numConfirmations:
+                type: number
+                description: Number of confirmations before the webhook is triggered.
+                example: 6
+              lastAttempt:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              failingSince:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              allToken:
+                type: boolean
+                description: Whether the webhook also fires for all tokens of the wallet.
+              txRequestStates:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - pendingApproval
+                    - canceled
+                    - rejected
+                    - initialized
+                    - pendingDelivery
+                    - delivered
+                    - pendingUserSignature
+                    - pendingUserCommitment
+                    - pendingUserRShare
+                    - pendingUserGShare
+                    - readyToSend
+                    - signed
+                    - failed
+                  description: |-
+                    If present, only transaction request state changes from the list will trigger notifications.
+                    If not present, all transaction request state changes will trigger notifications.
+              txRequestTransactionStates:
+                type: array
+                items:
+                  type: string
+                  enum:
+                    - initialized
+                    - pendingSignature
+                    - eddsaPendingCommitment
+                    - eddsaPendingRShare
+                    - eddsaPendingGShare
+                    - ecdsaMPCv2Round1
+                    - ecdsaMPCv2Round2
+                    - ecdsaMPCv2Round3
+                    - eddsaMPCv2Round1
+                    - eddsaMPCv2Round2
+                    - eddsaMPCv2Round3
+                    - redpallasRerandRound1
+                    - redpallasRerandRound2
+                    - redpallasMPCv2Round1
+                    - redpallasMPCv2Round2
+                    - redpallasMPCv2Round3
+                    - readyToCombineShares
+                    - signed
+                    - held
+                    - delivered
+                    - invalidSignature
+                    - rejected
+                  description: |-
+                    If present, only transaction request transaction state changes from the list will trigger
+                    notifications. If not present, all transaction request transaction state changes will trigger notifications.
+              allowBlockedHosts:
+                type: boolean
+                description: Whether the webhook may call blocked hosts. Admin only.
+              internal:
+                type: boolean
+                description: Whether the webhook is internal to BitGo. Admin only.
+            required:
+              - id
+              - created
+              - coin
+              - url
+              - version
+              - state
+              - successiveFailedAttempts
+              - listenToFailureStates
+      required:
+        - webhooks
     ListWebhookKeysResponse:
       type: object
       description: Paginated list of webhook signing keys for an enterprise.
@@ -94563,6 +95656,272 @@ components:
           type: integer
           description: The pagination offset used in this request.
           example: 0
+    ListWebhookNotificationsResponse:
+      title: ListWebhookNotificationsResponse
+      type: object
+      description: A page of webhook notifications, newest first.
+      properties:
+        webhookNotifications:
+          type: array
+          items:
+            type: object
+            description: The webhook notifications of the page.
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              idempotencyKey:
+                type: string
+                description: Unique ID that can be used to de-duplicate notifications.
+              type:
+                type: string
+                description: The type of event that created the notification.
+              wallet:
+                type: string
+                description: The ID of the wallet the notification belongs to.
+              enterprise:
+                type: string
+                description: The ID of the enterprise the notification belongs to.
+              organization:
+                type: string
+                description: The ID of the organization the notification belongs to.
+              bankAccount:
+                type: string
+                description: The ID of the bank account the notification belongs to.
+              url:
+                type: string
+                example: https://your.server.com/webhook
+                format: uri
+              hash:
+                type: string
+                description: A transaction hash for transactions, or a block hash for block notifications.
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol.
+              transfer:
+                type: string
+                description: The ID of the transfer the notification belongs to.
+              state:
+                type: string
+                description: Delivery state of the notification, for example `new` or `processed`.
+              simulation:
+                type: boolean
+                description: Whether the notification was created by a simulation.
+              retries:
+                type: number
+                description: The number of retries that have been attempted for this notification.
+              webhook:
+                type: string
+                description: The ID of the webhook that created the notification.
+              updatedAt:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              nextAttempt:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              version:
+                type: number
+                description: 1 for v1 wallets and 2 for coins running on API v2.
+              allowBlockedHosts:
+                type: boolean
+                description: Whether the notification may be sent to blocked hosts. Admin only.
+              heightToConfirm:
+                type: number
+                description: The block height at which the notification is sent. Admin only.
+              payload:
+                type: string
+                description: The payload that was sent to the URL. Admin only.
+              response:
+                type: object
+                description: The response that the URL returned. Admin only.
+                properties:
+                  code:
+                    oneOf:
+                      - type: number
+                      - type: string
+                  type:
+                    type: string
+                  body:
+                    type: string
+                  error:
+                    type: string
+            required:
+              - id
+        nextBatchPrevId:
+          type: string
+          description: The ID to pass as `prevId` to fetch the next page. Present only when more notifications exist.
+      required:
+        - webhookNotifications
+    ListedIndependentKey:
+      title: ListedIndependentKey
+      type: object
+      properties:
+        id:
+          type: string
+        source:
+          $ref: '#/components/schemas/KeySourceC'
+        ethAddress:
+          type: string
+        derivedFromParentWithSeed:
+          type: string
+        derivedFromParentWithPath:
+          type: string
+        hsmType:
+          type: string
+          enum:
+            - institutional
+            - nitro
+            - SDTrustNitro
+            - frankfurtDETrustNitro
+            - awsKms
+        isBitGo:
+          type: boolean
+        isTrust:
+          type: boolean
+        encryptedPrv:
+          type: string
+        aspKeyId:
+          type: number
+        coinSpecific:
+          type: object
+          additionalProperties: {}
+        commonKeychain:
+          type: string
+        verifiedVssProof:
+          type: boolean
+        commonPub:
+          type: string
+        commonPubSig:
+          type: string
+        provider:
+          type: string
+        distributedCustody:
+          type: string
+        webauthnDevices:
+          type: array
+          items:
+            type: object
+            properties:
+              authenticatorInfo:
+                allOf:
+                  - $ref: '#/components/schemas/AuthenticatorInfo'
+                description: The information about the authenticator
+              encryptedPrv:
+                type: string
+                description: The encrypted private key
+              otpDeviceId:
+                type: string
+                description: The OTP device ID
+              prfSalt:
+                type: string
+                description: The PRF salt
+            required:
+              - authenticatorInfo
+              - encryptedPrv
+              - otpDeviceId
+              - prfSalt
+        migratedFrom:
+          type: string
+        parent:
+          type: string
+        type:
+          type: string
+          enum:
+            - independent
+        pub:
+          type: string
+      required:
+        - id
+        - source
+        - type
+        - pub
+    ListedMpcKey:
+      title: ListedMpcKey
+      type: object
+      properties:
+        id:
+          type: string
+        source:
+          $ref: '#/components/schemas/KeySourceC'
+        ethAddress:
+          type: string
+        derivedFromParentWithSeed:
+          type: string
+        derivedFromParentWithPath:
+          type: string
+        hsmType:
+          type: string
+          enum:
+            - institutional
+            - nitro
+            - SDTrustNitro
+            - frankfurtDETrustNitro
+            - awsKms
+        isBitGo:
+          type: boolean
+        isTrust:
+          type: boolean
+        encryptedPrv:
+          type: string
+        aspKeyId:
+          type: number
+        coinSpecific:
+          type: object
+          additionalProperties: {}
+        commonKeychain:
+          type: string
+        verifiedVssProof:
+          type: boolean
+        commonPub:
+          type: string
+        commonPubSig:
+          type: string
+        provider:
+          type: string
+        distributedCustody:
+          type: string
+        webauthnDevices:
+          type: array
+          items:
+            type: object
+            properties:
+              authenticatorInfo:
+                allOf:
+                  - $ref: '#/components/schemas/AuthenticatorInfo'
+                description: The information about the authenticator
+              encryptedPrv:
+                type: string
+                description: The encrypted private key
+              otpDeviceId:
+                type: string
+                description: The OTP device ID
+              prfSalt:
+                type: string
+                description: The PRF salt
+            required:
+              - authenticatorInfo
+              - encryptedPrv
+              - otpDeviceId
+              - prfSalt
+        migratedFrom:
+          type: string
+        parent:
+          type: string
+        type:
+          type: string
+          enum:
+            - tss
+        pub:
+          type: string
+      required:
+        - id
+        - source
+        - type
     LivenessVerificationActionRequest:
       title: Base Liveness Verification
       type: object
@@ -95414,6 +96773,28 @@ components:
           required:
             - custodianTransactionId
         - $ref: '#/components/schemas/PaymentIntent'
+    MpcKeyResponse:
+      title: MpcKeyResponse
+      allOf:
+        - type: object
+          properties:
+            id:
+              type: string
+            source:
+              $ref: '#/components/schemas/KeySourceC'
+            type:
+              type: string
+              enum:
+                - tss
+            pub:
+              type: string
+            commonKeychain:
+              type: string
+          required:
+            - id
+            - source
+            - type
+        - $ref: '#/components/schemas/EphemeralData'
     MultiSigType:
       title: MultiSigType
       type: string
@@ -97841,6 +99222,47 @@ components:
           nullable: true
           allOf:
             - $ref: '#/components/schemas/DistributedCustody'
+        requestedBitgoProducts:
+          type: array
+          items:
+            type: string
+            enum:
+              - Instant Fee Wallets
+              - Go Account
+              - Settlement
+              - Tax
+              - Trade API
+              - Margin Trading
+              - Elliptic
+              - CryptoCompare
+              - MetaMask
+              - Custody
+              - Borrowing
+              - Lending
+              - DeFi
+              - Cold Self-Custody
+              - Go Network
+              - Go Network - Off Exchange Settlement - OKX
+              - Staking
+              - Trade
+              - Hot Self-Custody
+              - Escrow
+              - Escrow - Triparty
+              - Distributed Custody
+              - Advanced Wallets
+              - Stablecoins
+              - Loans against Go Account
+              - Auto Liquidation
+              - ACH Debits
+              - Go Lightning
+              - Trade FIX API
+              - Go Staking
+              - Link
+              - Kyt
+        source:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/AggregatorSourceType'
     OrganizationGetResponse:
       title: OrganizationGetResponse
       type: object
@@ -99142,6 +100564,35 @@ components:
               description: The source wallet
             triggeredPolicy:
               description: The triggered policy for the transaction
+            unit21FraudHold:
+              type: object
+              description: Unit21 RTR deny evidence for a fraud-hold pending approval
+              properties:
+                date:
+                  oneOf:
+                    - type: string
+                      format: date
+                      title: Date String
+                    - type: string
+                      format: date-time
+                      title: ISO Date String
+                  description: When the fraud hold was recorded
+                evaluationId:
+                  type: string
+                  description: The Unit21 evaluation that denied the withdrawal
+                triggeredRuleIds:
+                  type: array
+                  items:
+                    type: string
+                    description: IDs of the Unit21 rules that denied the withdrawal
+                triggeredRules:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Triggered rule id → human-readable rule name
+              required:
+                - date
+                - triggeredRuleIds
             validTransaction:
               type: string
               description: Indicates if the transaction is valid
@@ -99181,6 +100632,35 @@ components:
               allOf:
                 - $ref: '#/components/schemas/TransactionRequestId'
               description: The ID of the transaction request
+            unit21FraudHold:
+              type: object
+              description: Unit21 RTR deny evidence for a fraud-hold pending approval
+              properties:
+                date:
+                  oneOf:
+                    - type: string
+                      format: date
+                      title: Date String
+                    - type: string
+                      format: date-time
+                      title: ISO Date String
+                  description: When the fraud hold was recorded
+                evaluationId:
+                  type: string
+                  description: The Unit21 evaluation that denied the withdrawal
+                triggeredRuleIds:
+                  type: array
+                  items:
+                    type: string
+                    description: IDs of the Unit21 rules that denied the withdrawal
+                triggeredRules:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Triggered rule id → human-readable rule name
+              required:
+                - date
+                - triggeredRuleIds
             verificationItems:
               type: array
               items:
@@ -102207,10 +103687,6 @@ components:
       type: string
       description: BIP174 serialization of a PSBT
       example: 70736274ff0100530100000001ccf3d1b853dcff06a939afef91d8b178d74028516bb831d77fcfd5b1ce6715f00000000000ffffffff01f0b9f5050000000017a914567cd7b44f9f3a07c3138f37bf984b60fbbaf24387000000004f010488b21e0000000000000000003a922e29f0c8eb0db2a60484cbdcb631f6b107c9caae3ffdcf3e7d2ec1f6bcd00312148715f361dab685a669d42431e5d6d3f973404dab9c9fd1b950b279ad763404cc18ae084f010488b21e0000000000000000006d1d656d3ddd91c194c04565a3603702a21016ced14a265f38982d6275e67b6403d3bac2313a7c6b21cbb11b14b0d10341f922c0a403a8bd8c87f0dc820f35af6e04f65cd8694f010488b21e000000000000000000cb04fd63ab34d90fe6466b880e2a02ccf8a863374312991af8911b1aaab443340336ef228ffe9b8efffba052c32d334660dd1f8366cf8fe44ae5aa672b6b62909504f2ef0389000100c00100000000010101010101010101010101010101010101010101010101010101010101010101010000000000ffffffff0100e1f5050000000017a914d909474404c124a3d04c3fbff61faa49cf43c58b87024730440220360d495738071ed6930084713724262ef55d710e06d85f90b56727ab83c91b5702200ae452a812717ef0ac8866989ffc963d88c14f9694fa57ef046dd699bea1d5da01210247496797efe8b56780cd9bee19ac3d916624829cacd3f1236fa608000193e54d0000000001012000e1f5050000000017a914d909474404c124a3d04c3fbff61faa49cf43c58b87010469522102cc4d0fa411cac244486f8eb2c08e035ff7410f460a359ca7f8810991bd3b42092102d72fd0d0d90293434ad5fca160f278e03c614497aa4e425cf454e2c1330f96ab210344d884136df550202865ffbc6218c7f9c88fe6ce39c945798190badb38a752f153ae220602cc4d0fa411cac244486f8eb2c08e035ff7410f460a359ca7f8810991bd3b420914f2ef038900000000000000000000000000000000220602d72fd0d0d90293434ad5fca160f278e03c614497aa4e425cf454e2c1330f96ab14cc18ae080000000000000000000000000000000022060344d884136df550202865ffbc6218c7f9c88fe6ce39c945798190badb38a752f114f65cd8690000000000000000000000000000000000010069522103f6f40764bd5d63f200a2778883acf75e96f15095c998263c087270d0c97e7e7f21035ffb7abc70159e0469f4b989a6d5e1785a2904169ff050b2f468fe5d3d5dbbf22103e1524d7f6fc57ab3eacbb659b787106780a475d1db483952c2310b7e9a38975b53ae2202035ffb7abc70159e0469f4b989a6d5e1785a2904169ff050b2f468fe5d3d5dbbf214cc18ae0800000000000000000100000000000000220203e1524d7f6fc57ab3eacbb659b787106780a475d1db483952c2310b7e9a38975b14f65cd86900000000000000000100000000000000220203f6f40764bd5d63f200a2778883acf75e96f15095c998263c087270d0c97e7e7f14f2ef03890000000000000000010000000000000000
-    Pub:
-      type: string
-      description: public part of a key pair
-      example: xpub661MyMwAqRbcGMVhmc7wqQRYMtcX9LAvSj1pjB213y5TsrkV2uuzJjWnjBrT1FUeNWGPjaVm5p7o6jdNcQJrV1cy3a1R8NQ9m7LuYKA8RpH
     PublicAsset:
       type: object
       description: Metadata for a single digital asset (coin or token).
@@ -102352,6 +103828,9 @@ components:
           description: Detailed staking information. Only present when the `stakingData=true` query parameter is provided. Null for assets that do not support staking.
           allOf:
             - $ref: '#/components/schemas/StakingDetails'
+    PublicID:
+      title: PublicID
+      type: string
     PutIdentityDocumentUpdateResponse:
       title: PutIdentityDocumentUpdateResponse
       type: object
@@ -105485,26 +106964,10 @@ components:
           description: SHA-256 hash of the TIN returned by TaxBit
       title: SelfCertificationTaxResidence
       description: Tax residency jurisdiction and TIN details.
-    SendLabel:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/Id'
-        coin:
-          $ref: '#/components/schemas/Coin'
-        address:
-          $ref: '#/components/schemas/AddressString3'
-        enterpriseId:
-          $ref: '#/components/schemas/Id'
-        label:
-          type: string
-          maxLength: 250
-      required:
-        - id
-        - coin
-        - address
-        - enterpriseId
-        - label
+    SendLabelAddress:
+      title: SendLabelAddress
+      type: string
+      description: A non-empty address of at most 500 characters.
     SendQueueCoinSpecific:
       title: SendQueueCoinSpecific
       oneOf:
@@ -106200,262 +107663,6 @@ components:
         in-flight transaction state: notes locked by pending wallet transactions
         keep appearing UNSPENT until their spend is indexed, and spend selection
         applies its own reservation on top. The listing default is UNSPENT.
-    ShortCountryCode:
-      type: string
-      description: Two-letter country code, as specified by ISO 3166-1 alpha-2
-      minLength: 2
-      maxLength: 2
-      example: US
-      enum:
-        - AD
-        - AE
-        - AF
-        - AG
-        - AI
-        - AL
-        - AM
-        - AO
-        - AQ
-        - AR
-        - AS
-        - AT
-        - AU
-        - AW
-        - AX
-        - AZ
-        - BA
-        - BB
-        - BD
-        - BE
-        - BF
-        - BG
-        - BH
-        - BI
-        - BJ
-        - BL
-        - BM
-        - BN
-        - BO
-        - BQ
-        - BR
-        - BS
-        - BT
-        - BV
-        - BW
-        - BY
-        - BZ
-        - CA
-        - CC
-        - CD
-        - CF
-        - CG
-        - CH
-        - CI
-        - CK
-        - CL
-        - CM
-        - CN
-        - CO
-        - CR
-        - CU
-        - CV
-        - CW
-        - CX
-        - CY
-        - CZ
-        - DE
-        - DJ
-        - DK
-        - DM
-        - DO
-        - DZ
-        - EC
-        - EE
-        - EG
-        - EH
-        - ER
-        - ES
-        - ET
-        - FI
-        - FJ
-        - FK
-        - FM
-        - FO
-        - FR
-        - GA
-        - GB
-        - GD
-        - GE
-        - GF
-        - GG
-        - GH
-        - GI
-        - GL
-        - GM
-        - GN
-        - GP
-        - GQ
-        - GR
-        - GS
-        - GT
-        - GU
-        - GW
-        - GY
-        - HK
-        - HM
-        - HN
-        - HR
-        - HT
-        - HU
-        - ID
-        - IE
-        - IL
-        - IM
-        - IN
-        - IO
-        - IQ
-        - IR
-        - IS
-        - IT
-        - JE
-        - JM
-        - JO
-        - JP
-        - KE
-        - KG
-        - KH
-        - KI
-        - KM
-        - KN
-        - KP
-        - KR
-        - KW
-        - KY
-        - KZ
-        - LA
-        - LB
-        - LC
-        - LI
-        - LK
-        - LR
-        - LS
-        - LT
-        - LU
-        - LV
-        - LY
-        - MA
-        - MC
-        - MD
-        - ME
-        - MF
-        - MG
-        - MH
-        - MK
-        - ML
-        - MM
-        - MN
-        - MO
-        - MP
-        - MQ
-        - MR
-        - MS
-        - MT
-        - MU
-        - MV
-        - MW
-        - MX
-        - MY
-        - MZ
-        - NA
-        - NC
-        - NE
-        - NF
-        - NG
-        - NI
-        - NL
-        - 'NO'
-        - NP
-        - NR
-        - NU
-        - NZ
-        - OM
-        - PA
-        - PE
-        - PF
-        - PG
-        - PH
-        - PK
-        - PL
-        - PM
-        - PN
-        - PR
-        - PS
-        - PT
-        - PW
-        - PY
-        - QA
-        - RE
-        - RO
-        - RS
-        - RU
-        - RW
-        - SA
-        - SB
-        - SC
-        - SD
-        - SE
-        - SG
-        - SH
-        - SI
-        - SJ
-        - SK
-        - SL
-        - SM
-        - SN
-        - SO
-        - SR
-        - SS
-        - ST
-        - SV
-        - SX
-        - SY
-        - SZ
-        - TC
-        - TD
-        - TF
-        - TG
-        - TH
-        - TJ
-        - TK
-        - TL
-        - TM
-        - TN
-        - TO
-        - TR
-        - TT
-        - TV
-        - TW
-        - TZ
-        - UA
-        - UG
-        - UM
-        - US
-        - UY
-        - UZ
-        - VA
-        - VC
-        - VE
-        - VG
-        - VI
-        - VN
-        - VU
-        - WF
-        - WS
-        - YE
-        - YT
-        - ZA
-        - ZM
-        - ZW
     Side:
       description: The side of the order
       type: string
@@ -106545,6 +107752,21 @@ components:
         - from
         - to
         - share
+    SignatureShare1:
+      title: SignatureShare
+      allOf:
+        - type: object
+          properties:
+            vssProof:
+              type: string
+              description: The VSS proof of the signature share
+            privateShareProof:
+              type: string
+              description: The private share proof
+            publicShare:
+              type: string
+              description: The public share
+        - $ref: '#/components/schemas/SignatureShareWithoutVssProof'
     SignatureShareTypeCodec:
       title: SignatureShareTypeCodec
       type: string
@@ -113658,22 +114880,6 @@ components:
         If supplied, only transaction request state changes from the provided list
         will trigger notifications. If not provided, all transaction request state
         changes will trigger notifications.
-    TransactionRequestState1:
-      type: string
-      enum:
-        - initialized
-        - pendingApproval
-        - pendingUserCommitment
-        - pendingUserRShare
-        - pendingUserGShare
-        - readyToSend
-        - pendingUserSignature
-        - pendingDelivery
-        - signed
-        - delivered
-        - canceled
-        - rejected
-        - failed
     TransactionRequestUnsignedTransaction:
       type: object
       properties:
@@ -114517,23 +115723,6 @@ components:
         If supplied, only transaction request transaction state changes from the provided
         list will trigger notifications. If not provided, all transaction request
         transaction state changes will trigger notifications.
-    TransactionState1:
-      type: string
-      enum:
-        - initialized
-        - pendingSignature
-        - eddsaPendingCommitment
-        - eddsaPendingRShare
-        - eddsaPendingGShare
-        - readyToCombineShares
-        - signed
-        - held
-        - delivered
-        - invalidSignature
-        - rejected
-        - ecdsaMPCv2Round1
-        - ecdsaMPCv2Round2
-        - ecdsaMPCv2Round3
     Transfer:
       type: object
       properties:
@@ -119604,15 +120793,10 @@ components:
 
         Intentionally differs from {@link CreatePolicyRuleType}: clients updating or deleting a rule
         must send the `type` value as persisted on the rule, including legacy names not valid on create.
-    UpdateSendLabel:
-      type: object
-      properties:
-        label:
-          type: string
-          maxLength: 250
-          description: A human-readable mapping to an address
-      required:
-        - label
+    UpdateSendLabelText:
+      title: UpdateSendLabelText
+      type: string
+      description: A non-empty label of at most 250 characters.
     UpdateWallet:
       type: object
       properties:
@@ -120563,7 +121747,7 @@ components:
           minLength: 1
           description: |-
             The reason that the allocation/deallocation is not cleared.
-            Provides a descriptive explanation for why the allocation is in the reserved state.
+            Explains why the allocation/deallocation has not cleared.
             Will not be defined if the allocation is cleared.
         status:
           allOf:
@@ -120572,6 +121756,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -120624,6 +121810,22 @@ components:
             indicating the allocation was successfully completed.
       required:
         - allocation
+    V1AllocationsErrorOnlyPostPayload:
+      allOf:
+        - title: V1AllocationsErrorOnlyPostPayload
+        - $ref: '#/components/schemas/V1ErrorPayload'
+    V1AllocationsFailedWithErrorPostPayload:
+      title: V1AllocationsFailedWithErrorPostPayload
+      allOf:
+        - type: object
+          properties:
+            allocation:
+              oneOf:
+                - $ref: '#/components/schemas/V1ReleasedAllocation'
+                - $ref: '#/components/schemas/V1RejectedAllocation'
+          required:
+            - allocation
+        - $ref: '#/components/schemas/V1ErrorPayload'
     V1AllocationsGetPayload:
       title: V1AllocationsGetPayload
       type: object
@@ -120723,7 +121925,7 @@ components:
                 minLength: 1
                 description: |-
                   The reason that the allocation/deallocation is not cleared.
-                  Provides a descriptive explanation for why the allocation is in the reserved state.
+                  Explains why the allocation/deallocation has not cleared.
                   Will not be defined if the allocation is cleared.
               status:
                 allOf:
@@ -120732,6 +121934,8 @@ components:
                   Status of the allocation/deallocation.
 
                   Possible values:
+                  - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+                  - rejected: Terminal state; policy denied the operation before funds were reserved.
                   - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
                     This is a temporary state awaiting final resolution.
                   - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -120769,25 +121973,15 @@ components:
               The array may be empty if no allocations match the query criteria.
       required:
         - allocations
-    V1AllocationsReleasedPayload:
-      title: V1AllocationsReleasedPayload
-      type: object
-      properties:
-        allocation:
-          allOf:
-            - $ref: '#/components/schemas/V1ReleasedAllocation'
-          description: |-
-            The allocation record in its released state.
-            This contains all allocation details with a status of 'released',
-            indicating the allocation was not completed and funds were returned.
-            The reason field will explain why the allocation was released.
-      required:
-        - allocation
-    V1AllocationsReleasedWithErrorPostPayload:
-      title: V1AllocationsReleasedWithErrorPostPayload
-      allOf:
-        - $ref: '#/components/schemas/V1AllocationsReleasedPayload'
-        - $ref: '#/components/schemas/V1ErrorPayload'
+    V1AllocationsUnprocessablePostPayload:
+      title: V1AllocationsUnprocessablePostPayload
+      oneOf:
+        - $ref: '#/components/schemas/V1AllocationsFailedWithErrorPostPayload'
+        - $ref: '#/components/schemas/V1AllocationsErrorOnlyPostPayload'
+      description: |-
+        422 body for allocation POST: either a released or rejected allocation with the error,
+        or the error alone when the request was rejected before an allocation was created
+        (for example, the requested amount exceeds the balance net of pending requests).
     V1AssignedDisputesWithClosureOutput:
       title: V1AssignedDisputesWithClosureOutput
       type: array
@@ -121009,6 +122203,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -121787,25 +122983,31 @@ components:
             indicating the allocation was successfully completed.
       required:
         - deallocation
-    V1DeallocationReleasedPayload:
-      title: V1DeallocationReleasedPayload
-      type: object
-      properties:
-        deallocation:
-          allOf:
-            - $ref: '#/components/schemas/V1ReleasedAllocation'
-          description: |-
-            The deallocation record in its released state.
-            This contains all deallocation details with a status of 'released',
-            indicating the allocation was not completed and funds were returned.
-            The reason field will explain why the deallocation was released.
-      required:
-        - deallocation
-    V1DeallocationReleasedWithErrorPostPayload:
-      title: V1DeallocationReleasedWithErrorPostPayload
+    V1DeallocationErrorOnlyPostPayload:
       allOf:
-        - $ref: '#/components/schemas/V1DeallocationReleasedPayload'
+        - title: V1DeallocationErrorOnlyPostPayload
         - $ref: '#/components/schemas/V1ErrorPayload'
+    V1DeallocationFailedWithErrorPostPayload:
+      title: V1DeallocationFailedWithErrorPostPayload
+      allOf:
+        - type: object
+          properties:
+            deallocation:
+              oneOf:
+                - $ref: '#/components/schemas/V1ReleasedAllocation'
+                - $ref: '#/components/schemas/V1RejectedAllocation'
+          required:
+            - deallocation
+        - $ref: '#/components/schemas/V1ErrorPayload'
+    V1DeallocationUnprocessablePostPayload:
+      title: V1DeallocationUnprocessablePostPayload
+      oneOf:
+        - $ref: '#/components/schemas/V1DeallocationFailedWithErrorPostPayload'
+        - $ref: '#/components/schemas/V1DeallocationErrorOnlyPostPayload'
+      description: |-
+        422 body for deallocation POST: either a released or rejected deallocation with the error,
+        or the error alone when the request was rejected before a deallocation was created
+        (for example, the requested amount exceeds the balance net of pending requests).
     V1DeleteAccountResponse:
       allOf:
         - title: V1DeleteAccountResponse
@@ -124600,6 +125802,133 @@ components:
       allOf:
         - title: V1PatchAccountResponse
         - $ref: '#/components/schemas/V1AccountResponse'
+    V1PendingApprovalAllocationOutput:
+      title: V1PendingApprovalAllocationOutput
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            The unique identifier of the allocation/deallocation.
+            This is a UUID that uniquely identifies the allocation record.
+          title: uuid
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: |-
+            The amount of the allocation/deallocation.
+            Contains both the currency identifier and the quantity in base units.
+        connectionId:
+          type: string
+          description: |-
+            The unique identifier of the connection this allocation is for.
+            This identifies a connection between a client and partner.
+          title: uuid
+        clientExternalId:
+          type: string
+          description: |-
+            External identifier provided by the client when creating the allocation/deallocation.
+            Used for idempotence and correlation with client systems.
+          minLength: 1
+        partnerExternalId:
+          type: string
+          description: |-
+            External identifier of the allocation/deallocation in the partner system.
+            May be populated when partners provide their own identifier for the allocation.
+          minLength: 1
+        initiatedBy:
+          type: string
+          description: |-
+            The identifier of the user that initiated the allocation/deallocation.
+            Represents the user ID from the BitGo platform.
+          minLength: 1
+        notes:
+          type: string
+          description: |-
+            Optional notes provided by the client when creating the allocation/deallocation.
+            Can contain additional context or information about the purpose of the allocation.
+          minLength: 1
+        createdAt:
+          type: string
+          description: |-
+            The date and time when the allocation/deallocation was created.
+            Represented as an ISO 8601 formatted date string.
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          description: |-
+            The date and time when the allocation/deallocation was last updated.
+            Represented as an ISO 8601 formatted date string.
+          format: date-time
+          title: ISO Date String
+        retriable:
+          type: boolean
+          enum:
+            - false
+          description: Approval progresses asynchronously and must not be retried by the client.
+        evaluationId:
+          type: string
+          description: |-
+            The unique identifier of the policy evaluation for this allocation/deallocation.
+            Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: |-
+            The unique identifier of the pending approval for this allocation/deallocation.
+            Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: |-
+            The result of the policy evaluation for this allocation/deallocation.
+            - 'approved': Policy evaluation passed and the operation was allowed
+            - 'rejected': Policy evaluation failed and the operation was denied
+            Not present if no policy evaluation was performed or if evaluation is still pending.
+        status:
+          type: string
+          enum:
+            - pending_approval
+          description: Waiting for policy approval before funds are reserved.
+        reason:
+          type: string
+          description: Explains why policy approval is pending.
+          minLength: 1
+      required:
+        - id
+        - amount
+        - connectionId
+        - clientExternalId
+        - initiatedBy
+        - createdAt
+        - updatedAt
+        - retriable
+        - status
+        - reason
+    V1PendingApprovalAllocationsPostPayload:
+      title: V1PendingApprovalAllocationsPostPayload
+      type: object
+      properties:
+        allocation:
+          allOf:
+            - $ref: '#/components/schemas/V1PendingApprovalAllocationOutput'
+          description: The allocation waiting for policy approval, without a client retry.
+      required:
+        - allocation
+    V1PendingApprovalDeallocationPostPayload:
+      title: V1PendingApprovalDeallocationPostPayload
+      type: object
+      properties:
+        deallocation:
+          allOf:
+            - $ref: '#/components/schemas/V1PendingApprovalAllocationOutput'
+          description: The deallocation waiting for policy approval, without a client retry.
+      required:
+        - deallocation
     V1PendingSettlementOutput:
       title: V1PendingSettlementOutput
       type: object
@@ -124818,6 +126147,113 @@ components:
           $ref: '#/components/schemas/ResolvedGeoAttestation'
       required:
         - geoAttestation
+    V1RejectedAllocation:
+      title: V1RejectedAllocation
+      type: object
+      properties:
+        id:
+          type: string
+          description: |-
+            The unique identifier of the allocation/deallocation.
+            This is a UUID that uniquely identifies the allocation record.
+          title: uuid
+        amount:
+          allOf:
+            - $ref: '#/components/schemas/PositiveAllocationAmount'
+          description: |-
+            The amount of the allocation/deallocation.
+            Contains both the currency identifier and the quantity in base units.
+        connectionId:
+          type: string
+          description: |-
+            The unique identifier of the connection this allocation is for.
+            This identifies a connection between a client and partner.
+          title: uuid
+        clientExternalId:
+          type: string
+          description: |-
+            External identifier provided by the client when creating the allocation/deallocation.
+            Used for idempotence and correlation with client systems.
+          minLength: 1
+        partnerExternalId:
+          type: string
+          description: |-
+            External identifier of the allocation/deallocation in the partner system.
+            May be populated when partners provide their own identifier for the allocation.
+          minLength: 1
+        initiatedBy:
+          type: string
+          description: |-
+            The identifier of the user that initiated the allocation/deallocation.
+            Represents the user ID from the BitGo platform.
+          minLength: 1
+        notes:
+          type: string
+          description: |-
+            Optional notes provided by the client when creating the allocation/deallocation.
+            Can contain additional context or information about the purpose of the allocation.
+          minLength: 1
+        createdAt:
+          type: string
+          description: |-
+            The date and time when the allocation/deallocation was created.
+            Represented as an ISO 8601 formatted date string.
+          format: date-time
+          title: ISO Date String
+        updatedAt:
+          type: string
+          description: |-
+            The date and time when the allocation/deallocation was last updated.
+            Represented as an ISO 8601 formatted date string.
+          format: date-time
+          title: ISO Date String
+        retriable:
+          type: boolean
+          enum:
+            - false
+          description: A rejected allocation/deallocation cannot be retried.
+        evaluationId:
+          type: string
+          description: |-
+            The unique identifier of the policy evaluation for this allocation/deallocation.
+            Present when policy evaluation was performed as part of the allocation flow.
+          minLength: 1
+        pendingApprovalId:
+          type: string
+          description: |-
+            The unique identifier of the pending approval for this allocation/deallocation.
+            Present when policy evaluation resulted in a PENDING status requiring manual approval.
+          minLength: 1
+        policyResult:
+          type: string
+          enum:
+            - approved
+            - rejected
+          description: |-
+            The result of the policy evaluation for this allocation/deallocation.
+            - 'approved': Policy evaluation passed and the operation was allowed
+            - 'rejected': Policy evaluation failed and the operation was denied
+            Not present if no policy evaluation was performed or if evaluation is still pending.
+        status:
+          type: string
+          enum:
+            - rejected
+          description: Terminal policy rejection before funds were reserved.
+        reason:
+          type: string
+          description: Explains that policy rejected the operation.
+          minLength: 1
+      required:
+        - id
+        - amount
+        - connectionId
+        - clientExternalId
+        - initiatedBy
+        - createdAt
+        - updatedAt
+        - retriable
+        - status
+        - reason
     V1RejectedSettlementOutput:
       title: V1RejectedSettlementOutput
       type: object
@@ -125026,6 +126462,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -125038,7 +126476,7 @@ components:
           type: string
           description: |-
             The reason that the allocation/deallocation is not cleared.
-            Provides a descriptive explanation for why the allocation is in the reserved state.
+            Explains why the allocation/deallocation has not cleared.
             Will not be defined if the allocation is cleared.
           minLength: 1
       required:
@@ -125177,7 +126615,7 @@ components:
           type: string
           description: |-
             The reason that the allocation/deallocation is not cleared.
-            Provides a descriptive explanation for why the allocation is in the reserved state.
+            Explains why the allocation/deallocation has not cleared.
             Will not be defined if the allocation is cleared.
           minLength: 1
         status:
@@ -125188,6 +126626,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -125317,7 +126757,7 @@ components:
           type: string
           description: |-
             The reason that the allocation/deallocation is not cleared.
-            Provides a descriptive explanation for why the allocation is in the reserved state.
+            Explains why the allocation/deallocation has not cleared.
             Will not be defined if the allocation is cleared.
           minLength: 1
         status:
@@ -125328,6 +126768,8 @@ components:
             Status of the allocation/deallocation.
 
             Possible values:
+            - pending_approval: Waiting for policy approval before reservation. Clients must not retry.
+            - rejected: Terminal state; policy denied the operation before funds were reserved.
             - reserved: The amount for allocation/deallocation is reserved but operation has not completed.
               This is a temporary state awaiting final resolution.
             - cleared: Terminal state; the amount for allocation/deallocation is cleared and funds
@@ -126022,12 +127464,6 @@ components:
         - approved
         - rejected
         - pending
-    VerifiedKycState:
-      type: string
-      enum:
-        - approved
-        - pending
-        - rejected
     VerifiedKycState1:
       title: VerifiedKycState
       type: string
@@ -129848,78 +131284,6 @@ components:
       title: WCT unstaking request entity properties
       allOf:
         - $ref: '#/components/schemas/EthCommonStakingRequestEntityProperties'
-    Webhook1:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/Id'
-        label:
-          type: string
-          example: Test Webhook
-        created:
-          $ref: '#/components/schemas/DateTime'
-        coin:
-          $ref: '#/components/schemas/Coin'
-        type:
-          $ref: '#/components/schemas/WebhookTypeWallet'
-        url:
-          type: string
-          format: uri
-          example: https://your.server.com/webhook
-        version:
-          type: integer
-          example: 2
-          description: 2 for coins running on API v2.
-        numConfirmations:
-          type: integer
-          example: 6
-        state:
-          type: string
-          description: If `active`, indicates the webhook can trigger and send to the URL. If `suspended`, indicates the webhook can't trigger.
-          enum:
-            - active
-            - suspended
-          example: active
-        lastAttempt:
-          $ref: '#/components/schemas/DateTime'
-        failingSince:
-          $ref: '#/components/schemas/DateTime'
-        successiveFailedAttempts:
-          type: integer
-          example: 0
-        walletId:
-          type: string
-        allowBlockedHosts:
-          type: boolean
-        allToken:
-          type: boolean
-        txRequestStates:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransactionRequestState1'
-          description: If present, only transaction request state changes from the list will trigger notifications. If not present, all transaction request state changes will trigger notifications.
-        txRequestTransactionStates:
-          type: array
-          items:
-            $ref: '#/components/schemas/TransactionState1'
-          description: If present, only transaction request transaction state changes from the list will trigger notifications. If not present, all transaction request transaction state changes will trigger notifications.
-        identityStatus:
-          type: array
-          items:
-            $ref: '#/components/schemas/IdentityStatus'
-          description: If present, only identity status changes from the list will trigger notifications. If not present, all identity status changes will trigger notifications.
-        userKycState:
-          type: array
-          items:
-            $ref: '#/components/schemas/VerifiedKycState'
-          description: If present, only user kyc state changes from the list will trigger notifications. If not present, all kyc state changes will trigger notifications.
-        enterpriseKycState:
-          type: array
-          items:
-            $ref: '#/components/schemas/VerifiedKycState'
-          description: 'If present, only enterprise kyc state changes from the list will trigger notifications. If not present, all kyc state changes will trigger notifications.      '
-      required:
-        - url
     WebhookKeyInfo:
       type: object
       description: Metadata about a registered webhook signing key.
