@@ -313,271 +313,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
-  /api/v2/{coin}/wallet/{walletId}/webhooks:
-    delete:
-      tags:
-        - Webhook
-      summary: Remove wallet webhook
-      description: |
-        Removing a webhook will cause new events of the specified type to no
-        longer trigger HTTP callbacks to your URLs
-      operationId: v2.wallet.removewebhook
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                type:
-                  $ref: '#/components/schemas/WebhookTypeWallet'
-                url:
-                  type: string
-                  format: uri
-                  example: https://your.server.com/user_webhook
-                id:
-                  $ref: '#/components/schemas/Id'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  removed:
-                    type: integer
-                    example: 1
-                    description: Number of wallet webhooks removed.
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformPlatformError'
-                  - $ref: '#/components/schemas/PlatformInvalidWalletId'
-    get:
-      summary: List wallet webhooks
-      description: List webhooks set up on the wallet. Currently, the types of webhooks that can be attached to a wallet are `transfer`, `pendingapproval`, and `address_confirmation` notifications.
-      operationId: v2.wallet.listwebhooks
-      tags:
-        - Webhook
-      x-internal: false
-      parameters:
-        - name: allTokens
-          description: Set to `true` to include the webhooks of all tokens on an Ethereum-family wallet. Any other value is ignored
-          in: query
-          schema:
-            type: string
-        - name: includeEvmKeyringWebhooks
-          description: Set to `true` to include the webhooks of every wallet of an EVM keyring. Any other value is ignored
-          in: query
-          schema:
-            type: string
-        - name: coin
-          description: A cryptocurrency or token ticker symbol
-          in: path
-          required: true
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/CoinNonEmptyString'
-        - name: walletId
-          description: The ID of the wallet
-          in: path
-          required: true
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/WalletIdNonEmptyString'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListWalletWebhooksResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError'
-                  - $ref: '#/components/schemas/InvalidWalletId'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-    post:
-      summary: Add wallet webhook
-      description: |-
-        Add a webhook to a wallet that sends an HTTP callback from BitGo to a specified
-        URL when specific conditions occur. A wallet can have up to 10 webhooks of each
-        wallet-webhook `type`. Learn more about webhooks on the
-        [Developer Portal](/docs/webhooks-overview#/).
-
-        **Note:** Before you process webhook notifications, BitGo strongly recommends that
-        you verify response details by fetching the transfer or block data from BitGo. For
-        example, if you create a transfer webhook and you receive a transfer ID, pass that
-        ID to the [Get Transfer](/reference/v2walletgettransfer#/) endpoint to verify the transfer
-        details.
-      operationId: v2.wallet.addwebhook
-      tags:
-        - Webhook
-      parameters:
-        - name: coin
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/CoinNonEmptyString'
-        - name: walletId
-          in: path
-          required: true
-          schema:
-            $ref: '#/components/schemas/WalletIdNonEmptyString'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                type:
-                  allOf:
-                    - $ref: '#/components/schemas/WalletWebhookType'
-                  description: Event type to listen to.
-                url:
-                  type: string
-                  description: URL to fire the webhook to.
-                  example: https://your.server.com/webhook
-                  minLength: 1
-                  format: uri
-                label:
-                  type: string
-                  description: Label of the new webhook.
-                numConfirmations:
-                  type: number
-                  description: |-
-                    Number of confirmations before triggering the webhook. If 0 or unspecified,
-                    requests will be sent to the callback endpoint when the transfer is first
-                    seen and when it is confirmed.
-                  example: 6
-                allToken:
-                  type: boolean
-                  default: false
-                  description: |-
-                    Triggers on coin transfers and token transfers for ETH and Stellar.
-                    Must be set to true to receive webhooks for Trade accounts.
-                listenToFailureStates:
-                  type: boolean
-                  description: Whether or not to listen to failed transactions on chain.
-                txRequestStates:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - pendingApproval
-                      - canceled
-                      - rejected
-                      - initialized
-                      - pendingDelivery
-                      - delivered
-                      - pendingUserSignature
-                      - pendingUserCommitment
-                      - pendingUserRShare
-                      - pendingUserGShare
-                      - readyToSend
-                      - signed
-                      - failed
-                    description: |-
-                      If supplied, only transaction request state changes from the provided list
-                      will trigger notifications. If not provided, all transaction request state
-                      changes will trigger notifications.
-                txRequestTransactionStates:
-                  type: array
-                  items:
-                    type: string
-                    enum:
-                      - initialized
-                      - pendingSignature
-                      - eddsaPendingCommitment
-                      - eddsaPendingRShare
-                      - eddsaPendingGShare
-                      - ecdsaMPCv2Round1
-                      - ecdsaMPCv2Round2
-                      - ecdsaMPCv2Round3
-                      - eddsaMPCv2Round1
-                      - eddsaMPCv2Round2
-                      - eddsaMPCv2Round3
-                      - redpallasRerandRound1
-                      - redpallasRerandRound2
-                      - redpallasMPCv2Round1
-                      - redpallasMPCv2Round2
-                      - redpallasMPCv2Round3
-                      - readyToCombineShares
-                      - signed
-                      - held
-                      - delivered
-                      - invalidSignature
-                      - rejected
-                    description: |-
-                      If supplied, only transaction request transaction state changes from the provided
-                      list will trigger notifications. If not provided, all transaction request
-                      transaction state changes will trigger notifications.
-                customHttpHeaders:
-                  type: object
-                  additionalProperties:
-                    type: string
-                  description: Custom HTTP header key/values to be included with every notification for the webhook.
-              required:
-                - type
-                - url
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/WalletWebhookResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '403':
-          description: Forbidden
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '404':
-          description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '500':
-          description: Internal Server Error
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/webhooks/notifications:
     x-internal: false
     get:
@@ -777,120 +512,6 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-  /api/v2/{coin}/webhooks:
-    post:
-      tags:
-        - Webhook
-      summary: Add block webhook
-      description: |
-        Adds a webhook that will result in an HTTP callback at the
-        specified URL from BitGo when events are triggered.
-
-        Types of block webhooks:
-
-        1. Block webhooks will fire when a new block is seen on the coin network.
-        2. Wallet confirmation webhooks will fire when a wallet has been initialized.
-      operationId: v2.webhooks.add
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/CreateBlockWebhook'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                allOf:
-                  - type: object
-                    properties:
-                      type:
-                        $ref: '#/components/schemas/WebhookTypeBlock'
-                      userId:
-                        $ref: '#/components/schemas/Id'
-                  - $ref: '#/components/schemas/PlatformWebhook'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformPlatformError'
-    delete:
-      tags:
-        - Webhook
-      summary: Remove block webhook
-      description: |
-        Removing a webhook will cause new events of the specified type to no
-        longer trigger HTTP callbacks to your URLs.
-      operationId: v2.webhooks.remove
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                type:
-                  $ref: '#/components/schemas/WebhookTypeBlock'
-                url:
-                  type: string
-                  format: uri
-                  example: https://your.server.com/user_webhook
-                id:
-                  $ref: '#/components/schemas/Id'
-              required:
-                - type
-                - url
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  removed:
-                    type: integer
-                    example: 1
-                    description: Number of block webhooks removed.
-    get:
-      summary: List block webhooks
-      description: Returns block webhooks. The types of webhooks are `block` and `wallet_confirmation` notifications.
-      operationId: v2.webhooks.list
-      tags:
-        - Webhook
-      x-internal: false
-      parameters:
-        - name: coin
-          description: A cryptocurrency or token ticker symbol
-          in: path
-          required: true
-          schema:
-            allOf:
-              - $ref: '#/components/schemas/CoinNonEmptyString'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ListUserWebhooksResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError'
-        '401':
-          description: Unauthorized
           content:
             application/json:
               schema:
@@ -39268,89 +38889,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/wallet/{walletId}/webhooks/{webhookId}/simulate:
-    post:
-      tags:
-        - Webhook
-      summary: Simulate wallet webhook
-      description: |
-        Simulates and tests a webhook so you can view its response. A
-        `transferId`, `pendingApprovalId` or `txRequestId` is required.
-      operationId: v2.wallet.simulatewebhook
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-        - $ref: '#/components/parameters/pathWebhookId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SimulateWalletWebhookRequestBody'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  webhookNotifications:
-                    type: array
-                    items:
-                      allOf:
-                        - type: object
-                          properties:
-                            wallet:
-                              $ref: '#/components/schemas/Id'
-                            transfer:
-                              $ref: '#/components/schemas/Id'
-                            hash:
-                              $ref: '#/components/schemas/TxId'
-                        - $ref: '#/components/schemas/WebhookNotification'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                oneOf:
-                  - $ref: '#/components/schemas/PlatformError3'
-                  - $ref: '#/components/schemas/InvalidWalletId1'
-  /api/v2/{coin}/webhooks/{webhookId}/simulate:
-    post:
-      tags:
-        - Webhook
-      summary: Simulate block webhook
-      description: |
-        Simulates and tests a block webhook so you can view its response.
-      operationId: v2.webhooks.simulate
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWebhookId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                blockId:
-                  $ref: '#/components/schemas/BlockHash'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  webhookNotifications:
-                    type: array
-                    items:
-                      allOf:
-                        - type: object
-                          properties:
-                            hash:
-                              $ref: '#/components/schemas/BlockHash'
-                        - $ref: '#/components/schemas/WebhookNotification'
   /api/v2/xlm/federation:
     get:
       tags:
@@ -52878,6 +52416,24 @@ paths:
                 sourceChain:
                   type: string
                   description: (AVAXC and AVAXP only) Source chain for an AVAX import/export transaction. One of [P, C].
+                hopParams:
+                  type: object
+                  description: |-
+                    (AVAXC only) Parameters required for a hop (C→P or P→C) export/import transaction.
+                    The typed-route codec previously omitted this field, causing it to be stripped before
+                    reaching the AVAX build code and producing "Export transaction is a hop and required hopParams".
+                    Shape matches HopParams in abstractEthLikeCommon/types.ts.
+                  properties:
+                    gasPriceMax:
+                      allOf:
+                        - $ref: '#/components/schemas/NumberLike'
+                      description: Maximum gas price the user will allow for the hop transaction.
+                    paymentId:
+                      type: string
+                      description: Unique identifier for this hop transaction.
+                    userReqSig:
+                      type: string
+                      description: User's signature of the hop transaction request.
                 addressType:
                   type: string
                   deprecated: true
@@ -53213,6 +52769,38 @@ paths:
                   type: string
                   description: Token name for coin-specific flows such as token approval (ETH-like coins).
                   example: hteth:usdt
+                wrapParams:
+                  type: object
+                  description: |-
+                    [ERC-7984, multi-sig] Shield params for `type: 'wrapApprove'`: the wrapper token and the amount of the underlying
+                    ERC-20 to shield.
+                  properties:
+                    amount:
+                      type: string
+                      description: Amount in base units, as a decimal string.
+                      example: '500000'
+                    tokenName:
+                      type: string
+                      description: ERC-7984 wrapper token name.
+                      example: hteth:cusdt
+                  required:
+                    - amount
+                    - tokenName
+                unwrapParams:
+                  type: object
+                  description: '[ERC-7984, multi-sig] Unshield params for `type: ''unwrap''`: the wrapper token and the amount to unshield.'
+                  properties:
+                    amount:
+                      type: string
+                      description: Amount in base units, as a decimal string.
+                      example: '500000'
+                    tokenName:
+                      type: string
+                      description: ERC-7984 wrapper token name.
+                      example: hteth:cusdt
+                  required:
+                    - amount
+                    - tokenName
                 closeRemainderTo:
                   type: string
                   description: (Algo only) Address that receives the remaining account balance when disabling a token.
@@ -53918,6 +53506,447 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/webhooks:
+    delete:
+      summary: Remove wallet webhook
+      description: Removing a webhook will cause new events of the specified type to no longer trigger HTTP callbacks to your URLs. Requires admin permission on the wallet.
+      operationId: v2.wallet.removewebhook
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Remove V2 Wallet Webhook Request Body
+
+                The request body for removing webhooks from a wallet: either the type and URL of the webhooks to remove, or a flag to remove all of them.
+              properties:
+                type:
+                  type: string
+                  enum:
+                    - txRequest
+                    - txRequestTransaction
+                    - transfer
+                    - transaction
+                    - transactionRemoved
+                    - transactionExpire
+                    - unspentExpiry
+                    - pendingapproval
+                    - address_confirmation
+                    - lowFee
+                    - block
+                    - admin
+                    - circuitBreaker
+                    - transaction_finality_on_l1
+                    - lowFeeAddressBalance
+                    - stuckTx
+                    - endInvestorOnboardingInvite
+                    - endInvestorOnboardingAccepted
+                    - allocationRequest
+                    - allocationAccepted
+                    - allocationSettlementFailed
+                  description: |-
+                    The type of the webhooks to remove.
+
+                    Required unless `all` is set.
+                url:
+                  type: string
+                  description: |-
+                    The URL of the webhooks to remove.
+
+                    Required unless `all` is set.
+                id:
+                  type: string
+                  description: |-
+                    The ID of a single webhook to remove.
+
+                    When set, only the webhook with this ID that also matches the other fields is removed.
+                all:
+                  oneOf:
+                    - type: boolean
+                    - type: string
+                    - type: number
+                  description: |-
+                    Whether to remove every webhook of the wallet, regardless of `type` and `url`.
+
+                    Evaluated by the legacy boolean parser, so `true`, the string `true` and positive numbers remove all webhooks.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemovedWebhooksResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    get:
+      summary: List wallet webhooks
+      description: List webhooks set up on the wallet. Currently, the types of webhooks that can be attached to a wallet are `transfer`, `pendingapproval`, and `address_confirmation` notifications.
+      operationId: v2.wallet.listwebhooks
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: allTokens
+          description: Set to `true` to include the webhooks of all tokens on an Ethereum-family wallet. Any other value is ignored
+          in: query
+          schema:
+            type: string
+        - name: includeEvmKeyringWebhooks
+          description: Set to `true` to include the webhooks of every wallet of an EVM keyring. Any other value is ignored
+          in: query
+          schema:
+            type: string
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListWalletWebhooksResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Add wallet webhook
+      description: |-
+        Add a webhook to a wallet that sends an HTTP callback from BitGo to a specified
+        URL when specific conditions occur. A wallet can have up to 10 webhooks of each
+        wallet-webhook `type`. Learn more about webhooks on the
+        [Developer Portal](/docs/webhooks-overview#/).
+
+        **Note:** Before you process webhook notifications, BitGo strongly recommends that
+        you verify response details by fetching the transfer or block data from BitGo. For
+        example, if you create a transfer webhook and you receive a transfer ID, pass that
+        ID to the [Get Transfer](/reference/v2walletgettransfer#/) endpoint to verify the transfer
+        details.
+      operationId: v2.wallet.addwebhook
+      tags:
+        - Webhook
+      parameters:
+        - name: coin
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                type:
+                  allOf:
+                    - $ref: '#/components/schemas/WalletWebhookType'
+                  description: Event type to listen to.
+                url:
+                  type: string
+                  description: URL to fire the webhook to.
+                  example: https://your.server.com/webhook
+                  minLength: 1
+                  format: uri
+                label:
+                  type: string
+                  description: Label of the new webhook.
+                numConfirmations:
+                  type: number
+                  description: |-
+                    Number of confirmations before triggering the webhook. If 0 or unspecified,
+                    requests will be sent to the callback endpoint when the transfer is first
+                    seen and when it is confirmed.
+                  example: 6
+                allToken:
+                  type: boolean
+                  default: false
+                  description: |-
+                    Triggers on coin transfers and token transfers for ETH and Stellar.
+                    Must be set to true to receive webhooks for Trade accounts.
+                listenToFailureStates:
+                  type: boolean
+                  description: Whether or not to listen to failed transactions on chain.
+                txRequestStates:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - pendingApproval
+                      - canceled
+                      - rejected
+                      - initialized
+                      - pendingDelivery
+                      - delivered
+                      - pendingUserSignature
+                      - pendingUserCommitment
+                      - pendingUserRShare
+                      - pendingUserGShare
+                      - readyToSend
+                      - signed
+                      - failed
+                    description: |-
+                      If supplied, only transaction request state changes from the provided list
+                      will trigger notifications. If not provided, all transaction request state
+                      changes will trigger notifications.
+                txRequestTransactionStates:
+                  type: array
+                  items:
+                    type: string
+                    enum:
+                      - initialized
+                      - pendingSignature
+                      - eddsaPendingCommitment
+                      - eddsaPendingRShare
+                      - eddsaPendingGShare
+                      - ecdsaMPCv2Round1
+                      - ecdsaMPCv2Round2
+                      - ecdsaMPCv2Round3
+                      - eddsaMPCv2Round1
+                      - eddsaMPCv2Round2
+                      - eddsaMPCv2Round3
+                      - redpallasRerandRound1
+                      - redpallasRerandRound2
+                      - redpallasMPCv2Round1
+                      - redpallasMPCv2Round2
+                      - redpallasMPCv2Round3
+                      - readyToCombineShares
+                      - signed
+                      - held
+                      - delivered
+                      - invalidSignature
+                      - rejected
+                    description: |-
+                      If supplied, only transaction request transaction state changes from the provided
+                      list will trigger notifications. If not provided, all transaction request
+                      transaction state changes will trigger notifications.
+                customHttpHeaders:
+                  type: object
+                  additionalProperties:
+                    type: string
+                  description: Custom HTTP header key/values to be included with every notification for the webhook.
+              required:
+                - type
+                - url
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletWebhookResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/webhooks/{webhookId}/simulate:
+    post:
+      summary: Simulate wallet webhook
+      description: Simulates and tests a webhook so you can view its response. A `transferId`, `pendingApprovalId`, `txRequestId` or `txHash` is required, unless `usePlaceholderData` is true. Requires admin permission on the wallet.
+      operationId: v2.wallet.simulatewebhook
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: prevId
+          description: The ID returned as `nextBatchPrevId` by a previous response, to fetch the next page of notifications
+          in: query
+          schema:
+            type: string
+        - name: limit
+          description: Maximum number of notifications to return
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: hash
+          description: Return only the notifications for this transaction hash
+          in: query
+          schema:
+            type: string
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+        - name: webhookId
+          description: The ID of the webhook to simulate
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PublicID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Simulate V2 Wallet Webhook Request Body
+
+                The request body for simulating a wallet webhook: exactly one of the identifiers below, chosen by the type of the webhook, or the flag to use placeholder data.
+              properties:
+                transferId:
+                  type: string
+                  description: |-
+                    The ID of a transfer on the specified wallet.
+
+                    Must be provided if the webhook is of type `transfer`.
+                pendingApprovalId:
+                  type: string
+                  description: |-
+                    The ID of a pending approval on the specified wallet.
+
+                    Must be provided if the webhook is of type `pendingapproval`.
+                txRequestId:
+                  type: string
+                  description: |-
+                    The ID of a transaction request on the specified wallet.
+
+                    Must be provided if the webhook is of type `txRequest` or `txRequestTransaction`.
+                txHash:
+                  type: string
+                  description: |-
+                    The hash of a specific transaction for the specified coin.
+
+                    Must be provided if the webhook is of type `transaction` or `transaction_finality_on_l1`.
+                usePlaceholderData:
+                  type: boolean
+                  description: |-
+                    Whether the simulated webhook should use generated placeholder data.
+
+                    When true, no real transfer, pending approval, transaction request or transaction is needed.
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulateWebhookResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/balances:
     get:
       summary: List total balances by coin
@@ -53992,6 +54021,263 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/webhooks:
+    delete:
+      summary: Remove block webhook
+      description: Removing a webhook will cause new events of the specified type to no longer trigger HTTP callbacks to your URLs. Requires the `wallet_manage_all` scope.
+      operationId: v2.webhooks.remove
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Remove V2 Block Webhook Request Body
+
+                The request body for removing the block webhooks of a user that have a type and URL, optionally narrowed to a single webhook.
+              properties:
+                type:
+                  allOf:
+                    - $ref: '#/components/schemas/BlockWebhookType'
+                  description: |-
+                    The type of the webhooks to remove.
+
+                    Either `block` or `wallet_confirmation`.
+                url:
+                  type: string
+                  description: |-
+                    The URL of the webhooks to remove.
+
+                    Must be the URL the webhook was created with.
+                id:
+                  type: string
+                  description: |-
+                    The ID of a single webhook to remove.
+
+                    When set, only the webhook with this ID that also matches `type` and `url` is removed.
+                coin:
+                  type: string
+                  description: |-
+                    The coin of the webhooks to remove.
+
+                    Defaults to the coin of the request path.
+              required:
+                - type
+                - url
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RemovedWebhooksResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    get:
+      summary: List block webhooks
+      description: Returns block webhooks. The types of webhooks are `block` and `wallet_confirmation` notifications.
+      operationId: v2.webhooks.list
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListUserWebhooksResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+    post:
+      summary: Add block webhook
+      description: Adds a webhook that will result in an HTTP callback at the specified URL from BitGo when events are triggered. A user can have up to 5 webhooks of each type for a coin.
+      operationId: v2.webhooks.add
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Add V2 Block Webhook Request Body
+
+                The request body for adding a webhook that calls the URL when a block is seen on the coin network, or when a wallet has been initialized.
+              properties:
+                type:
+                  allOf:
+                    - $ref: '#/components/schemas/BlockWebhookType'
+                  description: |-
+                    The type of event to listen to.
+
+                    `block` fires when a new block is seen on the coin network. `wallet_confirmation` fires when a wallet has been initialized and is supported for account-based coins only.
+                url:
+                  type: string
+                  description: |-
+                    The URL to fire the webhook to.
+
+                    Must be a publicly reachable URL.
+                label:
+                  type: string
+                  description: |-
+                    The label of the new webhook.
+
+                    Free text that helps to tell webhooks apart.
+                numConfirmations:
+                  type: number
+                  description: |-
+                    The number of confirmations before the webhook is triggered.
+
+                    If 0 or unspecified, requests are sent to the callback endpoint when the transfer is first seen and when it is confirmed.
+              required:
+                - type
+                - url
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BlockWebhookResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/webhooks/{webhookId}/simulate:
+    post:
+      summary: Simulate block webhook
+      description: Simulates and tests a block webhook so you can view its response.
+      operationId: v2.webhooks.simulate
+      tags:
+        - Webhook
+      x-internal: false
+      parameters:
+        - name: prevId
+          description: The ID returned as `nextBatchPrevId` by a previous response, to fetch the next page of notifications
+          in: query
+          schema:
+            type: string
+        - name: limit
+          description: Maximum number of notifications to return
+          in: query
+          schema:
+            type: string
+            format: number
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: webhookId
+          description: The ID of the webhook to simulate
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PublicID'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Simulate V2 Block Webhook Request Body
+
+                The request body for simulating a block webhook: the hash of the block that the simulated notification is created for.
+              properties:
+                blockId:
+                  type: string
+                  description: |-
+                    The hash of the block to create the simulated notification for.
+
+                    The block must exist on the coin network.
+                  minLength: 1
+              required:
+                - blockId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SimulateWebhookResponse'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -70631,12 +70917,6 @@ components:
       required: true
       schema:
         $ref: '#/components/schemas/WalletId'
-    pathWebhookId:
-      name: webhookId
-      required: true
-      in: path
-      schema:
-        $ref: '#/components/schemas/Id'
     prevId:
       in: query
       name: prevId
@@ -71660,6 +71940,7 @@ components:
         - verifyWalletRebalance
         - getCustodianApproval
         - getCustodialSignature
+        - awaitWhitelistApproval
         - triggerWebhookNotification
         - performLivenessVerification
         - recommendBackingWalletRouting
@@ -72669,6 +72950,7 @@ components:
                   - unverifiedRule
                   - fastWithdrawal
                   - caasWaiverThreshold
+                  - combinedWhitelistWithdrawal
                 description: the source that verified this entry (unverifiedRule or fastWithdrawal)
               verifiedAt:
                 type: string
@@ -72707,6 +72989,7 @@ components:
             - unverifiedRule
             - fastWithdrawal
             - caasWaiverThreshold
+            - combinedWhitelistWithdrawal
           description: the source that verified this entry (unverifiedRule or fastWithdrawal)
         verifiedAt:
           type: string
@@ -77742,9 +78025,87 @@ components:
           properties: {}
         - $ref: '#/components/schemas/BlincAccountResponseProps'
         - $ref: '#/components/schemas/BankAccountResponseProps'
-    BlockHash:
+    BlockWebhookResponse:
+      title: BlockWebhookResponse
+      type: object
+      description: A webhook owned by a user for a coin, as returned when a block webhook is added.
+      properties:
+        id:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        created:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        coin:
+          type: string
+          description: A cryptocurrency or token ticker symbol.
+          example: btc
+        type:
+          allOf:
+            - $ref: '#/components/schemas/BlockWebhookType'
+          description: The type of event the webhook listens to.
+        url:
+          type: string
+          example: https://your.server.com/webhook
+          format: uri
+        version:
+          type: number
+          description: 2 for coins running on API v2.
+          example: 2
+        state:
+          $ref: '#/components/schemas/WebhookState'
+        successiveFailedAttempts:
+          type: number
+          example: 0
+        listenToFailureStates:
+          type: boolean
+          description: Whether or not to listen to failed transactions on chain.
+        label:
+          type: string
+          description: Label of the new webhook.
+        scope:
+          allOf:
+            - $ref: '#/components/schemas/WebhookScope'
+          description: The scope of the webhook. Not stored for webhooks owned by a user, so usually absent.
+        userId:
+          type: string
+          description: The ID of the user that owns the webhook.
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        numConfirmations:
+          type: number
+          description: Number of confirmations before the webhook is triggered.
+          example: 6
+        lastAttempt:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+        failingSince:
+          type: string
+          example: 2021-01-01T00:00:00.000Z
+          format: date-time
+          title: ISO Date String
+      required:
+        - id
+        - created
+        - coin
+        - type
+        - url
+        - version
+        - state
+        - successiveFailedAttempts
+        - listenToFailureStates
+    BlockWebhookType:
+      title: BlockWebhookType
       type: string
-      example: 0000000000000296ed56abee6cb78e40b00c47a03d92e71dd92c4862ca636b95
+      enum:
+        - block
+        - wallet_confirmation
+      description: 'The webhook types that can be set on a user for a coin: block notifications and wallet confirmations.'
     BscDelegateIntent:
       title: BSC Delegate Intent
       allOf:
@@ -81674,27 +82035,6 @@ components:
         - h2
         - 'n'
         - p
-    CreateBlockWebhook:
-      type: object
-      properties:
-        type:
-          $ref: '#/components/schemas/WebhookTypeBlock'
-        url:
-          type: string
-          format: uri
-          example: https://your.server.com/webhook
-          description: URL to fire the webhook to.
-        label:
-          type: string
-          description: Label of the new webhook.
-        numConfirmations:
-          type: integer
-          minimum: 0
-          example: 6
-          description: Number of confirmations before triggering the webhook. If 0 or unspecified, requests will be sent to the callback endpoint when the transfer is first seen and when it is confirmed.
-      required:
-        - type
-        - url
     CreateBusinessIdentityBody:
       type: object
       properties:
@@ -101155,6 +101495,7 @@ components:
         - pendingManualSupportReview
         - pendingVideoApprovalFromSupport
         - pendingFraudRiskEvaluation
+        - pendingWhitelistApproval
     PendingApprovalStateProtected:
       title: Pending Protected
       type: string
@@ -101674,25 +102015,6 @@ components:
         state: NY
         postalCode: '10005'
         country: USA
-    PlatformIdentityStatus:
-      type: string
-      enum:
-        - approved
-        - declined
-        - input error
-        - ssn error
-        - gov id error
-        - ssn verified
-        - gov id verified
-        - evaluating submission
-        - awaiting document upload
-        - records uploaded
-        - in review
-        - incomplete verifications
-        - awaiting signature
-        - signature submitted
-        - initiating
-        - additional information submitted
     PlatformIntegerOrIntegerString:
       oneOf:
         - type: string
@@ -102138,12 +102460,6 @@ components:
           description: New state of the wallet share after update
         changed:
           type: boolean
-    PlatformVerifiedKycState:
-      type: string
-      enum:
-        - approved
-        - pending
-        - rejected
     PlatformWallet:
       type: object
       properties:
@@ -102264,78 +102580,6 @@ components:
         - accepted
         - canceled
         - rejected
-    PlatformWebhook:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/Id'
-        label:
-          type: string
-          example: Test Webhook
-        created:
-          $ref: '#/components/schemas/DateTime'
-        coin:
-          $ref: '#/components/schemas/Coin'
-        type:
-          $ref: '#/components/schemas/WebhookTypeWallet'
-        url:
-          type: string
-          format: uri
-          example: https://your.server.com/webhook
-        version:
-          type: integer
-          example: 2
-          description: 2 for coins running on API v2.
-        numConfirmations:
-          type: integer
-          example: 6
-        state:
-          type: string
-          description: If `active`, indicates the webhook can trigger and send to the URL. If `suspended`, indicates the webhook can't trigger.
-          enum:
-            - active
-            - suspended
-          example: active
-        lastAttempt:
-          $ref: '#/components/schemas/DateTime'
-        failingSince:
-          $ref: '#/components/schemas/DateTime'
-        successiveFailedAttempts:
-          type: integer
-          example: 0
-        walletId:
-          type: string
-        allowBlockedHosts:
-          type: boolean
-        allToken:
-          type: boolean
-        txRequestStates:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlatformTransactionRequestState'
-          description: If present, only transaction request state changes from the list will trigger notifications. If not present, all transaction request state changes will trigger notifications.
-        txRequestTransactionStates:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlatformTransactionState'
-          description: If present, only transaction request transaction state changes from the list will trigger notifications. If not present, all transaction request transaction state changes will trigger notifications.
-        identityStatus:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlatformIdentityStatus'
-          description: If present, only identity status changes from the list will trigger notifications. If not present, all identity status changes will trigger notifications.
-        userKycState:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlatformVerifiedKycState'
-          description: If present, only user kyc state changes from the list will trigger notifications. If not present, all kyc state changes will trigger notifications.
-        enterpriseKycState:
-          type: array
-          items:
-            $ref: '#/components/schemas/PlatformVerifiedKycState'
-          description: 'If present, only enterprise kyc state changes from the list will trigger notifications. If not present, all kyc state changes will trigger notifications.      '
-      required:
-        - url
     PolStakingRequest:
       title: POL
       allOf:
@@ -104531,6 +104775,17 @@ components:
           $ref: '#/components/schemas/Id'
       required:
         - userId
+    RemovedWebhooksResponse:
+      title: RemovedWebhooksResponse
+      type: object
+      description: The number of webhooks that a remove request deleted.
+      properties:
+        removed:
+          type: number
+          description: Number of webhooks removed.
+          example: 1
+      required:
+        - removed
     ReportFormatType:
       title: ReportFormatType
       type: string
@@ -107870,50 +108125,110 @@ components:
       required:
         - walletId
         - currency
-    SimulateWalletWebhookRequestBody:
-      oneOf:
-        - title: Transfer
-          type: object
-          properties:
-            transferId:
-              allOf:
-                - $ref: '#/components/schemas/Id'
-              description: The ID of a transfer on the specified wallet. This must be provided if the webhook is of type `transfer`.
-          required:
-            - transferId
-        - title: Pending Approval
-          type: object
-          properties:
-            pendingApprovalId:
-              allOf:
-                - $ref: '#/components/schemas/Id'
-              description: The ID of a pending approval on the specified wallet. This must be provided if the webhook is of type `pendingApproval`.
-          required:
-            - pendingApprovalId
-        - title: Transaction request
-          type: object
-          properties:
-            txRequestId:
-              type: string
-              description: The txRequestId of a transaction request on the specified wallet. This must be provided if the webhook is of type `txRequest` or `txRequestTransaction`.
-          required:
-            - txRequestId
-        - title: Transaction hash
-          type: object
-          properties:
-            txHash:
-              type: string
-              description: The txHash of a specific transaction for the specified coin. This must be provided if the webhook is of type `transaction` or `transaction_finality_on_l1`.
-          required:
-            - txHash
-        - title: Use placeholder data
-          type: object
-          properties:
-            usePlaceholderData:
-              type: boolean
-              description: Boolean to indicate that the simulated webhook should use generated placeholder data.
-          required:
-            - usePlaceholderData
+    SimulateWebhookResponse:
+      title: SimulateWebhookResponse
+      type: object
+      description: The webhook notifications of the webhook owner after a simulation, newest first.
+      properties:
+        webhookNotifications:
+          type: array
+          items:
+            type: object
+            description: The webhook notifications, including the one the simulation created.
+            properties:
+              id:
+                type: string
+                example: 59cd72485007a239fb00282ed480da1f
+                pattern: ^[0-9a-f]{32}$
+              idempotencyKey:
+                type: string
+                description: Unique ID that can be used to de-duplicate notifications.
+              type:
+                type: string
+                description: The type of event that created the notification.
+              wallet:
+                type: string
+                description: The ID of the wallet the notification belongs to.
+              enterprise:
+                type: string
+                description: The ID of the enterprise the notification belongs to.
+              organization:
+                type: string
+                description: The ID of the organization the notification belongs to.
+              bankAccount:
+                type: string
+                description: The ID of the bank account the notification belongs to.
+              url:
+                type: string
+                example: https://your.server.com/webhook
+                format: uri
+              hash:
+                type: string
+                description: A transaction hash for transactions, or a block hash for block notifications.
+              coin:
+                type: string
+                description: A cryptocurrency or token ticker symbol.
+              coinChain:
+                type: string
+                description: The chain the coin belongs to.
+              transfer:
+                type: string
+                description: The ID of the transfer the notification belongs to.
+              state:
+                type: string
+                description: Delivery state of the notification, for example `new` or `processed`.
+              simulation:
+                type: boolean
+                description: Whether the notification was created by a simulation.
+              retries:
+                type: number
+                description: The number of retries that have been attempted for this notification.
+              webhook:
+                type: string
+                description: The ID of the webhook that created the notification.
+              updatedAt:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              nextAttempt:
+                type: string
+                example: 2021-01-01T00:00:00.000Z
+                format: date-time
+                title: ISO Date String
+              version:
+                type: number
+                description: 2 for coins running on API v2.
+              allowBlockedHosts:
+                type: boolean
+                description: Whether the notification may be sent to blocked hosts. Admin only.
+              heightToConfirm:
+                type: number
+                description: The block height at which the notification is sent. Admin only.
+              payload:
+                type: string
+                description: The payload that was sent to the URL. Admin only.
+              response:
+                type: object
+                description: The response that the URL returned. Admin only.
+                properties:
+                  code:
+                    oneOf:
+                      - type: number
+                      - type: string
+                  type:
+                    type: string
+                  body:
+                    type: string
+                  error:
+                    type: string
+            required:
+              - id
+        nextBatchPrevId:
+          type: string
+          description: The ID to pass as `prevId` to fetch the next page. Present only when more notifications exist.
+      required:
+        - webhookNotifications
     SingleBankAccountResponse:
       title: SingleBankAccountResponse
       description: Unified schema for a single bank account response
@@ -133071,62 +133386,6 @@ components:
           type: string
           description: User who registered the key.
           example: user@example.com
-    WebhookNotification:
-      type: object
-      properties:
-        id:
-          $ref: '#/components/schemas/Id'
-        type:
-          $ref: '#/components/schemas/WebhookTypeWallet'
-        wallet:
-          $ref: '#/components/schemas/Id'
-        enterprise:
-          $ref: '#/components/schemas/Id'
-        organization:
-          $ref: '#/components/schemas/Id'
-        bankAccount:
-          $ref: '#/components/schemas/Id'
-        url:
-          type: string
-          format: uri
-          example: https://your.server.com/webhook
-        hash:
-          type: string
-          example: 1311768467294899700
-          description: A transaction hash for transactions, or a block hash for block notifications.
-        coin:
-          $ref: '#/components/schemas/Coin'
-        transfer:
-          $ref: '#/components/schemas/Id'
-        state:
-          type: string
-          description: If `failed`, webhook notification failed to connect with the target URL. If `new`, webhook notification was newly generated, in response to an event. If `pending`, webhook notification is awaiting processing by the webhook worker. If `processed`, webhook notification successfully sent to target URL. If `unconfirmed`, webhook notification is awaiting confirmation on the blockchain.
-          enum:
-            - failed
-            - new
-            - pending
-            - processed
-            - unconfirmed
-          example: new
-        simulation:
-          type: boolean
-          example: false
-        retries:
-          type: integer
-          example: 0
-          description: The number of retries that have been attempted for this webhook notification.
-        webhook:
-          $ref: '#/components/schemas/Id'
-        updateAt:
-          $ref: '#/components/schemas/DateTime'
-        nextAttempt:
-          $ref: '#/components/schemas/DateTime'
-        version:
-          type: integer
-          example: 2
-        idempotencyKey:
-          type: string
-          description: A unique id that can be used to de-duplicate notifications.
     WebhookNotificationDTO:
       required:
         - createdAt
@@ -133334,38 +133593,6 @@ components:
         - allocationRequest
         - allocationAccepted
         - allocationSettlementFailed
-    WebhookTypeBlock:
-      type: string
-      enum:
-        - block
-        - wallet_confirmation
-      example: block
-    WebhookTypeWallet:
-      type: string
-      enum:
-        - txRequest
-        - txRequestTransaction
-        - transfer
-        - transaction
-        - transactionRemoved
-        - transactionExpire
-        - unspentExpiry
-        - pendingapproval
-        - address_confirmation
-        - lowFee
-        - block
-        - admin
-        - circuitBreaker
-        - transaction_finality_on_l1
-        - lowFeeAddressBalance
-        - stuckTx
-        - endInvestorOnboardingInvite
-        - endInvestorOnboardingAccepted
-        - allocationRequest
-        - allocationAccepted
-        - allocationSettlementFailed
-      example: transfer
-      description: Event type to listen to.
     WethStakingRequest:
       title: WETH
       allOf:
