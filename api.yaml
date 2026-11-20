@@ -10481,8 +10481,7 @@ paths:
               - amlAttestation
               - nonSolicitationLetterEu
               - nonSolicitationLetterSg
-              - taxEDeliveryConsent
-          description: Identifier for the legal disclosure and agreement type (e.g., amlAttestation, nonSolicitationLetterEu, nonSolicitationLetterSg, taxEDeliveryConsent)
+          description: Identifier for the legal disclosure and agreement type (e.g., amlAttestation, nonSolicitationLetterEu, nonSolicitationLetterSg)
       responses:
         '200':
           description: '200'
@@ -81831,6 +81830,8 @@ components:
           $ref: '#/components/schemas/Metadata'
         forUserId:
           $ref: '#/components/schemas/ForUserId'
+        isInternal:
+          $ref: '#/components/schemas/IsInternal'
       required:
         - documentType
       title: CreateDocumentRequest
@@ -83693,6 +83694,55 @@ components:
         rejectionReason:
           type: string
           description: Human-readable reason when status is rejected (e.g. illegible scan, wrong document type)
+        findings:
+          type: array
+          items:
+            type: object
+            properties:
+              checkType:
+                type: string
+                enum:
+                  - type_match
+                  - expiry
+                  - age
+                  - identity_mismatch
+                  - cross_doc
+                  - execution
+                  - ubo
+                  - signatory
+                  - date_coherence
+                  - language
+                  - quality
+                  - pipeline
+                  - tamper
+              severity:
+                type: string
+                enum:
+                  - info
+                  - warn
+                  - reject
+              message:
+                type: string
+                minLength: 1
+              field:
+                type: string
+              documentValue:
+                type: string
+              expectedValue:
+                type: string
+              internalOnly:
+                type: boolean
+            required:
+              - checkType
+              - severity
+              - message
+          nullable: true
+          description: Structured screening findings from the latest screening round
+        extractedFields:
+          type: object
+          additionalProperties: {}
+          description: Identity fields extracted from the document during live screening (ON-7580)
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -83961,6 +84011,7 @@ components:
         - caseRequiredDocuments
         - correspondentAccountCertification
         - authorizedSignerForm
+        - financialCrimeComplianceQuestionnaire
       title: DocumentType
       description: Type of document being uploaded
     DocumentTypeDetailed:
@@ -84002,6 +84053,7 @@ components:
         - caseRequiredDocuments
         - correspondentAccountCertification
         - authorizedSignerForm
+        - financialCrimeComplianceQuestionnaire
       title: DocumentTypeDetailed
       description: |-
         Type of document being uploaded. Supported document types:
@@ -84041,6 +84093,7 @@ components:
         - `caseRequiredDocuments` - A collection of documents required for a specific KYB/KYC case. Unlike other document types, the specific file slots and their per-file document classifications are defined per-instance at creation time rather than statically configured. Each file within this collection sets its own classification via the `File.documentType` field.
         - `correspondentAccountCertification` — FinCEN Certification Regarding Correspondent Accounts for Foreign Banks. Required from non-US bank applicants per FinCEN regulations. The blank form is available at https://www.fincen.gov/system/files/shared/Certification%20Regarding%20Correspondent%20Accounts%20for%20Foreign%20Banks.pdf — the applicant completes, signs, and uploads it.
         - `authorizedSignerForm` — A signed form identifying the individual authorized to make contractual commitments on behalf of the applicant. The blank fillable form is available at https://www.bitgo.com/legal/bitgo-bank-and-trust-na-authorized-signer-form/ — the authorized signer completes, signs, and uploads it.
+        - `financialCrimeComplianceQuestionnaire` — A questionnaire used to assess financial crime compliance controls, policies, and procedures as part of the KYB onboarding flow.
     DomesticWireAccountResponseProps:
       title: DomesticWireAccountResponseProps
       type: object
@@ -87372,11 +87425,12 @@ components:
       enum:
         - awaitingUpload
         - uploaded
+        - screening
         - accepted
         - rejected
         - requiresManualReview
       title: FileStatus
-      description: Current status of the file upload. `requiresManualReview` is a terminal state set after 2 failed AI screening attempts; the file is locked and Trust ops resolves it manually.
+      description: Current status of the file upload. `uploaded` means bytes are stored and is terminal when screening is not required. `screening` means an AI screening decision is in flight. `requiresManualReview` is a terminal state set when the customer submits a rejected file anyway (or on leftover auto-lock rows); the file is locked and Trust ops resolves it manually.
     FileView:
       type: string
       enum:
@@ -88213,8 +88267,7 @@ components:
             - amlAttestation
             - nonSolicitationLetterEu
             - nonSolicitationLetterSg
-            - taxEDeliveryConsent
-          description: Identifier for the legal disclosure and agreement type (e.g., amlAttestation, nonSolicitationLetterEu, nonSolicitationLetterSg, taxEDeliveryConsent)
+          description: Identifier for the legal disclosure and agreement type (e.g., amlAttestation, nonSolicitationLetterEu, nonSolicitationLetterSg)
         revision:
           type: integer
           minimum: 0
@@ -93265,6 +93318,10 @@ components:
           properties: {}
         - $ref: '#/components/schemas/IpiFtsAccountResponseProps'
         - $ref: '#/components/schemas/BankAccountResponseProps'
+    IsInternal:
+      type: boolean
+      title: IsInternal
+      description: True when the document is created by a BitGo employee, derived by the caller from a @bitgo.com email domain. Used to exclude internal and test traffic from screening metrics.
     IssuerComplianceRequestListResponse:
       title: IssuerComplianceRequestListResponse
       type: object
@@ -120622,6 +120679,48 @@ components:
         triggerLiveScreeningAsync:
           type: boolean
           description: When true, triggers async AI live screening on this upload. Defaults to false.
+        kybIdentity:
+          type: object
+          properties:
+            entityName:
+              type: string
+            registeredAddress:
+              type: string
+            registrationNumber:
+              type: string
+            legalStructure:
+              type: string
+            jurisdiction:
+              type: string
+            identityId:
+              type: string
+            transactionId:
+              type: string
+            ubos:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                  ownershipPercentage:
+                    type: number
+                required:
+                  - name
+            associatedPersons:
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    type: string
+                    minLength: 1
+                  role:
+                    type: string
+                required:
+                  - name
+          description: Structured KYB identity data for the entity being screened. Forwarded to the live screening workflow when the LIVE_SCREENING_KYB_IDENTITY_ENABLED flag is on.
       required:
         - status
       title: UpdateFileStatusRequest
