@@ -944,6 +944,7 @@ paths:
             type: array
             items:
               type: string
+              description: Validates the value is compatible with a WP public object id
               minLength: 1
         - name: targetWalletId
           in: query
@@ -951,6 +952,7 @@ paths:
             type: array
             items:
               type: string
+              description: Validates the value is compatible with a WP public object id
               minLength: 1
         - name: hiddenConnections
           in: query
@@ -1051,8 +1053,7 @@ paths:
                       type: string
                       minLength: 1
                     walletId:
-                      type: string
-                      minLength: 1
+                      $ref: '#/components/schemas/PublicId'
                   required:
                     - listingEntryId
                     - localListingName
@@ -1204,12 +1205,12 @@ paths:
               type: object
               properties:
                 walletId:
-                  type: string
-                  minLength: 1
+                  $ref: '#/components/schemas/PublicId'
                 targetWalletIds:
                   type: array
                   items:
                     type: string
+                    description: Validates the value is compatible with a WP public object id
                     minLength: 1
               required:
                 - walletId
@@ -1334,6 +1335,7 @@ paths:
             type: array
             items:
               type: string
+              description: Validates the value is compatible with a WP public object id
               minLength: 1
         - name: enterprise-id
           in: header
@@ -1807,8 +1809,7 @@ paths:
               type: object
               properties:
                 walletId:
-                  type: string
-                  minLength: 1
+                  $ref: '#/components/schemas/PublicId'
                 description:
                   type: string
                   minLength: 1
@@ -53879,7 +53880,7 @@ paths:
           required: true
           schema:
             allOf:
-              - $ref: '#/components/schemas/PublicID'
+              - $ref: '#/components/schemas/PublicID1'
       requestBody:
         content:
           application/json:
@@ -54237,7 +54238,7 @@ paths:
           required: true
           schema:
             allOf:
-              - $ref: '#/components/schemas/PublicID'
+              - $ref: '#/components/schemas/PublicID1'
       requestBody:
         content:
           application/json:
@@ -59749,7 +59750,7 @@ paths:
           required: true
           schema:
             allOf:
-              - $ref: '#/components/schemas/PublicID'
+              - $ref: '#/components/schemas/PublicID1'
       responses:
         '200':
           description: OK
@@ -59763,7 +59764,7 @@ paths:
                   properties:
                     id:
                       allOf:
-                        - $ref: '#/components/schemas/PublicID'
+                        - $ref: '#/components/schemas/PublicID1'
                       description: The ID of the send label
                     coin:
                       allOf:
@@ -59775,7 +59776,7 @@ paths:
                       description: The labelled address
                     enterpriseId:
                       allOf:
-                        - $ref: '#/components/schemas/PublicID'
+                        - $ref: '#/components/schemas/PublicID1'
                       description: The ID of the enterprise the label belongs to
                     label:
                       type: string
@@ -59838,7 +59839,7 @@ paths:
                     Must be a valid send label address for the coin.
                 enterpriseId:
                   allOf:
-                    - $ref: '#/components/schemas/PublicID'
+                    - $ref: '#/components/schemas/PublicID1'
                   description: |-
                     The ID of the enterprise the label belongs to.
 
@@ -59901,7 +59902,7 @@ paths:
           required: true
           schema:
             allOf:
-              - $ref: '#/components/schemas/PublicID'
+              - $ref: '#/components/schemas/PublicID1'
       responses:
         '200':
           description: OK
@@ -59947,7 +59948,7 @@ paths:
           required: true
           schema:
             allOf:
-              - $ref: '#/components/schemas/PublicID'
+              - $ref: '#/components/schemas/PublicID1'
       responses:
         '200':
           description: OK
@@ -59993,7 +59994,7 @@ paths:
           required: true
           schema:
             allOf:
-              - $ref: '#/components/schemas/PublicID'
+              - $ref: '#/components/schemas/PublicID1'
       requestBody:
         content:
           application/json:
@@ -85501,7 +85502,7 @@ components:
       properties:
         id:
           allOf:
-            - $ref: '#/components/schemas/PublicID'
+            - $ref: '#/components/schemas/PublicID1'
           description: The ID of the send label
         coin:
           allOf:
@@ -85513,7 +85514,7 @@ components:
           description: The labelled address
         enterpriseId:
           allOf:
-            - $ref: '#/components/schemas/PublicID'
+            - $ref: '#/components/schemas/PublicID1'
           description: The ID of the enterprise the label belongs to
         label:
           type: string
@@ -104181,9 +104182,14 @@ components:
           description: Detailed staking information. Only present when the `stakingData=true` query parameter is provided. Null for assets that do not support staking.
           allOf:
             - $ref: '#/components/schemas/StakingDetails'
-    PublicID:
+    PublicID1:
       title: PublicID
       type: string
+    PublicId:
+      title: PublicId
+      type: string
+      description: Validates the value is compatible with a WP public object id
+      minLength: 1
     PutIdentityDocumentUpdateResponse:
       title: PutIdentityDocumentUpdateResponse
       type: object
