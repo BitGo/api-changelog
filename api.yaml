@@ -13368,6 +13368,86 @@ paths:
                       description: Detailed error messages
                 required:
                   - error
+  /api/identity-service/v1/agreements/{agreementId}:
+    get:
+      summary: Get legal disclosure and agreement
+      description: Get the latest text and version number of a legal disclosure and agreement for a given agreement ID. Display the copy in your application before submitting your end user's consent and attestation to BitGo.
+      operationId: identities.get.v1.agreements.id
+      tags:
+        - Tax
+      x-internal: false
+      parameters:
+        - name: agreementId
+          in: path
+          required: true
+          schema:
+            type: string
+            enum:
+              - taxEDeliveryConsent
+            example: taxEDeliveryConsent
+          description: Identifier for the legal disclosure and agreement type (e.g., taxEDeliveryConsent)
+      responses:
+        '200':
+          description: '200'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetIdentityAgreementResponse'
+        '400':
+          description: '400'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '401':
+          description: '401'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '403':
+          description: '403'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '404':
+          description: '404'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
+        '500':
+          description: '500'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  error:
+                    type: string
+                required:
+                  - error
   /api/identity-service/v1/identities/{identityId}/agreements:
     post:
       summary: Submit Agreement Attestations
@@ -14255,11 +14335,11 @@ paths:
                     type: string
                 required:
                   - error
-  /api/identity-service/v1/taxbit/account/{enterpriseId}/tax-documentation-data/w-9:
+  /api/identity-service/v1/enterprises/{enterpriseId}/tax-forms/w-9:
     post:
       summary: Submit Form W-9 Tax Documentation
-      description: 'Submits IRS Form W-9 tax documentation data for the specified enterprise account owner. Pass-through to TaxBit POST /v1/account-owners/{id}/tax-documentation-data/w-9. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
-      operationId: identities.post.v1.taxbit.account.id.tax-documentation-data.w-9
+      description: 'Submits IRS Form W-9 tax documentation data for the specified enterprise. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
+      operationId: identities.post.v1.enterprises.id.tax-forms.w-9
       tags:
         - Tax
       x-internal: false
@@ -14291,37 +14371,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitBadRequestErrorResponseDto'
+                $ref: '#/components/schemas/TaxBadRequestErrorResponseDto'
         '401':
           description: '401'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitUnauthorizedErrorResponseDto'
+                $ref: '#/components/schemas/TaxUnauthorizedErrorResponseDto'
         '403':
           description: '403'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitForbiddenErrorResponseDto'
+                $ref: '#/components/schemas/TaxForbiddenErrorResponseDto'
         '404':
           description: '404'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitNotFoundErrorResponseDto'
+                $ref: '#/components/schemas/TaxNotFoundErrorResponseDto'
         '409':
           description: '409'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitConflictErrorResponseDto'
+                $ref: '#/components/schemas/TaxConflictErrorResponseDto'
         '429':
           description: '429'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitTooManyRequestsErrorResponseDto'
+                $ref: '#/components/schemas/TaxTooManyRequestsErrorResponseDto'
         '500':
           description: '500'
           content:
@@ -14333,11 +14413,11 @@ paths:
                     type: string
                 required:
                   - error
-  /api/identity-service/v1/taxbit/account/{enterpriseId}/tax-documentation-data/w-8ben:
+  /api/identity-service/v1/enterprises/{enterpriseId}/tax-forms/w-8ben:
     post:
       summary: Submit Form W-8BEN Tax Documentation
-      description: 'Submits IRS Form W-8BEN tax documentation data for an individual foreign enterprise account owner. Pass-through to TaxBit POST /v1/account-owners/{id}/tax-documentation-data/w-8ben. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
-      operationId: identities.post.v1.taxbit.account.id.tax-documentation-data.w-8ben
+      description: 'Submits IRS Form W-8BEN tax documentation data for an individual foreign beneficial owner associated with the specified enterprise. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
+      operationId: identities.post.v1.enterprises.id.tax-forms.w-8ben
       tags:
         - Tax
       x-internal: false
@@ -14369,37 +14449,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitBadRequestErrorResponseDto'
+                $ref: '#/components/schemas/TaxBadRequestErrorResponseDto'
         '401':
           description: '401'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitUnauthorizedErrorResponseDto'
+                $ref: '#/components/schemas/TaxUnauthorizedErrorResponseDto'
         '403':
           description: '403'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitForbiddenErrorResponseDto'
+                $ref: '#/components/schemas/TaxForbiddenErrorResponseDto'
         '404':
           description: '404'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitNotFoundErrorResponseDto'
+                $ref: '#/components/schemas/TaxNotFoundErrorResponseDto'
         '409':
           description: '409'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitConflictErrorResponseDto'
+                $ref: '#/components/schemas/TaxConflictErrorResponseDto'
         '429':
           description: '429'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitTooManyRequestsErrorResponseDto'
+                $ref: '#/components/schemas/TaxTooManyRequestsErrorResponseDto'
         '500':
           description: '500'
           content:
@@ -14411,11 +14491,11 @@ paths:
                     type: string
                 required:
                   - error
-  /api/identity-service/v1/taxbit/account/{enterpriseId}/tax-documentation-data/w-8ben-e:
+  /api/identity-service/v1/enterprises/{enterpriseId}/tax-forms/w-8ben-e:
     post:
       summary: Submit Form W-8BEN-E Tax Documentation
-      description: 'Submits IRS Form W-8BEN-E tax documentation data for a foreign entity enterprise account owner. Pass-through to TaxBit POST /v1/account-owners/{id}/tax-documentation-data/w-8ben-e. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
-      operationId: identities.post.v1.taxbit.account.id.tax-documentation-data.w-8ben-e
+      description: 'Submits IRS Form W-8BEN-E tax documentation data for a foreign entity associated with the specified enterprise. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
+      operationId: identities.post.v1.enterprises.id.tax-forms.w-8ben-e
       tags:
         - Tax
       x-internal: false
@@ -14447,37 +14527,37 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitBadRequestErrorResponseDto'
+                $ref: '#/components/schemas/TaxBadRequestErrorResponseDto'
         '401':
           description: '401'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitUnauthorizedErrorResponseDto'
+                $ref: '#/components/schemas/TaxUnauthorizedErrorResponseDto'
         '403':
           description: '403'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitForbiddenErrorResponseDto'
+                $ref: '#/components/schemas/TaxForbiddenErrorResponseDto'
         '404':
           description: '404'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitNotFoundErrorResponseDto'
+                $ref: '#/components/schemas/TaxNotFoundErrorResponseDto'
         '409':
           description: '409'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitConflictErrorResponseDto'
+                $ref: '#/components/schemas/TaxConflictErrorResponseDto'
         '429':
           description: '429'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitTooManyRequestsErrorResponseDto'
+                $ref: '#/components/schemas/TaxTooManyRequestsErrorResponseDto'
         '500':
           description: '500'
           content:
@@ -14489,89 +14569,11 @@ paths:
                     type: string
                 required:
                   - error
-  /api/identity-service/v1/taxbit/account/{enterpriseId}/tax-documentation-data/self-certification:
-    post:
-      summary: Submit DAC8 Self-Certification Tax Documentation
-      description: 'Submits DAC8/CARF Self-Certification tax documentation data for the specified enterprise account owner. Pass-through to TaxBit POST /v1/account-owners/{id}/tax-documentation-data/self-certification. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
-      operationId: identities.post.v1.taxbit.account.id.tax-documentation-data.self-certification
-      tags:
-        - Tax
-      x-internal: false
-      parameters:
-        - name: enterpriseId
-          in: path
-          required: true
-          schema:
-            type: string
-            minLength: 32
-            maxLength: 32
-            pattern: ^[0-9a-zA-Z]{32}$
-          description: The enterprise ID to get a token for
-      requestBody:
-        description: Body
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/SelfCertificationSubmissionDocsDto'
-      responses:
-        '201':
-          description: '201'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/SelfCertificationSubmissionResponseDto'
-        '400':
-          description: '400'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaxbitBadRequestErrorResponseDto'
-        '401':
-          description: '401'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaxbitUnauthorizedErrorResponseDto'
-        '403':
-          description: '403'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaxbitForbiddenErrorResponseDto'
-        '404':
-          description: '404'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaxbitNotFoundErrorResponseDto'
-        '409':
-          description: '409'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaxbitConflictErrorResponseDto'
-        '429':
-          description: '429'
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/TaxbitTooManyRequestsErrorResponseDto'
-        '500':
-          description: '500'
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  error:
-                    type: string
-                required:
-                  - error
-  /api/identity-service/v1/taxbit/account/{enterpriseId}/tax-documentation-data:
+  /api/identity-service/v1/enterprises/{enterpriseId}/tax-forms:
     get:
       summary: Get Tax Documentation Data
-      description: 'Retrieves submitted tax documentation data (W-Form, DAC8 Self-Certification, and DPS) for the specified enterprise account owner. Pass-through to TaxBit GET /v1/account-owners/{id}/tax-documentation-data. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
-      operationId: identities.get.v1.taxbit.account.id.tax-documentation-data
+      description: 'Retrieves submitted tax documentation data for the specified enterprise. Note: This endpoint currently returns hardcoded mock responses for initial client integration.'
+      operationId: identities.get.v1.enterprises.id.tax-forms
       tags:
         - Tax
       x-internal: false
@@ -14605,31 +14607,31 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitBadRequestErrorResponseDto'
+                $ref: '#/components/schemas/TaxBadRequestErrorResponseDto'
         '401':
           description: '401'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitUnauthorizedErrorResponseDto'
+                $ref: '#/components/schemas/TaxUnauthorizedErrorResponseDto'
         '403':
           description: '403'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitForbiddenErrorResponseDto'
+                $ref: '#/components/schemas/TaxForbiddenErrorResponseDto'
         '404':
           description: '404'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitNotFoundErrorResponseDto'
+                $ref: '#/components/schemas/TaxNotFoundErrorResponseDto'
         '429':
           description: '429'
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/TaxbitTooManyRequestsErrorResponseDto'
+                $ref: '#/components/schemas/TaxTooManyRequestsErrorResponseDto'
         '500':
           description: '500'
           content:
@@ -74253,6 +74255,7 @@ components:
             - inReview
             - verified
             - rejected
+            - resubmissionRequired
           description: Verification status of the associated person
         individual:
           type: object
@@ -88851,6 +88854,54 @@ components:
               - disabled
       required:
         - feeTokens
+    GetIdentityAgreementResponse:
+      type: object
+      properties:
+        agreementId:
+          type: string
+          enum:
+            - taxEDeliveryConsent
+          description: Identifier for the legal disclosure and agreement type (e.g., taxEDeliveryConsent)
+          example: taxEDeliveryConsent
+        revision:
+          type: integer
+          minimum: 1
+          description: Agreement version (revision) number
+          example: 1
+        content:
+          type: object
+          properties:
+            title:
+              type: string
+              description: Heading copy for the electronic delivery disclosure
+              example: Go paperless this tax season
+            description:
+              type: string
+              description: Summary description of electronic tax document delivery
+              example: Save time and reduce clutter by getting your tax documents delivered electronically. It's fast, secure, and eco-friendly.
+            disclosure:
+              type: string
+              description: Instructional consent disclosure copy
+              example: Please confirm your consent to electronic delivery, or select "Continue with postal delivery" to receive paper copies.
+            termsLinkText:
+              type: string
+              description: Label text for the electronic delivery terms link
+              example: Terms of electronic delivery
+            options:
+              $ref: '#/components/schemas/TaxEDeliveryConsentOptions'
+          required:
+            - title
+            - description
+            - disclosure
+            - termsLinkText
+            - options
+          description: Legal disclosure and agreement content payload
+      required:
+        - agreementId
+        - revision
+        - content
+      title: GetIdentityAgreementResponse
+      description: Latest version number and content for a legal disclosure and agreement.
     GetInvoicesResponse:
       title: GetInvoicesResponse
       type: object
@@ -96803,6 +96854,7 @@ components:
             - submitted
             - inReview
             - verified
+            - resubmissionRequired
           description: Current status of the missing requirement
       required:
         - id
@@ -105107,6 +105159,7 @@ components:
             - inReview
             - approved
             - rejected
+            - resubmissionRequired
           description: |-
             Status of the requested permission:
             - `missingLocation` - BitGo needs the business location.
@@ -105164,6 +105217,7 @@ components:
             - submitted
             - inReview
             - verified
+            - resubmissionRequired
           description: Current status of the requirement
         minRequired:
           type: number
@@ -105312,10 +105366,10 @@ components:
         id:
           type: string
           format: uuid
-          description: TaxBit internal UUID for the collected DPS documentation
+          description: Unique UUID for the collected DPS documentation
         name:
           type: string
-          description: Legal name of the account owner
+          description: Legal name of the enterprise
         document_type:
           type: string
           enum:
@@ -105323,20 +105377,20 @@ components:
           description: Document type (DPS)
         is_individual:
           type: boolean
-          description: Indicates if the account owner is an individual
+          description: Indicates if the taxpayer is an individual
         is_confirmed_correct_complete:
           type: boolean
-          description: Indicates if the account owner confirmed accuracy of the information
+          description: Indicates if the taxpayer confirmed accuracy of the information
         address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         business_registration_country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         business_registration_number:
           type: string
         city_of_birth:
           type: string
         country_of_birth:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         date_of_birth:
           type: string
         financial_account_identifier:
@@ -105373,17 +105427,16 @@ components:
       properties:
         e_delivery_consent:
           type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
         name:
           type: string
           description: Legal name of the individual or entity
           example: Euro Crypto GmbH
         permanent_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         mailing_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         tax_residences:
           type: array
           items:
@@ -105420,9 +105473,9 @@ components:
           type: string
           description: City of birth for individual account owners
         country_of_birth:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         country_of_citizenship:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         entity_type:
           type: string
           enum:
@@ -105495,14 +105548,14 @@ components:
         id:
           type: string
           format: uuid
-          description: TaxBit internal UUID for the collected Self-Certification
+          description: Unique UUID for the collected Self-Certification
         document_type:
           type: string
           enum:
             - SELF_CERTIFICATION
           description: Document type (SELF_CERTIFICATION)
         address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         has_certified:
           type: boolean
           description: Indicates whether the self-certification has been certified
@@ -105515,7 +105568,7 @@ components:
         submission_id:
           type: string
           format: uuid
-          description: TaxBit submission UUID for the Self-Certification
+          description: Submission UUID for the Self-Certification
         revision:
           type: number
           description: Revision number of the Self-Certification submission
@@ -105538,7 +105591,7 @@ components:
                     type: string
                   validation_result:
                     type: string
-          description: TIN format validation results returned by TaxBit
+          description: TIN format validation results
       required:
         - e_delivery_consent
         - id
@@ -105550,20 +105603,19 @@ components:
       properties:
         e_delivery_consent:
           type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
         irs_version:
           type: string
           enum:
             - 2021_OCT
-          description: Set to 2021_OCT when submitting the official IRS Form W-8BEN-E; omit for substitute form
+          description: IRS version of the submitted Form W-8BEN-E
         name:
           type: string
           description: Name of organization that is the beneficial owner
           example: Global Digital Assets Ltd
         country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         tax_classification:
           type: string
           enum:
@@ -105581,15 +105633,15 @@ components:
             - INTERNATIONAL_ORGANIZATION
           description: Chapter 3 Status (entity type)
         permanent_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         mailing_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         us_tin:
           type: string
-          description: U.S. taxpayer identification number (EIN), if required
+          description: Masked or unmasked U.S. taxpayer identification number (EIN)
         ftin:
           type: string
-          description: Foreign tax identifying number
+          description: Masked or unmasked foreign tax identifying number
         reference_numbers:
           type: string
           description: Reference number(s)
@@ -105612,8 +105664,9 @@ components:
         treaty_claim_is_eligible:
           type: boolean
           description: Indicates whether the entity is claiming tax treaty benefits
+          deprecated: true
         treaty_claim_country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         treaty_claim_i_certify_resident:
           type: boolean
           description: Certifies that the beneficial owner is a resident of the treaty country
@@ -105703,7 +105756,7 @@ components:
           type: string
           description: Name of sponsoring entity or trustee
         nonreporting_iga_country:
-          $ref: '#/components/schemas/TaxbitNonreportingIgaCountry'
+          $ref: '#/components/schemas/TaxNonreportingIgaCountry'
         nonreporting_iga_country_model:
           type: string
           enum:
@@ -105711,7 +105764,7 @@ components:
             - MODEL_2
           description: Applicable IGA model (MODEL_1 or MODEL_2)
         nonreporting_iga_category:
-          $ref: '#/components/schemas/TaxbitNonreportingIgaCategory'
+          $ref: '#/components/schemas/TaxNonreportingIgaCategory'
         nonreporting_iga_trustee_type:
           type: string
           enum:
@@ -105822,7 +105875,7 @@ components:
         id:
           type: string
           format: uuid
-          description: TaxBit internal UUID for the collected W-8BEN-E documentation
+          description: Unique UUID for the collected W-8BEN-E documentation
         created_at:
           type: string
           description: ISO 8601 timestamp when the W-8BEN-E documentation was recorded
@@ -105847,30 +105900,29 @@ components:
       properties:
         e_delivery_consent:
           type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
         irs_version:
           type: string
           enum:
             - 2021_OCT
-          description: Set to 2021_OCT when submitting the official IRS Form W-8BEN; omit for substitute form
+          description: IRS version of the submitted Form W-8BEN
         name:
           type: string
           description: Name of individual who is the beneficial owner
           example: Jane Doe
         country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         permanent_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         mailing_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         us_tin:
           type: string
-          description: U.S. taxpayer identification number (SSN or ITIN), if required
+          description: Masked or unmasked U.S. taxpayer identification number
         ftin:
           type: string
-          description: Foreign tax identifying number
+          description: Masked or unmasked foreign tax identifying number
         date_of_birth:
           type: string
           description: Date of birth (YYYY-MM-DD)
@@ -105897,8 +105949,9 @@ components:
         treaty_claim_is_eligible:
           type: boolean
           description: Indicates whether the beneficial owner is claiming treaty benefits
+          deprecated: true
         treaty_claim_country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         treaty_claim_i_certify_resident:
           type: boolean
           description: Certifies residency in the treaty country
@@ -105928,7 +105981,7 @@ components:
         id:
           type: string
           format: uuid
-          description: TaxBit internal UUID for the collected W-8BEN documentation
+          description: Unique UUID for the collected W-8BEN documentation
         created_at:
           type: string
           description: ISO 8601 timestamp when the W-8BEN documentation was recorded
@@ -105951,8 +106004,7 @@ components:
       properties:
         e_delivery_consent:
           type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
         name:
           type: string
@@ -105980,11 +106032,11 @@ components:
           type: string
           description: Description when tax_classification is OTHER
         address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         tin:
           type: string
-          description: Taxpayer Identification Number (SSN, EIN, ITIN, or ATIN)
-          example: '123456789'
+          description: Masked or unmasked Taxpayer Identification Number
+          example: '*****6789'
         tin_type:
           type: string
           enum:
@@ -106050,7 +106102,7 @@ components:
         id:
           type: string
           format: uuid
-          description: TaxBit internal UUID for the collected W-9 documentation
+          description: Unique UUID for the collected W-9 documentation
         created_at:
           type: string
           description: ISO 8601 timestamp when the W-9 documentation was recorded
@@ -106710,9 +106762,9 @@ components:
           type: string
           description: Full name of the controlling person
         address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         mailing_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         mailing_address_is_different:
           type: boolean
           description: Indicates if the mailing address differs from the permanent address
@@ -106723,9 +106775,9 @@ components:
           type: string
           description: City of birth of the controlling person
         country_of_birth:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         country_of_citizenship:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         ownership_percentage:
           type: number
           description: Percentage of ownership or control
@@ -106762,244 +106814,11 @@ components:
           description: Tax residences of the controlling person
       title: SelfCertificationControllingPerson
       description: Controlling person for a Passive NFE or managed investment entity.
-    SelfCertificationSubmissionDocsDto:
-      type: object
-      properties:
-        e_delivery_consent:
-          type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
-          example: true
-        name:
-          type: string
-          description: Legal name of the individual or entity
-          example: Euro Crypto GmbH
-        permanent_address:
-          $ref: '#/components/schemas/TaxbitAddress'
-        mailing_address:
-          $ref: '#/components/schemas/TaxbitAddress'
-        tax_residences:
-          type: array
-          items:
-            $ref: '#/components/schemas/SelfCertificationTaxResidence'
-          description: List of tax residency jurisdictions and TINs
-        classification:
-          type: string
-          enum:
-            - INDIVIDUAL
-            - FINANCIAL_INSTITUTION_DEPOSITORY_INSTITUTION
-            - FINANCIAL_INSTITUTION_CUSTODIAL_INSTITUTION
-            - FINANCIAL_INSTITUTION_INSURANCE_COMPANY
-            - FINANCIAL_INSTITUTION_NON_REPORTING
-            - FINANCIAL_INSTITUTION_INVESTMENT_ENTITY_MANAGED
-            - FINANCIAL_INSTITUTION_INVESTMENT_ENTITY_OTHER
-            - ACTIVE_NFE_GOVERNMENT_ENTITY
-            - ACTIVE_NFE_CENTRAL_BANK
-            - ACTIVE_NFE_INTERNATIONAL_ORGANIZATION
-            - ACTIVE_NFE_PUBLIC_CORPORATION
-            - ACTIVE_NFE_OTHER
-            - PASSIVE_NFE
-          description: CRS/CARF classification of the account owner
-        signature_date:
-          type: string
-          description: Date the self-certification was signed (YYYY-MM-DD or ISO 8601)
-          example: 2026-01-15T00:00:00.000Z
-        has_signed_and_certified:
-          type: boolean
-          description: Indicates that the account owner has signed and certified the self-certification
-        date_of_birth:
-          type: string
-          description: Date of birth for individual account owners (YYYY-MM-DD)
-        city_of_birth:
-          type: string
-          description: City of birth for individual account owners
-        country_of_birth:
-          $ref: '#/components/schemas/TaxbitCountry'
-        country_of_citizenship:
-          $ref: '#/components/schemas/TaxbitCountry'
-        entity_type:
-          type: string
-          enum:
-            - TRUST
-            - SIMILAR_TO_TRUST
-            - OTHER
-          description: Entity type when classification is PASSIVE_NFE
-        securities_market:
-          type: string
-          description: Established securities market when classification is ACTIVE_NFE_PUBLIC_CORPORATION
-        related_corporation:
-          type: string
-          description: Name of related corporation if affiliated with a publicly traded corporation
-        controlling_persons:
-          type: array
-          items:
-            $ref: '#/components/schemas/SelfCertificationControllingPerson'
-          description: Controlling persons for Passive NFE or managed investment entity
-        signature_capacity:
-          type: string
-          enum:
-            - OFFICER
-            - EXECUTOR
-            - OTHER_CAPACITY
-          description: Capacity in which the representative is signing
-        signature_capacity_other:
-          type: string
-          description: Description when signature_capacity is OTHER_CAPACITY
-        giin:
-          type: string
-          description: Global Intermediary Identification Number (GIIN)
-        residence_by_investment_confirmed:
-          type: boolean
-          description: Confirms whether tax residency information includes any CBI/RBI program
-        signature:
-          type: string
-          description: Electronic signature of the signer
-          example: Hans Mueller
-      required:
-        - e_delivery_consent
-      title: SelfCertificationSubmissionDocsDto
-      description: DAC8/CARF Self-Certification submission payload matching TaxBit POST /v1/account-owners/{id}/tax-documentation-data/self-certification.
-    SelfCertificationSubmissionResponseData:
-      type: object
-      properties:
-        e_delivery_consent:
-          type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
-          example: true
-        name:
-          type: string
-          description: Legal name of the individual or entity
-          example: Euro Crypto GmbH
-        permanent_address:
-          $ref: '#/components/schemas/TaxbitAddress'
-        mailing_address:
-          $ref: '#/components/schemas/TaxbitAddress'
-        tax_residences:
-          type: array
-          items:
-            $ref: '#/components/schemas/SelfCertificationTaxResidence'
-          description: List of tax residency jurisdictions and TINs
-        classification:
-          type: string
-          enum:
-            - INDIVIDUAL
-            - FINANCIAL_INSTITUTION_DEPOSITORY_INSTITUTION
-            - FINANCIAL_INSTITUTION_CUSTODIAL_INSTITUTION
-            - FINANCIAL_INSTITUTION_INSURANCE_COMPANY
-            - FINANCIAL_INSTITUTION_NON_REPORTING
-            - FINANCIAL_INSTITUTION_INVESTMENT_ENTITY_MANAGED
-            - FINANCIAL_INSTITUTION_INVESTMENT_ENTITY_OTHER
-            - ACTIVE_NFE_GOVERNMENT_ENTITY
-            - ACTIVE_NFE_CENTRAL_BANK
-            - ACTIVE_NFE_INTERNATIONAL_ORGANIZATION
-            - ACTIVE_NFE_PUBLIC_CORPORATION
-            - ACTIVE_NFE_OTHER
-            - PASSIVE_NFE
-          description: CRS/CARF classification of the account owner
-        signature_date:
-          type: string
-          description: Date the self-certification was signed (YYYY-MM-DD or ISO 8601)
-          example: 2026-01-15T00:00:00.000Z
-        has_signed_and_certified:
-          type: boolean
-          description: Indicates that the account owner has signed and certified the self-certification
-        date_of_birth:
-          type: string
-          description: Date of birth for individual account owners (YYYY-MM-DD)
-        city_of_birth:
-          type: string
-          description: City of birth for individual account owners
-        country_of_birth:
-          $ref: '#/components/schemas/TaxbitCountry'
-        country_of_citizenship:
-          $ref: '#/components/schemas/TaxbitCountry'
-        entity_type:
-          type: string
-          enum:
-            - TRUST
-            - SIMILAR_TO_TRUST
-            - OTHER
-          description: Entity type when classification is PASSIVE_NFE
-        securities_market:
-          type: string
-          description: Established securities market when classification is ACTIVE_NFE_PUBLIC_CORPORATION
-        related_corporation:
-          type: string
-          description: Name of related corporation if affiliated with a publicly traded corporation
-        controlling_persons:
-          type: array
-          items:
-            $ref: '#/components/schemas/SelfCertificationControllingPerson'
-          description: Controlling persons for Passive NFE or managed investment entity
-        signature_capacity:
-          type: string
-          enum:
-            - OFFICER
-            - EXECUTOR
-            - OTHER_CAPACITY
-          description: Capacity in which the representative is signing
-        signature_capacity_other:
-          type: string
-          description: Description when signature_capacity is OTHER_CAPACITY
-        giin:
-          type: string
-          description: Global Intermediary Identification Number (GIIN)
-        residence_by_investment_confirmed:
-          type: boolean
-          description: Confirms whether tax residency information includes any CBI/RBI program
-        signature:
-          type: string
-          description: Electronic signature of the signer
-          example: Hans Mueller
-        active_non_financial_entity_type:
-          type: string
-          enum:
-            - OTHER
-            - INTERNATIONAL_ORGANIZATION
-            - GOVERNMENT_ENTITY
-            - CENTRAL_BANK
-            - PUBLIC_CORPORATION
-          description: Derived active NFE subtype
-        financial_institution_type:
-          type: string
-          enum:
-            - DEPOSITORY_INSTITUTION
-            - CUSTODIAL_INSTITUTION
-            - INVESTMENT_ENTITY
-            - INSURANCE_COMPANY
-            - NON_REPORTING_FINANCIAL_INSTITUTION
-          description: Derived financial institution subtype
-        investment_entity_managed:
-          type: boolean
-          description: Indicates whether the investment entity is professionally managed
-        is_individual:
-          type: boolean
-          description: Indicates whether the account owner is an individual
-        self_certification_account_type:
-          type: string
-          enum:
-            - FINANCIAL_INSTITUTION
-            - PASSIVE_NON_FINANCIAL_ENTITY
-            - ACTIVE_NON_FINANCIAL_ENTITY
-          description: Derived entity account category
-      required:
-        - e_delivery_consent
-      title: SelfCertificationSubmissionResponseData
-    SelfCertificationSubmissionResponseDto:
-      type: object
-      properties:
-        data:
-          $ref: '#/components/schemas/SelfCertificationSubmissionResponseData'
-      required:
-        - data
-      title: SelfCertificationSubmissionResponseDto
-      description: Response returned upon successful Self-Certification submission.
     SelfCertificationTaxResidence:
       type: object
       properties:
         country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         tin:
           type: string
           description: Tax Identification Number (TIN) for the jurisdiction
@@ -107018,7 +106837,7 @@ components:
           description: Free-text explanation when tin_not_required_reason is OTHER
         hashed_tin:
           type: string
-          description: SHA-256 hash of the TIN returned by TaxBit
+          description: SHA-256 hash of the TIN
       title: SelfCertificationTaxResidence
       description: Tax residency jurisdiction and TIN details.
     SendLabelAddress:
@@ -111572,7 +111391,7 @@ components:
           description: Name of the substantial U.S. owner
           example: John Doe
         address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         us_tin:
           type: string
           description: U.S. TIN of the substantial U.S. owner
@@ -112494,27 +112313,7 @@ components:
         - wallet
         - enterprise
         - organization
-    TaxDocumentationDataResponseDto:
-      type: object
-      properties:
-        data:
-          type: object
-          properties:
-            wForm:
-              oneOf:
-                - $ref: '#/components/schemas/RetrievedW9Form'
-                - $ref: '#/components/schemas/RetrievedW8BenForm'
-                - $ref: '#/components/schemas/RetrievedW8BenEForm'
-              description: Collected W-9, W-8BEN, or W-8BEN-E form data
-            selfCertification:
-              $ref: '#/components/schemas/RetrievedSelfCertificationForm'
-            dps:
-              $ref: '#/components/schemas/RetrievedDpsForm'
-      required:
-        - data
-      title: TaxDocumentationDataResponseDto
-      description: Response returned from GET /v1/account-owners/{id}/tax-documentation-data containing submitted tax forms.
-    TaxbitAddress:
+    TaxAddress:
       type: object
       properties:
         first_line:
@@ -112531,17 +112330,17 @@ components:
           example: Seattle
         state_or_province:
           type: string
-          description: State or province (US state, Canada province, or other)
+          description: State or province (must be a 2-letter postal code when country is US or CA)
           example: WA
         postal_code:
           type: string
           description: Postal code
           example: '98000'
         country:
-          $ref: '#/components/schemas/TaxbitCountry'
-      title: TaxbitAddress
-      description: Shared TaxBit address object used across W-9, W-8BEN, W-8BEN-E, and Self-Certification.
-    TaxbitBadRequestErrorResponseDto:
+          $ref: '#/components/schemas/TaxCountry'
+      title: TaxAddress
+      description: Shared tax address object used across W-9, W-8BEN, W-8BEN-E, and Self-Certification.
+    TaxBadRequestErrorResponseDto:
       type: object
       properties:
         error:
@@ -112561,8 +112360,8 @@ components:
       required:
         - error
         - message
-      title: TaxbitBadRequestErrorResponseDto
-    TaxbitConflictErrorResponseDto:
+      title: TaxBadRequestErrorResponseDto
+    TaxConflictErrorResponseDto:
       type: object
       properties:
         error:
@@ -112572,12 +112371,12 @@ components:
         message:
           type: string
           description: Details of the existing submission conflict
-          example: Tax documentation for this form category has already been submitted for the current tax year
+          example: A tax form has already been submitted for this enterprise for the current tax year
       required:
         - error
         - message
-      title: TaxbitConflictErrorResponseDto
-    TaxbitCountry:
+      title: TaxConflictErrorResponseDto
+    TaxCountry:
       type: string
       enum:
         - AD
@@ -112852,10 +112651,1293 @@ components:
         - PARACEL ISLANDS
         - SPRATLY ISLANDS
         - SVALBARD
-      title: TaxbitCountry
-      description: Country identifier (ISO 3166-1 alpha-2 code, IRS-only code, or territory name per TaxBit specification).
+      title: TaxCountry
+      description: Country identifier (ISO 3166-1 alpha-2 code, IRS-only code, or territory name).
       example: US
-    TaxbitForbiddenErrorResponseDto:
+    TaxDocumentationDataResponseDto:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            wForm:
+              oneOf:
+                - $ref: '#/components/schemas/RetrievedW9Form'
+                - $ref: '#/components/schemas/RetrievedW8BenForm'
+                - $ref: '#/components/schemas/RetrievedW8BenEForm'
+              description: Collected W-9, W-8BEN, or W-8BEN-E form data
+            selfCertification:
+              $ref: '#/components/schemas/RetrievedSelfCertificationForm'
+            dps:
+              $ref: '#/components/schemas/RetrievedDpsForm'
+      required:
+        - data
+      title: TaxDocumentationDataResponseDto
+      description: Response returned when retrieving submitted tax documentation for an enterprise.
+    TaxEDeliveryConsentOptions:
+      type: object
+      properties:
+        confirmEDelivery:
+          type: string
+          description: Option label for consenting to electronic delivery
+          example: Confirm E-delivery
+        continueWithPostalDelivery:
+          type: string
+          description: Option label for opting into postal paper delivery
+          example: Continue with postal delivery
+      required:
+        - confirmEDelivery
+        - continueWithPostalDelivery
+      title: TaxEDeliveryConsentOptions
+      description: Selectable electronic vs. postal delivery option labels displayed alongside the disclosure.
+    TaxEstablishedSecuritiesExchange:
+      type: string
+      enum:
+        - 24_EXCHANGE
+        - 4_AFRICA_EXCHANGE_PTY_LTD
+        - 42_FINANCIAL_SERVICES_MTF
+        - A_AND_G_BANCA_PRIVADA_SAU
+        - A2X
+        - AB_NASDAQ_VILNIUS
+        - ABANCA
+        - ABIDE_FINANCIAL_DRSP_LIMITED_APA
+        - ABU_DHABI_SECURITIES_EXCHANGE
+        - ACE_MARKET
+        - ACS_EXECUTION_SERVICES_LLC
+        - ADVISE_TECHNOLOGIES_APA_TRANSPARENCY_REPORTING
+        - AFRICAN_STOCK_EXCHANGE
+        - AFRINEX_LIMITED
+        - AFS_OTF
+        - AFS_OTF_STRUCTURED_PRODUCTS
+        - AFS_E_VENUES_BV
+        - AGRICULTURAL_FUTURES_EXCHANGE_OF_THAILAND
+        - AIAF_MERCADO_DE_RENTA_FIJA
+        - ALBANIA_SECURITIES_EXCHANGE
+        - ALGIERS_STOCK_EXCHANGE
+        - ALLT_OTF
+        - ALPHA_EXCHANGE
+        - ALT_XCHANGE_U
+        - ALTERNATIVA_FRANCE
+        - ALTERNATIVE_PLATFORM_FOR_SPANISH_SECURITIES
+        - ALTEX_ATS
+        - AMERICAN_LEDGER_ATS
+        - AMMAN_STOCK_EXCHANGE
+        - AMMAN_STOCK_EXCHANGE_NON_LISTED_SECURITIES_MARKET
+        - APX_POWER_UK
+        - AQSE_GROWTH_MARKET_EQUITY
+        - AQSE_GROWTH_MARKET_NON_EQUITY
+        - AQSE_MAIN_MARKET_EQUITY
+        - AQSE_MAIN_MARKET_NON_EQUITY
+        - AQSE_TRADING_EQUITY
+        - AQSE_TRADING_NON_EQUITY
+        - AQUA_EQUITIES_LP
+        - AQUIS_EXCHANGE_EUROPE
+        - AQUIS_EXCHANGE_EUROPE_AUCTION_ON_DEMAND_AOD
+        - AQUIS_EXCHANGE_EUROPE_NON_DISPLAY_ORDER_BOOK_NDOB
+        - AQUIS_EXCHANGE_PLC
+        - AQUIS_EXCHANGE_PLC_AQUIS_EIX_INFRASTRUCTURE_BOND_MARKET
+        - AQUIS_EXCHANGE_PLC_AUCTION_ON_DEMAND_AOD
+        - AQUIS_STOCK_EXCHANGE
+        - ARABIAN_BOURSE_LIMITED
+        - ARCA_DARK
+        - ARCHAX
+        - AREX_AUTOMATED_RECEIVABLES_EXCHANGE
+        - ARIAN_TRADING_FACILITY
+        - ARITAS_FINANCIAL_LTD
+        - ARITAS_SECURITIES_LLC
+        - ARKONIS
+        - ARMENIA_SECURITIES_EXCHANGE
+        - ARRACO_GLOBAL_MARKETS_LTD
+        - ARRACO_IRELAND_LTD
+        - ASIA_PACIFIC_CLEAR
+        - ASIA_PACIFIC_EXCHANGE
+        - ASSENT_ATS
+        - ASSET_MATCH_PRIVATE_EXCHANGE
+        - ASTANA_INTERNATIONAL_EXCHANGE_LTD
+        - ASX_ALL_MARKETS
+        - ASX_CENTRE_POINT
+        - ASX_PUREMATCH
+        - ASX_TRADE24
+        - ASX_VOLUMEMATCH
+        - ASX_BOOKBUILD
+        - ASX_TRADEMATCH
+        - ATFUND_MTF
+        - ATHENS_EXCHANGE_APA
+        - ATHENS_EXCHANGE_ALTERNATIVE_MARKET
+        - ATHENS_EXCHANGE_SA_CASH_MARKET
+        - ATHENS_STOCK_EXCHANGE
+        - ATLANTIC_SECURITIES_MARKET
+        - AUREL
+        - AUREL_OTF
+        - AUSTRALIAN_WHEAT_BOARD
+        - AUSTRALIAN_WOOL_EXCHANGE
+        - AUTILLA
+        - AUTOBAHN_FX
+        - AUTOMATED_EQUITY_FINANCE_MARKETS
+        - B3_BRASIL_BOLSA_BALC_O
+        - BAHAMAS_INTERNATIONAL_SECURITIES_EXCHANGE
+        - BAHRAIN_BOURSE
+        - BAHRAIN_FINANCIAL_EXCHANGE
+        - BAHRAIN_STOCK_EXCHANGE
+        - BAKKT
+        - BAKU_STOCK_EXCHANGE
+        - BALKAN_GAS_HUB_EAD
+        - BALTPOOL
+        - BANCA_TRANSILVANIA_SA
+        - BANGALORE_STOCK_EXCHANGE_LTD
+        - BANJA_LUKA_STOCK_EXCHANGE
+        - BANJA_LUKA_STOCK_EXCHANGE_FREE_MARKET
+        - BARBADOS_STOCK_EXCHANGE
+        - BARBADOS_STOCK_EXCHANGE_INTERNATIONAL_SECURITIES_MARKET
+        - BARBADOS_STOCK_EXCHANGE_JUNIOR_MARKET
+        - BARCELONA_STOCK_EXCHANGE
+        - BARCLAYS_LIQUID_MARKETS
+        - BARCLAYS_SINGLE_DEALER_PLATFORM
+        - BATS_GLOBAL_MARKETS
+        - BATS_HOTSPOT_SEF_LLC
+        - BAXTER_FINANCIAL_SERVICES
+        - BAYERNLB
+        - BAYERNLB_EQUITIES_MARKET
+        - BAYERNLB_LIQP_BONDS_MARKET
+        - BB_SECURITIES_LTD
+        - BELARUS_CURRENCY_AND_STOCK_EXCHANGE
+        - BELGRADE_STOCK_EXCHANGE
+        - BENDIGO_STOCK_EXCHANGE_LIMITED
+        - BERMUDA_STOCK_EXCHANGE_LTD
+        - BERNSTEIN_CROSS_BERN_X
+        - BETA_MARKET
+        - BGC_BROKERS_LP
+        - BGC_BROKERS_LP_OTF
+        - BGC_BROKERS_LP_TRAYPORT
+        - BGC_FINANCIAL_INC
+        - BIDS_TRADING_LP
+        - BILBAO_STOCK_EXCHANGE
+        - BITNOMIAL
+        - BLINK_MTF
+        - BLOCK_EVENT
+        - BLOCKMATCH_DARK
+        - BLOCKMATCH_MTF_NT
+        - BLOCKMATCH_MTF_RFQ
+        - BLOOMBERG_APA
+        - BLOOMBERG_BPOOL
+        - BLOOMBERG_DATA_REPORTING_SERVICES_BV_APA
+        - BLOOMBERG_SEF_LLC
+        - BLOOMBERG_TRADEBOOK_JAPAN_LIMITED
+        - BLOOMBERG_TRADEBOOK_LLC
+        - BLOOMBERG_TRADEBOOK_SINGAPORE_PTE_LTD
+        - BLOOMBERG_TRADING_FACILITY_BV
+        - BLOOMBERG_TRADING_FACILITY_LIMITED
+        - BLUE_OCEAN_ALTERNATIVE_TRADING_SYSTEM
+        - BLUENEXT
+        - BM_F_BOVESPA_SA_BOLSA_DE_VALORES_MERCADORIAS_E_FUTUROS
+        - BME_APA
+        - BME_BOLSAS_Y_MERCADOS_ESPANOLES
+        - BME_CLEARING_SA
+        - BME_GROWTH_MARKET
+        - BME_MTF_EQUITY_IIC_AND_ECR_SEGMENTS
+        - BMO_CAPITAL_MARKETS_LIMITED
+        - BNP_PARIBAS_ALTERNATIVE_TRADING_SYSTEM
+        - BNPP_CORTEX_ATS
+        - BOERSE_BERLIN
+        - BOERSE_BERLIN_BERLIN_SECOND_REGULATED_MARKET
+        - BOERSE_BERLIN_FREIVERKEHR
+        - BOERSE_BERLIN_REGULIERTER_MARKT
+        - BOERSE_BERLIN_EQUIDUCT_TRADING
+        - BOERSE_BERLIN_EQUIDUCT_TRADING_BERLIN_SECOND_REGULATED_MARKET
+        - BOERSE_BERLIN_EQUIDUCT_TRADING_FREIVERKEHR
+        - BOERSE_BERLIN_EQUIDUCT_TRADING_OTC
+        - BOERSE_BERLIN_EQUIDUCT_TRADING_REGULIERTER_MARKT
+        - BOERSE_DUESSELDORF
+        - BOERSE_DUESSELDORF_FREIVERKEHR
+        - BOERSE_DUESSELDORF_QUOTRIX
+        - BOERSE_DUESSELDORF_QUOTRIX_REGULIERTER_MARKT
+        - BOERSE_DUESSELDORF_QUOTRIX_MTF
+        - BOERSE_DUESSELDORF_REGULIERTER_MARKT
+        - BOERSE_FRANKFURT_FREIVERKEHR
+        - BOERSE_FRANKFURT_FREIVERKEHR_OFF_BOOK
+        - BOERSE_FRANKFURT_REGULIERTER_MARKT
+        - BOERSE_FRANKFURT_REGULIERTERMARKT_OFF_BOOK
+        - BOERSE_FRANKFURT_SCALE
+        - BOERSE_FRANKFURT_SCALE_OFF_BOOK
+        - BOERSE_FRANKFURT_WARRANTS_TECHNICAL
+        - BOERSE_FRANKFURT_WARRANTS_TECHNICAL_1
+        - BOERSE_FRANKFURT_WARRANTS_TECHNICAL_2
+        - BOERSE_FRANKFURT_WARRANTS_TECHNICAL_3
+        - BOERSE_HAMBURG_FREIVERKEHR
+        - BOERSE_HAMBURG_LANG_AND_SCHWARZ_EXCHANGE
+        - BOERSE_HAMBURG_LANG_AND_SCHWARZ_EXCHANGE_FREIVERKEHR
+        - BOERSE_HAMBURG_LANG_AND_SCHWARZ_EXCHANGE_REGULIERTER_MARKT
+        - BOERSE_HAMBURG_REGULIERTER_MARKT
+        - BOERSE_HANNOVER_FREIVERKEHR
+        - BOERSE_HANNOVER_REGULIERTER_MARKT
+        - BOERSE_MUENCHEN
+        - BOERSE_MUENCHEN_FREIVERKEHR
+        - BOERSE_MUENCHEN_GETTEX_FREIVERKEHR
+        - BOERSE_MUENCHEN_GETTEX_REGULIERTER_MARKT
+        - BOERSE_MUENCHEN_REGULIERTER_MARKT
+        - BOERSE_STUTTGART
+        - BOERSE_STUTTGART_DIGITAL_EXCHANGE
+        - BOERSE_STUTTGART_FREIVERKEHR
+        - BOERSE_STUTTGART_FREIVERKEHR_TECHNICAL_PLATFORM_2
+        - BOERSE_STUTTGART_FREIVERKEHR_TECHNICAL_PLATFORM_3
+        - BOERSE_STUTTGART_REGULIERTER_MARKT
+        - BOERSE_STUTTGART_REGULIERTER_MARKT_TECHNICAL_PLATFORM_2
+        - BOERSE_STUTTGART_REGULIERTER_MARKT_TECHNICAL_PLATFORM_3
+        - BOERSE_STUTTGART_TECHNICAL_PLATFORM_2
+        - BOERSE_STUTTGART_TECHNICAL_PLATFORM_3
+        - BOLIVIAN_STOCK_EXCHANGE
+        - BOLSA_BOLIVIANA_DE_VALORES_SA
+        - BOLSA_CENTROAMERICANA_DE_VALORES_SA
+        - BOLSA_DE_BARCELONA
+        - BOLSA_DE_BARCELONA_RENTA_FIJA
+        - BOLSA_DE_BILBAO_RENTA_FIJA
+        - BOLSA_DE_CEREAIS_E_MERCADORIAS_DE_MARING
+        - BOLSA_DE_CEREALES_DE_BUENOS_AIRES
+        - BOLSA_DE_COMERCIO_CONFEDERADA_SA
+        - BOLSA_DE_COMERCIO_DE_BUENOS_AIRES
+        - BOLSA_DE_COMERCIO_DE_CORDOBA
+        - BOLSA_DE_COMERCIO_DE_MENDOZA_SA
+        - BOLSA_DE_COMERCIO_DE_SANTA_FE
+        - BOLSA_DE_CORREDORES_BOLSA_DE_VALORES
+        - BOLSA_DE_DIVIDA_E_VALORES_DE_ANGOLA_BODIVA_ANGOLA_SECURITIES_EXCHANGE
+        - BOLSA_DE_MADRID
+        - BOLSA_DE_VALENCIA
+        - BOLSA_DE_VALORES_DE_BILBAO
+        - BOLSA_DE_VALORES_DE_COLOMBIA
+        - BOLSA_DE_VALORES_DE_GUAYAQUIL
+        - BOLSA_DE_VALORES_DE_LA_REPUBLICA_DOMINICANA_SA
+        - BOLSA_DE_VALORES_DE_LIMA
+        - BOLSA_DE_VALORES_DE_MONTEVIDEO
+        - BOLSA_DE_VALORES_DE_NICARAGUA
+        - BOLSA_DE_VALORES_DE_PANAMA_SA
+        - BOLSA_DE_VALORES_DE_QUITO
+        - BOLSA_DE_VALORES_MINAS_ESP_RITO_SANTO_BRAS_LIA
+        - BOLSA_DE_VALORES_NACIONAL_SA
+        - BOLSA_DE_VALORES_Y_PRODUCTOS_DE_ASUNCION_SA
+        - BOLSA_ELECTRONICA_DE_VALORES_DEL_URUGUAY
+        - BOLSA_INSTITUCIONAL_DE_VALORES
+        - BOLSA_MEXICANA_DE_VALORES_MEXICAN_STOCK_EXCHANGE
+        - BOLSA_NACIONAL_DE_VALORES_SA
+        - BONDBLOX_EXCHANGE
+        - BONDVISION_EUROPE_MTF
+        - BORSA_ISTANBUL
+        - BORSA_ISTANBUL_DEBT_SECURITIES_MARKET
+        - BORSA_ISTANBUL_EQUITY_MARKET
+        - BORSA_ITALIANA_EQUITY_MTF
+        - BORSA_ITALIANA_SPA
+        - BOSTON_SECURITY_TOKEN_EXCHANGE_LLC
+        - BOTSWANA_STOCK_EXCHANGE
+        - BOTSWANA_STOCK_EXCHANGE_EXCHANGE_TRADED_FUNDS_ETF
+        - BOTSWANA_STOCK_EXCHANGE_VENTURE_CAPITAL
+        - BOURSE_AFRICA_LIMITED
+        - BOURSE_DE_BEYROUTH_BEIRUT_STOCK_EXCHANGE
+        - BOURSE_DE_TUNIS
+        - BOURSE_REGIONALE_DES_VALEURS_MOBILIERES
+        - BOX_EXCHANGE_LLC
+        - BRAEMAR_ATLANTIC_SECURITIES_LTD
+        - BRATISLAVA_STOCK_EXCHANGE
+        - BRATISLAVA_STOCK_EXCHANGE_MTF
+        - BRD_GROUPE_SOCIETE_GENERALE_SA
+        - BRD_GROUPE_SOCIETE_GENERALE_SA_LIQUIDITY_PROVIDER
+        - BROKERTEC_AMERICAS_LLC_RFQ_PLATFORM
+        - BROKERTEC_EUROPE_LIMITED_ALL_MARKETS
+        - BROKERTEC_EUROPE_LIMITED_RFQ_TRADING_PROTOCOL
+        - BRUT_ECN
+        - BRYAN_GARNIER_AND_CO_LIMITED
+        - BSE_LTD
+        - BSE_SME
+        - BUCHAREST_STOCK_EXCHANGE
+        - BUDAPEST_STOCK_EXCHANGE
+        - BUDAPEST_STOCK_EXCHANGE_XBOND
+        - BUENOS_AIRES_STOCK_EXCHANGE
+        - BULGARIAN_STOCK_EXCHANGE
+        - BULGARIAN_STOCK_EXCHANGE_ALTERNATIVE_MARKET
+        - BULGARIAN_STOCK_EXCHANGE_APA
+        - BULGARIAN_STOCK_EXCHANGE_INTERNATIONAL_INSTRUMENTS
+        - BULGARIAN_STOCK_EXCHANGE_INTERNATIONAL_MTF
+        - BULGARIAN_STOCK_EXCHANGE_MAIN_MARKET
+        - BULGARIAN_STOCK_EXCHANGE_SME_GROWTH_MARKET_BEAM
+        - BURSA_MALAYSIA
+        - BX_SWISS_AG
+        - CA_CHEUVREUX
+        - CADE_MERCADO_DE_DEUDA_PUBLICA_ANOTADA
+        - CALCUTTA_STOCK_EXCHANGE
+        - CAMBODIA_SECURITIES_EXCHANGE
+        - CAN_ATS
+        - CANADIAN_SECURITIES_EXCHANGE
+        - CANADIAN_SECURITIES_EXCHANGE_PURE
+        - CANDEALCA_INC
+        - CANNEX_FINANCIAL_EXCHANGE_LTS
+        - CANTOR_FITZGERALD_IRELAND_LIMITED
+        - CANTOR_SPREADFAIR
+        - CANTORCO2ECOM_LIMITED
+        - CAPE_VERDE_STOCK_EXCHANGE
+        - CAPI_APPROVED_PUBLICATION_ARRANGEMENT
+        - CAPI_OTF
+        - CAPTIN
+        - CARACAS_STOCK_EXCHANGE
+        - CARTAX
+        - CASABLANCA_STOCK_EXCHANGE
+        - CASSA_DI_COMPENSAZIONE_E_GARANZIA_SPA
+        - CASSA_DI_COMPENSAZIONE_E_GARANZIA_SPA_BONDS_CCP_SERVICE
+        - CASSA_DI_COMPENSAZIONE_E_GARANZIA_SPA_COLLATERALIZED_MONEY_MARKET_GUARANTEE_SERVICE
+        - CASSA_DI_COMPENSAZIONE_E_GARANZIA_SPA_EQUITY_CCP_SERVICE
+        - CASSA_DI_COMPENSAZIONE_E_GARANZIA_SPA_EURO_BONDS_CCP_SERVICE
+        - CASSA_DI_COMPENSAZIONE_E_GARANZIA_SPA_TRIPARTY_REPO_CCP_SERVICE
+        - CATS
+        - CAVEAT_EMPTOR
+        - CAVENDISH_MARKETS_BV
+        - CAYMAN_ISLANDS_STOCK_EXCHANGE
+        - CBOE_BYX_US_EQUITIES_EXCHANGE
+        - CBOE_BYX_US_EQUITIES_EXCHANGE_DARK
+        - CBOE_BZX_US_EQUITIES_EXCHANGE
+        - CBOE_BZX_US_EQUITIES_EXCHANGE_DARK
+        - CBOE_C2_OPTIONS_EXCHANGE
+        - CBOE_EDGA_US_EQUITIES_EXCHANGE
+        - CBOE_EDGA_US_EQUITIES_EXCHANGE_DARK
+        - CBOE_EDGX_US_EQUITIES_EXCHANGE
+        - CBOE_EDGX_US_EQUITIES_EXCHANGE_DARK
+        - CBOE_EUROPE_APA_NL
+        - CBOE_EUROPE_BXE_DARK_ORDER_BOOK
+        - CBOE_EUROPE_BXE_OFF_BOOK
+        - CBOE_EUROPE_BXE_ORDER_BOOKS
+        - CBOE_EUROPE_BXE_PERIODIC
+        - CBOE_EUROPE_CXE_DARK_ORDER_BOOK
+        - CBOE_EUROPE_CXE_OFF_BOOK
+        - CBOE_EUROPE_CXE_ORDER_BOOKS
+        - CBOE_EUROPE_DXE_DARK_ORDER_BOOK_NL
+        - CBOE_EUROPE_DXE_OFF_BOOK_NL
+        - CBOE_EUROPE_DXE_ORDER_BOOKS_NL
+        - CBOE_EUROPE_DXE_PERIODIC_NL
+        - CBOE_EUROPE_LIS_SERVICE
+        - CBOE_EUROPE_LIS_SERVICE_NL
+        - CBOE_EUROPE_REGULATED_MARKET_DARK_BOOK
+        - CBOE_EUROPE_REGULATED_MARKET_DARK_BOOK_NL
+        - CBOE_EUROPE_REGULATED_MARKET_INTEGRATED_BOOK
+        - CBOE_EUROPE_REGULATED_MARKET_INTEGRATED_BOOK_NL
+        - CBOE_EUROPE_REGULATED_MARKET_OFF_BOOK
+        - CBOE_EUROPE_REGULATED_MARKET_OFF_BOOK_NL
+        - CBOE_EUROPE_DERIVATIVES
+        - CBOE_EUROPE_EQUITIES
+        - CBOE_EUROPE_EQUITIES_EUROPEAN_EQUITIES_NL
+        - CBOE_EUROPE_REGULATED_MARKETS
+        - CBOE_EUROPE_REGULATED_MARKETS_NL
+        - CBOE_EXCHANGE_INC
+        - CBOE_FUTURES_EXCHANGE
+        - CBOE_FX_NDFS
+        - CBOE_GLOBAL_MARKETS_INC
+        - CBOE_STOCK_EXCHANGE
+        - CENTRAL_COUNTERPARTY_CLEARING_CENTER_MFB_JOINT_STOCK_COMPANY
+        - CENTRAL_EASTERN_EUROPEAN_GAS_EXCHANGE_LTD
+        - ESKOSLOVENSK_OBCHODN_BANKA_AS_OTHER_LIQUIDITY_PROVIDER_OLP
+        - CETIP_SA_MERCADOS_ORGANIZADOS
+        - CHICAGO_BOARD_OF_TRADE
+        - CHICAGO_BOARD_OF_TRADE_FLOOR
+        - CHINA_FOREIGN_EXCHANGE_TRADE_SYSTEM
+        - CHINA_FOREIGN_EXCHANGE_TRADE_SYSTEM_SHANGHAI_HONG_KONG_BOND_CONNECT
+        - CHINAFICC
+        - CHITTAGONG_STOCK_EXCHANGE_LTD
+        - CHI_X_AUSTRALIA
+        - CHI_X_AUSTRALIA_TRANSFERABLE_CUSTODY_RECEIPT_MARKET
+        - CHI_X_AUSTRALIA_WARRANTS
+        - CHI_X_AUSTRALIA_MARKET_PEG_FARPOINT_VENUE
+        - CHI_X_AUSTRALIA_MID_POINT_VENUE
+        - CHI_X_AUSTRALIA_PRIMARY_PEG_NEARPOINT_VENUE
+        - CHI_X_AUSTRALIA_QUOTED_MANAGED_FUNDS
+        - CHI_X_CANADA_ATS
+        - CHI_X_JAPAN
+        - CHI_X_JAPAN_SELECT
+        - CHI_X_JAPAN_VWAP_CROSSING
+        - CHI_X_MARKET_AUSTRALIA_LIMIT_VENUE
+        - CHI_X_MOC
+        - CHI_X_VWAP
+        - CIMD_SV_SA_APPROVED_PUBLICATION_ARRANGEMENT
+        - CIMD_SV_SA_OTF
+        - CIMD_SV_SA_OTF_FOR_BONDS
+        - CINNOBER_BOAT
+        - CIOI
+        - CITADEL_SECURITIES
+        - CITI_DARK
+        - CITI_LIQUIFI
+        - CITI_MATCH_JP
+        - CITI_MATCH_DE_CONTRA_LIQUIDITY
+        - CITIBLOC
+        - CITIGROUP_GLOBAL_MARKETS_EUROPE_AG_EMEA_LIQUIDITY_HUB
+        - CITIGROUP_GLOBAL_MARKETS_EUROPE_AG_EMEA_TRADING
+        - CITI_ONE
+        - CLEAR_MARKETS_EUROPE_LIMITED
+        - CLEAR_MARKETS_JAPAN_INC
+        - CLEAR_MARKETS_NORTH_AMERICA_INC
+        - CLEAR_STREET
+        - CLEARCORP_DEALING_SYSTEMS_INDIA_LTD
+        - CLEARCORP_DEALING_SYSTEMS_INDIA_LIMITED_ASTROID
+        - CLEARCORP_DEALING_SYSTEMS_INDIA_LIMITED_FX_CLEAR
+        - CLEARPOOL_EXECUTION_SERVICES_LLC
+        - CLEARPOOL_EXECUTION_SERVICES_LLC_NATURAL_LIQUIDITY_ALLIANCE
+        - CLEARTRADE_EXCHANGE
+        - CLIMEX
+        - CLSA_AMERICAS_LIQUIDITY_HUB
+        - CLSA_AUSTRALIA_DARK
+        - CLSA_HONG_KONG_DARK
+        - CLSA_JAPAN_DARK
+        - CLSA_PHILIPPINES_DARK
+        - CME_AMSTERDAM_BV
+        - CME_AMSTERDAM_BV_APA
+        - CME_AMSTERDAM_BV_RFQ_TRADING_PROTOCOL
+        - CME_CLEARING_EUROPE
+        - CME_EUROPE
+        - CME_GLOBEX
+        - CME_SWAPS_MARKETS_CBOT
+        - CME_SWAPS_MARKETS_CME
+        - CME_SWAPS_MARKETS_COMEX
+        - CNODE
+        - CODA_MARKETS_MICRO_AND_BLOCK
+        - COLOMBO_STOCK_EXCHANGE
+        - COMHAR_CAPITAL_MARKETS_LLC
+        - COMHAR_CAPITAL_MARKETS_LLC_US_EQUITIES
+        - COMMERG
+        - COMMERG_LTD
+        - CONTINENTAL_CAPITAL_MARKETS_LIMITED_OTF
+        - CONTINENTAL_CAPITAL_MARKETS_SA
+        - CONVERGEX
+        - CREDIT_FINANCIER_INVEST_CFI_LTD
+        - CREDIT_SUISSE_AES_CROSSFINDER
+        - CREDITEX_BROKERAGE_LLP_MTF
+        - CREDITEX_BROKERAGE_LLP_OTF
+        - CREDITEX_LLC
+        - CROATIAN_POWER_EXCHANGE
+        - CROSSFINDER_AUSTRALIA
+        - CROSSFINDER_HONG_KONG
+        - CROSSFINDER_JAPAN
+        - CROSSFINDER_TAIWAN
+        - CUREX_FX
+        - CURRENEX
+        - CURRENEX_IRELAND_MTF
+        - CURRENEX_IRELAND_MTF_RFQ
+        - CURRENEX_LDFX
+        - CX2
+        - CYPRUS_STOCK_EXCHANGE
+        - CYPRUS_STOCK_EXCHANGE_OTC
+        - DAIWA_CAPITAL_MARKETS_EUROPE_LIMITED
+        - DAIWA_DRECT
+        - DAMASCUS_SECURITIES_EXCHANGE
+        - DANSK_OTC
+        - DAR_ES_SALAAM_STOCK_EXCHANGE
+        - DASH_ATS
+        - DBOT_ATS_LLC
+        - DEALERWEB_FIXED_INCOME
+        - DELHI_STOCK_EXCHANGE
+        - DERIVATIVES_REGULATED_MARKET_BVB
+        - DEUTSCHE_BOERSE_AG
+        - DEUTSCHE_BOERSE_AG_APA_SERVICE
+        - DEUTSCHE_HOLDINGS_LUXEMBOURG_SA_RL
+        - DEX_LIMITED
+        - DHAKA_STOCK_EXCHANGE_LTD
+        - DIGITAL_VEGA
+        - DOUALA_STOCK_EXCHANGE
+        - DOWGATE_MTF_MADRID
+        - DUBAI_FINANCIAL_MARKET
+        - DUSSELDORF_STOCK_EXCHANGE
+        - DUTCH_CARIBBEAN_SECURITIES_EXCHANGE
+        - DW_SEF_LLC
+        - EAST_EUROPEAN_STOCK_EXCHANGE
+        - EASTERN_CARIBBEAN_SECURITIES_EXCHANGE
+        - EBM_MTF
+        - EBS_MTF
+        - EBS_MTF_FX_PRODUCTS_RFQ_SEGMENT
+        - EBS_MTF_RESET_SEGMENT
+        - EBS_MTF_RFQ_FX_PRODUCTS_FOR_ASSET_MANAGERS
+        - EBS_SERVICE_COMPANY_LIMITED_ALL_MARKETS
+        - ECB_EXCHANGE_RATES
+        - E_EXCHANGE
+        - EG_MARKET_TECHNOLOGIES
+        - EGYPTIAN_EXCHANGE
+        - EL_SALVADOR_STOCK_EXCHANGE
+        - ELECTRICITY_DAY_AHEAD_MARKET
+        - ELECTRICITY_INTRA_DAY_MARKET
+        - ELECTRONIC_BOND_MARKET
+        - ELECTRONIC_ETF_ETC_ETN_AND_OPEN_END_FUNDS_MARKET
+        - ELECTRONIC_SECONDARY_SECURITIES_MARKET_HDAT
+        - ELECTRONIC_SHARE_MARKET
+        - ELIXIUM
+        - ELIXIUM_SA
+        - ELX
+        - EMERGING_MARKETS_BOND_EXCHANGE_LIMITED
+        - E_MID
+        - E_MID_BANCA_DITALIA_SHARES_TRADING_MARKET
+        - E_MID_E_MIDER_MARKET
+        - E_MID_REPO
+        - EMS_EXCHANGE
+        - ENCLEAR
+        - ENGNSOL
+        - ENGNSOL_OMP
+        - E_OTC
+        - EPEX_SPOT_SE
+        - EQUILEND_CANADA_CORP
+        - EQUILEND_EUROPE_LIMITED
+        - EQUILEND_EUROPE_LIMITED_SWAPS
+        - EQUILEND_LIMITED
+        - EQUILEND_LIMITED_SWAPS
+        - EQUILEND_LLC
+        - EQUOS
+        - EQUOS_DERIVATIVES
+        - EQUOS_SPOT
+        - ERSX
+        - ESSEX_RADEZ_LLC
+        - EUREX_CLEARING_AG
+        - EUREX_CLEARING_AG_SME
+        - EUREX_CLEARING_ASIA_PTE_LTD
+        - EUREX_DEUTSCHLAND
+        - EUREX_EXCHANGE_ASIA_PTE_LTD
+        - EUREX_REPO_FUNDING_AND_FINANCING_PRODUCTS
+        - EUREX_REPO_HQLA_MARKET
+        - EUREX_REPO_TRIPARTY
+        - EUREX_REPO_GMBH
+        - EUREX_REPO_SECLEND_MARKET
+        - EURO_MTF
+        - EUROMTS_LTD
+        - EURONEXT_APA
+        - EURONEXT_EURONEXT_AMSTERDAM
+        - EURONEXT_EURONEXT_BRUSSELS
+        - EURONEXT_EURONEXT_BRUSSELS_DERIVATIVES
+        - EURONEXT_EURONEXT_LISBON
+        - EURONEXT_EURONEXT_PARIS
+        - EURONEXT_MARKET_WITHOUT_QUOTATIONS_LISBON
+        - EURONEXT_TRADED_BUT_NOT_LISTED_AMSTERDAM
+        - EURONEXT_TRADING_FACILITY_BRUSSELS
+        - EURONEXT_VENTES_PUBLIQUES_BRUSSELS
+        - EURONEXT_ACCESS_BRUSSELS
+        - EURONEXT_ACCESS_LISBON
+        - EURONEXT_ACCESS_PARIS
+        - EURONEXT_BLOCK_2
+        - EURONEXT_BLOCKS
+        - EURONEXT_DUBLIN
+        - EURONEXT_DUBLIN_TRADED_BONDS
+        - EURONEXT_EQF_EQUITIES_AND_INDICES_DERIVATIVES
+        - EURONEXT_ETF_ACCESS
+        - EURONEXT_EXPAND_OSLO
+        - EURONEXT_FX
+        - EURONEXT_GROWTH_OSLO
+        - EURONEXT_GROWTH_BRUSSELS
+        - EURONEXT_GROWTH_DUBLIN
+        - EURONEXT_GROWTH_LISBON
+        - EURONEXT_GROWTH_MILAN
+        - EURONEXT_GROWTH_PARIS
+        - EURONEXT_LONDON
+        - EURONEXT_MARKETS_SINGAPORE_PTE_LTD
+        - EURONEXT_PARIS_MATIF
+        - EURONEXT_PARIS_MONEP
+        - EURONEXT_STRUCTURED_PRODUCTS_MTF
+        - EURONEXT_UK_REPORTING_SERVICES
+        - EUROTLX
+        - EUWAX
+        - EVOLUTION_MARKETS
+        - EXANE_BNP_PARIBAS_LIQUIDITY_PROVISION
+        - EXOTIX_CAPITAL_OTF
+        - EXPERT_MARKET
+        - EXTRAMOT
+        - FAIRX
+        - FENICS_US_TREASURIES
+        - FEX_GLOBAL
+        - FIDELITY_CROSSSTREAM
+        - FIDELITY_CROSSSTREAM_ATS
+        - FIDELITY_DARK
+        - FINANCIAL_AND_RISK_TRANSACTIONS_SERVICES_IRELAND_LIMITED_FORWARDS_MATCHING
+        - FINANCIAL_AND_RISK_TRANSACTIONS_SERVICES_IRELAND_LIMITED_FXALL_RFQ_MTF
+        - FINANCIAL_AND_RISK_TRANSACTIONS_SERVICES_IRELAND_LIMITED_FXALL_RFS_MTF
+        - FINANCIAL_INFORMATION_CONTRIBUTORS_EXCHANGE
+        - FINANCIALCONTENT
+        - FINANCIALCONTENT_DIGITAL_ASSET_TRADE_REPORTING_FACILITY
+        - FINANCIALCONTENT_INDEXES
+        - FINESTI_SA
+        - FINRA
+        - FINRA_ALTERNATIVE_DISPLAY_FACILITY_ADF
+        - FINRA_ORF_TRADE_REPORTING_FACILITY
+        - FINRA_NASDAQ_TRF_CARTERET_TRADE_REPORTING_FACILITY
+        - FINRA_NASDAQ_TRF_CHICAGO_TRADE_REPORTING_FACILITY
+        - FINRA_NYSE_TRF_TRADE_REPORTING_FACILITY
+        - FIRST_NORTH_DENMARK
+        - FIRST_NORTH_DENMARK_AUCTION_ON_DEMAND
+        - FIRST_NORTH_DENMARK_SME_GROWTH_MARKET
+        - FIRST_NORTH_ESTONIA
+        - FIRST_NORTH_FINLAND
+        - FIRST_NORTH_FINLAND_AUCTION_ON_DEMAND
+        - FIRST_NORTH_FINLAND_SME_GROWTH_MARKET
+        - FIRST_NORTH_ICELAND
+        - FIRST_NORTH_ICELAND_AUCTION_ON_DEMAND
+        - FIRST_NORTH_LATVIA
+        - FIRST_NORTH_LITHUANIA
+        - FIRST_NORTH_SWEDEN
+        - FIRST_NORTH_SWEDEN_AUCTION_ON_DEMAND
+        - FIRST_NORTH_SWEDEN_NORWAY
+        - FIRST_NORTH_SWEDEN_NORWAY_AUCTION_ON_DEMAND
+        - FIRST_NORTH_SWEDEN_SME_GROWTH_MARKET
+        - FISH_POOL_ASA
+        - FISHEX
+        - FLOW_TRADERS
+        - FLOW_TRADERS_US_LLC
+        - FORTE_OTF
+        - FRANKFURT_CEF_SC
+        - FRANKFURT_STOCK_EXCHANGE
+        - FREIGHT_INVESTOR_SERVICES_LIMITED
+        - FTSEF_LLC
+        - FUKUOKA_STOCK_EXCHANGE
+        - FX_CONNECT_MTF
+        - FX_CONNECT_MTF_ALLOCATIONS
+        - FX_CONNECT_MTF_RFQ
+        - FX_CONNECT_IRELAND_MTF
+        - FX_CONNECT_IRELAND_MTF_ALLOCATIONS
+        - FX_CONNECT_IRELAND_MTF_RFQ
+        - FXALL
+        - FXCM_MTF
+        - G1_EXECUTION_SERVICES
+        - GALAXY
+        - GASPOINT_NORDIC_A_S
+        - GATE_US_LLC
+        - GEMMA_GILT_EDGED_MARKET_MAKERS_ASSOCIATION
+        - GEORGIA_STOCK_EXCHANGE
+        - GESTORE_MERCATO_ELETTRICO_ITALIAN_POWER_EXCHANGE
+        - GFI_BROKERS
+        - GFI_BROKERS_MTF
+        - GFI_BROKERS_OTF
+        - GFI_FOREXMATCH
+        - GFI_PARIS_OTF
+        - GFI_RATESMATCH
+        - GFI_SECURITIES_LLC_ALL_MARKETS
+        - GFI_SECURITIES_LLC_CREDITMATCH_LATG
+        - GFI_SECURITIES_LLC_FENICS_DELTA_X
+        - GFI_SECURITIES_LTD
+        - GFI_SECURITIES_LTD_MTF
+        - GFI_SECURITIES_LTD_OTF
+        - GFI_SWAPS_EXCHANGE_LLC
+        - GHANA_STOCK_EXCHANGE
+        - GLMX
+        - GLOBAL_COAL_LIMITED
+        - GLOBAL_EXCHANGE_MARKET_TRADED_BONDS
+        - GLOBAL_OTC
+        - GLOBAL_SECURITIES_EXCHANGE
+        - GLOMAX_EXCHANGE_LTD
+        - GMEX_EXCHANGE
+        - GMG_BROKERS_LIMITED
+        - GMG_DUBAI_LIMITED
+        - GOVEX
+        - GRIFFIN_MARKETS_EUROPE
+        - GRIFFIN_MARKETS_EUROPE_OTF
+        - GRIFFIN_MARKETS_LIMITED
+        - GRIFFIN_MARKETS_LIMITED_OTF
+        - GS_PRINCIPAL_LIQUIDITY_ASIA
+        - GSX_CHINA
+        - GSX_HONG_KONG
+        - GSX_KOREA
+        - GSX_TAIWAN
+        - GTSX
+        - GTX_ECN
+        - GTX_SEF_LLC
+        - GX_MARKETCENTER
+        - HAMBURG_STOCK_EXCHANGE
+        - HANNOVER_STOCK_EXCHANGE
+        - HANOI_STOCK_EXCHANGE
+        - HANOI_STOCK_EXCHANGE_DERIVATIVES
+        - HANOI_STOCK_EXCHANGE_UNLISTED_PUBLIC_COMPANY_TRADING_PLATFORM
+        - HANSEATISCHE_WERTPAPIERBOERSE_HAMBURG
+        - HELEX_ELECTRONIC_BOOK_BUILDING
+        - HELLENIC_EXCHANGE_OTC_MARKET
+        - HENEX_SA
+        - HI_CERT_MULTILATERAL_TRADING_FACILITY
+        - HI_MTF
+        - HI_MTF_ORDER_DRIVEN
+        - HI_MTF_RFQ
+        - HOCHIMINH_STOCK_EXCHANGE
+        - HONG_KONG_EXCHANGES_AND_CLEARING_LTD
+        - HONG_KONG_FUTURES_EXCHANGE_LTD
+        - HONG_KONG_GROWTH_ENTERPRISES_MARKET
+        - HOTSPOT_FX
+        - HPC_ETRADING
+        - HPC_SA
+        - HPC_SA_VOICE_OTF
+        - HSBC_X_HONG_KONG
+        - HUDSON_RIVER_TRADING
+        - HUDSON_RIVER_TRADING_HRT
+        - IBERCAJA_BANCO_SA
+        - ICAP_ELECTRONIC_BROKING_US
+        - ICAP_EU_OTF
+        - ICAP_EU_OTF_REGISTRATION
+        - ICAP_GLOBAL_DERIVATIVES_LIMITED_ELECTRONIC
+        - ICAP_GLOBAL_DERIVATIVES_LIMITED_VOICE
+        - ICAP_SECURITIES_OTF
+        - ICAP_SECURITIES_OTF_CORPORATE_BONDS_AND_SECURITISED_DEBT
+        - ICAP_SECURITIES_OTF_FX_DERIVATIVES
+        - ICAP_SECURITIES_OTF_GOVERNMENT_BONDS_UK_GILTS
+        - ICAP_SECURITIES_OTF_GOVERNMENT_BONDS_EXCLUDING_UK_GILTS
+        - ICAP_SECURITIES_OTF_INTEREST_RATE_DERIVATIVES
+        - ICAP_SECURITIES_OTF_MONEY_MARKET_INSTRUMENTS
+        - ICAP_SEF_US_LLC
+        - ICAP_UK_OTF_ORDERBOOK
+        - ICE_BENCHMARK_ADMINISTRATION
+        - ICE_BONDPOINT
+        - ICE_CLEAR_NETHERLANDS_BV
+        - ICE_CREDIT_TRADE
+        - ICE_ENDEX_OTF_FUTURES
+        - ICE_FUTURES_EUROPE
+        - ICE_FUTURES_US
+        - ICE_MARKETS_CREDIT
+        - ICE_MARKETS_EQUITY
+        - ICE_MARKETS_FOREIGN_EXCHANGE
+        - ICE_MARKETS_RATES
+        - ICE_TMC
+        - ICMA
+        - IDX_MARKETS_LLC
+        - IMC_FINANCIAL_MARKETS
+        - INDEPENDENT_ELECTRICITY_SYSTEM_OPERATOR_IESO
+        - INDEX_AND_OPTIONS_MARKET
+        - INDIA_INTERNATIONAL_EXCHANGE_IFSC_LIMITED
+        - INDONESIA_STOCK_EXCHANGE
+        - INSTINET_BLOCKCROSS_ATS
+        - INSTINET_BLX_AU
+        - INSTINET_CANADA_CROSS
+        - INSTINET_CBX_US
+        - INSTINET_DESK_CROSS
+        - INSTINET_EUROPE_LIMITED
+        - INSTINET_EUROPE_LIMITED_OTC
+        - INSTINET_PACIFIC_LTD
+        - INSTINET_VWAP_CROSS
+        - INSTITUTIONAL_FINANCIAL_SECURITIES_MARKET
+        - INTEGRAL_MTF
+        - INTELLIGENTCROSS
+        - INTELLIGENTCROSS_ASPEN_INTELLIGENT_BID_OFFER
+        - INTELLIGENTCROSS_ASPEN_INVERTED
+        - INTELLIGENTCROSS_ASPEN_MAKER_TAKER
+        - INTERACTIVE_BROKERS_LLC_ATS
+        - INTER_CONNECTED_STOCK_EXCHANGE_OF_INDIA_LTD
+        - INTERCONTINENTAL_EXCHANGE
+        - INTERNATIONAL_MARTIME_EXCHANGE
+        - INTERNATIONAL_SECURITIES_EXCHANGE_LLC
+        - INTERNATIONAL_SECURITIES_EXCHANGE_LLC_ALTERNATIVE_MARKETS
+        - INTERNATIONAL_SECURITIES_EXCHANGE_LLC_EQUITIES
+        - INTERNET_DIRECT_ACCESS_EXCHANGE
+        - INVESCO_CANADA_PTF_TRADES
+        - INVESTORS_EXCHANGE
+        - INVESTORS_EXCHANGE_DARK
+        - IPSX
+        - IPSX_PRIME
+        - IPSX_WHOLESALE
+        - IRAN_FARA_BOURSE
+        - IRAQ_STOCK_EXCHANGE
+        - IRISH_STOCK_EXCHANGE_ALL_MARKET
+        - IRISH_STOCK_EXCHANGE_GLOBAL_EXCHANGE_MARKET
+        - ISDAFIX
+        - ISE_GEMINI_EXCHANGE
+        - ISE_MERCURY_LLC
+        - ISLAND_ECN_LTD_THE
+        - ISTANBUL_STOCK_EXCHANGE
+        - ISWAP_EURO_MTF
+        - ISWAP_EURO_MTF_ORDERBOOK
+        - ISWAP_EURO_MTF_TARGETED_STREAMING_RFQ
+        - ISWAP_EURO_MTF_TRADE_REGISTRATION
+        - ISWAP_UK_MTF
+        - ISWAP_UK_MTF_TRADE_REGISTRATION
+        - ISWAP_UK_MTF_ORDER_BOOK
+        - ISWAP_UK_MTF_TARGETED_STREAMING_RFQ
+        - ITALIAN_STOCK_EXCHANGE
+        - ITG_POSIT
+        - JAKARTA_NEGOTIATED_BOARD
+        - JAMAICA_STOCK_EXCHANGE
+        - JAPAN_EXCHANGE_GROUP
+        - JAPANNEXT_J_MARKET
+        - JAPANNEXT_U_MARKET
+        - JAPANNEXT_VWAP_CROSSING
+        - JAPANNEXT_X_MARKET
+        - JOHANNESBURG_STOCK_EXCHANGE
+        - JOINT_STOCK_COMPANY_STOCK_EXCHANGE_INNEX
+        - JSE_ALTERNATE_EXCHANGE
+        - JSE_CASH_BOND_MARKET
+        - JSE_EQUITY_DERIVATIVES_MARKET
+        - JSE_REPO_MARKET
+        - JUMP_LIQUIDITY
+        - KAI_X
+        - KALSHIEX_LLC
+        - KANSAS_CITY_BOARD_OF_TRADE
+        - KAZAKHSTAN_STOCK_EXCHANGE
+        - KBL_EURO_COMMERCIAL_PAPERS
+        - KBL_EUROPEAN_PRIVATE_BANKERS_SA
+        - KBL_STRUCTURED_PRODUCTS
+        - KCG_ACKNOWLEDGE_FI
+        - KCG_AMERICAS_LLC
+        - KELER
+        - KELER_CCP
+        - KHARTOUM_STOCK_EXCHANGE
+        - KIEV_INTERNATIONAL_STOCK_EXCHANGE
+        - KIEV_UNIVERSAL_EXCHANGE
+        - KNIGHT
+        - KNIGHT_CAPITAL_MARKETS_LLC
+        - KNIGHT_EQUITY_MARKETS_LP
+        - KNIGHT_LINK
+        - KNIGHT_LINK_EUROPE
+        - KOREA_EXCHANGE_FUTURES_MARKET
+        - KOREA_EXCHANGE_KOSDAQ
+        - KOREA_EXCHANGE_STOCK_MARKET_KOSPI
+        - KOREA_EXCHANGE_EMISSIONS_MARKET
+        - KOREA_FREEBOARD_MARKET
+        - KOREA_NEW_EXCHANGE
+        - KUWAIT_STOCK_EXCHANGE
+        - KYRGYZ_STOCK_EXCHANGE
+        - KYTE_BROKING_LIMITED
+        - LA_BOLSA_ELECTRONICA_DE_CHILE
+        - LA_COTE_ALPHA
+        - LABUAN_INTERNATIONAL_FINANCIAL_EXCHANGE
+        - LAMPOST_CAPITAL
+        - LAO_SECURITIES_EXCHANGE
+        - LATAM_SEF
+        - LATIBEX
+        - LBBW_LANDESBANK_BADEN_WUERTTEMBERG
+        - LBBW_LANDESBANK_BADEN_WUERTTEMBERG_LIQUIDITY_PROVIDER
+        - LCH_LTD
+        - LCH_LTD_BUY_IN
+        - LCH_LTD_CROSS_NETTING
+        - LCHCLEARNET
+        - LEDGEREDGE
+        - LEDGERX
+        - LEVEL_ATS
+        - LEVEL_ATS_VWAP_CROSS
+        - LIBYAN_STOCK_MARKET
+        - LIFFE_ADMINISTRATION_AND_MANAGEMENT
+        - LIQUIDITY_CUBE_PTY_LTD
+        - LIQUIDITYEDGE
+        - LIQUIDNET_CANADA_ATS
+        - LIQUIDNET_EU_LIMITED_EQUITY_MTF
+        - LIQUIDNET_EU_LIMITED_FIXED_INCOME_MTF
+        - LIQUIDNET_EUROPE_LIMITED
+        - LIQUIDNET_H20
+        - LIQUIDNET_SYSTEMS
+        - LIQUIDNET_INC
+        - LIQUIDNET_INC_FIXED_INCOME_ATS
+        - LIQUIDNET_INC_H2O_ATS
+        - LJUBLJANA_STOCK_EXCHANGE_OFFICIAL_MARKET
+        - LMAX
+        - LMAX_EQUITIES
+        - LMAX_FX
+        - LME_CLEAR
+        - LONDON_BULLION_MARKET
+        - LONDON_DERIVATIVES_EXCHANGE
+        - LONDON_STOCK_EXCHANGE
+        - LONDON_STOCK_EXCHANGE_AIM_MTF
+        - LONDON_STOCK_EXCHANGE_APA
+        - LONDON_STOCK_EXCHANGE_CURVEGLOBAL_MARKETS
+        - LONDON_STOCK_EXCHANGE_MTF
+        - LONG_TERM_STOCK_EXCHANGE_INC
+        - LOUIS_CAPITAL_MARKETS_EU
+        - LOUIS_CAPITAL_MARKETS_UK
+        - LOUIS_CAPITAL_MARKETS_UK_LLP
+        - LUMINEX_TRADING_ANALYTICS_LLC
+        - LUMINEX_TRADING_ANALYTICS_LLC_ATS
+        - LUSAKA_STOCK_EXCHANGE
+        - LUXEMBOURG_STOCK_EXCHANGE
+        - LYNX_ATS
+        - MACEDONIAN_STOCK_EXCHANGE
+        - MADRAS_STOCK_EXCHANGE
+        - MADRID_STOCK_EXCHANGE
+        - MAGMA_ATS
+        - MAKOR_SECURITIES_LONDON_LTD
+        - MALAWI_STOCK_EXCHANGE
+        - MALDIVES_STOCK_EXCHANGE
+        - MALTA_STOCK_EXCHANGE
+        - MARACAIBO_STOCK_EXCHANGE
+        - MARCHE_INTERBANCAIRE_DES_DEVISES_MID
+        - MAREX_SPECTRON_EUROPE_LIMITED_OTF
+        - MAREX_SPECTRON_INTERNATIONAL_LIMITED_OTF
+        - MARIANA_UFP_LLP
+        - MARKET_FOR_ALTERNATIVE_INVESTMENT
+        - MARKET_FOR_INVESTMENT_VEHICLES
+        - MATCH_NOW
+        - MATRIX_EXCHANGE_LIMITED
+        - MAX_MARKETS_LIMITED
+        - MEFF_FX_FINANCIAL_DERIVATIVES
+        - MEMX_LLC
+        - MEMX_LLC_DARK
+        - MEMX_LLC_RETAIL_MIDPOINT
+        - MERCADO_A_TERMINO_DE_BUENOS_AIRES_SA
+        - MERCADO_ABIERTO_ELECTRONICO_SA
+        - MERCADO_ALTERNATIVO_DE_RENTA_FIJA
+        - MERCADO_DE_VALORES_DE_BUENOS_AIRES_SA
+        - MERCADO_DE_VALORES_DE_CORDOBA_SA
+        - MERCADO_DE_VALORES_DE_MENDOZA_SA
+        - MERCADO_DE_VALORES_DE_ROSARIO_SA
+        - MERCADO_DE_VALORES_DEL_LITORAL_SA
+        - MERCADO_ELECTRONICO_DE_RENTA_FIJA
+        - MERCADO_ORGANIZADO_DEL_GAS
+        - MERCHANTS_EXCHANGE
+        - MERJ_EXCHANGE_LIMITED
+        - MERKUR_MARKET_DARK_POOL
+        - MET_ZURICH
+        - METROPOLITAN_STOCK_EXCHANGE_OF_INDIA_LIMITED
+        - MIAMI_INTERNATIONAL_SECURITIES_EXCHANGE
+        - MIAX_EMERALD_LLC
+        - MIAX_EXCHANGE_GROUP
+        - MIAX_PEARL_EQUITIES
+        - MIAX_PEARL_EQUITIES_EXCHANGE_DARK
+        - MIAX_PEARL_LLC
+        - MIDCHAINS
+        - MILLENNIUM
+        - MOC_CROSS
+        - MOLDOVA_STOCK_EXCHANGE
+        - MONGOLIAN_STOCK_EXCHANGE
+        - MONTENEGRO_STOCK_EXCHANGE
+        - MONTEVIDEO_STOCK_EXCHANGE
+        - MONTREAL_CLIMATE_EXCHANGE
+        - MOSCOW_EXCHANGE_ALL_MARKETS
+        - MOZAMBIQUE_STOCK_EXCHANGE
+        - MTF_CYPRUS_EXCHANGE
+        - MTF_SOFIA
+        - MTF_SOFIA_GROWTH_MARKET
+        - MTS_ASSOCIATED_MARKETS
+        - MTS_BELGIUM
+        - MTS_CASH_DOMESTIC_MTF
+        - MTS_DENMARK
+        - MTS_FINLAND
+        - MTS_FRANCE_SAS
+        - MTS_ITALIA
+        - MTS_MARKETS_INTERNATIONAL_INC
+        - MTS_SPA
+        - MTS_UK
+        - MUNICH_STOCK_EXCHANGE
+        - MUSCAT_SECURITIES_MARKET
+        - MYTREASURY
+        - N2EX
+        - NADEX
+        - NAGOYA_STOCK_EXCHANGE
+        - NAIROBI_STOCK_EXCHANGE
+        - NAMIBIAN_STOCK_EXCHANGE
+        - NASD_OTC_MARKET
+        - NASDAQ_ALL_MARKETS
+        - NASDAQ_BX_INC
+        - NASDAQ_CAPITAL_MARKET
+        - NASDAQ_CLEARING_AB
+        - NASDAQ_COPENHAGEN_A_S
+        - NASDAQ_COPENHAGEN_A_S_AUCTION_ON_DEMAND
+        - NASDAQ_COPENHAGEN_A_S_NORDIC_MID
+        - NASDAQ_CXD
+        - NASDAQ_DUBAI
+        - NASDAQ_FIXED_INCOME_TRADING
+        - NASDAQ_GEMX_LLC
+        - NASDAQ_HELSINKI_LTD
+        - NASDAQ_HELSINKI_LTD_AUCTION_ON_DEMAND
+        - NASDAQ_HELSINKI_LTD_NORDIC_MID
+        - NASDAQ_ICELAND_HF
+        - NASDAQ_ICELAND_HF_AUCTION_ON_DEMAND
+        - NASDAQ_ICELAND_HF_NORDIC_MID
+        - NASDAQ_INTERMARKET
+        - NASDAQ_MIDPOINT_ELO_M_ELO
+        - NASDAQ_MRX_LLC
+        - NASDAQ_NORDIC_EXCHANGES
+        - NASDAQ_OMG
+        - NASDAQ_OMX_BX
+        - NASDAQ_OMX_BX_DARK
+        - NASDAQ_OMX_PHLX
+        - NASDAQ_OMX_PSX
+        - NASDAQ_PHLX_INC
+        - NASDAQ_PSX
+        - NASDAQ_RIGA_AS
+        - NASDAQ_STOCKHOLM_AB
+        - NASDAQ_STOCKHOLM_AB_APA_SERVICE
+        - NASDAQ_STOCKHOLM_AB_AUCTION_ON_DEMAND
+        - NASDAQ_STOCKHOLM_AB_DANISH_EQ_DERIVATIVES
+        - NASDAQ_STOCKHOLM_AB_DANISH_FI_DERIVATIVES
+        - NASDAQ_STOCKHOLM_AB_EUR_FI_DERIVATIVES
+        - NASDAQ_STOCKHOLM_AB_GBP_WB_EQ_DERIVATIVES
+        - NASDAQ_STOCKHOLM_AB_NORDIC_MID
+        - NASDAQ_STOCKHOLM_AB_NORWAY_ETF
+        - NASDAQ_STOCKHOLM_AB_PAN_NORDIC_EQ_DERIVATIVES
+        - NASDAQ_STOCKHOLM_AB_SWEDISH_EQ_DERIVATIVES
+        - NASDAQ_STOCKHOLM_AB_USD_WB_EQ_DERIVATIVES
+        - NASDAQ_TALLINN_AS
+        - NASDAQ_NGS_GLOBAL_SELECT_MARKET
+        - NASDAQ_NMS_GLOBAL_MARKET
+        - NATIONAL_BOARD_OF_TRADE_LIMITED
+        - NATIONAL_EQUITIES_EXCHANGE_AND_QUOTATIONS
+        - NATIONAL_STOCK_EXCHANGE_OF_AUSTRALIA_LIMITED
+        - NATIONAL_STOCK_EXCHANGE_OF_INDIA
+        - NATURAL_GAS_EXCHANGE
+        - NEO_CONNECT
+        - NEO_EXCHANGE_NEO_D_DARK
+        - NEO_EXCHANGE_NEO_L_MARKET_BY_ORDER
+        - NEO_EXCHANGE_NEO_N_MARKET_BY_PRICE
+        - NEPAL_STOCK_EXCHANGE
+        - NEW_YORK_PORTFOLIO_CLEARING
+        - NEW_YORK_STOCK_EXCHANGE_INC
+        - NEW_ZEALAND_EXCHANGE_LTD
+        - NEX_SEF_MTF_RESET_RISK_MITIGATION_SERVICES
+        - NICARAGUA_STOCK_EXCHANGE
+        - NIEDERSAECHSISCHE_BOERSE_ZU_HANNOVER
+        - NILE_STOCK_EXCHANGE
+        - NOBLE_EXCHANGE
+        - NODAL_EXCHANGE
+        - NOMISMA_LIECHTENSTEIN_AG
+        - NORDIC_ALTERNATIVE_BOND_MARKET
+        - NORDIC_GROWTH_MARKET
+        - NORDIC_MTF
+        - NORDIC_SME
+        - NOREXECO_ASA
+        - NORWEGIAN_OVER_THE_COUNTER_MARKET
+        - NOS_CLEARING_ASA
+        - NOW_CP_NEU_CP
+        - NPEX
+        - NQLX_LLC
+        - NSDQ_DARK
+        - NSE_IFSC_LIMITED
+        - NUEVA_BOLSA_DE_COMERCIO_DE_TUCUMAN_SA
+        - NXCHANGE
+        - NXCHANGE_BV_MTF
+        - NYSE_ALTERNEXT_DARK
+        - NYSE_ARCA
+        - NYSE_CHICAGO_INC
+        - NYSE_DARK
+        - NYSE_LIFFE
+        - NYSE_MKT_LLC
+        - NYSE_NATIONAL_INC
+        - NYSE_NATIONAL_INC_DARK
+        - ODDO_BHF
+        - ODDO_CONTREPARTIE
+        - ODX_OSAKA_DIGITAL_EXCHANGE
+        - OHV_OTF
+        - OMEGA_ATS
+        - OMI_POLO_ESPANOL_SA_OMIE
+        - OPORTO_STOCK_EXCHANGE
+        - OSAKA_EXCHANGE
+        - OSAKA_EXCHANGE_J_NET
+        - OSL_DIGITAL_SECURITIES_EXCHANGE
+        - OSL_SG_EXCHANGES
+        - OSLO_AXESS_NORTH_SEA_DARK_POOL
+        - OSLO_BORS
+        - OSLO_BORS_APA
+        - OSLO_BORS_LIT_X_AUCTIONS
+        - OSLO_BORS_ASA_OSLO_AXESS_LIT_X_AUCTIONS
+        - OSLO_BORS_NORTH_SEA_DARK_POOL
+        - OSLO_CONNECT
+        - OSLO_STOCK_EXCHANGE
+        - OTC_EXCHANGE_OF_INDIA
+        - OTC_GREY_MARKET
+        - OTC_LINK_ATS_OTC_MARKETS
+        - OTC_LINK_ECN
+        - OTC_LINK_NQB_IDQS_INTER_DEALER_QUOTATION_SYSTEM
+        - OTC_MARKET
+        - OTC_PINK_CURRENT
+        - OTC_PINK_LIMITED
+        - OTC_PINK_MARKETPLACE
+        - OTC_PINK_NO_INFORMATION
+        - OTC_PUBLICATION_VENUE
+        - OTCEX
+        - OTCEX_LLC
+        - OTCQB_MARKETPLACE
+        - OTCQX_MARKETPLACE
+        - OTFLINK
+        - OTHER_OTC
+        - PACIFIC_OTC
+        - PALESTINE_SECURITIES_EXCHANGE
+        - PANAMA_STOCK_EXCHANGE
+        - PAYWARD_MENA_HOLDINGS_LTD
+        - PEPINS_MTF
+        - PEPINS_MTF_HALF_YEAR
+        - PEPINS_MTF_MONTH
+        - PEPINS_MTF_QUARTER
+        - PEPINS_MTF_YEAR
+        - PEX_PRIVATE_EXCHANGE
+        - PFTS_QUOTE_DRIVEN
+        - PFTS_STOCK_EXCHANGE
+        - PHILIPPINE_DEALING_AND_EXCHANGE_CORP
+        - PHILIPPINE_STOCK_EXCHANGE_INC
+        - PIRUM
+        - PJSC_NATIONAL_DEPOSITORY_OF_UKRAINE
+        - PLUS_DERIVATIVES_EXCHANGE
+        - PNGX_MARKETS_LIMITED
+        - POLISH_TRADING_POINT
+        - PORTAL
+        - PORTFOLIO_STOCK_EXCHANGE
+        - POSIT_ASIA_PACIFIC
+        - POSIT_AUCTION
+        - POSIT_AUCTION_UK
+        - POSIT_DARK
+        - POSIT_DARK_UK
+        - POSIT_MTF
+        - POSIT_RFQ
+        - POSIT_UK
+        - POTAMUS_TRADING_LLC
+        - PRAGMA_ATS
+        - PRAGUE_STOCK_EXCHANGE
+        - PRAGUE_STOCK_EXCHANGE_MTF
+        - PRO_SECURITIES_ATS
+        - PROGRESS_MARKET
+        - PROPERTY_PARTNER_EXCHANGE
+        - PROSPECTS
+        - PVM_OTF
+        - QATAR_EXCHANGE
+        - Q_WIXX_PLATFORM
+        - R5FX_LIMITED
+        - RASDAQ
+        - REFINITIV_MTF
+        - RENAISSANCE_SECURITIES_CYPRUS_LIMITED
+        - REPUBLICAN_STOCK_EXCHANGE
+        - RINGGIT_BOND_MARKET
+        - RM_SYSTEM_CZECH_STOCK_EXCHANGE
+        - RM_SYSTEM_CZECH_STOCK_EXCHANGE_MTF
+        - ROMANIAN_POWER_MARKET
+        - RWANDA_OTC_MARKET
+        - RWANDA_STOCK_EXCHANGE
+        - SAGETRADER
+        - SAINT_VINCENT_AND_THE_GRENADINES_SECURITIES_EXCHANGE
+        - SANTIAGO_STOCK_EXCHANGE
+        - SAPPORO_SECURITIES_EXCHANGE
+        - SARAJEVO_STOCK_EXCHANGE
+        - SAUDI_STOCK_EXCHANGE
+        - SCOTTISH_STOCK_EXCHANGE
+        - SECDEX_EXCHANGE_LIMITED
+        - SECFINEX
+        - SECURITISED_DERIVATIVES_MARKET
+        - SEED_DIGITAL_SECURITIES_MARKET
+        - SEMOPX
+        - SEND_SISTEMA_ELECTRONICO_DE_NEGOCIACION_DE_DEUDA
+        - SHANGHAI_STOCK_EXCHANGE
+        - SHANGHAI_STOCK_EXCHANGE_SHANGHAI_HONG_KONG_STOCK_CONNECT
+        - SHENZHEN_STOCK_EXCHANGE
+        - SHENZHEN_STOCK_EXCHANGE_SHENZHEN_HONG_KONG_STOCK_CONNECT
+        - SI_ENTER
+        - SIBERIAN_EXCHANGE
+        - SIM_VENTURE_SECURITIES_EXCHANGE
+        - SINGAPORE_CATALIST_MARKET
+        - SINGAPORE_EXCHANGE
+        - SINGAPORE_EXCHANGE_BOND_TRADING_PTE_LTD
+        - SISTEMA_ESPANOL_DE_NEGOCIACION_DE_ACTIVOS_FINANCIEROS
+        - SISTEMA_ESPECIAL_DE_LIQUIDACAO_E_CUSTODIA_DE_TITULOS_PUBLICOS
+        - SIX_DIGITAL_EXCHANGE
+        - SIX_SWISS_BILATERAL_TRADING_PLATFORM_FOR_STRUCTURED_OTC_PRODUCTS
+        - SIX_SWISS_EXCHANGE
+        - SIX_SWISS_EXCHANGE_DEAL_POOL_BOOK_BUILDING_AND_ANNOUNCEMENT_PLATFORM
+        - SIX_SWISS_EXCHANGE_EBBO_BOOK
+        - SIX_SWISS_EXCHANGE_ETF_QOD
+        - SIX_SWISS_EXCHANGE_SIX_SWISS_EXCHANGE_AT_MIDPOINT
+        - SIX_SWISS_EXCHANGE_STRUCTURED_PRODUCTS
+        - SKYTRA
+        - SMALL_EXCHANGE_INC_DESIGNATED_CONTRACT_MARKET
+        - SOCIAL_STOCK_EXCHANGE
+        - SOUTH_PACIFIC_STOCK_EXCHANGE
+        - SPANISH_STOCK_EXCHANGES_BOLSA_Y_MERCADOS_ESPANOLES
+        - SPB_EXCHANGE_ALL_MARKETS
+        - SPECTRUM_MARKETS
+        - SPOT_REGULATED_MARKET_BVB
+        - SPOTLIGHT_STOCK_MARKET
+        - SPX
+        - SQUARE_GLOBAL_OTF
+        - SSY_FUTURES_LTD_FREIGHT_SCREEN
+        - STOCK_EXCHANGE_OF_HONG_KONG_LIMITED_SHANGHAI_HONG_KONG_STOCK_CONNECT
+        - STOCK_EXCHANGE_OF_HONG_KONG_LIMITED_SHENZHEN_HONG_KONG_STOCK_CONNECT
+        - STOCK_EXCHANGE_OF_MAURITIUS_LTD
+        - STOCK_EXCHANGE_OF_THAILAND
+        - STOCK_EXCHANGE_OF_THAILAND_FOREIGN_BOARD
+        - STOCK_EXCHANGE_PERSPECTIVA
+        - STOCK_EXCHANGE_SAINT_PETERSBURG
+        - STOXX_LIMITED_INDICES
+        - STOXX_LIMITED_VOLATILITY_INDICES
+        - STUTTGART_STOCK_EXCHANGE
+        - SWAPS_EXECUTION_FACILITIES
+        - SWAZILAND_STOCK_EXCHANGE
+        - SWISS_DOTS_BY_CATS
+        - SWX_SWISS_BLOCK
+        - SYDNEY_STOCK_EXCHANGE_LIMITED
+        - TAIPEI_EXCHANGE
+        - TAIWAN_FUTURES_EXCHANGE
+        - TAIWAN_STOCK_EXCHANGE
+        - TEHRAN_STOCK_EXCHANGE
+        - TEL_AVIV_STOCK_EXCHANGE
+        - TERAEXCHANGE
+        - THE_BALTIC_EXCHANGE
+        - THE_FAROESE_SECURITIES_MARKET
+        - THE_GIBRALTAR_STOCK_EXCHANGE
+        - THE_GREEN_EXCHANGE
+        - THE_GREEN_STOCK_EXCHANGE_ACB_IMPACT_MARKETS
+        - THE_GUYANA_ASSOCIATION_OF_SECURITIES_COMPANIES_AND_INTERMEDIARIES_INC
+        - THE_INTERNATIONAL_STOCK_EXCHANGE
+        - THE_ISLAND_FUTURES_EXCHANGE_LLC
+        - THE_MONTREAL_EXCHANGE_BOURSE_DE_MONTREAL
+        - THE_NIGERIAN_STOCK_EXCHANGE
+        - THE_PAKISTAN_STOCK_EXCHANGE_LIMITED
+        - THE_PROPERTY_INVESTMENT_EXCHANGE
+        - TIRANA_STOCK_EXCHANGE
+        - TMX_GROUP
+        - TOKYO_FINANCIAL_EXCHANGE
+        - TOKYO_STOCK_EXCHANGE
+        - TOKYO_STOCK_EXCHANGE_TOSTNET_1
+        - TOKYO_STOCK_EXCHANGE_TOSTNET_2
+        - TOKYO_STOCK_EXCHANGE_TOSTNET_3
+        - TOKYO_STOCK_EXCHANGE_JASDAQ
+        - TOKYO_STOCK_EXCHANGE_TOKYO_PRO_MARKET
+        - TORONTO_STOCK_EXCHANGE
+        - TORONTO_STOCK_EXCHANGE_DRK
+        - TP_ICAP_EU_MTF
+        - TP_ICAP_EU_MTF_EQUITY_AND_ETF
+        - TP_ICAP_EU_MTF_ORDERBOOK
+        - TP_ICAP_EU_MTF_REGISTRATION
+        - TP_ICAP_UK_MTF
+        - TP_ICAP_UK_MTF_CASH_EQUITY
+        - TP_ICAP_UK_MTF_ORDERBOOK
+        - TP_ICAP_UK_MTF_REGISTRATION
+        - TRADEGATE_EXCHANGE
+        - TRADEGATE_EXCHANGE_FREIVERKEHR
+        - TRADEGATE_EXCHANGE_REGULIERTER_MARKT
+        - TRADITION_SECURITIES_AND_DERIVATIVES_INC
+        - TRINIDAD_AND_TOBAGO_STOCK_EXCHANGE
+        - TSX_VENTURE_EXCHANGE
+        - TSX_VENTURE_EXCHANGE_DRK
+        - TSX_VENTURE_EXCHANGE_NEX
+        - TUNIS_STOCK_EXCHANGE
+        - TURQUOISE
+        - TURQUOISE_EUROPE
+        - TURQUOISE_EUROPE_DARK
+        - TURQUOISE_EUROPE_LIT_AUCTIONS
+        - TURQUOISE_EUROPE_NYLON_CASH_ORDER_BOOK
+        - TURQUOISE_LIT_AUCTIONS
+        - TURQUOISE_NYLON_CASH_ORDER_BOOK
+        - TURQUOISE_NYLON_CLEARED_CONTRACT
+        - TURQUOISE_PLATO
+        - UBS_MTF_LIMITED_DARK_ORDER_BOOK
+        - UBS_MTF_LIMITED_PERIODIC_AUCTION_ORDER_BOOK
+        - UFEX
+        - UGANDA_SECURITIES_EXCHANGE
+        - UKRAINIAN_EXCHANGE
+        - UKRAINIAN_STOCK_EXCHANGE
+        - UNITED_STOCK_EXCHANGE
+        - UNITEDBLOCKTRADE
+        - UNIVERSAL_BROKERS_EXCHANGE_TASHKENT
+        - VALENCIA_STOCK_EXCHANGE
+        - VIENNA_STOCK_EXCHANGE
+        - VONTOBEL_LIQUIDITY_EXTENDER
+        - VORTEX
+        - WARSAW_STOCK_EXCHANGE_ETPS
+        - WARSAW_STOCK_EXCHANGE_EQUITIES_MAIN_MARKET
+        - WARSAW_STOCK_EXCHANGE_INDICES
+        - WIENER_BOERSE_AG
+        - WIENER_BOERSE_AG_APA
+        - WIENER_BOERSE_AG_AMTLICHER_HANDEL_OFFICIAL_MARKET
+        - WIENER_BOERSE_AG_DRITTER_MARKT_THIRD_MARKET
+        - WIENER_BOERSE_AG_WERTPAPIERBOERSE_SECURITIES_EXCHANGE
+        - XETRA
+        - XETRA_FREIVERKEHR
+        - XETRA_FREIVERKEHR_OFF_BOOK
+        - XETRA_REGULIERTER_MARKT
+        - XETRA_REGULIERTERMARKT_OFF_BOOK
+        - XETRA_SCALE
+        - XETRA_SCALE_OFF_BOOK
+        - XTEND
+        - ZAGREB_MONEY_AND_SHORT_TERM_SECURITIES_MARKET_INC
+        - ZAGREB_STOCK_EXCHANGE
+        - ZAGREB_STOCK_EXCHANGE_APA
+        - ZAR_X
+        - ZIMBABWE_STOCK_EXCHANGE
+        - ZOBEX
+        - ZURCHER_KANTONALBANK_EKMU_X
+        - ZURCHER_KANTONALBANK_SECURITIES_EXCHANGE
+      title: TaxEstablishedSecuritiesExchange
+      description: The established securities market on which the entity (or its affiliate) is regularly traded.
+      example: NEW_YORK_STOCK_EXCHANGE_INC
+    TaxForbiddenErrorResponseDto:
       type: object
       properties:
         error:
@@ -112866,8 +113948,8 @@ components:
           type: string
           description: Explicit deny message
           example: User does not have admin permission on enterprise
-      title: TaxbitForbiddenErrorResponseDto
-    TaxbitNonreportingIgaCategory:
+      title: TaxForbiddenErrorResponseDto
+    TaxNonreportingIgaCategory:
       type: string
       enum:
         - ARTICLE_XXI_ENTITIES
@@ -112944,9 +114026,9 @@ components:
         - TRUSTEE_DOCUMENTED_TRUST
         - VENTURE_CAPITAL_TRUSTS
         - VOLUNTARY_PENSION_FUNDS
-      title: TaxbitNonreportingIgaCategory
+      title: TaxNonreportingIgaCategory
       description: Category of nonreporting IGA FFI.
-    TaxbitNonreportingIgaCountry:
+    TaxNonreportingIgaCountry:
       type: string
       enum:
         - AE
@@ -113062,9 +114144,9 @@ components:
         - VG
         - VN
         - ZA
-      title: TaxbitNonreportingIgaCountry
+      title: TaxNonreportingIgaCountry
       description: Country for the nonreporting IGA FFI.
-    TaxbitNotFoundErrorResponseDto:
+    TaxNotFoundErrorResponseDto:
       type: object
       properties:
         error:
@@ -113074,12 +114156,48 @@ components:
         message:
           type: string
           description: Which resource could not be found
-          example: Object with id Account1234 cannot be found
+          example: Enterprise not found
       required:
         - error
         - message
-      title: TaxbitNotFoundErrorResponseDto
-    TaxbitTooManyRequestsErrorResponseDto:
+      title: TaxNotFoundErrorResponseDto
+    TaxRequiredAddress:
+      type: object
+      properties:
+        first_line:
+          type: string
+          minLength: 1
+          description: First line of the address
+          example: 123 Pine St
+        second_line:
+          type: string
+          description: Second line of the address
+          example: Apt 456
+        city:
+          type: string
+          minLength: 1
+          description: City
+          example: Seattle
+        state_or_province:
+          type: string
+          minLength: 1
+          description: State or province (required 2-letter postal code when country is US or CA, e.g. WA or ON)
+          example: WA
+        postal_code:
+          type: string
+          minLength: 1
+          description: Postal code
+          example: '98000'
+        country:
+          $ref: '#/components/schemas/TaxCountry'
+      required:
+        - first_line
+        - city
+        - postal_code
+        - country
+      title: TaxRequiredAddress
+      description: Required physical address for IRS tax form submissions (first_line, city, postal_code, and country required; 2-letter state_or_province required for US and CA).
+    TaxTooManyRequestsErrorResponseDto:
       type: object
       properties:
         error:
@@ -113093,8 +114211,8 @@ components:
       required:
         - error
         - message
-      title: TaxbitTooManyRequestsErrorResponseDto
-    TaxbitUnauthorizedErrorResponseDto:
+      title: TaxTooManyRequestsErrorResponseDto
+    TaxUnauthorizedErrorResponseDto:
       type: object
       properties:
         error:
@@ -113107,7 +114225,7 @@ components:
           example: Unauthorized Error
       required:
         - message
-      title: TaxbitUnauthorizedErrorResponseDto
+      title: TaxUnauthorizedErrorResponseDto
     TestcoinAddress:
       title: Testcoin Address
       type: object
@@ -128162,25 +129280,24 @@ components:
           required:
             - intentType
         - $ref: '#/components/schemas/BaseStakeIntent'
-    W8BenESubmissionDto:
+    W8BenEResponseData:
       type: object
       properties:
         e_delivery_consent:
           type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
         irs_version:
           type: string
           enum:
             - 2021_OCT
-          description: Set to 2021_OCT when submitting the official IRS Form W-8BEN-E; omit for substitute form
+          description: IRS version of the submitted Form W-8BEN-E
         name:
           type: string
           description: Name of organization that is the beneficial owner
           example: Global Digital Assets Ltd
         country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         tax_classification:
           type: string
           enum:
@@ -128198,15 +129315,15 @@ components:
             - INTERNATIONAL_ORGANIZATION
           description: Chapter 3 Status (entity type)
         permanent_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         mailing_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         us_tin:
           type: string
-          description: U.S. taxpayer identification number (EIN), if required
+          description: Masked or unmasked U.S. taxpayer identification number (EIN)
         ftin:
           type: string
-          description: Foreign tax identifying number
+          description: Masked or unmasked foreign tax identifying number
         reference_numbers:
           type: string
           description: Reference number(s)
@@ -128229,8 +129346,9 @@ components:
         treaty_claim_is_eligible:
           type: boolean
           description: Indicates whether the entity is claiming tax treaty benefits
+          deprecated: true
         treaty_claim_country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         treaty_claim_i_certify_resident:
           type: boolean
           description: Certifies that the beneficial owner is a resident of the treaty country
@@ -128320,7 +129438,7 @@ components:
           type: string
           description: Name of sponsoring entity or trustee
         nonreporting_iga_country:
-          $ref: '#/components/schemas/TaxbitNonreportingIgaCountry'
+          $ref: '#/components/schemas/TaxNonreportingIgaCountry'
         nonreporting_iga_country_model:
           type: string
           enum:
@@ -128328,7 +129446,7 @@ components:
             - MODEL_2
           description: Applicable IGA model (MODEL_1 or MODEL_2)
         nonreporting_iga_category:
-          $ref: '#/components/schemas/TaxbitNonreportingIgaCategory'
+          $ref: '#/components/schemas/TaxNonreportingIgaCategory'
         nonreporting_iga_trustee_type:
           type: string
           enum:
@@ -128438,37 +129556,338 @@ components:
           example: Alex Smith
       required:
         - e_delivery_consent
-      title: W8BenESubmissionDto
-      description: Form W-8BEN-E submission payload matching TaxBit POST /v1/account-owners/{id}/tax-documentation-data/w-8ben-e.
-    W8BenSubmissionDto:
+      title: W8BenEResponseData
+      description: Form W-8BEN-E data returned in submission and retrieval responses.
+    W8BenESubmissionDto:
       type: object
       properties:
         e_delivery_consent:
           type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
         irs_version:
           type: string
           enum:
             - 2021_OCT
-          description: Set to 2021_OCT when submitting the official IRS Form W-8BEN; omit for substitute form
+          description: Required IRS Form W-8BEN-E revision (2021_OCT) for Chapter 4 / FATCA classifications and certifications
+          example: 2021_OCT
+        name:
+          type: string
+          minLength: 1
+          description: Name of organization that is the beneficial owner (Part I, Line 1)
+          example: Global Digital Assets Ltd
+        country:
+          $ref: '#/components/schemas/TaxCountry'
+        tax_classification:
+          type: string
+          enum:
+            - CORPORATION
+            - PARTNERSHIP
+            - SIMPLE_TRUST
+            - COMPLEX_TRUST
+            - GRANTOR_TRUST
+            - ESTATE
+            - CENTRAL_BANK_OF_ISSUE
+            - FOREIGN_GOVERNMENT_CONTROLLED_ENTITY
+            - FOREIGN_GOVERNMENT_INTEGRAL_PART
+            - TAX_EXEMPT_ORGANIZATION
+            - PRIVATE_FOUNDATION
+            - INTERNATIONAL_ORGANIZATION
+          description: Chapter 3 Status (entity type) (Part I, Line 4)
+        permanent_address:
+          $ref: '#/components/schemas/TaxRequiredAddress'
+        mailing_address:
+          $ref: '#/components/schemas/TaxAddress'
+        us_tin:
+          type: string
+          description: U.S. taxpayer identification number (EIN), if required (Part I, Line 8)
+        ftin:
+          type: string
+          minLength: 1
+          description: Foreign tax identifying number (Part I, Line 9b; required unless ftin_not_legally_required is true)
+        reference_numbers:
+          type: string
+          description: Reference number(s) (Part I, Line 10)
+        ftin_not_legally_required:
+          type: boolean
+          description: Set to true if a foreign TIN is not legally required (Part I, Line 9c)
+        has_signed_and_certified:
+          type: boolean
+          enum:
+            - true
+          description: Must be true to certify that an authorized representative has signed and certified the W-8BEN-E under penalties of perjury (Part XXX)
+        signature_timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the form was signed
+          example: 2026-01-15T12:00:00.000Z
+        completed_for:
+          type: string
+          enum:
+            - ACCOUNT_HOLDER
+            - REGARDED_OWNER
+          description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
+        treaty_claim_is_eligible:
+          type: boolean
+          description: 'Deprecated: indicates whether the entity is claiming tax treaty benefits (prefer treaty_claim_country)'
+          deprecated: true
+        treaty_claim_country:
+          $ref: '#/components/schemas/TaxCountry'
+        treaty_claim_i_certify_resident:
+          type: boolean
+          description: Certifies that the beneficial owner is a resident of the treaty country (Part III, Line 14a)
+        treaty_claim_type_of_income:
+          type: string
+          enum:
+            - BUSINESS_PROFITS
+            - DIVIDENDS
+            - INTEREST
+            - OTHER_INCOME
+            - ROYALTIES_MOTION_PICTURE_AND_TV
+            - ROYALTIES_OTHER
+          description: 'Special rates and conditions: type of income (Part III, Line 15)'
+        treaty_claim_rate_of_withholding:
+          type: string
+          description: 'Special rates and conditions: percentage rate of withholding (Part III, Line 15)'
+        treaty_claim_article_paragraph:
+          type: string
+          description: 'Special rates and conditions: treaty article and paragraph (Part III, Line 15)'
+        treaty_claim_has_additional_conditions:
+          type: boolean
+          description: Indicates whether additional conditions apply to the treaty claim
+        treaty_claim_i_certify_requirements:
+          type: boolean
+          description: Certifies that the entity derives the item of income and meets treaty requirements (Part III, Line 14b)
+        treaty_claim_limitation_on_benefits:
+          type: string
+          enum:
+            - GOVERNMENT
+            - TAX_EXEMPT_PENSION
+            - OTHER_TAX_EXEMPT_ORGANIZATION
+            - PUBLICLY_TRADED_CORPORATION
+            - SUBSIDIARY
+            - COMPANY_MEETS_EROSION_TEST
+            - COMPANY_MEETS_DERIVATIVE_TEST
+            - COMPANY_MEETS_BUSINESS_TEST
+            - FAVORABLE_DETERMINATION
+            - NO_LOB_ARTICLE
+            - OTHER_ARTICLE_PARAGRAPH
+          description: Limitation on benefits (LOB) provision met by the entity (Part III, Line 14b)
+        treaty_claim_limitation_on_benefits_other_article_paragraph:
+          type: string
+          description: Article and paragraph when OTHER_ARTICLE_PARAGRAPH is selected for LOB
+        fatca_classification:
+          type: string
+          enum:
+            - ACCOUNT_NOT_FINANCIAL
+            - ACTIVE_NFFE
+            - CERTIFIED_DEEMED_COMPLIANT_LIMITED_LIFE_DEBT_ENTITY
+            - CERTIFIED_DEEMED_COMPLIANT_LOW_VALUE_ACCOUNTS_FFI
+            - CERTIFIED_DEEMED_COMPLIANT_NONREGISTERING_LOCAL_BANK
+            - CERTIFIED_DEEMED_COMPLIANT_SPONSORED_CLOSELY_HELD_VEHICLE
+            - DIRECT_REPORTING_NFFE
+            - ENTITY_WHOLLY_OWNED_BY_EXEMPT_BENEFICIAL_OWNERS
+            - EXCEPTED_INTER_AFFILIATE_FFI
+            - EXCEPTED_NONFINANCIAL_ENTITY_IN_LIQUIDATION_OR_BANKRUPTCY
+            - EXCEPTED_NONFINANCIAL_GROUP_ENTITY
+            - EXCEPTED_NONFINANCIAL_START_UP_COMPANY
+            - EXCEPTED_TERRITORY_NFFE
+            - EXEMPT_RETIREMENT_PLANS
+            - FOREIGN_GOVERNMENT
+            - INTERNATIONAL_ORGANIZATION
+            - INVESTMENT_ENTITY_NOT_MAINTAINING_FINANCIAL_ACCOUNTS
+            - NONPARTICIPATING_FFI
+            - NONPROFIT_ORGANIZATION
+            - NONREPORTING_IGA_FFI
+            - OWNER_DOCUMENTED_FFI
+            - PARTICIPATING_FFI
+            - PASSIVE_NFFE
+            - PUBLICLY_TRADED_NFFE_OR_AFFILIATE
+            - REGISTERED_DEEMED_COMPLIANT_FFI
+            - REPORTING_MODEL_1_FFI
+            - REPORTING_MODEL_2_FFI
+            - RESTRICTED_DISTRIBUTOR
+            - SECTION_501C_ORGANIZATION
+            - SPONSORED_DIRECT_REPORTING_NFFE
+            - SPONSORED_FFI
+            - TERRITORY_FINANCIAL_INSTITUTION
+          description: Chapter 4 Status (FATCA classification) (Part I, Line 5)
+        giin:
+          type: string
+          description: Global Intermediary Identification Number (GIIN) (Part I, Line 9a)
+        giin_applied_for:
+          type: boolean
+          description: Indicates if the entity has applied for a GIIN
+        sponsoring_entity_or_trustee_name:
+          type: string
+          description: Name of sponsoring entity or trustee
+        nonreporting_iga_country:
+          $ref: '#/components/schemas/TaxNonreportingIgaCountry'
+        nonreporting_iga_country_model:
+          type: string
+          enum:
+            - MODEL_1
+            - MODEL_2
+          description: Applicable IGA model (MODEL_1 or MODEL_2)
+        nonreporting_iga_category:
+          $ref: '#/components/schemas/TaxNonreportingIgaCategory'
+        nonreporting_iga_trustee_type:
+          type: string
+          enum:
+            - FOREIGN
+            - US
+          description: Whether the trustee is FOREIGN or US
+        securities_market:
+          $ref: '#/components/schemas/TaxEstablishedSecuritiesExchange'
+        affiliate_entity_name:
+          type: string
+          description: Name of the entity with which the corporation is affiliated
+        substantial_us_owners:
+          type: array
+          items:
+            $ref: '#/components/schemas/SubstantialUsOwner'
+          description: Substantial U.S. owners of a Passive NFFE (Part XXIX)
+        box_17_1:
+          type: boolean
+        box_17_2:
+          type: boolean
+        box_18:
+          type: boolean
+        box_19:
+          type: boolean
+        box_21:
+          type: boolean
+        box_22:
+          type: boolean
+        box_23:
+          type: boolean
+        box_24a:
+          type: boolean
+        box_24b:
+          type: boolean
+        box_24c:
+          type: boolean
+        box_24d:
+          type: boolean
+        box_25a:
+          type: boolean
+        box_25b:
+          type: boolean
+        box_25c:
+          type: boolean
+        box_26:
+          type: boolean
+        box_27:
+          type: boolean
+        box_28a:
+          type: boolean
+        box_28b:
+          type: boolean
+        box_29a:
+          type: boolean
+        box_29b:
+          type: boolean
+        box_29c:
+          type: boolean
+        box_29d:
+          type: boolean
+        box_29e:
+          type: boolean
+        box_29f:
+          type: boolean
+        box_30:
+          type: boolean
+        box_31:
+          type: boolean
+        box_32:
+          type: boolean
+        box_33:
+          type: boolean
+        box_33_date_of_formation:
+          type: string
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          format: date
+          example: 2026-01-15T00:00:00.000Z
+        box_34:
+          type: boolean
+        box_34_date_of_filing:
+          type: string
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          format: date
+          example: 2026-01-15T00:00:00.000Z
+        box_35:
+          type: boolean
+        box_35_determination_letter_date:
+          type: string
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          format: date
+          example: 2020-06-30T00:00:00.000Z
+        box_36:
+          type: boolean
+        box_37a:
+          type: boolean
+        box_37b:
+          type: boolean
+        box_38:
+          type: boolean
+        box_39:
+          type: boolean
+        box_40a:
+          type: boolean
+        box_40b:
+          type: boolean
+        box_40c:
+          type: boolean
+        box_41:
+          type: boolean
+        box_43:
+          type: boolean
+        signature:
+          type: string
+          minLength: 1
+          description: Electronic signature of the authorized representative (Part XXX)
+          example: Alex Smith
+      required:
+        - e_delivery_consent
+        - irs_version
+        - name
+        - country
+        - tax_classification
+        - permanent_address
+        - has_signed_and_certified
+        - signature_timestamp
+        - fatca_classification
+        - signature
+      title: W8BenESubmissionDto
+      description: Form W-8BEN-E submission payload.
+    W8BenResponseData:
+      type: object
+      properties:
+        e_delivery_consent:
+          type: boolean
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
+          example: true
+        irs_version:
+          type: string
+          enum:
+            - 2021_OCT
+          description: IRS version of the submitted Form W-8BEN
         name:
           type: string
           description: Name of individual who is the beneficial owner
           example: Jane Doe
         country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         permanent_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         mailing_address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         us_tin:
           type: string
-          description: U.S. taxpayer identification number (SSN or ITIN), if required
+          description: Masked or unmasked U.S. taxpayer identification number
         ftin:
           type: string
-          description: Foreign tax identifying number
+          description: Masked or unmasked foreign tax identifying number
         date_of_birth:
           type: string
           description: Date of birth (YYYY-MM-DD)
@@ -128495,8 +129914,9 @@ components:
         treaty_claim_is_eligible:
           type: boolean
           description: Indicates whether the beneficial owner is claiming treaty benefits
+          deprecated: true
         treaty_claim_country:
-          $ref: '#/components/schemas/TaxbitCountry'
+          $ref: '#/components/schemas/TaxCountry'
         treaty_claim_i_certify_resident:
           type: boolean
           description: Certifies residency in the treaty country
@@ -128525,13 +129945,115 @@ components:
           example: Jane Doe
       required:
         - e_delivery_consent
+      title: W8BenResponseData
+      description: Form W-8BEN data returned in submission and retrieval responses.
+    W8BenSubmissionDto:
+      type: object
+      properties:
+        e_delivery_consent:
+          type: boolean
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
+          example: true
+        irs_version:
+          type: string
+          enum:
+            - 2021_OCT
+          description: Set to 2021_OCT when submitting the official IRS Form W-8BEN; omit for substitute form
+        name:
+          type: string
+          minLength: 1
+          description: Name of individual who is the beneficial owner (Line 1)
+          example: Jane Doe
+        country:
+          $ref: '#/components/schemas/TaxCountry'
+        permanent_address:
+          $ref: '#/components/schemas/TaxRequiredAddress'
+        mailing_address:
+          $ref: '#/components/schemas/TaxAddress'
+        us_tin:
+          type: string
+          description: U.S. taxpayer identification number (SSN or ITIN), if required (Line 5)
+        ftin:
+          type: string
+          minLength: 1
+          description: Foreign tax identifying number (Line 6a; required unless ftin_not_legally_required is true)
+        date_of_birth:
+          type: string
+          pattern: ^\d{4}-\d{2}-\d{2}$
+          description: Date of birth in YYYY-MM-DD format (Line 8)
+          format: date
+          example: 1985-06-15T00:00:00.000Z
+        reference_numbers:
+          type: string
+          description: Reference number(s) (Line 7)
+        ftin_not_legally_required:
+          type: boolean
+          description: Set to true if a foreign TIN is not legally required (Line 6b)
+        has_signed_and_certified:
+          type: boolean
+          enum:
+            - true
+          description: Must be true to certify that the beneficial owner has signed and certified the W-8BEN under penalties of perjury (Part III)
+        signature_timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the form was signed
+          example: 2026-01-15T12:00:00.000Z
+        completed_for:
+          type: string
+          enum:
+            - ACCOUNT_HOLDER
+            - REGARDED_OWNER
+          description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
+        treaty_claim_is_eligible:
+          type: boolean
+          description: 'Deprecated: indicates whether the beneficial owner is claiming treaty benefits (prefer treaty_claim_country)'
+          deprecated: true
+        treaty_claim_country:
+          $ref: '#/components/schemas/TaxCountry'
+        treaty_claim_i_certify_resident:
+          type: boolean
+          description: Certifies residency in treaty_claim_country (substitute form only; omit when irs_version is 2021_OCT)
+        treaty_claim_type_of_income:
+          type: string
+          enum:
+            - BUSINESS_PROFITS
+            - DIVIDENDS
+            - INTEREST
+            - OTHER_INCOME
+            - ROYALTIES_MOTION_PICTURE_AND_TV
+            - ROYALTIES_OTHER
+          description: 'Special rates and conditions: type of income (Line 10)'
+        treaty_claim_rate_of_withholding:
+          type: string
+          description: 'Special rates and conditions: percentage rate of withholding (Line 10)'
+        treaty_claim_article_paragraph:
+          type: string
+          description: 'Special rates and conditions: treaty article and paragraph (Line 10)'
+        treaty_claim_has_additional_conditions:
+          type: boolean
+          description: Indicates whether additional conditions apply to the treaty claim
+        signature:
+          type: string
+          minLength: 1
+          description: Electronic signature of the beneficial owner (Part III)
+          example: Jane Doe
+      required:
+        - e_delivery_consent
+        - name
+        - country
+        - permanent_address
+        - date_of_birth
+        - has_signed_and_certified
+        - signature_timestamp
+        - signature
       title: W8BenSubmissionDto
-      description: Form W-8BEN submission payload matching TaxBit POST /v1/account-owners/{id}/tax-documentation-data/w-8ben.
+      description: Form W-8BEN submission payload.
     W8benESubmissionResponseDto:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/W8BenESubmissionDto'
+          $ref: '#/components/schemas/W8BenEResponseData'
       required:
         - data
       title: W8benESubmissionResponseDto
@@ -128540,18 +130062,17 @@ components:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/W8BenSubmissionDto'
+          $ref: '#/components/schemas/W8BenResponseData'
       required:
         - data
       title: W8benSubmissionResponseDto
       description: Response returned upon successful Form W-8BEN submission.
-    W9SubmissionDto:
+    W9ResponseData:
       type: object
       properties:
         e_delivery_consent:
           type: boolean
-          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/document-service/v1/agreements/taxEDeliveryConsent.
-          default: true
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
         name:
           type: string
@@ -128579,11 +130100,11 @@ components:
           type: string
           description: Description when tax_classification is OTHER
         address:
-          $ref: '#/components/schemas/TaxbitAddress'
+          $ref: '#/components/schemas/TaxAddress'
         tin:
           type: string
-          description: Taxpayer Identification Number (SSN, EIN, ITIN, or ATIN)
-          example: '123456789'
+          description: Masked or unmasked Taxpayer Identification Number
+          example: '*****6789'
         tin_type:
           type: string
           enum:
@@ -128648,13 +130169,132 @@ components:
           example: John Doe
       required:
         - e_delivery_consent
+      title: W9ResponseData
+      description: Form W-9 data returned in submission and retrieval responses.
+    W9SubmissionDto:
+      type: object
+      properties:
+        e_delivery_consent:
+          type: boolean
+          description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
+          example: true
+        name:
+          type: string
+          minLength: 1
+          description: Legal name of the individual or entity (Box 1)
+          example: John Doe
+        dba_name:
+          type: string
+          description: Business name / disregarded entity name, if different from above (Box 2)
+          example: Acme LLC
+        tax_classification:
+          type: string
+          enum:
+            - INDIVIDUAL
+            - C_CORPORATION
+            - S_CORPORATION
+            - PARTNERSHIP
+            - TRUST_ESTATE
+            - LLC_C
+            - LLC_P
+            - LLC_S
+            - SOLE_PROPRIETOR
+            - OTHER
+          description: Federal tax classification of the person or entity (Box 3a)
+        other_tax_classification:
+          type: string
+          minLength: 1
+          description: Description required when tax_classification is OTHER
+        address:
+          $ref: '#/components/schemas/TaxRequiredAddress'
+        tin:
+          type: string
+          minLength: 1
+          description: Taxpayer Identification Number (SSN, EIN, ITIN, or ATIN) (Part I)
+          example: '123456789'
+        tin_type:
+          type: string
+          enum:
+            - SSN
+            - EIN
+            - ITIN
+            - ATIN
+          description: Type of Taxpayer Identification Number (SSN, EIN, ITIN, or ATIN)
+        exempt_payee_code:
+          type: string
+          enum:
+            - '1'
+            - '2'
+            - '3'
+            - '4'
+            - '5'
+            - '6'
+            - '7'
+            - '8'
+            - '9'
+            - '10'
+            - '11'
+            - '12'
+            - '13'
+          description: Exempt payee code (Box 4, if applicable)
+        exempt_fatca_code:
+          type: string
+          enum:
+            - A
+            - B
+            - C
+            - D
+            - E
+            - F
+            - G
+            - H
+            - I
+            - J
+            - K
+            - L
+            - M
+          description: Exemption from FATCA reporting code (Box 4, if applicable)
+        is_not_subject_backup_withholding:
+          type: boolean
+          description: Certifies that the taxpayer is not subject to backup withholding
+        has_signed_and_certified:
+          type: boolean
+          enum:
+            - true
+          description: Must be true to certify that the taxpayer has signed and certified the W-9 under penalties of perjury (Part II)
+        signature_timestamp:
+          type: string
+          format: date-time
+          description: ISO 8601 timestamp when the form was signed
+          example: 2026-01-15T12:00:00.000Z
+        completed_for:
+          type: string
+          enum:
+            - ACCOUNT_HOLDER
+            - REGARDED_OWNER
+          description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
+        signature:
+          type: string
+          minLength: 1
+          description: Electronic signature of the person certifying the form
+          example: John Doe
+      required:
+        - e_delivery_consent
+        - name
+        - tax_classification
+        - address
+        - tin
+        - tin_type
+        - has_signed_and_certified
+        - signature_timestamp
+        - signature
       title: W9SubmissionDto
-      description: Form W-9 submission payload matching TaxBit POST /v1/account-owners/{id}/tax-documentation-data/w-9.
+      description: Form W-9 submission payload.
     W9SubmissionResponseDto:
       type: object
       properties:
         data:
-          $ref: '#/components/schemas/W9SubmissionDto'
+          $ref: '#/components/schemas/W9ResponseData'
       required:
         - data
       title: W9SubmissionResponseDto
