@@ -45938,6 +45938,17 @@ paths:
         with the returned `token` (as `linkToken`) and the `publicToken` received
         from Plaid Link to complete the bank account linking process.
 
+        A Plaid connection is not permanent. Over time the user may need to
+        sign in to their bank again, for example after a password change or
+        when the bank's access expires, or to grant consent for a new Plaid
+        product. When that happens, the bank transfer method returns a
+        `plaid-refresh` entry in `requiredActions`. Check `requiredActions`
+        whenever you display or use a Plaid-linked bank transfer method, and
+        when it contains `plaid-refresh`, send the user through Link update
+        mode with `/api/tradfi/v1/plaid/link/token/update`. Do not link the
+        account again with this endpoint: update mode repairs the existing
+        connection and keeps the same bank transfer method.
+
         **Requires access token scope:** `wallet_manage_all`
       operationId: tradfi.v1.plaid.link.token.create
       tags:
@@ -46099,11 +46110,21 @@ paths:
       summary: Create Plaid Link update mode token
       description: |
         Creates a Plaid Link token that opens Link in update mode for the Plaid
-        Item behind an existing bank transfer method. 
+        Item behind an existing bank transfer method.
 
-        Once the user completes Link, call
-        `/api/tradfi/v1/plaid/link/token/update/complete`. 
-        The token expires after 30 minutes.
+        Use this endpoint when a bank transfer method's `requiredActions`
+        contains `plaid-refresh`. That action means Plaid needs the user to sign
+        in to their bank again or to grant consent for a new product. Until the
+        user does, the connection is incomplete. To resolve it:
+
+        1. Call this endpoint with the bank transfer method ID.
+        2. Open Plaid Link with the returned `token`, and have the user complete
+           the flow.
+        3. Call `/api/tradfi/v1/plaid/link/token/update/complete`.
+
+        Completing update mode clears `plaid-refresh` on every bank transfer
+        method linked to the same Plaid Item, so one refresh fixes all accounts
+        the user connected from that bank. The token expires after 30 minutes.
 
         **Requires access token scope:** `wallet_manage_all`
       operationId: tradfi.v1.plaid.link.token.update
@@ -76318,7 +76339,8 @@ components:
         requiredActions:
           type: array
           readOnly: true
-          description: Actions the user must complete for this account. Empty when none are required.
+          description: |
+            Actions the user must complete for this account. Empty when none are required. Check this field whenever you display or use the account, and prompt the user to resolve any action it contains. See `RequiredAction` for what each action means and how to resolve it.
           items:
             $ref: '#/components/schemas/RequiredAction'
         fee:
@@ -105467,7 +105489,17 @@ components:
       properties:
         type:
           type: string
-          description: The action identifier. New values may be added.
+          description: |
+            The action identifier. New values may be added.
+
+            - `plaid-refresh` — The user must refresh their Plaid connection.
+              This happens when their bank requires them to sign in again, or
+              when Plaid needs their consent for a new product. Prompt the user
+              to refresh, then send them through Link update mode: create a
+              token with `/api/tradfi/v1/plaid/link/token/update`, open Plaid
+              Link with it, and call
+              `/api/tradfi/v1/plaid/link/token/update/complete` when they
+              finish.
           example: plaid-refresh
         title:
           type: string
