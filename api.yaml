@@ -42948,7 +42948,7 @@ paths:
       tags:
         - Staking Request
       summary: Create staking request
-      description: Create a staking request of type STAKE or UNSTAKE.
+      description: Create a staking request. The accepted request type depends on the coin - for example STAKE, UNSTAKE, CLAIM_REWARDS, or SWITCH_VALIDATOR.
       operationId: v1.staking.request.create
       x-internal: false
       parameters:
@@ -43011,6 +43011,7 @@ paths:
                 - $ref: '#/components/schemas/HashUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/HypeEvmStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/HypeEvmUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/HypeEvmSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveClaimRewardsRequestPOSTBody'
@@ -91768,6 +91769,43 @@ components:
         - type
         - amount
         - validator
+    HypeEvmSwitchValidatorsRequestPOSTBody:
+      title: HYPEEVM switch validators
+      description: |
+        Request to move a HYPE delegation to a different validator without leaving HyperCore.
+
+        **No unstaking queue:** HyperEVM processes this as two CoreWriter actions - `undelegate` from the
+        source validator, which returns the stake to the HyperCore staking balance, and `delegate` to the
+        destination validator. The staking balance to spot transfer is never used, so the 7 day unstaking
+        queue is not entered and the stake resumes earning as soon as the new delegation lands.
+
+        **Timing:** each action is applied by HyperCore on the next big block, so a switch takes about
+        2 minutes in total. The source delegation stays active until the undelegate confirms.
+
+        **Lockups:** the source delegation must be past its 1 day delegation lockup, and the destination
+        delegation starts a fresh 1 day lockup.
+
+        **Partial switches:** `amount` may be less than the whole delegation, as long as it does not exceed
+        `delegated - pendingUnstake`. The remainder stays delegated to the source validator.
+
+        **Fields:** `delegationId` selects the source delegation and `validator` is the destination
+        validator, so both are required. `gasPrice`, `duration`, and `delegationRequests` are ignored.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/SwitchValidatorsRequestPOSTBody'
+      properties:
+        type:
+          description: Staking request type. Always 'SWITCH_VALIDATOR' for this endpoint.
+          type: string
+          enum:
+            - SWITCH_VALIDATOR
+          example: SWITCH_VALIDATOR
+        amount:
+          description: Amount to switch in wei (18 decimals). Must be greater than zero and cannot exceed `delegated - pendingUnstake` for the source delegation.
+          type: string
+          example: '150000000'
+      required:
+        - amount
     HypeEvmUnStakingRequest:
       title: HYPEEVM unstake
       description: A HyperEVM UNSTAKE request. `validatorAddress` is not returned - the validator is carried on the delegation.
@@ -105759,34 +105797,34 @@ components:
         name:
           type: string
           description: Legal name of the enterprise
-        document_type:
+        documentType:
           type: string
           enum:
             - DPS
           description: Document type (DPS)
-        is_individual:
+        isIndividual:
           type: boolean
           description: Indicates if the taxpayer is an individual
-        is_confirmed_correct_complete:
+        isConfirmedCorrectComplete:
           type: boolean
           description: Indicates if the taxpayer confirmed accuracy of the information
         address:
           $ref: '#/components/schemas/TaxAddress'
-        business_registration_country:
+        businessRegistrationCountry:
           $ref: '#/components/schemas/TaxCountry'
-        business_registration_number:
+        businessRegistrationNumber:
           type: string
-        city_of_birth:
+        cityOfBirth:
           type: string
-        country_of_birth:
+        countryOfBirth:
           $ref: '#/components/schemas/TaxCountry'
-        date_of_birth:
+        dateOfBirth:
           type: string
-        financial_account_identifier:
+        financialAccountIdentifier:
           type: string
-        financial_account_name:
+        financialAccountName:
           type: string
-        tax_residences:
+        taxResidences:
           type: array
           items:
             type: object
@@ -105795,26 +105833,26 @@ components:
                 type: string
               tin:
                 type: string
-              tin_not_required:
+              tinNotRequired:
                 type: boolean
         vatin:
           type: string
-        vatin_country:
+        vatinCountry:
           type: string
-        vatin_not_required:
+        vatinNotRequired:
           type: boolean
       required:
         - id
         - name
-        - document_type
-        - is_individual
-        - is_confirmed_correct_complete
+        - documentType
+        - isIndividual
+        - isConfirmedCorrectComplete
       title: RetrievedDpsForm
       description: Collected Digital Platform Seller (DPS) data
     RetrievedSelfCertificationForm:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
@@ -105822,11 +105860,11 @@ components:
           type: string
           description: Legal name of the individual or entity
           example: Euro Crypto GmbH
-        permanent_address:
+        permanentAddress:
           $ref: '#/components/schemas/TaxAddress'
-        mailing_address:
+        mailingAddress:
           $ref: '#/components/schemas/TaxAddress'
-        tax_residences:
+        taxResidences:
           type: array
           items:
             $ref: '#/components/schemas/SelfCertificationTaxResidence'
@@ -105848,62 +105886,62 @@ components:
             - ACTIVE_NFE_OTHER
             - PASSIVE_NFE
           description: CRS/CARF classification of the account owner
-        signature_date:
+        signatureDate:
           type: string
           description: Date the self-certification was signed (YYYY-MM-DD or ISO 8601)
           example: 2026-01-15T00:00:00.000Z
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           description: Indicates that the account owner has signed and certified the self-certification
-        date_of_birth:
+        dateOfBirth:
           type: string
           description: Date of birth for individual account owners (YYYY-MM-DD)
-        city_of_birth:
+        cityOfBirth:
           type: string
           description: City of birth for individual account owners
-        country_of_birth:
+        countryOfBirth:
           $ref: '#/components/schemas/TaxCountry'
-        country_of_citizenship:
+        countryOfCitizenship:
           $ref: '#/components/schemas/TaxCountry'
-        entity_type:
+        entityType:
           type: string
           enum:
             - TRUST
             - SIMILAR_TO_TRUST
             - OTHER
           description: Entity type when classification is PASSIVE_NFE
-        securities_market:
+        securitiesMarket:
           type: string
           description: Established securities market when classification is ACTIVE_NFE_PUBLIC_CORPORATION
-        related_corporation:
+        relatedCorporation:
           type: string
           description: Name of related corporation if affiliated with a publicly traded corporation
-        controlling_persons:
+        controllingPersons:
           type: array
           items:
             $ref: '#/components/schemas/SelfCertificationControllingPerson'
           description: Controlling persons for Passive NFE or managed investment entity
-        signature_capacity:
+        signatureCapacity:
           type: string
           enum:
             - OFFICER
             - EXECUTOR
             - OTHER_CAPACITY
           description: Capacity in which the representative is signing
-        signature_capacity_other:
+        signatureCapacityOther:
           type: string
-          description: Description when signature_capacity is OTHER_CAPACITY
+          description: Description when signatureCapacity is OTHER_CAPACITY
         giin:
           type: string
           description: Global Intermediary Identification Number (GIIN)
-        residence_by_investment_confirmed:
+        residenceByInvestmentConfirmed:
           type: boolean
           description: Confirms whether tax residency information includes any CBI/RBI program
         signature:
           type: string
           description: Electronic signature of the signer
           example: Hans Mueller
-        active_non_financial_entity_type:
+        activeNonFinancialEntityType:
           type: string
           enum:
             - OTHER
@@ -105912,7 +105950,7 @@ components:
             - CENTRAL_BANK
             - PUBLIC_CORPORATION
           description: Derived active NFE subtype
-        financial_institution_type:
+        financialInstitutionType:
           type: string
           enum:
             - DEPOSITORY_INSTITUTION
@@ -105921,13 +105959,13 @@ components:
             - INSURANCE_COMPANY
             - NON_REPORTING_FINANCIAL_INSTITUTION
           description: Derived financial institution subtype
-        investment_entity_managed:
+        investmentEntityManaged:
           type: boolean
           description: Indicates whether the investment entity is professionally managed
-        is_individual:
+        isIndividual:
           type: boolean
           description: Indicates whether the account owner is an individual
-        self_certification_account_type:
+        selfCertificationAccountType:
           type: string
           enum:
             - FINANCIAL_INSTITUTION
@@ -105938,33 +105976,33 @@ components:
           type: string
           format: uuid
           description: Unique UUID for the collected Self-Certification
-        document_type:
+        documentType:
           type: string
           enum:
             - SELF_CERTIFICATION
           description: Document type (SELF_CERTIFICATION)
         address:
           $ref: '#/components/schemas/TaxAddress'
-        has_certified:
+        hasCertified:
           type: boolean
           description: Indicates whether the self-certification has been certified
-        mailing_address_is_different:
+        mailingAddressIsDifferent:
           type: boolean
           description: Indicates if the mailing address is different from the permanent address
-        created_at:
+        createdAt:
           type: string
           description: ISO 8601 timestamp when the Self-Certification documentation was recorded
-        submission_id:
+        submissionId:
           type: string
           format: uuid
           description: Submission UUID for the Self-Certification
         revision:
           type: number
           description: Revision number of the Self-Certification submission
-        is_derived_signature:
+        isDerivedSignature:
           type: boolean
           description: Indicates whether the signature was derived
-        tax_id_format_validation_results:
+        taxIdFormatValidationResults:
           type: object
           properties:
             results:
@@ -105972,29 +106010,29 @@ components:
               items:
                 type: object
                 properties:
-                  country_code:
+                  countryCode:
                     type: string
-                  masked_value:
+                  maskedValue:
                     type: string
                   type:
                     type: string
-                  validation_result:
+                  validationResult:
                     type: string
           description: TIN format validation results
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
         - id
-        - document_type
+        - documentType
       title: RetrievedSelfCertificationForm
       description: Collected DAC8/CARF Self-Certification data
     RetrievedW8BenEForm:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
-        irs_version:
+        irsVersion:
           type: string
           enum:
             - 2021_OCT
@@ -106005,7 +106043,7 @@ components:
           example: Global Digital Assets Ltd
         country:
           $ref: '#/components/schemas/TaxCountry'
-        tax_classification:
+        taxClassification:
           type: string
           enum:
             - CORPORATION
@@ -106021,45 +106059,41 @@ components:
             - PRIVATE_FOUNDATION
             - INTERNATIONAL_ORGANIZATION
           description: Chapter 3 Status (entity type)
-        permanent_address:
+        permanentAddress:
           $ref: '#/components/schemas/TaxAddress'
-        mailing_address:
+        mailingAddress:
           $ref: '#/components/schemas/TaxAddress'
-        us_tin:
+        usTin:
           type: string
           description: Masked or unmasked U.S. taxpayer identification number (EIN)
         ftin:
           type: string
           description: Masked or unmasked foreign tax identifying number
-        reference_numbers:
+        referenceNumbers:
           type: string
           description: Reference number(s)
-        ftin_not_legally_required:
+        ftinNotLegallyRequired:
           type: boolean
           description: Check if FTIN is not legally required
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           description: Indicates that an authorized representative has signed and certified the W-8BEN-E
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
             - REGARDED_OWNER
           description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
-        treaty_claim_is_eligible:
-          type: boolean
-          description: Indicates whether the entity is claiming tax treaty benefits
-          deprecated: true
-        treaty_claim_country:
+        treatyClaimCountry:
           $ref: '#/components/schemas/TaxCountry'
-        treaty_claim_i_certify_resident:
+        treatyClaimICertifyResident:
           type: boolean
           description: Certifies that the beneficial owner is a resident of the treaty country
-        treaty_claim_type_of_income:
+        treatyClaimTypeOfIncome:
           type: string
           enum:
             - BUSINESS_PROFITS
@@ -106069,19 +106103,19 @@ components:
             - ROYALTIES_MOTION_PICTURE_AND_TV
             - ROYALTIES_OTHER
           description: 'Special rates and conditions: type of income'
-        treaty_claim_rate_of_withholding:
+        treatyClaimRateOfWithholding:
           type: string
           description: 'Special rates and conditions: percentage rate of withholding'
-        treaty_claim_article_paragraph:
+        treatyClaimArticleParagraph:
           type: string
           description: 'Special rates and conditions: treaty article and paragraph'
-        treaty_claim_has_additional_conditions:
+        treatyClaimHasAdditionalConditions:
           type: boolean
           description: Indicates whether additional conditions apply to the treaty claim
-        treaty_claim_i_certify_requirements:
+        treatyClaimICertifyRequirements:
           type: boolean
           description: Certifies that the entity derives the item of income and meets treaty requirements
-        treaty_claim_limitation_on_benefits:
+        treatyClaimLimitationOnBenefits:
           type: string
           enum:
             - GOVERNMENT
@@ -106096,10 +106130,10 @@ components:
             - NO_LOB_ARTICLE
             - OTHER_ARTICLE_PARAGRAPH
           description: Limitation on benefits (LOB) provision met by the entity
-        treaty_claim_limitation_on_benefits_other_article_paragraph:
+        treatyClaimLimitationOnBenefitsOtherArticleParagraph:
           type: string
           description: Article and paragraph when OTHER_ARTICLE_PARAGRAPH is selected for LOB
-        fatca_classification:
+        fatcaClassification:
           type: string
           enum:
             - ACCOUNT_NOT_FINANCIAL
@@ -106138,124 +106172,124 @@ components:
         giin:
           type: string
           description: Global Intermediary Identification Number (GIIN)
-        giin_applied_for:
+        giinAppliedFor:
           type: boolean
           description: Indicates if the entity has applied for a GIIN
-        sponsoring_entity_or_trustee_name:
+        sponsoringEntityOrTrusteeName:
           type: string
           description: Name of sponsoring entity or trustee
-        nonreporting_iga_country:
+        nonreportingIgaCountry:
           $ref: '#/components/schemas/TaxNonreportingIgaCountry'
-        nonreporting_iga_country_model:
+        nonreportingIgaCountryModel:
           type: string
           enum:
             - MODEL_1
             - MODEL_2
           description: Applicable IGA model (MODEL_1 or MODEL_2)
-        nonreporting_iga_category:
+        nonreportingIgaCategory:
           $ref: '#/components/schemas/TaxNonreportingIgaCategory'
-        nonreporting_iga_trustee_type:
+        nonreportingIgaTrusteeType:
           type: string
           enum:
             - FOREIGN
             - US
           description: Whether the trustee is FOREIGN or US
-        securities_market:
+        securitiesMarket:
           type: string
           description: Name of established securities market on which stock is regularly traded
-        affiliate_entity_name:
+        affiliateEntityName:
           type: string
           description: Name of the entity with which the corporation is affiliated
-        substantial_us_owners:
+        substantialUsOwners:
           type: array
           items:
             $ref: '#/components/schemas/SubstantialUsOwner'
           description: Substantial U.S. owners of a Passive NFFE
-        box_17_1:
+        box17_1:
           type: boolean
-        box_17_2:
+        box17_2:
           type: boolean
-        box_18:
+        box18:
           type: boolean
-        box_19:
+        box19:
           type: boolean
-        box_21:
+        box21:
           type: boolean
-        box_22:
+        box22:
           type: boolean
-        box_23:
+        box23:
           type: boolean
-        box_24a:
+        box24a:
           type: boolean
-        box_24b:
+        box24b:
           type: boolean
-        box_24c:
+        box24c:
           type: boolean
-        box_24d:
+        box24d:
           type: boolean
-        box_25a:
+        box25a:
           type: boolean
-        box_25b:
+        box25b:
           type: boolean
-        box_25c:
+        box25c:
           type: boolean
-        box_26:
+        box26:
           type: boolean
-        box_27:
+        box27:
           type: boolean
-        box_28a:
+        box28a:
           type: boolean
-        box_28b:
+        box28b:
           type: boolean
-        box_29a:
+        box29a:
           type: boolean
-        box_29b:
+        box29b:
           type: boolean
-        box_29c:
+        box29c:
           type: boolean
-        box_29d:
+        box29d:
           type: boolean
-        box_29e:
+        box29e:
           type: boolean
-        box_29f:
+        box29f:
           type: boolean
-        box_30:
+        box30:
           type: boolean
-        box_31:
+        box31:
           type: boolean
-        box_32:
+        box32:
           type: boolean
-        box_33:
+        box33:
           type: boolean
-        box_33_date_of_formation:
+        box33DateOfFormation:
           type: string
-        box_34:
+        box34:
           type: boolean
-        box_34_date_of_filing:
+        box34DateOfFiling:
           type: string
-        box_35:
+        box35:
           type: boolean
-        box_35_determination_letter_date:
+        box35DeterminationLetterDate:
           type: string
-        box_36:
+        box36:
           type: boolean
-        box_37a:
+        box37a:
           type: boolean
-        box_37b:
+        box37b:
           type: boolean
-        box_38:
+        box38:
           type: boolean
-        box_39:
+        box39:
           type: boolean
-        box_40a:
+        box40a:
           type: boolean
-        box_40b:
+        box40b:
           type: boolean
-        box_40c:
+        box40c:
           type: boolean
-        box_41:
+        box41:
           type: boolean
-        box_43:
+        box43:
           type: boolean
         signature:
           type: string
@@ -106265,33 +106299,33 @@ components:
           type: string
           format: uuid
           description: Unique UUID for the collected W-8BEN-E documentation
-        created_at:
+        createdAt:
           type: string
           description: ISO 8601 timestamp when the W-8BEN-E documentation was recorded
-        has_certified:
+        hasCertified:
           type: boolean
           description: Indicates whether the W-8BEN-E form has been certified
-        document_type:
+        documentType:
           type: string
           enum:
             - W-8BEN-E
           description: Document type (W-8BEN-E)
-        date_of_birth:
+        dateOfBirth:
           type: string
         tin:
           type: string
           description: Tax Identification Number
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
       title: RetrievedW8BenEForm
     RetrievedW8BenForm:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
-        irs_version:
+        irsVersion:
           type: string
           enum:
             - 2021_OCT
@@ -106302,49 +106336,45 @@ components:
           example: Jane Doe
         country:
           $ref: '#/components/schemas/TaxCountry'
-        permanent_address:
+        permanentAddress:
           $ref: '#/components/schemas/TaxAddress'
-        mailing_address:
+        mailingAddress:
           $ref: '#/components/schemas/TaxAddress'
-        us_tin:
+        usTin:
           type: string
           description: Masked or unmasked U.S. taxpayer identification number
         ftin:
           type: string
           description: Masked or unmasked foreign tax identifying number
-        date_of_birth:
+        dateOfBirth:
           type: string
           description: Date of birth (YYYY-MM-DD)
           example: 1985-06-15T00:00:00.000Z
-        reference_numbers:
+        referenceNumbers:
           type: string
           description: Reference number(s)
-        ftin_not_legally_required:
+        ftinNotLegallyRequired:
           type: boolean
           description: Check if FTIN is not legally required
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           description: Indicates that the beneficial owner has signed and certified the W-8BEN
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
             - REGARDED_OWNER
           description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
-        treaty_claim_is_eligible:
-          type: boolean
-          description: Indicates whether the beneficial owner is claiming treaty benefits
-          deprecated: true
-        treaty_claim_country:
+        treatyClaimCountry:
           $ref: '#/components/schemas/TaxCountry'
-        treaty_claim_i_certify_resident:
+        treatyClaimICertifyResident:
           type: boolean
           description: Certifies residency in the treaty country
-        treaty_claim_type_of_income:
+        treatyClaimTypeOfIncome:
           type: string
           enum:
             - BUSINESS_PROFITS
@@ -106354,13 +106384,13 @@ components:
             - ROYALTIES_MOTION_PICTURE_AND_TV
             - ROYALTIES_OTHER
           description: 'Special rates and conditions: type of income'
-        treaty_claim_rate_of_withholding:
+        treatyClaimRateOfWithholding:
           type: string
           description: 'Special rates and conditions: percentage rate of withholding'
-        treaty_claim_article_paragraph:
+        treatyClaimArticleParagraph:
           type: string
           description: 'Special rates and conditions: treaty article and paragraph'
-        treaty_claim_has_additional_conditions:
+        treatyClaimHasAdditionalConditions:
           type: boolean
           description: Indicates whether additional conditions apply to the treaty claim
         signature:
@@ -106371,13 +106401,13 @@ components:
           type: string
           format: uuid
           description: Unique UUID for the collected W-8BEN documentation
-        created_at:
+        createdAt:
           type: string
           description: ISO 8601 timestamp when the W-8BEN documentation was recorded
-        has_certified:
+        hasCertified:
           type: boolean
           description: Indicates whether the W-8BEN form has been certified
-        document_type:
+        documentType:
           type: string
           enum:
             - W-8BEN
@@ -106386,12 +106416,12 @@ components:
           type: string
           description: Tax Identification Number
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
       title: RetrievedW8BenForm
     RetrievedW9Form:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
@@ -106399,11 +106429,11 @@ components:
           type: string
           description: Legal name of the individual or entity
           example: John Doe
-        dba_name:
+        dbaName:
           type: string
           description: Business name / disregarded entity name, if different from above
           example: Acme LLC
-        tax_classification:
+        taxClassification:
           type: string
           enum:
             - INDIVIDUAL
@@ -106417,16 +106447,16 @@ components:
             - SOLE_PROPRIETOR
             - OTHER
           description: Federal tax classification of the person or entity
-        other_tax_classification:
+        otherTaxClassification:
           type: string
-          description: Description when tax_classification is OTHER
+          description: Description when taxClassification is OTHER
         address:
           $ref: '#/components/schemas/TaxAddress'
         tin:
           type: string
           description: Masked or unmasked Taxpayer Identification Number
           example: '*****6789'
-        tin_type:
+        tinType:
           type: string
           enum:
             - SSN
@@ -106434,7 +106464,7 @@ components:
             - ITIN
             - ATIN
           description: Type of Taxpayer Identification Number
-        exempt_payee_code:
+        exemptPayeeCode:
           type: string
           enum:
             - '1'
@@ -106451,7 +106481,7 @@ components:
             - '12'
             - '13'
           description: Exempt payee code (if applicable)
-        exempt_fatca_code:
+        exemptFatcaCode:
           type: string
           enum:
             - A
@@ -106468,17 +106498,17 @@ components:
             - L
             - M
           description: Exemption from FATCA reporting code (if applicable)
-        is_not_subject_backup_withholding:
+        isNotSubjectBackupWithholding:
           type: boolean
           description: Certifies that the taxpayer is not subject to backup withholding
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           description: Indicates that the taxpayer has signed and certified the W-9 under penalties of perjury
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
@@ -106492,19 +106522,19 @@ components:
           type: string
           format: uuid
           description: Unique UUID for the collected W-9 documentation
-        created_at:
+        createdAt:
           type: string
           description: ISO 8601 timestamp when the W-9 documentation was recorded
-        has_certified:
+        hasCertified:
           type: boolean
           description: Indicates whether the W-9 form has been certified
-        document_type:
+        documentType:
           type: string
           enum:
             - W-9
           description: Document type (W-9)
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
       title: RetrievedW9Form
     RetriggerNotificationResult:
       required:
@@ -107152,25 +107182,25 @@ components:
           description: Full name of the controlling person
         address:
           $ref: '#/components/schemas/TaxAddress'
-        mailing_address:
+        mailingAddress:
           $ref: '#/components/schemas/TaxAddress'
-        mailing_address_is_different:
+        mailingAddressIsDifferent:
           type: boolean
           description: Indicates if the mailing address differs from the permanent address
-        date_of_birth:
+        dateOfBirth:
           type: string
           description: Date of birth of the controlling person (YYYY-MM-DD)
-        city_of_birth:
+        cityOfBirth:
           type: string
           description: City of birth of the controlling person
-        country_of_birth:
+        countryOfBirth:
           $ref: '#/components/schemas/TaxCountry'
-        country_of_citizenship:
+        countryOfCitizenship:
           $ref: '#/components/schemas/TaxCountry'
-        ownership_percentage:
+        ownershipPercentage:
           type: number
           description: Percentage of ownership or control
-        residence_by_investment_confirmed:
+        residenceByInvestmentConfirmed:
           type: boolean
           description: Confirms whether tax residency includes any CBI/RBI program
         role:
@@ -107190,13 +107220,13 @@ components:
             - OTHER_MEANS
             - SENIOR_MANAGING_OFFICIAL
           description: Role of the controlling person in controlling the entity
-        role_other:
+        roleOther:
           type: string
           description: Description when role is OTHER
-        role_other_equivalent:
+        roleOtherEquivalent:
           type: string
           description: Description when role is OTHER_EQUIVALENT
-        tax_residences:
+        taxResidences:
           type: array
           items:
             $ref: '#/components/schemas/SelfCertificationTaxResidence'
@@ -107211,20 +107241,20 @@ components:
         tin:
           type: string
           description: Tax Identification Number (TIN) for the jurisdiction
-        tin_not_required:
+        tinNotRequired:
           type: boolean
           description: Indicates if a TIN is not required or not issued
-        tin_not_required_reason:
+        tinNotRequiredReason:
           type: string
           enum:
             - NOT_ISSUED
             - NOT_REQUIRED
             - OTHER
           description: Reason why a TIN was not provided
-        tin_not_required_reason_other:
+        tinNotRequiredReasonOther:
           type: string
-          description: Free-text explanation when tin_not_required_reason is OTHER
-        hashed_tin:
+          description: Free-text explanation when tinNotRequiredReason is OTHER
+        hashedTin:
           type: string
           description: SHA-256 hash of the TIN
       title: SelfCertificationTaxResidence
@@ -111841,12 +111871,33 @@ components:
           example: John Doe
         address:
           $ref: '#/components/schemas/TaxAddress'
-        us_tin:
+        usTin:
           type: string
-          description: U.S. TIN of the substantial U.S. owner
-          example: '123456789'
+          description: Masked or unmasked U.S. TIN of the substantial U.S. owner
+          example: '*****6789'
       title: SubstantialUsOwner
       description: Substantial U.S. owner of a Passive NFFE.
+    SubstantialUsOwnerRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Name of the substantial U.S. owner
+          example: John Doe
+        address:
+          $ref: '#/components/schemas/TaxRequiredAddress'
+        usTin:
+          type: string
+          pattern: ^(?:\d{9}|\d{3}-\d{2}-\d{4}|\d{2}-\d{7})$
+          description: 9-digit U.S. TIN of the substantial U.S. owner
+          example: '123456789'
+      required:
+        - name
+        - address
+        - usTin
+      title: SubstantialUsOwnerRequest
+      description: Substantial U.S. owner of a Passive NFFE (Part XXIX; name, address, and 9-digit usTin required).
     SubstrateAccountBaseBuildOptions:
       title: SubstrateAccountBaseBuildOptions
       allOf:
@@ -112765,11 +112816,11 @@ components:
     TaxAddress:
       type: object
       properties:
-        first_line:
+        firstLine:
           type: string
           description: First line of the address
           example: 123 Pine St
-        second_line:
+        secondLine:
           type: string
           description: Second line of the address
           example: Apt 456
@@ -112777,11 +112828,11 @@ components:
           type: string
           description: City
           example: Seattle
-        state_or_province:
+        stateOrProvince:
           type: string
           description: State or province (must be a 2-letter postal code when country is US or CA)
           example: WA
-        postal_code:
+        postalCode:
           type: string
           description: Postal code
           example: '98000'
@@ -114613,12 +114664,12 @@ components:
     TaxRequiredAddress:
       type: object
       properties:
-        first_line:
+        firstLine:
           type: string
           minLength: 1
           description: First line of the address
           example: 123 Pine St
-        second_line:
+        secondLine:
           type: string
           description: Second line of the address
           example: Apt 456
@@ -114627,12 +114678,12 @@ components:
           minLength: 1
           description: City
           example: Seattle
-        state_or_province:
+        stateOrProvince:
           type: string
           minLength: 1
           description: State or province (required 2-letter postal code when country is US or CA, e.g. WA or ON)
           example: WA
-        postal_code:
+        postalCode:
           type: string
           minLength: 1
           description: Postal code
@@ -114640,12 +114691,12 @@ components:
         country:
           $ref: '#/components/schemas/TaxCountry'
       required:
-        - first_line
+        - firstLine
         - city
-        - postal_code
+        - postalCode
         - country
       title: TaxRequiredAddress
-      description: Required physical address for IRS tax form submissions (first_line, city, postal_code, and country required; 2-letter state_or_province required for US and CA).
+      description: Required physical address for IRS tax form submissions (firstLine, city, postalCode, and country required; 2-letter stateOrProvince required for US and CA).
     TaxTooManyRequestsErrorResponseDto:
       type: object
       properties:
@@ -129732,11 +129783,11 @@ components:
     W8BenEResponseData:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
-        irs_version:
+        irsVersion:
           type: string
           enum:
             - 2021_OCT
@@ -129747,7 +129798,7 @@ components:
           example: Global Digital Assets Ltd
         country:
           $ref: '#/components/schemas/TaxCountry'
-        tax_classification:
+        taxClassification:
           type: string
           enum:
             - CORPORATION
@@ -129763,45 +129814,41 @@ components:
             - PRIVATE_FOUNDATION
             - INTERNATIONAL_ORGANIZATION
           description: Chapter 3 Status (entity type)
-        permanent_address:
+        permanentAddress:
           $ref: '#/components/schemas/TaxAddress'
-        mailing_address:
+        mailingAddress:
           $ref: '#/components/schemas/TaxAddress'
-        us_tin:
+        usTin:
           type: string
           description: Masked or unmasked U.S. taxpayer identification number (EIN)
         ftin:
           type: string
           description: Masked or unmasked foreign tax identifying number
-        reference_numbers:
+        referenceNumbers:
           type: string
           description: Reference number(s)
-        ftin_not_legally_required:
+        ftinNotLegallyRequired:
           type: boolean
           description: Check if FTIN is not legally required
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           description: Indicates that an authorized representative has signed and certified the W-8BEN-E
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
             - REGARDED_OWNER
           description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
-        treaty_claim_is_eligible:
-          type: boolean
-          description: Indicates whether the entity is claiming tax treaty benefits
-          deprecated: true
-        treaty_claim_country:
+        treatyClaimCountry:
           $ref: '#/components/schemas/TaxCountry'
-        treaty_claim_i_certify_resident:
+        treatyClaimICertifyResident:
           type: boolean
           description: Certifies that the beneficial owner is a resident of the treaty country
-        treaty_claim_type_of_income:
+        treatyClaimTypeOfIncome:
           type: string
           enum:
             - BUSINESS_PROFITS
@@ -129811,19 +129858,19 @@ components:
             - ROYALTIES_MOTION_PICTURE_AND_TV
             - ROYALTIES_OTHER
           description: 'Special rates and conditions: type of income'
-        treaty_claim_rate_of_withholding:
+        treatyClaimRateOfWithholding:
           type: string
           description: 'Special rates and conditions: percentage rate of withholding'
-        treaty_claim_article_paragraph:
+        treatyClaimArticleParagraph:
           type: string
           description: 'Special rates and conditions: treaty article and paragraph'
-        treaty_claim_has_additional_conditions:
+        treatyClaimHasAdditionalConditions:
           type: boolean
           description: Indicates whether additional conditions apply to the treaty claim
-        treaty_claim_i_certify_requirements:
+        treatyClaimICertifyRequirements:
           type: boolean
           description: Certifies that the entity derives the item of income and meets treaty requirements
-        treaty_claim_limitation_on_benefits:
+        treatyClaimLimitationOnBenefits:
           type: string
           enum:
             - GOVERNMENT
@@ -129838,10 +129885,10 @@ components:
             - NO_LOB_ARTICLE
             - OTHER_ARTICLE_PARAGRAPH
           description: Limitation on benefits (LOB) provision met by the entity
-        treaty_claim_limitation_on_benefits_other_article_paragraph:
+        treatyClaimLimitationOnBenefitsOtherArticleParagraph:
           type: string
           description: Article and paragraph when OTHER_ARTICLE_PARAGRAPH is selected for LOB
-        fatca_classification:
+        fatcaClassification:
           type: string
           enum:
             - ACCOUNT_NOT_FINANCIAL
@@ -129880,141 +129927,141 @@ components:
         giin:
           type: string
           description: Global Intermediary Identification Number (GIIN)
-        giin_applied_for:
+        giinAppliedFor:
           type: boolean
           description: Indicates if the entity has applied for a GIIN
-        sponsoring_entity_or_trustee_name:
+        sponsoringEntityOrTrusteeName:
           type: string
           description: Name of sponsoring entity or trustee
-        nonreporting_iga_country:
+        nonreportingIgaCountry:
           $ref: '#/components/schemas/TaxNonreportingIgaCountry'
-        nonreporting_iga_country_model:
+        nonreportingIgaCountryModel:
           type: string
           enum:
             - MODEL_1
             - MODEL_2
           description: Applicable IGA model (MODEL_1 or MODEL_2)
-        nonreporting_iga_category:
+        nonreportingIgaCategory:
           $ref: '#/components/schemas/TaxNonreportingIgaCategory'
-        nonreporting_iga_trustee_type:
+        nonreportingIgaTrusteeType:
           type: string
           enum:
             - FOREIGN
             - US
           description: Whether the trustee is FOREIGN or US
-        securities_market:
+        securitiesMarket:
           type: string
           description: Name of established securities market on which stock is regularly traded
-        affiliate_entity_name:
+        affiliateEntityName:
           type: string
           description: Name of the entity with which the corporation is affiliated
-        substantial_us_owners:
+        substantialUsOwners:
           type: array
           items:
             $ref: '#/components/schemas/SubstantialUsOwner'
           description: Substantial U.S. owners of a Passive NFFE
-        box_17_1:
+        box17_1:
           type: boolean
-        box_17_2:
+        box17_2:
           type: boolean
-        box_18:
+        box18:
           type: boolean
-        box_19:
+        box19:
           type: boolean
-        box_21:
+        box21:
           type: boolean
-        box_22:
+        box22:
           type: boolean
-        box_23:
+        box23:
           type: boolean
-        box_24a:
+        box24a:
           type: boolean
-        box_24b:
+        box24b:
           type: boolean
-        box_24c:
+        box24c:
           type: boolean
-        box_24d:
+        box24d:
           type: boolean
-        box_25a:
+        box25a:
           type: boolean
-        box_25b:
+        box25b:
           type: boolean
-        box_25c:
+        box25c:
           type: boolean
-        box_26:
+        box26:
           type: boolean
-        box_27:
+        box27:
           type: boolean
-        box_28a:
+        box28a:
           type: boolean
-        box_28b:
+        box28b:
           type: boolean
-        box_29a:
+        box29a:
           type: boolean
-        box_29b:
+        box29b:
           type: boolean
-        box_29c:
+        box29c:
           type: boolean
-        box_29d:
+        box29d:
           type: boolean
-        box_29e:
+        box29e:
           type: boolean
-        box_29f:
+        box29f:
           type: boolean
-        box_30:
+        box30:
           type: boolean
-        box_31:
+        box31:
           type: boolean
-        box_32:
+        box32:
           type: boolean
-        box_33:
+        box33:
           type: boolean
-        box_33_date_of_formation:
+        box33DateOfFormation:
           type: string
-        box_34:
+        box34:
           type: boolean
-        box_34_date_of_filing:
+        box34DateOfFiling:
           type: string
-        box_35:
+        box35:
           type: boolean
-        box_35_determination_letter_date:
+        box35DeterminationLetterDate:
           type: string
-        box_36:
+        box36:
           type: boolean
-        box_37a:
+        box37a:
           type: boolean
-        box_37b:
+        box37b:
           type: boolean
-        box_38:
+        box38:
           type: boolean
-        box_39:
+        box39:
           type: boolean
-        box_40a:
+        box40a:
           type: boolean
-        box_40b:
+        box40b:
           type: boolean
-        box_40c:
+        box40c:
           type: boolean
-        box_41:
+        box41:
           type: boolean
-        box_43:
+        box43:
           type: boolean
         signature:
           type: string
           description: Electronic signature of the authorized representative
           example: Alex Smith
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
       title: W8BenEResponseData
       description: Form W-8BEN-E data returned in submission and retrieval responses.
     W8BenESubmissionDto:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
-        irs_version:
+        irsVersion:
           type: string
           enum:
             - 2021_OCT
@@ -130027,7 +130074,7 @@ components:
           example: Global Digital Assets Ltd
         country:
           $ref: '#/components/schemas/TaxCountry'
-        tax_classification:
+        taxClassification:
           type: string
           enum:
             - CORPORATION
@@ -130043,49 +130090,47 @@ components:
             - PRIVATE_FOUNDATION
             - INTERNATIONAL_ORGANIZATION
           description: Chapter 3 Status (entity type) (Part I, Line 4)
-        permanent_address:
+        permanentAddress:
           $ref: '#/components/schemas/TaxRequiredAddress'
-        mailing_address:
+        mailingAddress:
           $ref: '#/components/schemas/TaxAddress'
-        us_tin:
+        usTin:
           type: string
-          description: U.S. taxpayer identification number (EIN), if required (Part I, Line 8)
+          pattern: ^(?:\d{9}|\d{3}-\d{2}-\d{4}|\d{2}-\d{7})$
+          description: 9-digit U.S. taxpayer identification number (EIN), if required (Part I, Line 8)
+          example: '123456789'
         ftin:
           type: string
           minLength: 1
-          description: Foreign tax identifying number (Part I, Line 9b; required unless ftin_not_legally_required is true)
-        reference_numbers:
+          description: Foreign tax identifying number (Part I, Line 9b; required unless ftinNotLegallyRequired is true)
+        referenceNumbers:
           type: string
           description: Reference number(s) (Part I, Line 10)
-        ftin_not_legally_required:
+        ftinNotLegallyRequired:
           type: boolean
           description: Set to true if a foreign TIN is not legally required (Part I, Line 9c)
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           enum:
             - true
           description: Must be true to certify that an authorized representative has signed and certified the W-8BEN-E under penalties of perjury (Part XXX)
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
             - REGARDED_OWNER
           description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
-        treaty_claim_is_eligible:
-          type: boolean
-          description: 'Deprecated: indicates whether the entity is claiming tax treaty benefits (prefer treaty_claim_country)'
-          deprecated: true
-        treaty_claim_country:
+        treatyClaimCountry:
           $ref: '#/components/schemas/TaxCountry'
-        treaty_claim_i_certify_resident:
+        treatyClaimICertifyResident:
           type: boolean
           description: Certifies that the beneficial owner is a resident of the treaty country (Part III, Line 14a)
-        treaty_claim_type_of_income:
+        treatyClaimTypeOfIncome:
           type: string
           enum:
             - BUSINESS_PROFITS
@@ -130095,19 +130140,19 @@ components:
             - ROYALTIES_MOTION_PICTURE_AND_TV
             - ROYALTIES_OTHER
           description: 'Special rates and conditions: type of income (Part III, Line 15)'
-        treaty_claim_rate_of_withholding:
+        treatyClaimRateOfWithholding:
           type: string
           description: 'Special rates and conditions: percentage rate of withholding (Part III, Line 15)'
-        treaty_claim_article_paragraph:
+        treatyClaimArticleParagraph:
           type: string
           description: 'Special rates and conditions: treaty article and paragraph (Part III, Line 15)'
-        treaty_claim_has_additional_conditions:
+        treatyClaimHasAdditionalConditions:
           type: boolean
           description: Indicates whether additional conditions apply to the treaty claim
-        treaty_claim_i_certify_requirements:
+        treatyClaimICertifyRequirements:
           type: boolean
           description: Certifies that the entity derives the item of income and meets treaty requirements (Part III, Line 14b)
-        treaty_claim_limitation_on_benefits:
+        treatyClaimLimitationOnBenefits:
           type: string
           enum:
             - GOVERNMENT
@@ -130122,10 +130167,10 @@ components:
             - NO_LOB_ARTICLE
             - OTHER_ARTICLE_PARAGRAPH
           description: Limitation on benefits (LOB) provision met by the entity (Part III, Line 14b)
-        treaty_claim_limitation_on_benefits_other_article_paragraph:
+        treatyClaimLimitationOnBenefitsOtherArticleParagraph:
           type: string
           description: Article and paragraph when OTHER_ARTICLE_PARAGRAPH is selected for LOB
-        fatca_classification:
+        fatcaClassification:
           type: string
           enum:
             - ACCOUNT_NOT_FINANCIAL
@@ -130164,132 +130209,132 @@ components:
         giin:
           type: string
           description: Global Intermediary Identification Number (GIIN) (Part I, Line 9a)
-        giin_applied_for:
+        giinAppliedFor:
           type: boolean
           description: Indicates if the entity has applied for a GIIN
-        sponsoring_entity_or_trustee_name:
+        sponsoringEntityOrTrusteeName:
           type: string
           description: Name of sponsoring entity or trustee
-        nonreporting_iga_country:
+        nonreportingIgaCountry:
           $ref: '#/components/schemas/TaxNonreportingIgaCountry'
-        nonreporting_iga_country_model:
+        nonreportingIgaCountryModel:
           type: string
           enum:
             - MODEL_1
             - MODEL_2
           description: Applicable IGA model (MODEL_1 or MODEL_2)
-        nonreporting_iga_category:
+        nonreportingIgaCategory:
           $ref: '#/components/schemas/TaxNonreportingIgaCategory'
-        nonreporting_iga_trustee_type:
+        nonreportingIgaTrusteeType:
           type: string
           enum:
             - FOREIGN
             - US
           description: Whether the trustee is FOREIGN or US
-        securities_market:
+        securitiesMarket:
           $ref: '#/components/schemas/TaxEstablishedSecuritiesExchange'
-        affiliate_entity_name:
+        affiliateEntityName:
           type: string
           description: Name of the entity with which the corporation is affiliated
-        substantial_us_owners:
+        substantialUsOwners:
           type: array
           items:
-            $ref: '#/components/schemas/SubstantialUsOwner'
+            $ref: '#/components/schemas/SubstantialUsOwnerRequest'
           description: Substantial U.S. owners of a Passive NFFE (Part XXIX)
-        box_17_1:
+        box17_1:
           type: boolean
-        box_17_2:
+        box17_2:
           type: boolean
-        box_18:
+        box18:
           type: boolean
-        box_19:
+        box19:
           type: boolean
-        box_21:
+        box21:
           type: boolean
-        box_22:
+        box22:
           type: boolean
-        box_23:
+        box23:
           type: boolean
-        box_24a:
+        box24a:
           type: boolean
-        box_24b:
+        box24b:
           type: boolean
-        box_24c:
+        box24c:
           type: boolean
-        box_24d:
+        box24d:
           type: boolean
-        box_25a:
+        box25a:
           type: boolean
-        box_25b:
+        box25b:
           type: boolean
-        box_25c:
+        box25c:
           type: boolean
-        box_26:
+        box26:
           type: boolean
-        box_27:
+        box27:
           type: boolean
-        box_28a:
+        box28a:
           type: boolean
-        box_28b:
+        box28b:
           type: boolean
-        box_29a:
+        box29a:
           type: boolean
-        box_29b:
+        box29b:
           type: boolean
-        box_29c:
+        box29c:
           type: boolean
-        box_29d:
+        box29d:
           type: boolean
-        box_29e:
+        box29e:
           type: boolean
-        box_29f:
+        box29f:
           type: boolean
-        box_30:
+        box30:
           type: boolean
-        box_31:
+        box31:
           type: boolean
-        box_32:
+        box32:
           type: boolean
-        box_33:
+        box33:
           type: boolean
-        box_33_date_of_formation:
+        box33DateOfFormation:
           type: string
           pattern: ^\d{4}-\d{2}-\d{2}$
           format: date
           example: 2026-01-15T00:00:00.000Z
-        box_34:
+        box34:
           type: boolean
-        box_34_date_of_filing:
+        box34DateOfFiling:
           type: string
           pattern: ^\d{4}-\d{2}-\d{2}$
           format: date
           example: 2026-01-15T00:00:00.000Z
-        box_35:
+        box35:
           type: boolean
-        box_35_determination_letter_date:
+        box35DeterminationLetterDate:
           type: string
           pattern: ^\d{4}-\d{2}-\d{2}$
           format: date
           example: 2020-06-30T00:00:00.000Z
-        box_36:
+        box36:
           type: boolean
-        box_37a:
+        box37a:
           type: boolean
-        box_37b:
+        box37b:
           type: boolean
-        box_38:
+        box38:
           type: boolean
-        box_39:
+        box39:
           type: boolean
-        box_40a:
+        box40a:
           type: boolean
-        box_40b:
+        box40b:
           type: boolean
-        box_40c:
+        box40c:
           type: boolean
-        box_41:
+        box41:
           type: boolean
-        box_43:
+        box43:
           type: boolean
         signature:
           type: string
@@ -130297,26 +130342,26 @@ components:
           description: Electronic signature of the authorized representative (Part XXX)
           example: Alex Smith
       required:
-        - e_delivery_consent
-        - irs_version
+        - eDeliveryConsent
+        - irsVersion
         - name
         - country
-        - tax_classification
-        - permanent_address
-        - has_signed_and_certified
-        - signature_timestamp
-        - fatca_classification
+        - taxClassification
+        - permanentAddress
+        - hasSignedAndCertified
+        - signatureTimestamp
+        - fatcaClassification
         - signature
       title: W8BenESubmissionDto
       description: Form W-8BEN-E submission payload.
     W8BenResponseData:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
-        irs_version:
+        irsVersion:
           type: string
           enum:
             - 2021_OCT
@@ -130327,49 +130372,45 @@ components:
           example: Jane Doe
         country:
           $ref: '#/components/schemas/TaxCountry'
-        permanent_address:
+        permanentAddress:
           $ref: '#/components/schemas/TaxAddress'
-        mailing_address:
+        mailingAddress:
           $ref: '#/components/schemas/TaxAddress'
-        us_tin:
+        usTin:
           type: string
           description: Masked or unmasked U.S. taxpayer identification number
         ftin:
           type: string
           description: Masked or unmasked foreign tax identifying number
-        date_of_birth:
+        dateOfBirth:
           type: string
           description: Date of birth (YYYY-MM-DD)
           example: 1985-06-15T00:00:00.000Z
-        reference_numbers:
+        referenceNumbers:
           type: string
           description: Reference number(s)
-        ftin_not_legally_required:
+        ftinNotLegallyRequired:
           type: boolean
           description: Check if FTIN is not legally required
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           description: Indicates that the beneficial owner has signed and certified the W-8BEN
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
             - REGARDED_OWNER
           description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
-        treaty_claim_is_eligible:
-          type: boolean
-          description: Indicates whether the beneficial owner is claiming treaty benefits
-          deprecated: true
-        treaty_claim_country:
+        treatyClaimCountry:
           $ref: '#/components/schemas/TaxCountry'
-        treaty_claim_i_certify_resident:
+        treatyClaimICertifyResident:
           type: boolean
           description: Certifies residency in the treaty country
-        treaty_claim_type_of_income:
+        treatyClaimTypeOfIncome:
           type: string
           enum:
             - BUSINESS_PROFITS
@@ -130379,13 +130420,13 @@ components:
             - ROYALTIES_MOTION_PICTURE_AND_TV
             - ROYALTIES_OTHER
           description: 'Special rates and conditions: type of income'
-        treaty_claim_rate_of_withholding:
+        treatyClaimRateOfWithholding:
           type: string
           description: 'Special rates and conditions: percentage rate of withholding'
-        treaty_claim_article_paragraph:
+        treatyClaimArticleParagraph:
           type: string
           description: 'Special rates and conditions: treaty article and paragraph'
-        treaty_claim_has_additional_conditions:
+        treatyClaimHasAdditionalConditions:
           type: boolean
           description: Indicates whether additional conditions apply to the treaty claim
         signature:
@@ -130393,17 +130434,17 @@ components:
           description: Electronic signature of the beneficial owner
           example: Jane Doe
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
       title: W8BenResponseData
       description: Form W-8BEN data returned in submission and retrieval responses.
     W8BenSubmissionDto:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
-        irs_version:
+        irsVersion:
           type: string
           enum:
             - 2021_OCT
@@ -130415,55 +130456,53 @@ components:
           example: Jane Doe
         country:
           $ref: '#/components/schemas/TaxCountry'
-        permanent_address:
+        permanentAddress:
           $ref: '#/components/schemas/TaxRequiredAddress'
-        mailing_address:
+        mailingAddress:
           $ref: '#/components/schemas/TaxAddress'
-        us_tin:
+        usTin:
           type: string
-          description: U.S. taxpayer identification number (SSN or ITIN), if required (Line 5)
+          pattern: ^(?:\d{9}|\d{3}-\d{2}-\d{4}|\d{2}-\d{7})$
+          description: 9-digit U.S. taxpayer identification number (SSN or ITIN), if required (Line 5)
+          example: '123456789'
         ftin:
           type: string
           minLength: 1
-          description: Foreign tax identifying number (Line 6a; required unless ftin_not_legally_required is true)
-        date_of_birth:
+          description: Foreign tax identifying number (Line 6a; required unless ftinNotLegallyRequired is true)
+        dateOfBirth:
           type: string
           pattern: ^\d{4}-\d{2}-\d{2}$
           description: Date of birth in YYYY-MM-DD format (Line 8)
           format: date
           example: 1985-06-15T00:00:00.000Z
-        reference_numbers:
+        referenceNumbers:
           type: string
           description: Reference number(s) (Line 7)
-        ftin_not_legally_required:
+        ftinNotLegallyRequired:
           type: boolean
           description: Set to true if a foreign TIN is not legally required (Line 6b)
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           enum:
             - true
           description: Must be true to certify that the beneficial owner has signed and certified the W-8BEN under penalties of perjury (Part III)
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
             - REGARDED_OWNER
           description: Whether the form was completed for the ACCOUNT_HOLDER or REGARDED_OWNER
-        treaty_claim_is_eligible:
-          type: boolean
-          description: 'Deprecated: indicates whether the beneficial owner is claiming treaty benefits (prefer treaty_claim_country)'
-          deprecated: true
-        treaty_claim_country:
+        treatyClaimCountry:
           $ref: '#/components/schemas/TaxCountry'
-        treaty_claim_i_certify_resident:
+        treatyClaimICertifyResident:
           type: boolean
-          description: Certifies residency in treaty_claim_country (substitute form only; omit when irs_version is 2021_OCT)
-        treaty_claim_type_of_income:
+          description: Certifies residency in treatyClaimCountry (substitute form only; omit when irsVersion is 2021_OCT)
+        treatyClaimTypeOfIncome:
           type: string
           enum:
             - BUSINESS_PROFITS
@@ -130473,13 +130512,13 @@ components:
             - ROYALTIES_MOTION_PICTURE_AND_TV
             - ROYALTIES_OTHER
           description: 'Special rates and conditions: type of income (Line 10)'
-        treaty_claim_rate_of_withholding:
+        treatyClaimRateOfWithholding:
           type: string
           description: 'Special rates and conditions: percentage rate of withholding (Line 10)'
-        treaty_claim_article_paragraph:
+        treatyClaimArticleParagraph:
           type: string
           description: 'Special rates and conditions: treaty article and paragraph (Line 10)'
-        treaty_claim_has_additional_conditions:
+        treatyClaimHasAdditionalConditions:
           type: boolean
           description: Indicates whether additional conditions apply to the treaty claim
         signature:
@@ -130488,13 +130527,13 @@ components:
           description: Electronic signature of the beneficial owner (Part III)
           example: Jane Doe
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
         - name
         - country
-        - permanent_address
-        - date_of_birth
-        - has_signed_and_certified
-        - signature_timestamp
+        - permanentAddress
+        - dateOfBirth
+        - hasSignedAndCertified
+        - signatureTimestamp
         - signature
       title: W8BenSubmissionDto
       description: Form W-8BEN submission payload.
@@ -130519,7 +130558,7 @@ components:
     W9ResponseData:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
@@ -130527,11 +130566,11 @@ components:
           type: string
           description: Legal name of the individual or entity
           example: John Doe
-        dba_name:
+        dbaName:
           type: string
           description: Business name / disregarded entity name, if different from above
           example: Acme LLC
-        tax_classification:
+        taxClassification:
           type: string
           enum:
             - INDIVIDUAL
@@ -130545,16 +130584,16 @@ components:
             - SOLE_PROPRIETOR
             - OTHER
           description: Federal tax classification of the person or entity
-        other_tax_classification:
+        otherTaxClassification:
           type: string
-          description: Description when tax_classification is OTHER
+          description: Description when taxClassification is OTHER
         address:
           $ref: '#/components/schemas/TaxAddress'
         tin:
           type: string
           description: Masked or unmasked Taxpayer Identification Number
           example: '*****6789'
-        tin_type:
+        tinType:
           type: string
           enum:
             - SSN
@@ -130562,7 +130601,7 @@ components:
             - ITIN
             - ATIN
           description: Type of Taxpayer Identification Number
-        exempt_payee_code:
+        exemptPayeeCode:
           type: string
           enum:
             - '1'
@@ -130579,7 +130618,7 @@ components:
             - '12'
             - '13'
           description: Exempt payee code (if applicable)
-        exempt_fatca_code:
+        exemptFatcaCode:
           type: string
           enum:
             - A
@@ -130596,17 +130635,17 @@ components:
             - L
             - M
           description: Exemption from FATCA reporting code (if applicable)
-        is_not_subject_backup_withholding:
+        isNotSubjectBackupWithholding:
           type: boolean
           description: Certifies that the taxpayer is not subject to backup withholding
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           description: Indicates that the taxpayer has signed and certified the W-9 under penalties of perjury
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
@@ -130617,13 +130656,13 @@ components:
           description: Electronic signature of the person certifying the form
           example: John Doe
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
       title: W9ResponseData
       description: Form W-9 data returned in submission and retrieval responses.
     W9SubmissionDto:
       type: object
       properties:
-        e_delivery_consent:
+        eDeliveryConsent:
           type: boolean
           description: Required electronic delivery preference for tax documents (true = Confirm E-delivery, false = Continue with postal delivery). Clients can fetch the electronic delivery disclosure text via GET /api/identity-service/v1/agreements/taxEDeliveryConsent and must explicitly collect and pass the end user selection (do not default to true).
           example: true
@@ -130632,11 +130671,11 @@ components:
           minLength: 1
           description: Legal name of the individual or entity (Box 1)
           example: John Doe
-        dba_name:
+        dbaName:
           type: string
           description: Business name / disregarded entity name, if different from above (Box 2)
           example: Acme LLC
-        tax_classification:
+        taxClassification:
           type: string
           enum:
             - INDIVIDUAL
@@ -130650,18 +130689,18 @@ components:
             - SOLE_PROPRIETOR
             - OTHER
           description: Federal tax classification of the person or entity (Box 3a)
-        other_tax_classification:
+        otherTaxClassification:
           type: string
           minLength: 1
-          description: Description required when tax_classification is OTHER
+          description: Description required when taxClassification is OTHER
         address:
           $ref: '#/components/schemas/TaxRequiredAddress'
         tin:
           type: string
-          minLength: 1
-          description: Taxpayer Identification Number (SSN, EIN, ITIN, or ATIN) (Part I)
+          pattern: ^(?:\d{9}|\d{3}-\d{2}-\d{4}|\d{2}-\d{7})$
+          description: 9-digit U.S. Taxpayer Identification Number (SSN, EIN, ITIN, or ATIN) (Part I)
           example: '123456789'
-        tin_type:
+        tinType:
           type: string
           enum:
             - SSN
@@ -130669,7 +130708,7 @@ components:
             - ITIN
             - ATIN
           description: Type of Taxpayer Identification Number (SSN, EIN, ITIN, or ATIN)
-        exempt_payee_code:
+        exemptPayeeCode:
           type: string
           enum:
             - '1'
@@ -130686,7 +130725,7 @@ components:
             - '12'
             - '13'
           description: Exempt payee code (Box 4, if applicable)
-        exempt_fatca_code:
+        exemptFatcaCode:
           type: string
           enum:
             - A
@@ -130703,20 +130742,20 @@ components:
             - L
             - M
           description: Exemption from FATCA reporting code (Box 4, if applicable)
-        is_not_subject_backup_withholding:
+        isNotSubjectBackupWithholding:
           type: boolean
           description: Certifies that the taxpayer is not subject to backup withholding
-        has_signed_and_certified:
+        hasSignedAndCertified:
           type: boolean
           enum:
             - true
           description: Must be true to certify that the taxpayer has signed and certified the W-9 under penalties of perjury (Part II)
-        signature_timestamp:
+        signatureTimestamp:
           type: string
           format: date-time
           description: ISO 8601 timestamp when the form was signed
           example: 2026-01-15T12:00:00.000Z
-        completed_for:
+        completedFor:
           type: string
           enum:
             - ACCOUNT_HOLDER
@@ -130728,14 +130767,14 @@ components:
           description: Electronic signature of the person certifying the form
           example: John Doe
       required:
-        - e_delivery_consent
+        - eDeliveryConsent
         - name
-        - tax_classification
+        - taxClassification
         - address
         - tin
-        - tin_type
-        - has_signed_and_certified
-        - signature_timestamp
+        - tinType
+        - hasSignedAndCertified
+        - signatureTimestamp
         - signature
       title: W9SubmissionDto
       description: Form W-9 submission payload.
