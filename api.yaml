@@ -40677,6 +40677,8 @@ paths:
         quote `id` to place an order priced off this quote. Requesting an identical quote (same account,
         product, side, quantity and quantity currency) while an identical quote is still active returns
         the existing quote.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.rfq.quote.add
       x-internal: false
       tags:
@@ -40764,6 +40766,8 @@ paths:
 
         This is a lookup only: it never re-solicits quotes and does not check expiry. Quote expiry is
         enforced when the quote is used to place an order.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.rfq.quote.detail
       x-internal: false
       tags:
@@ -40813,10 +40817,12 @@ paths:
       description: |-
         Places an order priced off a previously accepted RFQ quote.
 
-        The request carries only the `quoteId`: the agreed price, quantity, side and product are already
-        persisted on the quote. The order executes fill-or-kill at the quote's price.
+        The request carries the `quoteId` plus an optional `clientOrderId` correlation key: the agreed price,
+        quantity, side and product are already persisted on the quote. The order executes fill-or-kill at the quote's price.
 
         A quote can fund exactly one order. Placing an order on an expired or already-used quote fails.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.rfq.order.add
       x-internal: false
       tags:
@@ -41157,7 +41163,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/products/{product}/level2:
     get:
       summary: Get Level2 Order Book
-      description: Gets a snapshot of the order book for product
+      description: |-
+        Gets a snapshot of the order book for product
+
+        **Requires access token scope:** `trade_view`
       operationId: products.product.level2
       tags:
         - Order Book
@@ -41234,7 +41243,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/currencies:
     get:
       summary: List available currencies for collateral
-      description: Returns the list of currencies that are available for use as collateral.
+      description: |-
+        Returns the list of currencies that are available for use as collateral.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.collateral.currencies.list
       tags:
         - Margin
@@ -41262,7 +41274,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/transferred:
     get:
       summary: List transferred collateral
-      description: Returns the balance of assets deposited as collateral for the specified account.
+      description: |-
+        Returns the balance of assets deposited as collateral for the specified account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.collateral.transferred.list
       tags:
         - Margin
@@ -41314,7 +41329,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/risksettings:
     get:
       summary: Get margin risk settings
-      description: Returns the margin risk settings for the specified account.
+      description: |-
+        Returns the margin risk settings for the specified account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.risksettings.get
       tags:
         - Margin
@@ -41372,7 +41390,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositions:
     get:
       summary: Get net open margin positions
-      description: Returns the net open positions for the specified account.
+      description: |-
+        Returns the net open positions for the specified account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.netopenpositions.get
       tags:
         - Margin
@@ -41407,7 +41428,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositions/snapshot:
     get:
       summary: Get net open positions snapshot
-      description: Returns the net open positions snapshot as of a given time for the specified account.
+      description: |-
+        Returns the net open positions snapshot as of a given time for the specified account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.netopenpositions.snapshot.get
       tags:
         - Margin
@@ -41476,7 +41500,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/activity:
     get:
       summary: Get positions activity
-      description: Returns unsettled fill legs and position transfers that make up the unsettled position as of a specified historical time range.
+      description: |-
+        Returns unsettled fill legs and position transfers that make up the unsettled position as of a specified historical time range.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.positions.activity.get
       tags:
         - Margin
@@ -41582,7 +41609,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/netopenpositionlimits:
     get:
       summary: Get net open margin position limits
-      description: Returns the asset-specific net open position limits for the specified account.
+      description: |-
+        Returns the asset-specific net open position limits for the specified account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.netopenpositionlimits.get
       tags:
         - Margin
@@ -41609,7 +41639,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/riskprofile:
     get:
       summary: Get margin risk profile
-      description: Runs margin calculations and returns the margin risk profile for the specified account.
+      description: |-
+        Runs margin calculations and returns the margin risk profile for the specified account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.riskprofile.get
       tags:
         - Margin
@@ -41691,7 +41724,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/transfer:
     post:
       summary: Transfer collateral for margin
-      description: Transfers collateral for the specified account.
+      description: |-
+        Transfers collateral for the specified account.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.margin.collateral.transfer
       tags:
         - Margin
@@ -41783,7 +41819,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/transfer:
     post:
       summary: Transfer margin position
-      description: Transfers the amount specified to cover margin position for the specified account.
+      description: |-
+        Transfers the amount specified to cover margin position for the specified account.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.margin.positions.transfer
       tags:
         - Margin
@@ -41884,7 +41923,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/cover:
     post:
       summary: Cover all short margin positions
-      description: Transfers the exact amount to cover all short margin positions for the specified account.
+      description: |-
+        Transfers the exact amount to cover all short margin positions for the specified account.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.margin.positions.cover
       tags:
         - Margin
@@ -41974,7 +42016,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close:
     post:
       summary: Close all margin positions
-      description: Initiates an asynchronous process to close margin positions by executing market trades to net positions to zero. Unlike 'cover' which transfers assets, 'close' creates trade orders to sell or buy assets. Returns immediately with a request ID that can be used to track progress via the close position requests endpoints.
+      description: |-
+        Initiates an asynchronous process to close margin positions by executing market trades to net positions to zero. Unlike 'cover' which transfers assets, 'close' creates trade orders to sell or buy assets. Returns immediately with a request ID that can be used to track progress via the close position requests endpoints.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.margin.positions.close
       tags:
         - Margin
@@ -42053,7 +42098,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests:
     get:
       summary: List close position requests
-      description: List all close position requests for an account with optional filters on status and creation date.
+      description: |-
+        List all close position requests for an account with optional filters on status and creation date.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.positions.close.requests.list
       tags:
         - Margin
@@ -42145,7 +42193,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests/{closePositionRequestID}:
     get:
       summary: Get close position request details
-      description: Get details of a specific close position request.
+      description: |-
+        Get details of a specific close position request.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.positions.close.requests.get
       tags:
         - Margin
@@ -42200,7 +42251,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/positions/close/requests/{closePositionRequestID}/orders:
     get:
       summary: List orders for close position request
-      description: List orders associated with a close position request.
+      description: |-
+        List orders associated with a close position request.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.positions.close.requests.orders.list
       tags:
         - Margin
@@ -42242,7 +42296,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests:
     post:
       summary: Create collateral withdrawal request
-      description: Create a collateral withdrawal request.
+      description: |-
+        Create a collateral withdrawal request.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.margin.collateral.withdrawalrequests.create
       tags:
         - Margin
@@ -42325,7 +42382,10 @@ paths:
           $ref: '#/components/responses/internalServerError1'
     get:
       summary: List collateral withdrawal requests
-      description: List all collateral withdrawal requests for an account.
+      description: |-
+        List all collateral withdrawal requests for an account.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.collateral.withdrawalrequests.list
       tags:
         - Margin
@@ -42375,7 +42435,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests/{requestID}:
     get:
       summary: Get collateral withdrawal request
-      description: Get details of a specific collateral withdrawal request.
+      description: |-
+        Get details of a specific collateral withdrawal request.
+
+        **Requires access token scope:** `trade_view`
       operationId: trade.margin.collateral.withdrawalrequests.get
       tags:
         - Margin
@@ -42430,7 +42493,10 @@ paths:
   /api/prime/trading/v1/accounts/{accountId}/margin/collateral/withdrawalrequests/{requestID}/cancel:
     patch:
       summary: Cancel collateral withdrawal request
-      description: Cancel a collateral withdrawal request.
+      description: |-
+        Cancel a collateral withdrawal request.
+
+        **Requires access token scope:** `trade_trade`
       operationId: trade.margin.collateral.withdrawalrequests.cancel
       tags:
         - Margin
@@ -97848,6 +97914,11 @@ components:
           format: uuid
           description: ID of the RFQ quote to execute. The quote must be unexpired and not already used.
           example: 68ade562-5e4d-4efc-83d0-9b76aa6bf88a
+        clientOrderId:
+          type: string
+          nullable: true
+          maxLength: 256
+          description: 'Optional client-supplied correlation key, mirroring the optional clientOrderId on normal order placement. Enterprise-wide unique; a duplicate rejects with clientOrderId/inUse. Null when absent — never generated. Reserved as soon as the order is created: a placement that fails after creation still consumes the key, so retry with a fresh key or cancel the order first.'
     NewRFQQuoteRequest:
       required:
         - product
