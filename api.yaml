@@ -15156,6 +15156,15 @@ paths:
                       Updated credentials. All existing credentials must be provided (all-or-none).
                       Each credential must include its id.
                     properties:
+                      accessLevels:
+                        type: array
+                        example:
+                          - read_write
+                        items:
+                          type: string
+                          enum:
+                            - read_write
+                          description: Access levels, only read_write is supported at this time.
                       credentials:
                         type: string
                         minLength: 1
@@ -15165,7 +15174,9 @@ paths:
                         title: ISO Date String
                       id:
                         type: string
-                        description: Credential id (returned by POST/GET account)
+                        description: |-
+                          Credential id (returned by POST/GET account). Required-in-effect when the account has
+                          credentials (the all-or-none match is by id); ignored when provisioning.
                         title: uuid
                       iv:
                         type: string
@@ -15180,7 +15191,6 @@ paths:
                         minLength: 1
                     required:
                       - credentials
-                      - id
                       - iv
                       - masterKeyVersion
                       - tag
