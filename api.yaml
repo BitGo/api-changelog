@@ -42948,7 +42948,7 @@ paths:
       tags:
         - Staking Request
       summary: Create staking request
-      description: Create a staking request of type STAKE or UNSTAKE.
+      description: Create a staking request. The accepted request type depends on the coin - for example STAKE, UNSTAKE, CLAIM_REWARDS, or SWITCH_VALIDATOR.
       operationId: v1.staking.request.create
       x-internal: false
       parameters:
@@ -43011,6 +43011,7 @@ paths:
                 - $ref: '#/components/schemas/HashUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/HypeEvmStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/HypeEvmUnStakingRequestPOSTBody'
+                - $ref: '#/components/schemas/HypeEvmSwitchValidatorsRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveUnStakingRequestPOSTBody'
                 - $ref: '#/components/schemas/InjectiveClaimRewardsRequestPOSTBody'
@@ -91768,6 +91769,43 @@ components:
         - type
         - amount
         - validator
+    HypeEvmSwitchValidatorsRequestPOSTBody:
+      title: HYPEEVM switch validators
+      description: |
+        Request to move a HYPE delegation to a different validator without leaving HyperCore.
+
+        **No unstaking queue:** HyperEVM processes this as two CoreWriter actions - `undelegate` from the
+        source validator, which returns the stake to the HyperCore staking balance, and `delegate` to the
+        destination validator. The staking balance to spot transfer is never used, so the 7 day unstaking
+        queue is not entered and the stake resumes earning as soon as the new delegation lands.
+
+        **Timing:** each action is applied by HyperCore on the next big block, so a switch takes about
+        2 minutes in total. The source delegation stays active until the undelegate confirms.
+
+        **Lockups:** the source delegation must be past its 1 day delegation lockup, and the destination
+        delegation starts a fresh 1 day lockup.
+
+        **Partial switches:** `amount` may be less than the whole delegation, as long as it does not exceed
+        `delegated - pendingUnstake`. The remainder stays delegated to the source validator.
+
+        **Fields:** `delegationId` selects the source delegation and `validator` is the destination
+        validator, so both are required. `gasPrice`, `duration`, and `delegationRequests` are ignored.
+      type: object
+      allOf:
+        - $ref: '#/components/schemas/SwitchValidatorsRequestPOSTBody'
+      properties:
+        type:
+          description: Staking request type. Always 'SWITCH_VALIDATOR' for this endpoint.
+          type: string
+          enum:
+            - SWITCH_VALIDATOR
+          example: SWITCH_VALIDATOR
+        amount:
+          description: Amount to switch in wei (18 decimals). Must be greater than zero and cannot exceed `delegated - pendingUnstake` for the source delegation.
+          type: string
+          example: '150000000'
+      required:
+        - amount
     HypeEvmUnStakingRequest:
       title: HYPEEVM unstake
       description: A HyperEVM UNSTAKE request. `validatorAddress` is not returned - the validator is carried on the delegation.
