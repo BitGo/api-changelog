@@ -14644,7 +14644,9 @@ paths:
       x-internal: false
       parameters:
         - name: limit
-          description: Maximum number of results to return per page. Defaults to 50.
+          description: |-
+            Maximum number of results to return per page. Defaults to 50; requests above
+            500 are clamped down to 500. Invalid values fall back to 50.
           in: query
           required: true
           schema:
@@ -14653,6 +14655,7 @@ paths:
               - type: number
                 enum:
                   - 50
+                description: Default page size when a paginated request's `limit` is missing or invalid (GN-4758).
             example: '50'
         - name: offset
           description: Number of results to skip before returning. Defaults to 0.
@@ -14806,6 +14809,8 @@ paths:
                   minLength: 1
                 credentials:
                   type: array
+                  minItems: 1
+                  maxItems: 10
                   items:
                     type: object
                     properties:
@@ -14818,17 +14823,21 @@ paths:
                           description: Must be `['read_write']`. Readonly credentials are not currently supported.
                       wrappedKey:
                         type: string
+                        maxLength: 2048
                         minLength: 1
                       iv:
                         type: string
+                        maxLength: 128
                         minLength: 1
                       tag:
                         type: string
+                        maxLength: 128
                         minLength: 1
                       masterKeyVersion:
                         type: number
                       credentials:
                         type: string
+                        maxLength: 32768
                         minLength: 1
                       expirationDate:
                         type: string
@@ -14844,15 +14853,20 @@ paths:
                     description: |-
                       An array of credentials to associate with the new account. Each credential should include the access level,
                       encrypted credentials, and envelope encryption fields. See the CredentialInput type for details.
+                      At most 10 credentials per account.
                 name:
                   type: string
-                  description: A unique name for the account. This is used to identify the account in BitGo and must be unique within your enterprise.
+                  description: |-
+                    A unique name for the account. This is used to identify the account in BitGo and must be unique within your enterprise.
+                    Max 60 characters.
                   example: My Coinbase Account
+                  maxLength: 60
                   minLength: 1
                 description:
                   type: string
-                  description: An optional description for the account. This can be any string and is not required to be unique.
+                  description: A description for the account. This can be any string and is not required to be unique. Max 256 characters.
                   example: This account is used for trading on Coinbase.
+                  maxLength: 256
                   minLength: 1
                 whitelistingEnabled:
                   type: boolean
@@ -15135,11 +15149,13 @@ paths:
                   type: string
                   description: Updated account name. Must be unique within the enterprise, max 60 characters.
                   example: My Coinbase Account v2
+                  maxLength: 60
                   minLength: 1
                 description:
                   type: string
                   description: Updated account description. Max 256 characters.
                   example: Updated description
+                  maxLength: 256
                   minLength: 1
                 status:
                   type: string
@@ -15150,16 +15166,13 @@ paths:
                   example: inactive
                 credentials:
                   type: array
+                  minItems: 1
+                  maxItems: 10
                   items:
                     type: object
-                    description: |-
-                      Updated credentials. All existing credentials must be provided (all-or-none).
-                      Each credential must include its id.
                     properties:
                       accessLevels:
                         type: array
-                        example:
-                          - read_write
                         items:
                           type: string
                           enum:
@@ -15167,6 +15180,7 @@ paths:
                           description: Access levels, only read_write is supported at this time.
                       credentials:
                         type: string
+                        maxLength: 32768
                         minLength: 1
                       expirationDate:
                         type: string
@@ -15174,20 +15188,21 @@ paths:
                         title: ISO Date String
                       id:
                         type: string
-                        description: |-
-                          Credential id (returned by POST/GET account). Required-in-effect when the account has
-                          credentials (the all-or-none match is by id); ignored when provisioning.
+                        description: Credential id (returned by POST/GET account). Required-in-effect when the account has credentials (the all-or-none match is by id); ignored when provisioning.
                         title: uuid
                       iv:
                         type: string
+                        maxLength: 128
                         minLength: 1
                       masterKeyVersion:
                         type: number
                       tag:
                         type: string
+                        maxLength: 128
                         minLength: 1
                       wrappedKey:
                         type: string
+                        maxLength: 2048
                         minLength: 1
                     required:
                       - credentials
@@ -15195,6 +15210,11 @@ paths:
                       - masterKeyVersion
                       - tag
                       - wrappedKey
+                    description: |-
+                      Updated credentials. All existing credentials must be provided (all-or-none).
+                      On accounts with stored credentials each envelope must carry its credential id;
+                      when provisioning (no stored credentials) `id` may be omitted. At most 10
+                      credentials per account.
                 whitelistingEnabled:
                   type: boolean
                   description: Updated whitelisting flag.
@@ -15413,7 +15433,8 @@ paths:
                     hard field returns 409 `TransferIdempotencyConflict`.
 
                     Required. Callers should generate a stable identifier (e.g. UUIDv4)
-                    per logical transfer and reuse it across retries.
+                    per logical transfer and reuse it across retries. Max 256 characters.
+                  maxLength: 256
                   minLength: 1
                 amount:
                   type: string
@@ -15432,7 +15453,8 @@ paths:
                     Optional venue sub-account / bucket (e.g. `SPOT` vs `MARGIN`). Required
                     for venues that hold balances across multiple sub-types where the caller
                     needs to disambiguate which bucket to debit. When omitted, the venue's
-                    default sub-account is used.
+                    default sub-account is used. Max 64 characters.
+                  maxLength: 64
                   minLength: 1
                 destination:
                   allOf:
@@ -15445,10 +15467,13 @@ paths:
                     venue has OTP withdrawal protection enabled. When omitted and the venue
                     requires OTP, the transfer is created with `status: "pending_otp"`
                     and `reason.code: "OtpRequired"`. Call the retry endpoint with a fresh
-                    code to proceed.
+                    code to proceed. Max 64 characters.
+                  maxLength: 64
                   minLength: 1
                 notes:
                   type: string
+                  description: Free-form client notes associated with the transfer. Max 1024 characters.
+                  maxLength: 1024
                   minLength: 1
               required:
                 - externalId
@@ -15569,6 +15594,8 @@ paths:
                   description: |-
                     Venue-specific one-time password (TOTP code).
                     Required for `failed_retriable` / `pending_otp` transfers with reason.code of 'OtpRequired' or 'OtpInvalid'.
+                    Max 64 characters.
+                  maxLength: 64
                   minLength: 1
       responses:
         '200':
@@ -15670,14 +15697,17 @@ paths:
               properties:
                 userIds:
                   type: array
+                  maxItems: 1000
                   items:
                     type: string
+                    maxLength: 128
                     minLength: 1
                     description: |-
                       External user IDs to assign to the organization's "Link Manager" role.
                       Assignment bypasses the pending-approval flow, so the users are added
                       synchronously. Optional — when omitted or empty, no assignment happens
-                      and the role is only ensured to exist.
+                      and the role is only ensured to exist. At most 1000 ids, each max 128
+                      characters.
       responses:
         '201':
           description: Created
@@ -15735,7 +15765,9 @@ paths:
       x-internal: false
       parameters:
         - name: limit
-          description: Maximum number of results to return per page. Defaults to 50.
+          description: |-
+            Maximum number of results to return per page. Defaults to 50; requests above
+            500 are clamped down to 500. Invalid values fall back to 50.
           in: query
           required: true
           schema:
@@ -15744,6 +15776,7 @@ paths:
               - type: number
                 enum:
                   - 50
+                description: Default page size when a paginated request's `limit` is missing or invalid (GN-4758).
             example: '50'
         - name: offset
           description: Number of results to skip before returning. Defaults to 0.
@@ -16024,7 +16057,9 @@ paths:
             example: trading
             minLength: 1
         - name: limit
-          description: Maximum number of results to return per page. Defaults to 50.
+          description: |-
+            Maximum number of results to return per page. Defaults to 50; requests above
+            500 are clamped down to 500. Invalid values fall back to 50.
           in: query
           required: true
           schema:
@@ -16033,6 +16068,7 @@ paths:
               - type: number
                 enum:
                   - 50
+                description: Default page size when a paginated request's `limit` is missing or invalid (GN-4758).
             example: '50'
         - name: offset
           description: Number of results to skip before returning. Defaults to 0.
@@ -16342,7 +16378,9 @@ paths:
             example: My Coinbase
             minLength: 1
         - name: limit
-          description: Maximum number of results to return per page. Defaults to 50.
+          description: |-
+            Maximum number of results to return per page. Defaults to 50; requests above
+            500 are clamped down to 500. Invalid values fall back to 50.
           in: query
           required: true
           schema:
@@ -16351,6 +16389,7 @@ paths:
               - type: number
                 enum:
                   - 50
+                description: Default page size when a paginated request's `limit` is missing or invalid (GN-4758).
             example: '50'
         - name: offset
           description: Number of results to skip before returning. Defaults to 0.
@@ -16528,7 +16567,9 @@ paths:
       x-internal: false
       parameters:
         - name: limit
-          description: Maximum number of results to return per page. Defaults to 50.
+          description: |-
+            Maximum number of results to return per page. Defaults to 50; requests above
+            500 are clamped down to 500. Invalid values fall back to 50.
           in: query
           required: true
           schema:
@@ -16537,6 +16578,7 @@ paths:
               - type: number
                 enum:
                   - 50
+                description: Default page size when a paginated request's `limit` is missing or invalid (GN-4758).
             example: '50'
         - name: offset
           description: Number of results to skip before returning. Defaults to 0.
@@ -16845,6 +16887,8 @@ paths:
                     Required today — this is the only updatable field on this route.
                     An empty string clears previously set notes.
                     When omitted in the future alongside other fields, notes are left unchanged.
+                    Max 1024 characters.
+                  maxLength: 1024
               required:
                 - notes
       responses:
@@ -118729,6 +118773,7 @@ components:
           title: uuid
         accountSubType:
           type: string
+          maxLength: 64
           minLength: 1
       required:
         - kind
@@ -118766,6 +118811,7 @@ components:
             - address
         toAddress:
           type: string
+          maxLength: 512
           minLength: 1
         network:
           type: string
@@ -118773,6 +118819,7 @@ components:
           minLength: 1
         memo:
           type: string
+          maxLength: 256
           minLength: 1
       required:
         - kind
