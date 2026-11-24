@@ -38731,53 +38731,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/wallet/{walletId}/requestreshare:
-    post:
-      tags:
-        - Wallet share
-      summary: Request wallet reshare
-      description: Indicates that the calling user has lost access to the user key and would like to it to be reshared with them.
-      operationId: v2.wallet.sharing.requestreshare
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/wallet/{walletId}/share:
-    post:
-      tags:
-        - Wallet share
-      summary: Create a wallet share
-      description: Share wallet with an existing BitGo user
-      operationId: v2.wallet.sharing.createshare
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/ShareWalletRequest'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ShareWalletResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
   /api/v2/wallet/requestaccess:
     post:
       tags:
@@ -38795,29 +38748,6 @@ paths:
           in: query
           schema:
             $ref: '#/components/schemas/Id'
-      responses:
-        '200':
-          description: OK
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-  /api/v2/wallet/{walletId}/rejectreshare:
-    post:
-      tags:
-        - Wallet share
-      summary: Reject a wallet reshare request
-      description: If a user requested a reshare, another admin on the wallet can use this endpoint to reject their reshare request.
-      operationId: v2.wallet.sharing.rejectreshare
-      parameters:
-        - $ref: '#/components/parameters/pathWalletId'
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/RejectReshare'
       responses:
         '200':
           description: OK
@@ -38863,37 +38793,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/WalletShare1'
-        '401':
-          description: Unauthorized
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
-  /api/v2/{coin}/walletshare/{shareId}/resendemail:
-    post:
-      tags:
-        - Wallet share
-      summary: Resend a wallet share invitation email
-      description: |
-        Resends the wallet share invitation to the share recipient. The wallet
-        share must not have been accepted yet.
-      operationId: v2.wallet.sharing.resendemail
-      parameters:
-        - $ref: '#/components/parameters/pathCoin'
-        - $ref: '#/components/parameters/pathShareId'
-      responses:
-        '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ResendShareEmailResponse'
-        '400':
-          description: Bad Request
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/PlatformError3'
         '401':
           description: Unauthorized
           content:
@@ -49547,6 +49446,11 @@ paths:
           in: query
           schema:
             type: string
+        - name: envelopeOnly
+          description: When the exact string 'true', return the slim key shape consumed by the password-rotation walk (WCI-2309). Any other value is ignored.
+          in: query
+          schema:
+            type: string
         - name: coin
           description: Coin or token identifier.
           in: path
@@ -51762,6 +51666,63 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/wallet/{walletId}/requestreshare:
+    post:
+      summary: Request wallet reshare
+      description: Indicates that the calling user has lost access to the user key and would like it to be reshared with them.
+      operationId: v2.wallet.sharing.requestreshare
+      tags:
+        - Wallet share
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/resourcedelegations:
     get:
       summary: Get resource delegations
@@ -51881,6 +51842,139 @@ paths:
                 oneOf:
                   - $ref: '#/components/schemas/PlatformError'
                   - $ref: '#/components/schemas/InvalidWalletId'
+  /api/v2/{coin}/wallet/{walletId}/share:
+    post:
+      summary: Create a wallet share
+      description: Share wallet with an existing BitGo user. When the wallet has more than one admin, the share waits for approval.
+      operationId: v2.wallet.sharing.createshare
+      tags:
+        - Wallet share
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Create V2 Wallet Share Request Body
+
+                The request body for sharing a wallet with an existing BitGo user: who receives the share, with which permissions, and the key that is passed to them.
+              properties:
+                user:
+                  allOf:
+                    - $ref: '#/components/schemas/PublicID1'
+                  description: |-
+                    The ID of the user to share the wallet with.
+
+                    The user must be active and, for enterprise wallets, a member of the enterprise.
+                permissions:
+                  type: string
+                  description: |-
+                    Comma-separated list of privileges for the wallet.
+
+                    Includes `admin`, `freeze`, `spend`, `trade`, `view` and `dapp`, for example `spend,view`. Needed for a new share. A reshare ignores it, because it reuses the permissions the user already has.
+                message:
+                  type: string
+                  description: |-
+                    User readable message to display to the share recipient.
+
+                    Free text.
+                reshare:
+                  type: boolean
+                  description: |-
+                    Flag for reinviting a user to the wallet.
+
+                    Required if the invitee is already on the wallet but has changed their password and needs a new invite.
+                disableEmail:
+                  type: boolean
+                  description: |-
+                    Flag for disabling the invite notification email.
+
+                    When true, the recipient is not notified by email.
+                keychain:
+                  type: object
+                  description: |-
+                    The key to pass to the receiving user.
+
+                    Required when the share grants spend permission on a coin with keys, unless `skipKeychain` is true.
+                  properties:
+                    encryptedPrv:
+                      type: string
+                      description: Private key of the user sharing the wallet, encrypted under their wallet passphrase
+                    fromPubKey:
+                      type: string
+                      description: Derived public key of the user sharing the wallet
+                    path:
+                      type: string
+                      description: BIP32 HD path of the derived public keys (`fromPubKey` and `toPubKey`)
+                    pub:
+                      type: string
+                      description: One of the wallet public key (on-chain) or the common keychain (MPC)
+                    toPubKey:
+                      type: string
+                      description: Derived public key of the user receiving the share. It must match the derivation of the recipient's ECDH keychain at `path`
+                skipKeychain:
+                  type: boolean
+                  description: |-
+                    If true, allows creating a wallet share without sharing a key when the wallet is shared with spend permission.
+
+                    Required for multi-user-key wallets, and `keychain` must then be empty.
+              required:
+                - user
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WalletShareDetail'
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '422':
+          description: Unprocessable Entity
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/{coin}/wallet/{walletId}/shieldedunspents:
     get:
       summary: List a wallet's shielded notes
@@ -54120,6 +54214,62 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '500':
           description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/{coin}/walletshare/{shareId}/resendemail:
+    post:
+      summary: Resend a wallet share invitation email
+      description: Resends the wallet share invitation to the share recipient. The wallet share must not have been accepted yet.
+      operationId: v2.wallet.sharing.resendemail
+      tags:
+        - Wallet share
+      x-internal: false
+      parameters:
+        - name: coin
+          description: A cryptocurrency or token ticker symbol
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/CoinNonEmptyString'
+        - name: shareId
+          description: The ID of the wallet share
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/PublicID1'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  resent:
+                    type: boolean
+                    enum:
+                      - true
+                    description: Always true when the email was sent.
+                required:
+                  - resent
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
           content:
             application/json:
               schema:
@@ -62432,6 +62582,75 @@ paths:
                 $ref: '#/components/schemas/MultiWalletStuckTxsResponse'
         '400':
           description: Bad Request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+  /api/v2/wallet/{walletId}/rejectreshare:
+    post:
+      summary: Reject a wallet reshare request
+      description: If a user requested a reshare, another admin on the wallet can use this endpoint to reject their reshare request.
+      operationId: v2.wallet.sharing.rejectreshare
+      tags:
+        - Wallet share
+      x-internal: false
+      parameters:
+        - name: walletId
+          description: The ID of the wallet
+          in: path
+          required: true
+          schema:
+            allOf:
+              - $ref: '#/components/schemas/WalletIdNonEmptyString'
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              description: |-
+                Reject V2 Wallet Share Reshare Request Body
+
+                The request body for rejecting a reshare request: the user whose request is rejected.
+              properties:
+                userId:
+                  allOf:
+                    - $ref: '#/components/schemas/PublicID1'
+                  description: |-
+                    The ID of the user whose reshare request is rejected.
+
+                    The user must be on the wallet and must have requested a reshare.
+              required:
+                - userId
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties: {}
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: '#/components/schemas/PlatformError'
+                  - $ref: '#/components/schemas/InvalidWalletId'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '403':
+          description: Forbidden
           content:
             application/json:
               schema:
@@ -104930,13 +105149,6 @@ components:
           format: date-time
           description: When the key was registered.
           example: 2026-01-12T10:30:00.000Z
-    RejectReshare:
-      type: object
-      properties:
-        userId:
-          $ref: '#/components/schemas/Id'
-      required:
-        - userId
     RemovedWebhooksResponse:
       title: RemovedWebhooksResponse
       type: object
@@ -105658,11 +105870,6 @@ components:
         - name
         - status
       title: Requirement
-    ResendShareEmailResponse:
-      type: object
-      properties:
-        resent:
-          type: boolean
     ReservedUnspent:
       type: object
       description: a ReservedUnspent object
@@ -107843,93 +108050,6 @@ components:
       enum:
         - encryptedSignerShare
         - encryptedRShare
-    ShareWalletRequest:
-      type: object
-      properties:
-        permission:
-          type: string
-          description: |
-            Comma-separated list of privileges for a wallet. Includes:
-
-              - `admin` - Can manage wallet policies and users and approve or reject pending approvals.
-              - `freeze` - Can freeze a wallet, disabling all withdrawals.
-              - `spend` - Can initiate withdrawals and generate new receive addresses.
-              - `trade` - Can initiate trades from a Go Account (`trading` wallet type).
-              - `view` - Can view balances and transactions.
-
-            Permissions don't overlap. Required parameter if 'reshare' is false.
-          enum:
-            - admin
-            - spend
-            - trade
-            - view
-          example: spend,view
-        message:
-          type: string
-          description: User readable message to display to the share recipient
-        reshare:
-          type: boolean
-          description: Flag for reinviting a user to the wallet. This is required if the invitee has already been invited to the wallet, but has changed their password and needs a new invite
-        disableEmail:
-          type: boolean
-          description: Flag for disabling invite notification email
-        user:
-          $ref: '#/components/schemas/Id'
-        keychain:
-          $ref: '#/components/schemas/WalletShareKeychain'
-        skipKeychain:
-          type: boolean
-          description: If true, allows creating wallet shares without a sharing a key (keychain) when the wallet is shared with spend permission.
-      required:
-        - user
-    ShareWalletResponse:
-      type: object
-      description: Wallet share object
-      properties:
-        id:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: Wallet share id
-        coin:
-          allOf:
-            - $ref: '#/components/schemas/Coin'
-          description: Coin of the wallet
-        wallet:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: Wallet id
-        walletLabel:
-          $ref: '#/components/schemas/WalletLabel'
-        fromUser:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: Id of the user sharing the wallet
-        toUser:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: Id of the user receiving the share
-        permissions:
-          type: string
-          allOf:
-            - $ref: '#/components/schemas/WalletPermission'
-        message:
-          type: string
-          description: Message for the user receiving the share
-        state:
-          type: string
-          allOf:
-            - $ref: '#/components/schemas/WalletShareState1'
-          description: State of the share
-        enterprise:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: If the wallet belongs to an enterprise, the id of that enterprise
-        pendingApprovalId:
-          allOf:
-            - $ref: '#/components/schemas/Id'
-          description: If the share generated a pending approval, the id of that pending approval
-        keychain:
-          $ref: '#/components/schemas/WalletShareKeychain'
     ShieldedNoteDirection:
       title: Shielded Note Direction
       type: string
@@ -132629,26 +132749,99 @@ components:
         - message
         - state
         - enterprise
-    WalletShareKeychain:
+    WalletShareDetail:
+      title: WalletShareDetail
       type: object
-      description: Key passed to the receiving user, included if the wallet was shared with spend permission
+      description: A share of a wallet between two BitGo users.
+      properties:
+        id:
+          type: string
+          example: 59cd72485007a239fb00282ed480da1f
+          pattern: ^[0-9a-f]{32}$
+        coin:
+          type: string
+          description: A cryptocurrency or token ticker symbol.
+          example: eth
+        wallet:
+          type: string
+          description: The ID of the shared wallet.
+          example: 59cd72485007a239fb00282ed480da1f
+        walletLabel:
+          type: string
+          description: Name of the wallet. Can be absent for shares created before the name was stored.
+        fromUser:
+          type: string
+          description: The ID of the user who shared the wallet.
+          example: 59cd72485007a239fb00282ed480da1f
+        toUser:
+          type: string
+          description: The ID of the user the wallet is shared with.
+          example: 59cd72485007a239fb00282ed480da1f
+        permissions:
+          type: array
+          items:
+            type: string
+            description: The permissions that the share grants, for example `spend` and `view`.
+        state:
+          allOf:
+            - $ref: '#/components/schemas/WalletShareState'
+          description: The state of the share.
+        enterprise:
+          type: string
+          description: The ID of the enterprise the wallet belongs to.
+          example: 59cd72485007a239fb00282ed480da1f
+        message:
+          type: string
+          description: User readable message for the recipient of the share.
+        pendingApprovalId:
+          type: string
+          description: Only set if the share is waiting for approval.
+          example: 59cd72485007a239fb00282ed480da1f
+        keychainOverrideRequired:
+          type: boolean
+          description: Deprecated. Always false.
+        userMultiKeyRotationRequired:
+          type: boolean
+          description: Whether the recipient has to supply their own public key when accepting the share.
+        isUMSInitiated:
+          type: boolean
+          description: Whether the share was created by user management.
+        keychain:
+          allOf:
+            - $ref: '#/components/schemas/WalletShareDetailKeychain'
+          description: Only set if the share includes a key.
+        updatedAt:
+          type: string
+          example: '2021-01-01T00:00:00.000Z'
+          format: date-time
+      required:
+        - id
+        - coin
+        - wallet
+        - fromUser
+        - toUser
+        - permissions
+    WalletShareDetailKeychain:
+      title: WalletShareDetailKeychain
+      type: object
+      description: The key a wallet share carries for the recipient. Only present when the share includes a key.
       properties:
         pub:
-          description: One of wallet pub (onchain) or commonKeychain (MPC)
           type: string
+          description: Sharing user's root public key, or the common keychain of an MPC wallet.
         encryptedPrv:
-          description: Private key of the user sharing the wallet encrypted under their wallet passphrase
           type: string
+          description: Sharing user's private key, encrypted under their wallet passphrase.
         fromPubKey:
-          description: Derived public key of the user sharing the wallet
           type: string
+          description: Sharing user's derived public key, used to calculate the wallet sharing secret.
         toPubKey:
-          description: Derived public key of the user receiving the share
           type: string
+          description: Shared-to user's derived public key, used to calculate the wallet sharing secret.
         path:
-          description: BIP32 HD path of the derived public keys (fromPubKey and toPubKey)
-          example: m/1234/1/1
           type: string
+          description: BIP32 HD path of the derived public keys.
+          example: m/1234/1/1
     WalletShareState:
       title: WalletShareState
       type: string
