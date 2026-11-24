@@ -90851,6 +90851,87 @@ components:
               - token
               - assets
             description: Array of chain-agnostic token summaries supported by the enterprise
+        ineligibleTokens:
+          type: array
+          items:
+            type: object
+            properties:
+              token:
+                type: string
+                description: Chain-agnostic token identifier
+                example: usd1
+              assets:
+                type: array
+                example:
+                  - sol:usd1
+                  - eth:usd1
+                  - bsc:usd1
+                items:
+                  type: string
+                  description: Chain-scoped asset IDs for this token
+              type:
+                allOf:
+                  - $ref: '#/components/schemas/tokenTypeCodec'
+                description: Asset type classification
+                example: stablecoin
+              minimumMintAmount:
+                type: string
+                description: Minimum amount required to mint, in full units
+                example: '1.5'
+                pattern: ^[0-9]+(\.[0-9]+)?$
+              minimumBurnAmount:
+                type: string
+                description: Minimum amount required to burn, in full units
+                example: '1.5'
+                pattern: ^[0-9]+(\.[0-9]+)?$
+              maximumMintAmount:
+                type: string
+                description: Maximum amount allowed per mint order, in full units. Omitted when no maximum is enforced.
+                example: '10'
+                pattern: ^[0-9]+(\.[0-9]+)?$
+              maximumBurnAmount:
+                type: string
+                description: Maximum amount allowed per burn order, in full units. Omitted when no maximum is enforced.
+                example: '10'
+                pattern: ^[0-9]+(\.[0-9]+)?$
+              mintFeeBps:
+                type: string
+                description: Mint fee in basis points (1 bps = 0.01%)
+                example: '5'
+                pattern: ^[0-9]+$
+              burnFeeBps:
+                type: string
+                description: Burn fee in basis points (1 bps = 0.01%)
+                example: '5'
+                pattern: ^[0-9]+$
+              description:
+                type: string
+                description: Public-facing description of the token
+                example: A stablecoin backed by US dollar reserves
+              role:
+                allOf:
+                  - $ref: '#/components/schemas/roleCodec'
+                description: |-
+                  The enterprise's role for this token.
+                  Only present for issuer and partner enterprises.
+                example: issuer
+              issuerOrdersEnabled:
+                type: boolean
+                description: |-
+                  Whether issuer orders are enabled for this token's base asset.
+                  Only present for issuer enterprises when enabled.
+                example: true
+              name:
+                type: string
+                description: Human-readable name of the base asset
+                example: USD1
+            required:
+              - token
+              - assets
+            description: |-
+              Tokens this enterprise can see but may not mint or burn, as full summaries. They are not
+               in `tokens`, so every entry there stays actionable. Mint and burn orders for these tokens
+               are rejected. Absent when there are none.
       required:
         - tokens
     GetTokenConstantsResponse:
