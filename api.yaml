@@ -40194,6 +40194,14 @@ paths:
       description: |-
         Get balance information about a single trading account.
 
+        Requests without the `trade_view` scope return `403 Forbidden` for
+        insufficient token permissions.
+
+        If the account cannot be found or you do not have access to it, the request
+        also returns `403 Forbidden` with this message:
+
+        > Account not found or not accessible. Call GET /api/prime/trading/v1/accounts to list the account IDs available to you.
+
         **Requires access token scope:** `trade_view`
       operationId: trade.accounts.balances
       tags:
@@ -41751,7 +41759,7 @@ paths:
                   transferId:
                     type: string
                     format: uuid
-                    description: The margin transfer ID (UUID) from Trade Falcon
+                    description: ID of the collateral transfer
                   currency:
                     type: string
                     description: Symbol of the collateral asset
@@ -41854,7 +41862,7 @@ paths:
                         transferId:
                           type: string
                           format: uuid
-                          description: The margin transfer ID (UUID) from Trade Falcon
+                          description: ID of the position transfer
                         currency:
                           type: string
                           description: Currency symbol
@@ -70899,12 +70907,15 @@ components:
     FundingTypeQueryParam:
       name: fundingType
       in: query
-      description: Filter by funding type. 'funded' for available balance, 'margin' for margin balance.
+      description: Filter by funding type. 'funded' for available balance, 'margin' for margin balance. Omit to include both.
       required: false
       style: form
       explode: true
       schema:
-        $ref: '#/components/schemas/FundingType'
+        type: string
+        enum:
+          - margin
+          - funded
     Interval:
       name: interval
       in: query
@@ -97144,7 +97155,7 @@ components:
         lastModified:
           type: string
           format: date-time
-          description: ISO format datetime for date and time the record was last updated in the database
+          description: Date and time the margin position was last updated
       example:
         currency: BTC
         enterpriseId: 63925f940c259a00061853808ffea830
