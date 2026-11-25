@@ -57047,7 +57047,10 @@ paths:
   /api/v2/organization/{organizationId}/reports:
     get:
       summary: List org-level reports
-      description: Lists generated reports.
+      description: |-
+        Lists generated reports.
+        The access token must carry one of the `wallet_view_all`, `enterprise_view_all`, `enterprise_manage_all`, or `user_manage` scopes.
+        Requests without any of these scopes receive a 401 response.
       operationId: v2.organization.reports.list
       tags:
         - Reports
@@ -57181,7 +57184,10 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
     post:
       summary: Generate org-level report
-      description: Creates a new report in pending status.
+      description: |-
+        Creates a new report in pending status.
+        The access token must carry one of the `wallet_view_all`, `enterprise_view_all`, `enterprise_manage_all`, or `user_manage` scopes.
+        Requests without any of these scopes receive a 401 response.
       operationId: v2.organization.reports.create
       tags:
         - Reports
@@ -59306,7 +59312,10 @@ paths:
   /api/v2/reports:
     get:
       summary: List reports
-      description: Lists generated reports.
+      description: |-
+        Lists generated reports.
+        The access token must carry one of the `wallet_view_all`, `enterprise_view_all`, `enterprise_manage_all`, or `user_manage` scopes.
+        Requests without any of these scopes receive a 401 response.
       operationId: v2.reports.list
       tags:
         - Reports
@@ -59451,7 +59460,10 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
     post:
       summary: Generate report
-      description: Creates a new report in pending status.
+      description: |-
+        Creates a new report in pending status.
+        The access token must carry one of the `wallet_view_all`, `enterprise_view_all`, `enterprise_manage_all`, or `user_manage` scopes.
+        Requests without any of these scopes receive a 401 response.
       operationId: v2.reports.create
       tags:
         - Reports
@@ -60039,7 +60051,10 @@ paths:
   /api/v2/reports/{reportId}:
     get:
       summary: Get report
-      description: Returns a single report by report ID.
+      description: |-
+        Returns a single report by report ID.
+        The access token must carry one of the `wallet_view_all`, `enterprise_view_all`, `enterprise_manage_all`, or `user_manage` scopes.
+        Requests without any of these scopes receive a 401 response.
       operationId: v2.reports.getById
       tags:
         - Reports
@@ -60087,7 +60102,10 @@ paths:
   /api/v2/reports/{reportId}/document:
     get:
       summary: Download report
-      description: Returns binary data encoded based on report format (pdf/csv).
+      description: |-
+        Returns binary data encoded based on report format (pdf/csv).
+        The access token must carry one of the `wallet_view_all`, `enterprise_view_all`, `enterprise_manage_all`, or `user_manage` scopes.
+        Requests without any of these scopes receive a 401 response.
       operationId: v2.reports.download
       tags:
         - Reports
@@ -60113,10 +60131,20 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/PlatformError'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
   /api/v2/sendlabels:
     get:
       summary: List send labels
-      description: List all send labels for the enterprise. Address and coin parameters are optional.
+      description: |-
+        List all send labels for the enterprise. Address and coin parameters are optional.
+
+        The token must hold one of `user_manage`, `wallet_view_all`, `wallet_manage_all`,
+        `enterprise_view_all`, or `enterprise_manage_all`; a token without one of them receives 401.
       operationId: v2.sendlabels.list
       tags:
         - Send label
@@ -60197,7 +60225,11 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
     post:
       summary: Create send label
-      description: Create an address send label for an enterprise.
+      description: |-
+        Create an address send label for an enterprise.
+
+        The token must hold one of `user_manage`, `wallet_manage_all`, or `enterprise_manage_all`;
+        a token without one of them receives 401.
       operationId: v2.sendlabels.create
       tags:
         - Send label
@@ -60280,7 +60312,11 @@ paths:
   /api/v2/sendlabels/{id}:
     delete:
       summary: Delete send label
-      description: Deletes an address send label by the specified id and returns the deleted label.
+      description: |-
+        Deletes an address send label by the specified id and returns the deleted label.
+
+        The token must hold one of `user_manage`, `wallet_manage_all`, or `enterprise_manage_all`;
+        a token without one of them receives 401.
       operationId: v2.sendlabels.delete
       tags:
         - Send label
@@ -60326,7 +60362,11 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
     get:
       summary: Get send label by id
-      description: Gets an address send label by the specified id.
+      description: |-
+        Gets an address send label by the specified id.
+
+        The token must hold one of `user_manage`, `wallet_view_all`, `wallet_manage_all`,
+        `enterprise_view_all`, or `enterprise_manage_all`; a token without one of them receives 401.
       operationId: v2.sendlabels.get
       tags:
         - Send label
@@ -60372,7 +60412,11 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
     put:
       summary: Update send label
-      description: Updates an address send label by the specified id.
+      description: |-
+        Updates an address send label by the specified id.
+
+        The token must hold one of `user_manage`, `wallet_manage_all`, or `enterprise_manage_all`;
+        a token without one of them receives 401.
       operationId: v2.sendlabels.update
       tags:
         - Send label
@@ -63153,6 +63197,9 @@ paths:
         TRX (`trx`, `ttrx`) MPC wallets support native transfers, TRC-20
         tokens, consolidation, staking, and resource delegation via
         `delegateResource` and `undelegateResource` intents.
+
+        A 409 response for stale Sui input objects requires rebuilding the transaction
+        with the current object versions.
       operationId: v2.wallet.txrequest.create
       tags:
         - Transaction request
@@ -63281,6 +63328,12 @@ paths:
                 $ref: '#/components/schemas/PlatformError'
         '404':
           description: Not Found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PlatformError'
+        '409':
+          description: Conflict
           content:
             application/json:
               schema:
